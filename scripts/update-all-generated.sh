@@ -1,12 +1,12 @@
 #!/bin/bash
 
 echo "Generating GLESv1_CM marshalling code..."
-./gen-yagl-calls.sh ../GLESv1_CM/yagl_gles1_calls.in yagl_api_id_gles1 \
+./gen-yagl-calls.sh ../GLES_common/yagl_gles_calls.in,../GLESv1_CM/yagl_gles1_calls.in yagl_api_id_gles1 \
     YAGL_HOST_GLES1_CALLS GLES/gl.h yagl_host_gles1_calls.h,yagl_marshal_gl.h ../GLESv1_CM/yagl_host_gles1_calls \
     QEMU_YAGL_GLES1_CALLS yagl_gles1_api yagl_gles1_calls.h,yagl_host_gles1_calls.h,yagl_marshal_gl.h,yagl_thread.h,yagl_process.h yagl_gles1_calls
 
 echo "Generating GLESv2 marshalling code..."
-./gen-yagl-calls.sh ../GLESv2/yagl_gles2_calls.in yagl_api_id_gles2 \
+./gen-yagl-calls.sh ../GLES_common/yagl_gles_calls.in,../GLESv2/yagl_gles2_calls.in yagl_api_id_gles2 \
     YAGL_HOST_GLES2_CALLS GLES2/gl2.h yagl_host_gles2_calls.h,yagl_marshal_gl.h ../GLESv2/yagl_host_gles2_calls \
     QEMU_YAGL_GLES2_CALLS yagl_gles2_api yagl_gles2_calls.h,yagl_host_gles2_calls.h,yagl_marshal_gl.h,yagl_thread.h,yagl_process.h yagl_gles2_calls
 

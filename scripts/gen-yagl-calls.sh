@@ -42,6 +42,13 @@ if [ -z "$6" ]; then
     exit 1
 fi;
 
+INPUT_IN_FILES=""
+IFS=$','
+for INPUT_IN in ${1}; do
+    INPUT_IN_FILES="$INPUT_IN_FILES $INPUT_IN"
+done;
+unset IFS
+
 API="$2"
 TARGET_GUARD_NAME="$3"
 TARGET_HEADER_INCLUDE_FILES="$4"
@@ -138,6 +145,7 @@ EOF
 
 FUNC_POINTERS=""
 FUNC_ID=1
+for INPUT_IN in ${INPUT_IN_FILES}; do
 while read -r CUR_LINE || [ -n "$CUR_LINE" ]; do
     CUR_LINE=`StrTrim "$CUR_LINE"`
     FORCE_SYNC=0
@@ -360,7 +368,8 @@ EOF
     echo "}" >> $HOST_SOURCE_FILE
     echo "" >> $HOST_SOURCE_FILE
     FUNC_ID=$(($FUNC_ID + 1))
-done < $1
+done < $INPUT_IN
+done;
 
 RETVAL="$?"
 if [ "$RETVAL" != 0 ]; then

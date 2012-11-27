@@ -5,6 +5,10 @@ TARGETS = $(TARGET)
 
 include $(TOP_DIR)/Make.rules
 
+include $(TOP_DIR)/Make.gles_common
+
+OBJS += $(GLES_COMMON_OBJS)
+
 $(TARGET): $(OBJ_DIR) $(DEPS) $(OBJS) $(LIB_DIR)
 ifeq ($(V),0)
 	@echo [LD] $@

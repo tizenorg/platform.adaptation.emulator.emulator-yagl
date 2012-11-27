@@ -1,9 +1,14 @@
 TOP_DIR = ..
 OBJ_PREFIX = /GLESv1_CM
-TARGET = $(LIB_DIR)/libGLES_CM.so
+TARGET = $(LIB_DIR)/libGLESv1_CM.so
 TARGETS = $(TARGET)
 
 include $(TOP_DIR)/Make.rules
+
+include $(TOP_DIR)/Make.gles_common
+
+OBJS += $(GLES_COMMON_OBJS)
+DEPS += $(GLES_COMMON_DEPS)
 
 $(TARGET): $(OBJ_DIR) $(DEPS) $(OBJS) $(LIB_DIR)
 ifeq ($(V),0)

@@ -1,0 +1,10 @@
+
+GLES_COMMON_DIR_PREFIX ?= /GLES_common
+GLES_COMMON_SRC_DIR    = $(TOP_DIR)$(GLES_COMMON_DIR_PREFIX)
+GLES_COMMON_OBJ_DIR    = $(BUILD_DIR)/obj$(GLES_COMMON_DIR_PREFIX)
+GLES_COMMON_SOURCES    = $(wildcard $(GLES_COMMON_SRC_DIR)/*.c)
+GLES_COMMON_OBJS       = $(foreach file, $(notdir $(basename $(GLES_COMMON_SOURCES))), $(GLES_COMMON_OBJ_DIR)/$(file).o)
+GLES_COMMON_DEPS       = $(foreach file, $(notdir $(basename $(GLES_COMMON_SOURCES))), $(GLES_COMMON_OBJ_DIR)/$(file).d)
+
+$(GLES_COMMON_OBJS) $(GLES_COMMON_DEPS):
+	@$(MAKE) -C $(GLES_COMMON_SRC_DIR) all || exit 1

@@ -1,6 +1,9 @@
-#include <GL/gl.h>
-#include "yagl_gles_utils.h"
+#include <GLES/gl.h>
+#include <GLES/glext.h>
 #include <assert.h>
+#include "yagl_gles_utils.h"
+#include "yagl_host_gles1_calls.h"
+#include "yagl_mem_gl.h"
 
 int yagl_gles_get_stride(GLsizei alignment,
                          GLsizei width,
@@ -49,4 +52,42 @@ int yagl_gles_get_stride(GLsizei alignment,
     *stride = ((width * bpp) + alignment - 1) & ~(alignment - 1);
 
     return 1;
+}
+
+int yagl_get_el_size(GLenum type, int *el_size)
+{
+    switch (type) {
+    case GL_BYTE:
+        *el_size = 1;
+        break;
+    case GL_UNSIGNED_BYTE:
+        *el_size = 1;
+        break;
+    case GL_SHORT:
+        *el_size = 2;
+        break;
+    case GL_UNSIGNED_SHORT:
+        *el_size = 2;
+        break;
+    case GL_FLOAT:
+        *el_size = 4;
+        break;
+    case GL_FIXED:
+        *el_size = 4;
+        break;
+    default:
+        return 0;
+    }
+    return 1;
+}
+
+GLint yagl_get_integer(GLenum pname)
+{
+    GLint param = 0;
+
+    do {
+        yagl_mem_probe_write_GLint(&param);
+    } while (!yagl_host_glGetIntegerv(pname, &param));
+
+    return param;
 }
