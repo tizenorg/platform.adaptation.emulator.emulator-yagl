@@ -4,6 +4,7 @@
 #include "yagl_gles_utils.h"
 #include "yagl_host_gles1_calls.h"
 #include "yagl_mem_gl.h"
+#include "yagl_gles_context.h"
 
 int yagl_gles_get_stride(GLsizei alignment,
                          GLsizei width,
@@ -90,4 +91,16 @@ GLint yagl_get_integer(GLenum pname)
     } while (!yagl_host_glGetIntegerv(pname, &param));
 
     return param;
+}
+
+void yagl_update_vbo(void)
+{
+    struct yagl_gles_context *ctx = yagl_gles_context_get();
+
+    if (!ctx || ctx->vbo_valid) {
+        return;
+    }
+
+    ctx->vbo = yagl_get_integer(GL_ARRAY_BUFFER_BINDING);
+    ctx->vbo_valid = 1;
 }

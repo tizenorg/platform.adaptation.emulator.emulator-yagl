@@ -4,6 +4,7 @@
 GLint yagl_get_integer(GLenum pname);
 void yagl_update_arrays(void);
 int yagl_get_el_size(GLenum type, int *el_size);
+void yagl_update_vbo(void);
 int yagl_gles_get_stride(GLsizei alignment,
                                   GLsizei width,
                                   GLenum format,

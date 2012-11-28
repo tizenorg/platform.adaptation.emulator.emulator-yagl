@@ -11,18 +11,6 @@
 #include <string.h>
 #include "yagl_gles_utils.h"
 
-static void yagl_update_vbo()
-{
-    struct yagl_gles_context *ctx = yagl_gles_context_get();
-
-    if (!ctx || ctx->vbo_valid) {
-        return;
-    }
-
-    ctx->vbo = yagl_get_integer(GL_ARRAY_BUFFER_BINDING);
-    ctx->vbo_valid = 1;
-}
-
 static GLint yagl_get_array_param(GLuint index, GLenum pname)
 {
     GLint param = 0;

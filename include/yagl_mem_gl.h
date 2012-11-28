@@ -16,6 +16,8 @@
 #define yagl_mem_probe_write_GLboolean(value) yagl_mem_probe_write_uint8(value)
 #define yagl_mem_probe_read_GLfloat(value) yagl_mem_probe_read_float(value)
 #define yagl_mem_probe_write_GLfloat(value) yagl_mem_probe_write_float(value)
+#define yagl_mem_probe_read_GLfixed(value) yagl_mem_probe_read_int32(value)
+#define yagl_mem_probe_write_GLfixed(value) yagl_mem_probe_write_int32(value)
 
 static __inline void yagl_mem_probe_read_GLchars(const GLchar *value)
 {

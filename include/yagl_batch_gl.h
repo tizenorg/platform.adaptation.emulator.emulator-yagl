@@ -9,6 +9,7 @@
 #define yagl_batch_put_GLints(data, count) yagl_batch_put_int32s(data, count)
 #define yagl_batch_put_GLuints(data, count) yagl_batch_put_uint32s(data, count)
 #define yagl_batch_put_GLfloats(data, count) yagl_batch_put_floats(data, count)
+#define yagl_batch_put_GLfixeds(data, count) yagl_batch_put_int32s(data, count)
 
 static __inline const GLchar *yagl_batch_put_GLchars(const GLchar *data)
 {
