@@ -5,10 +5,8 @@
 #include "yagl_types.h"
 #include "yagl_resource.h"
 #include <EGL/egl.h>
-#include <pthread.h>
 
 struct yagl_display;
-struct yagl_bimage;
 
 struct yagl_surface
 {
@@ -18,37 +16,37 @@ struct yagl_surface
 
     EGLenum type;
 
-    /*
-     * See host:yagl_egl_surface.h:bimage_mtx for explanation.
-     */
-    pthread_mutex_t bi_mtx;
-
-    struct yagl_bimage *bi;
-
     union
     {
         Window win;
         Pixmap pixmap;
     } x_drawable;
 
-    GC x_gc;
+    int (*invalidate)(struct yagl_surface */*sfc*/);
+
+    int (*swap_buffers)(struct yagl_surface */*sfc*/);
+
+    int (*copy_buffers)(struct yagl_surface */*sfc*/, Pixmap /*target*/);
 };
 
-/*
- * These take ownership of 'bi'. Guaranteed to succeed.
- * @{
- */
+void yagl_surface_init_window(struct yagl_surface *sfc,
+                              yagl_ref_destroy_func destroy_func,
+                              yagl_host_handle handle,
+                              struct yagl_display *dpy,
+                              Window x_win);
 
-struct yagl_surface *yagl_surface_create_window(yagl_host_handle handle,
-                                                struct yagl_bimage *bi,
-                                                Window x_win);
+void yagl_surface_init_pixmap(struct yagl_surface *sfc,
+                              yagl_ref_destroy_func destroy_func,
+                              yagl_host_handle handle,
+                              struct yagl_display *dpy,
+                              Pixmap x_pixmap);
 
-struct yagl_surface *yagl_surface_create_pixmap(yagl_host_handle handle,
-                                                struct yagl_bimage *bi,
-                                                Pixmap x_pixmap);
+void yagl_surface_init_pbuffer(struct yagl_surface *sfc,
+                               yagl_ref_destroy_func destroy_func,
+                               yagl_host_handle handle,
+                               struct yagl_display *dpy);
 
-struct yagl_surface *yagl_surface_create_pbuffer(yagl_host_handle handle,
-                                                 struct yagl_bimage *bi);
+void yagl_surface_cleanup(struct yagl_surface *sfc);
 
 /*
  * Surfaces cannot be simply referenced by 'sfc->res.handle', this is due to
@@ -57,27 +55,6 @@ struct yagl_surface *yagl_surface_create_pbuffer(yagl_host_handle handle,
  * a handle, in case of pbuffer surface we'll simply use 'sfc->res.handle'.
  */
 EGLSurface yagl_surface_get_handle(struct yagl_surface *sfc);
-
-/*
- * Lock/unlock surface for 'bi' access, all 'bi' operations
- * must be carried out while surface is locked.
- * @{
- */
-
-void yagl_surface_lock(struct yagl_surface *sfc);
-
-void yagl_surface_unlock(struct yagl_surface *sfc);
-
-/*
- * @}
- */
-
-void yagl_surface_update(struct yagl_surface *sfc,
-                         struct yagl_bimage *bi);
-
-/*
- * @}
- */
 
 /*
  * Helper functions that simply acquire/release yagl_surface::res

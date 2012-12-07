@@ -6,6 +6,8 @@
 #include "yagl_malloc.h"
 #include "yagl_marshal.h"
 #include "yagl_mem.h"
+#include "yagl_offscreen.h"
+#include "yagl_backend.h"
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/mman.h>
@@ -68,6 +70,8 @@ struct yagl_state
     /*
      * @}
      */
+
+    struct yagl_backend *backend;
 };
 
 static pthread_key_t g_state_key;
@@ -84,11 +88,9 @@ static void yagl_state_free(void* ptr)
         return;
     }
 
-    if (munlock(state->data_base, YAGL_DATA_SIZE) == -1)
-    {
-        fprintf(stderr, "Critical error! Unable to unlock YaGL data memory: %s!\n", strerror(errno));
-        exit(1);
-    }
+    state->backend->destroy(state->backend);
+
+    munlock(state->data_base, YAGL_DATA_SIZE);
 
     yagl_free(state->data_base);
 
@@ -113,6 +115,7 @@ static struct yagl_state* yagl_get_state()
     long int page_size;
     unsigned int version = 0;
     uint8_t *tmp;
+    yagl_render_type render_type;
 
     pthread_once(&g_state_key_init, yagl_state_key_init);
 
@@ -188,6 +191,8 @@ static struct yagl_state* yagl_get_state()
         exit(1);
     }
 
+    render_type = yagl_marshal_get_render_type(&tmp);
+
     state->data_base = yagl_malloc(YAGL_DATA_SIZE);
 
     /*
@@ -210,6 +215,19 @@ static struct yagl_state* yagl_get_state()
     state->batch_marshal = state->marshal_base;
     state->batch_data = state->data_base;
     state->batch_data_overflow = 0;
+
+    switch (render_type) {
+    case yagl_render_type_offscreen:
+        state->backend = yagl_offscreen_create();
+        break;
+    case yagl_render_type_onscreen:
+        fprintf(stderr, "Critical error! Onscreen render type not supported yet!\n");
+        exit(1);
+        break;
+    default:
+        fprintf(stderr, "Critical error! Bad render type reported by kernel: %d!\n", render_type);
+        exit(1);
+    }
 
     pthread_setspecific(g_state_key, state);
 
@@ -334,4 +352,9 @@ int yagl_batch_sync()
         exit(1);
         break;
     }
+}
+
+struct yagl_backend *yagl_get_backend()
+{
+    return yagl_get_state()->backend;
 }

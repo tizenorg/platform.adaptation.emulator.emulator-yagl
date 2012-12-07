@@ -4,11 +4,11 @@
 #include "yagl_log.h"
 #include "yagl_egl_state.h"
 #include "yagl_malloc.h"
-#include "yagl_bimage.h"
 #include "yagl_surface.h"
 #include "yagl_context.h"
 #include "yagl_image.h"
 #include "yagl_mem_egl.h"
+#include "yagl_backend.h"
 #include <EGL/eglext.h>
 #include <stdio.h>
 #include <string.h>
@@ -59,117 +59,6 @@ static __inline int yagl_validate_surface(struct yagl_display *dpy,
     }
 
     return 1;
-}
-
-static int yagl_resize_surface(struct yagl_surface *surface)
-{
-    int res = 0;
-    EGLBoolean retval = EGL_FALSE;
-    unsigned int width = 0;
-    unsigned int height = 0;
-    unsigned int depth = 0;
-    union { Window w; int i; unsigned int ui; } tmp_geom;
-    unsigned int captured_width = 0;
-    unsigned int captured_height = 0;
-    unsigned int captured_depth = 0;
-    struct yagl_bimage *bi = NULL;
-
-    YAGL_LOG_FUNC_SET(yagl_resize_surface);
-
-    if (surface->type != EGL_WINDOW_BIT) {
-        return 1;
-    }
-
-    memset(&tmp_geom, 0, sizeof(tmp_geom));
-
-    XGetGeometry(surface->dpy->x_dpy,
-                 surface->x_drawable.win,
-                 &tmp_geom.w,
-                 &tmp_geom.i,
-                 &tmp_geom.i,
-                 &width,
-                 &height,
-                 &tmp_geom.ui,
-                 &depth);
-
-    yagl_surface_lock(surface);
-
-    if (!surface->bi) {
-        yagl_surface_unlock(surface);
-        YAGL_SET_ERR(EGL_BAD_SURFACE);
-        goto out;
-    }
-
-    captured_width = surface->bi->width;
-    captured_height = surface->bi->height;
-    captured_depth = surface->bi->depth;
-
-    yagl_surface_unlock(surface);
-
-    if ((width != captured_width) ||
-        (height != captured_height) ||
-        (depth != captured_depth)) {
-        YAGL_LOG_DEBUG("Surface resizing from %ux%ux%u to %ux%ux%u",
-                       captured_width, captured_height, captured_depth,
-                       width, height, depth);
-        /*
-         * First of all, create new backing image.
-         */
-
-        bi = yagl_bimage_create(surface->dpy, width, height, depth);
-
-        if (!bi) {
-            YAGL_SET_ERR(EGL_BAD_ALLOC);
-            YAGL_LOG_ERROR("yagl_bimage_create failed");
-            goto out;
-        }
-
-        /*
-         * Tell the host that it should use new backing image from now on.
-         * No need to probe in 'bi->pixels', it's already 'mlock'ed.
-         */
-
-        YAGL_HOST_CALL_ASSERT(yagl_host_eglResizeOffscreenSurfaceYAGL(&retval,
-            surface->dpy->host_dpy,
-            surface->res.handle,
-            bi->width,
-            bi->height,
-            bi->bpp,
-            bi->pixels));
-
-        if (!retval) {
-            YAGL_LOG_ERROR("eglResizeOffscreenSurfaceYAGL failed");
-            goto out;
-        }
-
-        /*
-         * Now that the host accepted us we can be sure that 'surface' is
-         * attached to current context, so no race conditions will occur and
-         * we can safely replace surface's backing image with a new one.
-         */
-
-        yagl_surface_lock(surface);
-
-        if (surface->bi) {
-            yagl_surface_update(surface, bi);
-            bi = NULL;
-        } else {
-            yagl_surface_unlock(surface);
-            YAGL_SET_ERR(EGL_BAD_SURFACE);
-            goto out;
-        }
-
-        yagl_surface_unlock(surface);
-    }
-
-    res = 1;
-
-out:
-    if (bi) {
-        yagl_bimage_destroy(bi);
-    }
-
-    return res;
 }
 
 YAGL_API EGLint eglGetError()
@@ -498,9 +387,6 @@ YAGL_API EGLSurface eglCreateWindowSurface( EGLDisplay dpy_,
                                             const EGLint* attrib_list)
 {
     struct yagl_display *dpy = NULL;
-    XWindowAttributes x_wa;
-    struct yagl_bimage *bi = NULL;
-    yagl_host_handle host_surface = 0;
     struct yagl_surface *surface = NULL;
 
     YAGL_LOG_FUNC_ENTER(eglCreateWindowSurface,
@@ -512,46 +398,24 @@ YAGL_API EGLSurface eglCreateWindowSurface( EGLDisplay dpy_,
         goto fail;
     }
 
-    if (!XGetWindowAttributes(dpy->x_dpy, win, &x_wa)) {
-        YAGL_SET_ERR(EGL_BAD_NATIVE_WINDOW);
-        YAGL_LOG_ERROR("XGetWindowAttributes failed");
+    surface = yagl_get_backend()->create_window_surface(dpy,
+                                                        (yagl_host_handle)config,
+                                                        win,
+                                                        attrib_list);
+
+    if (!surface) {
         goto fail;
     }
-
-    bi = yagl_bimage_create(dpy, x_wa.width, x_wa.height, x_wa.depth);
-
-    if (!bi) {
-        YAGL_SET_ERR(EGL_BAD_ALLOC);
-        YAGL_LOG_ERROR("yagl_bimage_create failed");
-        goto fail;
-    }
-
-    do {
-        yagl_mem_probe_read_attrib_list(attrib_list);
-    } while (!yagl_host_eglCreateWindowSurfaceOffscreenYAGL(&host_surface,
-        dpy->host_dpy,
-        (yagl_host_handle)config,
-        bi->width,
-        bi->height,
-        bi->bpp,
-        bi->pixels,
-        attrib_list));
-
-    if (!host_surface) {
-        goto fail;
-    }
-
-    surface = yagl_surface_create_window(host_surface, bi, win);
-    assert(surface);
-
-    bi = NULL;
 
     if (!yagl_display_surface_add(dpy, surface)) {
         EGLBoolean retval;
-        YAGL_HOST_CALL_ASSERT(yagl_host_eglDestroySurface(&retval, dpy->host_dpy, surface->res.handle));
+        YAGL_HOST_CALL_ASSERT(yagl_host_eglDestroySurface(&retval,
+                                                          dpy->host_dpy,
+                                                          surface->res.handle));
         YAGL_SET_ERR(EGL_BAD_ALLOC);
         goto fail;
     }
+
     yagl_surface_release(surface);
 
     YAGL_LOG_FUNC_EXIT("%p", yagl_surface_get_handle(surface));
@@ -559,9 +423,6 @@ YAGL_API EGLSurface eglCreateWindowSurface( EGLDisplay dpy_,
     return yagl_surface_get_handle(surface);
 
 fail:
-    if (bi) {
-        yagl_bimage_destroy(bi);
-    }
     yagl_surface_release(surface);
 
     YAGL_LOG_FUNC_EXIT(NULL);
@@ -574,12 +435,7 @@ YAGL_API EGLSurface eglCreatePbufferSurface( EGLDisplay dpy_,
                                              const EGLint* attrib_list )
 {
     struct yagl_display *dpy = NULL;
-    uint32_t width = 0;
-    uint32_t height = 0;
-    struct yagl_bimage *bi = NULL;
-    yagl_host_handle host_surface = 0;
     struct yagl_surface *surface = NULL;
-    int i = 0;
 
     YAGL_LOG_FUNC_ENTER(eglCreatePbufferSurface,
                         "dpy = %u, config = %u",
@@ -590,59 +446,23 @@ YAGL_API EGLSurface eglCreatePbufferSurface( EGLDisplay dpy_,
         goto fail;
     }
 
-    if (attrib_list) {
-        while (attrib_list[i] != EGL_NONE) {
-            switch (attrib_list[i]) {
-            case EGL_WIDTH:
-                width = attrib_list[i + 1];
-                break;
-            case EGL_HEIGHT:
-                height = attrib_list[i + 1];
-                break;
-            default:
-                break;
-            }
+    surface = yagl_get_backend()->create_pbuffer_surface(dpy,
+                                                         (yagl_host_handle)config,
+                                                         attrib_list);
 
-            i += 2;
-        }
-    }
-
-    YAGL_LOG_DEBUG("Creating %dx%d pbuffer", width, height);
-
-    bi = yagl_bimage_create(dpy, width, height, 24);
-
-    if (!bi) {
-        YAGL_SET_ERR(EGL_BAD_ALLOC);
-        YAGL_LOG_ERROR("yagl_bimage_create failed");
+    if (!surface) {
         goto fail;
     }
-
-    do {
-        yagl_mem_probe_read_attrib_list(attrib_list);
-    } while (!yagl_host_eglCreatePbufferSurfaceOffscreenYAGL(&host_surface,
-        dpy->host_dpy,
-        (yagl_host_handle)config,
-        bi->width,
-        bi->height,
-        bi->bpp,
-        bi->pixels,
-        attrib_list));
-
-    if (!host_surface) {
-        goto fail;
-    }
-
-    surface = yagl_surface_create_pbuffer(host_surface, bi);
-    assert(surface);
-
-    bi = NULL;
 
     if (!yagl_display_surface_add(dpy, surface)) {
         EGLBoolean retval;
-        YAGL_HOST_CALL_ASSERT(yagl_host_eglDestroySurface(&retval, dpy->host_dpy, surface->res.handle));
+        YAGL_HOST_CALL_ASSERT(yagl_host_eglDestroySurface(&retval,
+                                                          dpy->host_dpy,
+                                                          surface->res.handle));
         YAGL_SET_ERR(EGL_BAD_ALLOC);
         goto fail;
     }
+
     yagl_surface_release(surface);
 
     YAGL_LOG_FUNC_EXIT("%p", yagl_surface_get_handle(surface));
@@ -650,9 +470,6 @@ YAGL_API EGLSurface eglCreatePbufferSurface( EGLDisplay dpy_,
     return yagl_surface_get_handle(surface);
 
 fail:
-    if (bi) {
-        yagl_bimage_destroy(bi);
-    }
     yagl_surface_release(surface);
 
     YAGL_LOG_FUNC_EXIT(NULL);
@@ -666,12 +483,6 @@ YAGL_API EGLSurface eglCreatePixmapSurface( EGLDisplay dpy_,
                                             const EGLint* attrib_list )
 {
     struct yagl_display *dpy = NULL;
-    unsigned int width = 0;
-    unsigned int height = 0;
-    unsigned int depth = 0;
-    union { Window w; int i; unsigned int ui; } tmp_geom;
-    struct yagl_bimage *bi = NULL;
-    yagl_host_handle host_surface = 0;
     struct yagl_surface *surface = NULL;
 
     YAGL_LOG_FUNC_ENTER(eglCreatePixmapSurface,
@@ -683,54 +494,24 @@ YAGL_API EGLSurface eglCreatePixmapSurface( EGLDisplay dpy_,
         goto fail;
     }
 
-    memset(&tmp_geom, 0, sizeof(tmp_geom));
+    surface = yagl_get_backend()->create_pixmap_surface(dpy,
+                                                        (yagl_host_handle)config,
+                                                        pixmap,
+                                                        attrib_list);
 
-    XGetGeometry(dpy->x_dpy,
-                 pixmap,
-                 &tmp_geom.w,
-                 &tmp_geom.i,
-                 &tmp_geom.i,
-                 &width,
-                 &height,
-                 &tmp_geom.ui,
-                 &depth);
-
-    YAGL_LOG_DEBUG("Creating %dx%dx%d pixmap", width, height, depth);
-
-    bi = yagl_bimage_create(dpy, width, height, depth);
-
-    if (!bi) {
-        YAGL_SET_ERR(EGL_BAD_ALLOC);
-        YAGL_LOG_ERROR("yagl_bimage_create failed");
+    if (!surface) {
         goto fail;
     }
-
-    do {
-        yagl_mem_probe_read_attrib_list(attrib_list);
-    } while (!yagl_host_eglCreatePixmapSurfaceOffscreenYAGL(&host_surface,
-        dpy->host_dpy,
-        (yagl_host_handle)config,
-        bi->width,
-        bi->height,
-        bi->bpp,
-        bi->pixels,
-        attrib_list));
-
-    if (!host_surface) {
-        goto fail;
-    }
-
-    surface = yagl_surface_create_pixmap(host_surface, bi, pixmap);
-    assert(surface);
-
-    bi = NULL;
 
     if (!yagl_display_surface_add(dpy, surface)) {
         EGLBoolean retval;
-        YAGL_HOST_CALL_ASSERT(yagl_host_eglDestroySurface(&retval, dpy->host_dpy, surface->res.handle));
+        YAGL_HOST_CALL_ASSERT(yagl_host_eglDestroySurface(&retval,
+                                                          dpy->host_dpy,
+                                                          surface->res.handle));
         YAGL_SET_ERR(EGL_BAD_ALLOC);
         goto fail;
     }
+
     yagl_surface_release(surface);
 
     YAGL_LOG_FUNC_EXIT("%p", yagl_surface_get_handle(surface));
@@ -738,9 +519,6 @@ YAGL_API EGLSurface eglCreatePixmapSurface( EGLDisplay dpy_,
     return yagl_surface_get_handle(surface);
 
 fail:
-    if (bi) {
-        yagl_bimage_destroy(bi);
-    }
     yagl_surface_release(surface);
 
     YAGL_LOG_FUNC_EXIT(NULL);
@@ -782,20 +560,9 @@ YAGL_API EGLBoolean eglDestroySurface(EGLDisplay dpy_, EGLSurface surface_)
         goto out;
     }
 
-    yagl_surface_lock(surface);
-
-    assert(surface->bi);
-
-    if (!surface->bi) {
-        yagl_surface_unlock(surface);
-        YAGL_LOG_ERROR("we're the one who destroy the surface, but bi isn't there!");
-        YAGL_SET_ERR(EGL_BAD_SURFACE);
+    if (!surface->invalidate(surface)) {
         goto out;
     }
-
-    yagl_surface_update(surface, NULL);
-
-    yagl_surface_unlock(surface);
 
     res = EGL_TRUE;
 
@@ -1274,36 +1041,11 @@ YAGL_API EGLBoolean eglSwapBuffers(EGLDisplay dpy_, EGLSurface surface_)
         goto out;
     }
 
-    if (!yagl_resize_surface(surface)) {
+    if (!surface->swap_buffers(surface)) {
         goto out;
     }
 
-    YAGL_HOST_CALL_ASSERT(yagl_host_eglSwapBuffers(&retval,
-                                                   dpy->host_dpy,
-                                                   surface->res.handle));
-
-    if (!retval) {
-        YAGL_LOG_ERROR("eglSwapBuffers failed");
-        goto out;
-    }
-
-    /*
-     * Host has updated our image, update the window.
-     */
-
-    yagl_surface_lock(surface);
-
-    if (surface->bi) {
-        yagl_bimage_draw(surface->bi, surface->x_drawable.win, surface->x_gc);
-
-        res = EGL_TRUE;
-    } else {
-        yagl_surface_unlock(surface);
-        YAGL_SET_ERR(EGL_BAD_SURFACE);
-        goto out;
-    }
-
-    yagl_surface_unlock(surface);
+    res = EGL_TRUE;
 
 out:
     yagl_surface_release(surface);
@@ -1336,91 +1078,11 @@ YAGL_API EGLBoolean eglCopyBuffers( EGLDisplay dpy_,
         goto out;
     }
 
-    if (surface->type == EGL_WINDOW_BIT) {
-        unsigned int width = 0;
-        unsigned int height = 0;
-        unsigned int depth = 0;
-        union { Window w; int i; unsigned int ui; } tmp_geom;
-        unsigned int captured_width = 0;
-        unsigned int captured_height = 0;
-        unsigned int captured_depth = 0;
-
-        memset(&tmp_geom, 0, sizeof(tmp_geom));
-
-        XGetGeometry(dpy->x_dpy,
-                     surface->x_drawable.win,
-                     &tmp_geom.w,
-                     &tmp_geom.i,
-                     &tmp_geom.i,
-                     &width,
-                     &height,
-                     &tmp_geom.ui,
-                     &depth);
-
-        yagl_surface_lock(surface);
-
-        if (!surface->bi) {
-            yagl_surface_unlock(surface);
-            YAGL_SET_ERR(EGL_BAD_SURFACE);
-            goto out;
-        }
-
-        captured_width = surface->bi->width;
-        captured_height = surface->bi->height;
-        captured_depth = surface->bi->depth;
-
-        yagl_surface_unlock(surface);
-
-        if ((width != captured_width) ||
-            (height != captured_height) ||
-            (depth != captured_depth)) {
-            /*
-             * Don't allow copying from window surfaces that
-             * just changed their size, user must first update
-             * the surface with eglSwapBuffers.
-             */
-
-            YAGL_SET_ERR(EGL_BAD_MATCH);
-            goto out;
-        }
-    }
-
-    YAGL_HOST_CALL_ASSERT(yagl_host_eglCopyBuffers(&retval,
-                                                   dpy->host_dpy,
-                                                   surface->res.handle,
-                                                   target));
-
-    if (!retval) {
-        YAGL_LOG_ERROR("eglCopyBuffers failed");
+    if (!surface->copy_buffers(surface, target)) {
         goto out;
     }
 
-    /*
-     * Host has updated our image, update the surface.
-     */
-
-    yagl_surface_lock(surface);
-
-    if (surface->bi) {
-        GC x_gc = XCreateGC(dpy->x_dpy, target, 0, NULL);
-
-        if (!x_gc) {
-            fprintf(stderr, "Critical error! XCreateGC failed!\n");
-            exit(1);
-        }
-
-        yagl_bimage_draw(surface->bi, target, x_gc);
-
-        XFreeGC(dpy->x_dpy, x_gc);
-
-        res = EGL_TRUE;
-    } else {
-        yagl_surface_unlock(surface);
-        YAGL_SET_ERR(EGL_BAD_SURFACE);
-        goto out;
-    }
-
-    yagl_surface_unlock(surface);
+    res = EGL_TRUE;
 
 out:
     yagl_surface_release(surface);

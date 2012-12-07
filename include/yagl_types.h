@@ -7,6 +7,12 @@
 
 typedef enum
 {
+    yagl_render_type_offscreen = 1,
+    yagl_render_type_onscreen = 2,
+} yagl_render_type;
+
+typedef enum
+{
     yagl_api_id_egl = 1,
     yagl_api_id_gles1 = 2,
     yagl_api_id_gles2 = 3,
