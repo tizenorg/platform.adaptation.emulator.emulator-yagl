@@ -1,5 +1,6 @@
 #include "yagl_offscreen.h"
 #include "yagl_offscreen_surface.h"
+#include "yagl_offscreen_image.h"
 #include "yagl_backend.h"
 #include "yagl_malloc.h"
 
@@ -41,9 +42,12 @@ static struct yagl_surface
 static struct yagl_image
     *yagl_offscreen_create_image(struct yagl_display *dpy,
                                  Pixmap x_pixmap,
-                                 const EGLint *attrib_list)
+                                 yagl_host_handle host_image)
 {
-    return NULL;
+    struct yagl_offscreen_image *image =
+        yagl_offscreen_image_create(dpy, x_pixmap, host_image);
+
+    return image ? &image->base : NULL;
 }
 
 static void yagl_offscreen_destroy(struct yagl_backend *backend)

@@ -129,23 +129,38 @@ int yagl_host_eglSwapBuffers(EGLBoolean* retval, yagl_host_handle dpy, yagl_host
 int yagl_host_eglCopyBuffers(EGLBoolean* retval, yagl_host_handle dpy, yagl_host_handle surface, EGLNativePixmapType target);
 
 /*
- * eglCreateWindowSurfaceOffscreenYAGL wrapper. id = 25
+ * eglCreateImageKHR wrapper. id = 25
+ */
+int yagl_host_eglCreateImageKHR(yagl_host_handle* retval, yagl_host_handle dpy, yagl_host_handle ctx, EGLenum target, yagl_host_handle buffer, const EGLint* attrib_list);
+
+/*
+ * eglDestroyImageKHR wrapper. id = 26
+ */
+int yagl_host_eglDestroyImageKHR(EGLBoolean* retval, yagl_host_handle dpy, yagl_host_handle image);
+
+/*
+ * eglCreateWindowSurfaceOffscreenYAGL wrapper. id = 27
  */
 int yagl_host_eglCreateWindowSurfaceOffscreenYAGL(yagl_host_handle* retval, yagl_host_handle dpy, yagl_host_handle config, uint32_t width, uint32_t height, uint32_t bpp, void* pixels, const EGLint* attrib_list);
 
 /*
- * eglCreatePbufferSurfaceOffscreenYAGL wrapper. id = 26
+ * eglCreatePbufferSurfaceOffscreenYAGL wrapper. id = 28
  */
 int yagl_host_eglCreatePbufferSurfaceOffscreenYAGL(yagl_host_handle* retval, yagl_host_handle dpy, yagl_host_handle config, uint32_t width, uint32_t height, uint32_t bpp, void* pixels, const EGLint* attrib_list);
 
 /*
- * eglCreatePixmapSurfaceOffscreenYAGL wrapper. id = 27
+ * eglCreatePixmapSurfaceOffscreenYAGL wrapper. id = 29
  */
 int yagl_host_eglCreatePixmapSurfaceOffscreenYAGL(yagl_host_handle* retval, yagl_host_handle dpy, yagl_host_handle config, uint32_t width, uint32_t height, uint32_t bpp, void* pixels, const EGLint* attrib_list);
 
 /*
- * eglResizeOffscreenSurfaceYAGL wrapper. id = 28
+ * eglResizeOffscreenSurfaceYAGL wrapper. id = 30
  */
 int yagl_host_eglResizeOffscreenSurfaceYAGL(EGLBoolean* retval, yagl_host_handle dpy, yagl_host_handle surface, uint32_t width, uint32_t height, uint32_t bpp, void* pixels);
+
+/*
+ * eglUpdateOffscreenImageYAGL wrapper. id = 31
+ */
+int yagl_host_eglUpdateOffscreenImageYAGL(yagl_host_handle dpy, yagl_host_handle image, uint32_t width, uint32_t height, uint32_t bpp, const void* pixels);
 
 #endif

@@ -3,19 +3,12 @@
 
 #include "yagl_export.h"
 #include "yagl_types.h"
-#include <X11/X.h>
-#include <X11/Xlib.h>
 
 struct yagl_gles_image
 {
-    void *opaque;
+    yagl_host_handle host_image;
 
-    Display *x_dpy;
-
-    Pixmap x_pixmap;
-
-    uint32_t width;
-    uint32_t height;
+    void (*update)(struct yagl_gles_image */*image*/);
 };
 
 YAGL_API struct yagl_gles_image *yagl_gles_image_acquire(GLeglImageOES image);

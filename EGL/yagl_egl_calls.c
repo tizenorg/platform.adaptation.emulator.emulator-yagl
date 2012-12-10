@@ -61,6 +61,22 @@ static __inline int yagl_validate_surface(struct yagl_display *dpy,
     return 1;
 }
 
+static __inline int yagl_validate_image(struct yagl_display *dpy,
+                                        EGLImageKHR image_,
+                                        struct yagl_image **image)
+{
+    YAGL_LOG_FUNC_SET(yagl_validate_image);
+
+    *image = yagl_display_image_acquire(dpy, image_);
+
+    if (!*image) {
+        YAGL_SET_ERR(EGL_BAD_PARAMETER);
+        return 0;
+    }
+
+    return 1;
+}
+
 YAGL_API EGLint eglGetError()
 {
     EGLint retval;
@@ -1100,7 +1116,7 @@ YAGL_API EGLImageKHR eglCreateImageKHR( EGLDisplay dpy_,
 {
     EGLImageKHR ret = EGL_NO_IMAGE_KHR;
     struct yagl_display *dpy = NULL;
-    int i = 0;
+    yagl_host_handle host_image = 0;
     struct yagl_image *image = NULL;
 
     YAGL_LOG_FUNC_ENTER(eglCreateImageKHR,
@@ -1109,15 +1125,6 @@ YAGL_API EGLImageKHR eglCreateImageKHR( EGLDisplay dpy_,
                         (yagl_host_handle)ctx,
                         target,
                         buffer);
-
-    if (!yagl_validate_display(dpy_, &dpy)) {
-        goto out;
-    }
-
-    if (ctx != EGL_NO_CONTEXT) {
-        YAGL_SET_ERR(EGL_BAD_PARAMETER);
-        goto out;
-    }
 
     if (target != EGL_NATIVE_PIXMAP_KHR) {
         YAGL_SET_ERR(EGL_BAD_PARAMETER);
@@ -1129,32 +1136,49 @@ YAGL_API EGLImageKHR eglCreateImageKHR( EGLDisplay dpy_,
         goto out;
     }
 
-    if (attrib_list) {
-        while (attrib_list[i] != EGL_NONE) {
-            switch (attrib_list[i]) {
-            case EGL_IMAGE_PRESERVED_KHR:
-                break;
-            default:
-                YAGL_SET_ERR(EGL_BAD_PARAMETER);
-                goto out;
-            }
-
-            i += 2;
-        }
+    if (!yagl_validate_display(dpy_, &dpy)) {
+        goto out;
     }
 
-    image = yagl_image_create((Pixmap)buffer, dpy);
-    assert(image);
+    do {
+        yagl_mem_probe_read_attrib_list(attrib_list);
+    } while (!yagl_host_eglCreateImageKHR(&host_image,
+        dpy->host_dpy,
+        (yagl_host_handle)ctx,
+        target,
+        0,
+        attrib_list));
+
+    if (!host_image) {
+        goto out;
+    }
+
+    image = yagl_get_backend()->create_image(dpy,
+                                             (Pixmap)buffer,
+                                             host_image);
+
+    if (!image) {
+        YAGL_SET_ERR(EGL_BAD_ALLOC);
+        goto out;
+    }
 
     if (!yagl_display_image_add(dpy, image)) {
-        YAGL_SET_ERR(EGL_BAD_ACCESS);
+        YAGL_SET_ERR(EGL_BAD_PARAMETER);
         goto out;
     }
 
     ret = yagl_image_get_handle(image);
 
+    host_image = 0;
+
 out:
     yagl_image_release(image);
+    if (host_image) {
+        EGLBoolean retval;
+        YAGL_HOST_CALL_ASSERT(yagl_host_eglDestroyImageKHR(&retval,
+                                                           dpy->host_dpy,
+                                                           host_image));
+    }
 
     YAGL_LOG_FUNC_EXIT("%p", ret);
 
@@ -1162,31 +1186,48 @@ out:
 }
 
 YAGL_API EGLBoolean eglDestroyImageKHR( EGLDisplay dpy_,
-                                        EGLImageKHR image )
+                                        EGLImageKHR image_ )
 {
-    EGLBoolean ret = EGL_FALSE;
+    EGLBoolean res = EGL_FALSE;
+    EGLBoolean retval = EGL_FALSE;
     struct yagl_display *dpy = NULL;
+    struct yagl_image *image = NULL;
 
     YAGL_LOG_FUNC_ENTER(eglDestroyImageKHR,
                         "dpy = %u, image = %p",
                         (yagl_host_handle)dpy_,
-                        image);
+                        image_);
 
     if (!yagl_validate_display(dpy_, &dpy)) {
         goto out;
     }
 
-    if (!yagl_display_image_remove(dpy, image)) {
+    if (!yagl_validate_image(dpy, image_, &image)) {
+        goto out;
+    }
+
+    YAGL_HOST_CALL_ASSERT(yagl_host_eglDestroyImageKHR(&retval,
+                                                       dpy->host_dpy,
+                                                       image->res.handle));
+
+    if (!retval) {
+        goto out;
+    }
+
+    if (!yagl_display_image_remove(dpy, image_)) {
+        YAGL_LOG_ERROR("we're the one who destroy the image, but it isn't there!");
         YAGL_SET_ERR(EGL_BAD_PARAMETER);
         goto out;
     }
 
-    ret = EGL_TRUE;
+    res = EGL_TRUE;
 
 out:
-    YAGL_LOG_FUNC_EXIT("%d", ((ret == EGL_TRUE) ? 1 : 0));
+    yagl_image_release(image);
 
-    return ret;
+    YAGL_LOG_FUNC_EXIT("%d", ((res == EGL_TRUE) ? 1 : 0));
+
+    return res;
 }
 
 static __eglMustCastToProperFunctionPointerType yagl_get_gles1_proc_address(const char* procname)

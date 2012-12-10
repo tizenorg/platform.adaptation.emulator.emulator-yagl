@@ -2564,13 +2564,30 @@ int yagl_host_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 }
 
 /*
- * glGetExtensionStringYAGL wrapper. id = 144
+ * glEGLImageTargetTexture2DOES wrapper. id = 144
+ */
+int yagl_host_glEGLImageTargetTexture2DOES(GLenum target, yagl_host_handle image)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 144);
+    yagl_marshal_put_GLenum(&base, target);
+    yagl_marshal_put_host_handle(&base, image);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glGetExtensionStringYAGL wrapper. id = 145
  */
 int yagl_host_glGetExtensionStringYAGL(GLuint* retval, GLchar* str)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 144);
+    yagl_marshal_put_uint32(&base, 145);
     yagl_marshal_put_ptr(&base, str);
     if (!yagl_batch_update_marshal(base))
     {
@@ -2583,26 +2600,6 @@ int yagl_host_glGetExtensionStringYAGL(GLuint* retval, GLchar* str)
     base = yagl_batch_get_marshal();
     yagl_marshal_skip(&base); // call result
     *retval = yagl_marshal_get_GLuint(&base);
-    return 1;
-}
-
-/*
- * glEGLImageTargetTexture2DYAGL wrapper. id = 145
- */
-int yagl_host_glEGLImageTargetTexture2DYAGL(GLenum target, uint32_t width, uint32_t height, uint32_t bpp, const void* pixels)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 145);
-    yagl_marshal_put_GLenum(&base, target);
-    yagl_marshal_put_uint32_t(&base, width);
-    yagl_marshal_put_uint32_t(&base, height);
-    yagl_marshal_put_uint32_t(&base, bpp);
-    yagl_marshal_put_ptr(&base, pixels);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
     return 1;
 }
 

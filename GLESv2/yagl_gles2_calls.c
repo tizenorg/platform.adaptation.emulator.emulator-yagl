@@ -1280,33 +1280,12 @@ YAGL_API void glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOES image)
         goto out;
     }
 
-    x_image = XGetImage(image_obj->x_dpy,
-                        image_obj->x_pixmap,
-                        0,
-                        0,
-                        image_obj->width,
-                        image_obj->height,
-                        AllPlanes,
-                        ZPixmap);
+    image_obj->update(image_obj);
 
-    if (!x_image) {
-        YAGL_LOG_ERROR("XGetImage failed for %p", image);
-        goto out;
-    }
-
-    while (!yagl_host_glEGLImageTargetTexture2DYAGL(target,
-        image_obj->width,
-        image_obj->height,
-        (x_image->bits_per_pixel / 8),
-            yagl_batch_put(x_image->data, (image_obj->width *
-                                           image_obj->height *
-                                           (x_image->bits_per_pixel / 8))))) {}
+    YAGL_HOST_CALL_ASSERT(yagl_host_glEGLImageTargetTexture2DOES(target,
+        image_obj->host_image));
 
 out:
-    if (x_image) {
-        XDestroyImage(x_image);
-    }
-
     yagl_gles_image_release(image_obj);
 
     YAGL_LOG_FUNC_EXIT(NULL);

@@ -1,61 +1,35 @@
 #include "yagl_image.h"
-#include "yagl_malloc.h"
-#include "yagl_display.h"
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-#include <string.h>
-#include "yagl_gles_image.h"
 
-static void yagl_image_destroy(struct yagl_ref *ref)
+static void yagl_gles_image_update(struct yagl_gles_image *image)
 {
-    struct yagl_image *image = (struct yagl_image*)ref;
+    struct yagl_image *egl_image =
+        yagl_containerof(image, struct yagl_image, gles_image);
 
-    yagl_free(image->gles_image);
-
-    yagl_resource_cleanup(&image->res);
-
-    yagl_free(image);
+    egl_image->update(egl_image);
 }
 
-struct yagl_image *yagl_image_create(Pixmap x_pixmap,
-                                     struct yagl_display *dpy)
+void yagl_image_init(struct yagl_image *image,
+                     yagl_ref_destroy_func destroy_func,
+                     yagl_host_handle handle,
+                     struct yagl_display *dpy,
+                     Pixmap x_pixmap)
 {
-    struct yagl_image *image;
-    unsigned int depth = 0;
-    union { Window w; int i; unsigned int ui; } tmp_geom;
-
-    image = yagl_malloc0(sizeof(*image));
-
-    yagl_resource_init(&image->res, &yagl_image_destroy, 0);
+    yagl_resource_init(&image->res, destroy_func, handle);
 
     image->dpy = dpy;
+    image->x_pixmap = x_pixmap;
+    image->gles_image.host_image = handle;
+    image->gles_image.update = &yagl_gles_image_update;
+}
 
-    image->gles_image = yagl_malloc0(sizeof(*image->gles_image));
-
-    image->gles_image->opaque = image;
-
-    image->gles_image->x_dpy = dpy->x_dpy;
-
-    image->gles_image->x_pixmap = x_pixmap;
-
-    memset(&tmp_geom, 0, sizeof(tmp_geom));
-
-    XGetGeometry(dpy->x_dpy,
-                 x_pixmap,
-                 &tmp_geom.w,
-                 &tmp_geom.i,
-                 &tmp_geom.i,
-                 &image->gles_image->width,
-                 &image->gles_image->height,
-                 &tmp_geom.ui,
-                 &depth);
-
-    return image;
+void yagl_image_cleanup(struct yagl_image *image)
+{
+    yagl_resource_cleanup(&image->res);
 }
 
 EGLImageKHR yagl_image_get_handle(struct yagl_image *image)
 {
-    return (EGLImageKHR)image->gles_image->x_pixmap;
+    return (EGLImageKHR)image->x_pixmap;
 }
 
 void yagl_image_acquire(struct yagl_image *image)

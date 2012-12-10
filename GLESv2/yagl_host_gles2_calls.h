@@ -714,14 +714,14 @@ int yagl_host_glVertexAttribPointer(GLuint indx, GLint size, GLenum type, GLbool
 int yagl_host_glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
 
 /*
- * glGetExtensionStringYAGL wrapper. id = 142
+ * glEGLImageTargetTexture2DOES wrapper. id = 142
  */
-int yagl_host_glGetExtensionStringYAGL(GLuint* retval, GLchar* str);
+int yagl_host_glEGLImageTargetTexture2DOES(GLenum target, yagl_host_handle image);
 
 /*
- * glEGLImageTargetTexture2DYAGL wrapper. id = 143
+ * glGetExtensionStringYAGL wrapper. id = 143
  */
-int yagl_host_glEGLImageTargetTexture2DYAGL(GLenum target, uint32_t width, uint32_t height, uint32_t bpp, const void* pixels);
+int yagl_host_glGetExtensionStringYAGL(GLuint* retval, GLchar* str);
 
 /*
  * glGetVertexAttribRangeYAGL wrapper. id = 144

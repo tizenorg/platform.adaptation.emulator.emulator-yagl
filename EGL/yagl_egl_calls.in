@@ -22,6 +22,8 @@ EGLBoolean, eglWaitGL
 EGLBoolean, eglWaitNative, EGLint engine
 EGLBoolean, eglSwapBuffers, EGLDisplay^ dpy, EGLSurface^ surface
 EGLBoolean, eglCopyBuffers, EGLDisplay^ dpy, EGLSurface^ surface, EGLNativePixmapType target
+EGLImageKHR^, eglCreateImageKHR, EGLDisplay^ dpy, EGLContext^ ctx, EGLenum target, EGLClientBuffer^ buffer, const EGLint* attrib_list
+EGLBoolean, eglDestroyImageKHR, EGLDisplay^ dpy, EGLImageKHR^ image
 
 #
 # YaGL Extensions
@@ -31,3 +33,4 @@ EGLSurface^, eglCreateWindowSurfaceOffscreenYAGL, EGLDisplay^ dpy, EGLConfig^ co
 EGLSurface^, eglCreatePbufferSurfaceOffscreenYAGL, EGLDisplay^ dpy, EGLConfig^ config, uint32_t width, uint32_t height, uint32_t bpp, void* pixels, const EGLint* attrib_list
 EGLSurface^, eglCreatePixmapSurfaceOffscreenYAGL, EGLDisplay^ dpy, EGLConfig^ config, uint32_t width, uint32_t height, uint32_t bpp, void* pixels, const EGLint* attrib_list
 EGLBoolean, eglResizeOffscreenSurfaceYAGL, EGLDisplay^ dpy, EGLSurface^ surface, uint32_t width, uint32_t height, uint32_t bpp, void* pixels
+void, eglUpdateOffscreenImageYAGL, EGLDisplay^ dpy, EGLImageKHR^ image, uint32_t width, uint32_t height, uint32_t bpp, const void* pixels

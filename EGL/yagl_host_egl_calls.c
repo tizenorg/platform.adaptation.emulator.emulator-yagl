@@ -595,19 +595,17 @@ int yagl_host_eglCopyBuffers(EGLBoolean* retval, yagl_host_handle dpy, yagl_host
 }
 
 /*
- * eglCreateWindowSurfaceOffscreenYAGL wrapper. id = 25
+ * eglCreateImageKHR wrapper. id = 25
  */
-int yagl_host_eglCreateWindowSurfaceOffscreenYAGL(yagl_host_handle* retval, yagl_host_handle dpy, yagl_host_handle config, uint32_t width, uint32_t height, uint32_t bpp, void* pixels, const EGLint* attrib_list)
+int yagl_host_eglCreateImageKHR(yagl_host_handle* retval, yagl_host_handle dpy, yagl_host_handle ctx, EGLenum target, yagl_host_handle buffer, const EGLint* attrib_list)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_egl);
     yagl_marshal_put_uint32(&base, 25);
     yagl_marshal_put_host_handle(&base, dpy);
-    yagl_marshal_put_host_handle(&base, config);
-    yagl_marshal_put_uint32_t(&base, width);
-    yagl_marshal_put_uint32_t(&base, height);
-    yagl_marshal_put_uint32_t(&base, bpp);
-    yagl_marshal_put_ptr(&base, pixels);
+    yagl_marshal_put_host_handle(&base, ctx);
+    yagl_marshal_put_EGLenum(&base, target);
+    yagl_marshal_put_host_handle(&base, buffer);
     yagl_marshal_put_ptr(&base, attrib_list);
     if (!yagl_batch_update_marshal(base))
     {
@@ -624,20 +622,15 @@ int yagl_host_eglCreateWindowSurfaceOffscreenYAGL(yagl_host_handle* retval, yagl
 }
 
 /*
- * eglCreatePbufferSurfaceOffscreenYAGL wrapper. id = 26
+ * eglDestroyImageKHR wrapper. id = 26
  */
-int yagl_host_eglCreatePbufferSurfaceOffscreenYAGL(yagl_host_handle* retval, yagl_host_handle dpy, yagl_host_handle config, uint32_t width, uint32_t height, uint32_t bpp, void* pixels, const EGLint* attrib_list)
+int yagl_host_eglDestroyImageKHR(EGLBoolean* retval, yagl_host_handle dpy, yagl_host_handle image)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_egl);
     yagl_marshal_put_uint32(&base, 26);
     yagl_marshal_put_host_handle(&base, dpy);
-    yagl_marshal_put_host_handle(&base, config);
-    yagl_marshal_put_uint32_t(&base, width);
-    yagl_marshal_put_uint32_t(&base, height);
-    yagl_marshal_put_uint32_t(&base, bpp);
-    yagl_marshal_put_ptr(&base, pixels);
-    yagl_marshal_put_ptr(&base, attrib_list);
+    yagl_marshal_put_host_handle(&base, image);
     if (!yagl_batch_update_marshal(base))
     {
         return 0;
@@ -648,14 +641,14 @@ int yagl_host_eglCreatePbufferSurfaceOffscreenYAGL(yagl_host_handle* retval, yag
     }
     base = yagl_batch_get_marshal();
     yagl_marshal_skip(&base); // call result
-    *retval = yagl_marshal_get_host_handle(&base);
+    *retval = yagl_marshal_get_EGLBoolean(&base);
     return 1;
 }
 
 /*
- * eglCreatePixmapSurfaceOffscreenYAGL wrapper. id = 27
+ * eglCreateWindowSurfaceOffscreenYAGL wrapper. id = 27
  */
-int yagl_host_eglCreatePixmapSurfaceOffscreenYAGL(yagl_host_handle* retval, yagl_host_handle dpy, yagl_host_handle config, uint32_t width, uint32_t height, uint32_t bpp, void* pixels, const EGLint* attrib_list)
+int yagl_host_eglCreateWindowSurfaceOffscreenYAGL(yagl_host_handle* retval, yagl_host_handle dpy, yagl_host_handle config, uint32_t width, uint32_t height, uint32_t bpp, void* pixels, const EGLint* attrib_list)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_egl);
@@ -682,13 +675,71 @@ int yagl_host_eglCreatePixmapSurfaceOffscreenYAGL(yagl_host_handle* retval, yagl
 }
 
 /*
- * eglResizeOffscreenSurfaceYAGL wrapper. id = 28
+ * eglCreatePbufferSurfaceOffscreenYAGL wrapper. id = 28
+ */
+int yagl_host_eglCreatePbufferSurfaceOffscreenYAGL(yagl_host_handle* retval, yagl_host_handle dpy, yagl_host_handle config, uint32_t width, uint32_t height, uint32_t bpp, void* pixels, const EGLint* attrib_list)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_egl);
+    yagl_marshal_put_uint32(&base, 28);
+    yagl_marshal_put_host_handle(&base, dpy);
+    yagl_marshal_put_host_handle(&base, config);
+    yagl_marshal_put_uint32_t(&base, width);
+    yagl_marshal_put_uint32_t(&base, height);
+    yagl_marshal_put_uint32_t(&base, bpp);
+    yagl_marshal_put_ptr(&base, pixels);
+    yagl_marshal_put_ptr(&base, attrib_list);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    if (!yagl_batch_sync())
+    {
+        return 0;
+    }
+    base = yagl_batch_get_marshal();
+    yagl_marshal_skip(&base); // call result
+    *retval = yagl_marshal_get_host_handle(&base);
+    return 1;
+}
+
+/*
+ * eglCreatePixmapSurfaceOffscreenYAGL wrapper. id = 29
+ */
+int yagl_host_eglCreatePixmapSurfaceOffscreenYAGL(yagl_host_handle* retval, yagl_host_handle dpy, yagl_host_handle config, uint32_t width, uint32_t height, uint32_t bpp, void* pixels, const EGLint* attrib_list)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_egl);
+    yagl_marshal_put_uint32(&base, 29);
+    yagl_marshal_put_host_handle(&base, dpy);
+    yagl_marshal_put_host_handle(&base, config);
+    yagl_marshal_put_uint32_t(&base, width);
+    yagl_marshal_put_uint32_t(&base, height);
+    yagl_marshal_put_uint32_t(&base, bpp);
+    yagl_marshal_put_ptr(&base, pixels);
+    yagl_marshal_put_ptr(&base, attrib_list);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    if (!yagl_batch_sync())
+    {
+        return 0;
+    }
+    base = yagl_batch_get_marshal();
+    yagl_marshal_skip(&base); // call result
+    *retval = yagl_marshal_get_host_handle(&base);
+    return 1;
+}
+
+/*
+ * eglResizeOffscreenSurfaceYAGL wrapper. id = 30
  */
 int yagl_host_eglResizeOffscreenSurfaceYAGL(EGLBoolean* retval, yagl_host_handle dpy, yagl_host_handle surface, uint32_t width, uint32_t height, uint32_t bpp, void* pixels)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_egl);
-    yagl_marshal_put_uint32(&base, 28);
+    yagl_marshal_put_uint32(&base, 30);
     yagl_marshal_put_host_handle(&base, dpy);
     yagl_marshal_put_host_handle(&base, surface);
     yagl_marshal_put_uint32_t(&base, width);
@@ -706,6 +757,27 @@ int yagl_host_eglResizeOffscreenSurfaceYAGL(EGLBoolean* retval, yagl_host_handle
     base = yagl_batch_get_marshal();
     yagl_marshal_skip(&base); // call result
     *retval = yagl_marshal_get_EGLBoolean(&base);
+    return 1;
+}
+
+/*
+ * eglUpdateOffscreenImageYAGL wrapper. id = 31
+ */
+int yagl_host_eglUpdateOffscreenImageYAGL(yagl_host_handle dpy, yagl_host_handle image, uint32_t width, uint32_t height, uint32_t bpp, const void* pixels)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_egl);
+    yagl_marshal_put_uint32(&base, 31);
+    yagl_marshal_put_host_handle(&base, dpy);
+    yagl_marshal_put_host_handle(&base, image);
+    yagl_marshal_put_uint32_t(&base, width);
+    yagl_marshal_put_uint32_t(&base, height);
+    yagl_marshal_put_uint32_t(&base, bpp);
+    yagl_marshal_put_ptr(&base, pixels);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
     return 1;
 }
 

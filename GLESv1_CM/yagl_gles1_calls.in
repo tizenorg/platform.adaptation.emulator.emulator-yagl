@@ -147,11 +147,11 @@ void, glTexSubImage2D, GLenum target, GLint level, GLint xoffset, GLint yoffset,
 void, glTranslatex, GLfixed x, GLfixed y, GLfixed z
 void, glVertexPointer, GLint size, GLenum type, GLsizei stride, const GLvoid* pointer
 void, glViewport, GLint x, GLint y, GLsizei width, GLsizei height
+void, glEGLImageTargetTexture2DOES, GLenum target, GLeglImageOES^ image
 
 #
 # YaGL Extensions
 #
 
 GLuint, glGetExtensionStringYAGL, GLchar* str
-void, glEGLImageTargetTexture2DYAGL, GLenum target, uint32_t width, uint32_t height, uint32_t bpp, const void* pixels
 @void, glGetVertexAttribRangeYAGL, GLsizei count, GLenum type, const GLvoid* indices, GLint* range_first, GLsizei* range_count

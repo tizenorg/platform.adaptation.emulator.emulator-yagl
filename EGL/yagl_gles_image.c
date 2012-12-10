@@ -13,7 +13,7 @@ struct yagl_gles_image *yagl_gles_image_acquire(GLeglImageOES image)
     if (ctx) {
         struct yagl_image *egl_image = yagl_display_image_acquire(ctx->dpy,
             (EGLImageKHR)image);
-        return (egl_image ? egl_image->gles_image : NULL);
+        return (egl_image ? &egl_image->gles_image : NULL);
     } else {
         return NULL;
     }
@@ -22,7 +22,7 @@ struct yagl_gles_image *yagl_gles_image_acquire(GLeglImageOES image)
 void yagl_gles_image_release(struct yagl_gles_image *image)
 {
     if (image) {
-        struct yagl_image *egl_image = image->opaque;
+        struct yagl_image *egl_image = yagl_containerof(image, struct yagl_image, gles_image);
         yagl_image_release(egl_image);
     }
 }

@@ -28,7 +28,7 @@ struct yagl_backend
 
     struct yagl_image *(*create_image)(struct yagl_display */*dpy*/,
                                        Pixmap /*x_pixmap*/,
-                                       const EGLint */*attrib_list*/);
+                                       yagl_host_handle /*host_image*/);
 
     void (*destroy)(struct yagl_backend */*backend*/);
 };

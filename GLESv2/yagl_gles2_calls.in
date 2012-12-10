@@ -139,11 +139,11 @@ void, glVertexAttrib4f, GLuint indx, GLfloat x, GLfloat y, GLfloat z, GLfloat w
 void, glVertexAttrib4fv, GLuint indx, const GLfloat* values
 void, glVertexAttribPointer, GLuint indx, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* ptr
 void, glViewport, GLint x, GLint y, GLsizei width, GLsizei height
+void, glEGLImageTargetTexture2DOES, GLenum target, GLeglImageOES^ image
 
 #
 # YaGL Extensions
 #
 
 GLuint, glGetExtensionStringYAGL, GLchar* str
-void, glEGLImageTargetTexture2DYAGL, GLenum target, uint32_t width, uint32_t height, uint32_t bpp, const void* pixels
 @void, glGetVertexAttribRangeYAGL, GLsizei count, GLenum type, const GLvoid* indices, GLint* range_first, GLsizei* range_count
