@@ -197,8 +197,7 @@ EOF
         echo -n "int yagl_host_${FUNC_NAME}(" >> $TARGET_SOURCE_FILE
         echo -n "bool yagl_host_${FUNC_NAME}(" >> $HOST_IMPL_FILE
     fi;
-    echo "static bool yagl_func_${FUNC_NAME}(struct yagl_thread_state *ts," >> $HOST_SOURCE_FILE
-    echo "    uint8_t **out_buff," >> $HOST_SOURCE_FILE
+    echo "static bool yagl_func_${FUNC_NAME}(uint8_t **out_buff," >> $HOST_SOURCE_FILE
     echo "    uint8_t *in_buff)" >> $HOST_SOURCE_FILE
     if [ "$FUNC_ID" != 1 ]; then
         FUNC_POINTERS="${FUNC_POINTERS},\\n"
@@ -274,7 +273,7 @@ EOF
     if [ "$I" == 0 ] && [ "$RET_TYPE" == "void" ]; then
         echo -n "void" >> $HOST_IMPL_FILE
     fi;
-    echo -n "    YAGL_LOG_FUNC_ENTER_SPLIT$I(ts->ps->id, ts->id, $FUNC_NAME" >> $HOST_SOURCE_FILE
+    echo -n "    YAGL_LOG_FUNC_ENTER_SPLIT$I($FUNC_NAME" >> $HOST_SOURCE_FILE
     for FUNC_ARG in ${FUNC_ARGS}; do
         FUNC_ARG="$(StrTrim "$FUNC_ARG")"
         FUNC_ARG_NAME="$(GetFuncArgName "$FUNC_ARG")"
