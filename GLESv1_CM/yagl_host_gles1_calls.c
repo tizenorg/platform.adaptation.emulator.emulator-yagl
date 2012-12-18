@@ -7,169 +7,13 @@
 #include <assert.h>
 
 /*
- * glClearColor wrapper. id = 1
- */
-int yagl_host_glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 1);
-    yagl_marshal_put_GLclampf(&base, red);
-    yagl_marshal_put_GLclampf(&base, green);
-    yagl_marshal_put_GLclampf(&base, blue);
-    yagl_marshal_put_GLclampf(&base, alpha);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glClearDepthf wrapper. id = 2
- */
-int yagl_host_glClearDepthf(GLclampf depth)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 2);
-    yagl_marshal_put_GLclampf(&base, depth);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glDepthRangef wrapper. id = 3
- */
-int yagl_host_glDepthRangef(GLclampf zNear, GLclampf zFar)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 3);
-    yagl_marshal_put_GLclampf(&base, zNear);
-    yagl_marshal_put_GLclampf(&base, zFar);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glGetFloatv wrapper. id = 4
- */
-int yagl_host_glGetFloatv(GLenum pname, GLfloat* params)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 4);
-    yagl_marshal_put_GLenum(&base, pname);
-    yagl_marshal_put_ptr(&base, params);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return yagl_batch_sync();
-}
-
-/*
- * glGetTexParameterfv wrapper. id = 5
- */
-int yagl_host_glGetTexParameterfv(GLenum target, GLenum pname, GLfloat* params)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 5);
-    yagl_marshal_put_GLenum(&base, target);
-    yagl_marshal_put_GLenum(&base, pname);
-    yagl_marshal_put_ptr(&base, params);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return yagl_batch_sync();
-}
-
-/*
- * glLineWidth wrapper. id = 6
- */
-int yagl_host_glLineWidth(GLfloat width)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 6);
-    yagl_marshal_put_GLfloat(&base, width);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glPolygonOffset wrapper. id = 7
- */
-int yagl_host_glPolygonOffset(GLfloat factor, GLfloat units)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 7);
-    yagl_marshal_put_GLfloat(&base, factor);
-    yagl_marshal_put_GLfloat(&base, units);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glTexParameterf wrapper. id = 8
- */
-int yagl_host_glTexParameterf(GLenum target, GLenum pname, GLfloat param)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 8);
-    yagl_marshal_put_GLenum(&base, target);
-    yagl_marshal_put_GLenum(&base, pname);
-    yagl_marshal_put_GLfloat(&base, param);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glTexParameterfv wrapper. id = 9
- */
-int yagl_host_glTexParameterfv(GLenum target, GLenum pname, const GLfloat* params)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 9);
-    yagl_marshal_put_GLenum(&base, target);
-    yagl_marshal_put_GLenum(&base, pname);
-    yagl_marshal_put_ptr(&base, params);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glActiveTexture wrapper. id = 10
+ * glActiveTexture wrapper. id = 1
  */
 int yagl_host_glActiveTexture(GLenum texture)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 10);
+    yagl_marshal_put_uint32(&base, 1);
     yagl_marshal_put_GLenum(&base, texture);
     if (!yagl_batch_update_marshal(base))
     {
@@ -179,13 +23,13 @@ int yagl_host_glActiveTexture(GLenum texture)
 }
 
 /*
- * glBindBuffer wrapper. id = 11
+ * glBindBuffer wrapper. id = 2
  */
 int yagl_host_glBindBuffer(GLenum target, GLuint buffer)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 11);
+    yagl_marshal_put_uint32(&base, 2);
     yagl_marshal_put_GLenum(&base, target);
     yagl_marshal_put_GLuint(&base, buffer);
     if (!yagl_batch_update_marshal(base))
@@ -196,13 +40,47 @@ int yagl_host_glBindBuffer(GLenum target, GLuint buffer)
 }
 
 /*
- * glBindTexture wrapper. id = 12
+ * glBindFramebuffer wrapper. id = 3
+ */
+int yagl_host_glBindFramebuffer(GLenum target, GLuint framebuffer)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 3);
+    yagl_marshal_put_GLenum(&base, target);
+    yagl_marshal_put_GLuint(&base, framebuffer);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glBindRenderbuffer wrapper. id = 4
+ */
+int yagl_host_glBindRenderbuffer(GLenum target, GLuint renderbuffer)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 4);
+    yagl_marshal_put_GLenum(&base, target);
+    yagl_marshal_put_GLuint(&base, renderbuffer);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glBindTexture wrapper. id = 5
  */
 int yagl_host_glBindTexture(GLenum target, GLuint texture)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 12);
+    yagl_marshal_put_uint32(&base, 5);
     yagl_marshal_put_GLenum(&base, target);
     yagl_marshal_put_GLuint(&base, texture);
     if (!yagl_batch_update_marshal(base))
@@ -213,13 +91,46 @@ int yagl_host_glBindTexture(GLenum target, GLuint texture)
 }
 
 /*
- * glBlendFunc wrapper. id = 13
+ * glBlendEquation wrapper. id = 6
+ */
+int yagl_host_glBlendEquation(GLenum mode)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 6);
+    yagl_marshal_put_GLenum(&base, mode);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glBlendEquationSeparate wrapper. id = 7
+ */
+int yagl_host_glBlendEquationSeparate(GLenum modeRGB, GLenum modeAlpha)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 7);
+    yagl_marshal_put_GLenum(&base, modeRGB);
+    yagl_marshal_put_GLenum(&base, modeAlpha);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glBlendFunc wrapper. id = 8
  */
 int yagl_host_glBlendFunc(GLenum sfactor, GLenum dfactor)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 13);
+    yagl_marshal_put_uint32(&base, 8);
     yagl_marshal_put_GLenum(&base, sfactor);
     yagl_marshal_put_GLenum(&base, dfactor);
     if (!yagl_batch_update_marshal(base))
@@ -230,13 +141,32 @@ int yagl_host_glBlendFunc(GLenum sfactor, GLenum dfactor)
 }
 
 /*
- * glBufferData wrapper. id = 14
+ * glBlendFuncSeparate wrapper. id = 9
+ */
+int yagl_host_glBlendFuncSeparate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 9);
+    yagl_marshal_put_GLenum(&base, srcRGB);
+    yagl_marshal_put_GLenum(&base, dstRGB);
+    yagl_marshal_put_GLenum(&base, srcAlpha);
+    yagl_marshal_put_GLenum(&base, dstAlpha);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glBufferData wrapper. id = 10
  */
 int yagl_host_glBufferData(GLenum target, GLsizeiptr size, const GLvoid* data, GLenum usage)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 14);
+    yagl_marshal_put_uint32(&base, 10);
     yagl_marshal_put_GLenum(&base, target);
     yagl_marshal_put_GLsizeiptr(&base, size);
     yagl_marshal_put_ptr(&base, data);
@@ -249,13 +179,13 @@ int yagl_host_glBufferData(GLenum target, GLsizeiptr size, const GLvoid* data, G
 }
 
 /*
- * glBufferSubData wrapper. id = 15
+ * glBufferSubData wrapper. id = 11
  */
 int yagl_host_glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid* data)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 15);
+    yagl_marshal_put_uint32(&base, 11);
     yagl_marshal_put_GLenum(&base, target);
     yagl_marshal_put_GLintptr(&base, offset);
     yagl_marshal_put_GLsizeiptr(&base, size);
@@ -268,423 +198,14 @@ int yagl_host_glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, c
 }
 
 /*
- * glClear wrapper. id = 16
+ * glCheckFramebufferStatus wrapper. id = 12
  */
-int yagl_host_glClear(GLbitfield mask)
+int yagl_host_glCheckFramebufferStatus(GLenum* retval, GLenum target)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 16);
-    yagl_marshal_put_GLbitfield(&base, mask);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glClearStencil wrapper. id = 17
- */
-int yagl_host_glClearStencil(GLint s)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 17);
-    yagl_marshal_put_GLint(&base, s);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glColorMask wrapper. id = 18
- */
-int yagl_host_glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 18);
-    yagl_marshal_put_GLboolean(&base, red);
-    yagl_marshal_put_GLboolean(&base, green);
-    yagl_marshal_put_GLboolean(&base, blue);
-    yagl_marshal_put_GLboolean(&base, alpha);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glCompressedTexImage2D wrapper. id = 19
- */
-int yagl_host_glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid* data)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 19);
+    yagl_marshal_put_uint32(&base, 12);
     yagl_marshal_put_GLenum(&base, target);
-    yagl_marshal_put_GLint(&base, level);
-    yagl_marshal_put_GLenum(&base, internalformat);
-    yagl_marshal_put_GLsizei(&base, width);
-    yagl_marshal_put_GLsizei(&base, height);
-    yagl_marshal_put_GLint(&base, border);
-    yagl_marshal_put_GLsizei(&base, imageSize);
-    yagl_marshal_put_ptr(&base, data);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glCompressedTexSubImage2D wrapper. id = 20
- */
-int yagl_host_glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const GLvoid* data)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 20);
-    yagl_marshal_put_GLenum(&base, target);
-    yagl_marshal_put_GLint(&base, level);
-    yagl_marshal_put_GLint(&base, xoffset);
-    yagl_marshal_put_GLint(&base, yoffset);
-    yagl_marshal_put_GLsizei(&base, width);
-    yagl_marshal_put_GLsizei(&base, height);
-    yagl_marshal_put_GLenum(&base, format);
-    yagl_marshal_put_GLsizei(&base, imageSize);
-    yagl_marshal_put_ptr(&base, data);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glCopyTexImage2D wrapper. id = 21
- */
-int yagl_host_glCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 21);
-    yagl_marshal_put_GLenum(&base, target);
-    yagl_marshal_put_GLint(&base, level);
-    yagl_marshal_put_GLenum(&base, internalformat);
-    yagl_marshal_put_GLint(&base, x);
-    yagl_marshal_put_GLint(&base, y);
-    yagl_marshal_put_GLsizei(&base, width);
-    yagl_marshal_put_GLsizei(&base, height);
-    yagl_marshal_put_GLint(&base, border);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glCopyTexSubImage2D wrapper. id = 22
- */
-int yagl_host_glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 22);
-    yagl_marshal_put_GLenum(&base, target);
-    yagl_marshal_put_GLint(&base, level);
-    yagl_marshal_put_GLint(&base, xoffset);
-    yagl_marshal_put_GLint(&base, yoffset);
-    yagl_marshal_put_GLint(&base, x);
-    yagl_marshal_put_GLint(&base, y);
-    yagl_marshal_put_GLsizei(&base, width);
-    yagl_marshal_put_GLsizei(&base, height);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glCullFace wrapper. id = 23
- */
-int yagl_host_glCullFace(GLenum mode)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 23);
-    yagl_marshal_put_GLenum(&base, mode);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glDeleteBuffers wrapper. id = 24
- */
-int yagl_host_glDeleteBuffers(GLsizei n, const GLuint* buffers)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 24);
-    yagl_marshal_put_GLsizei(&base, n);
-    yagl_marshal_put_ptr(&base, buffers);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glDeleteTextures wrapper. id = 25
- */
-int yagl_host_glDeleteTextures(GLsizei n, const GLuint* textures)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 25);
-    yagl_marshal_put_GLsizei(&base, n);
-    yagl_marshal_put_ptr(&base, textures);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glDepthFunc wrapper. id = 26
- */
-int yagl_host_glDepthFunc(GLenum func)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 26);
-    yagl_marshal_put_GLenum(&base, func);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glDepthMask wrapper. id = 27
- */
-int yagl_host_glDepthMask(GLboolean flag)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 27);
-    yagl_marshal_put_GLboolean(&base, flag);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glDisable wrapper. id = 28
- */
-int yagl_host_glDisable(GLenum cap)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 28);
-    yagl_marshal_put_GLenum(&base, cap);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glDrawArrays wrapper. id = 29
- */
-int yagl_host_glDrawArrays(GLenum mode, GLint first, GLsizei count)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 29);
-    yagl_marshal_put_GLenum(&base, mode);
-    yagl_marshal_put_GLint(&base, first);
-    yagl_marshal_put_GLsizei(&base, count);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glDrawElements wrapper. id = 30
- */
-int yagl_host_glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 30);
-    yagl_marshal_put_GLenum(&base, mode);
-    yagl_marshal_put_GLsizei(&base, count);
-    yagl_marshal_put_GLenum(&base, type);
-    yagl_marshal_put_ptr(&base, indices);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glEnable wrapper. id = 31
- */
-int yagl_host_glEnable(GLenum cap)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 31);
-    yagl_marshal_put_GLenum(&base, cap);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glFinish wrapper. id = 32
- */
-int yagl_host_glFinish()
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 32);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glFlush wrapper. id = 33
- */
-int yagl_host_glFlush()
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 33);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glFrontFace wrapper. id = 34
- */
-int yagl_host_glFrontFace(GLenum mode)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 34);
-    yagl_marshal_put_GLenum(&base, mode);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glGetBooleanv wrapper. id = 35
- */
-int yagl_host_glGetBooleanv(GLenum pname, GLboolean* params)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 35);
-    yagl_marshal_put_GLenum(&base, pname);
-    yagl_marshal_put_ptr(&base, params);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return yagl_batch_sync();
-}
-
-/*
- * glGetBufferParameteriv wrapper. id = 36
- */
-int yagl_host_glGetBufferParameteriv(GLenum target, GLenum pname, GLint* params)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 36);
-    yagl_marshal_put_GLenum(&base, target);
-    yagl_marshal_put_GLenum(&base, pname);
-    yagl_marshal_put_ptr(&base, params);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return yagl_batch_sync();
-}
-
-/*
- * glGenBuffers wrapper. id = 37
- */
-int yagl_host_glGenBuffers(GLsizei n, GLuint* buffers)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 37);
-    yagl_marshal_put_GLsizei(&base, n);
-    yagl_marshal_put_ptr(&base, buffers);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return yagl_batch_sync();
-}
-
-/*
- * glGenTextures wrapper. id = 38
- */
-int yagl_host_glGenTextures(GLsizei n, GLuint* textures)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 38);
-    yagl_marshal_put_GLsizei(&base, n);
-    yagl_marshal_put_ptr(&base, textures);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return yagl_batch_sync();
-}
-
-/*
- * glGetError wrapper. id = 39
- */
-int yagl_host_glGetError(GLenum* retval)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 39);
     if (!yagl_batch_update_marshal(base))
     {
         return 0;
@@ -700,13 +221,580 @@ int yagl_host_glGetError(GLenum* retval)
 }
 
 /*
- * glGetIntegerv wrapper. id = 40
+ * glClear wrapper. id = 13
  */
-int yagl_host_glGetIntegerv(GLenum pname, GLint* params)
+int yagl_host_glClear(GLbitfield mask)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 13);
+    yagl_marshal_put_GLbitfield(&base, mask);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glClearColor wrapper. id = 14
+ */
+int yagl_host_glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 14);
+    yagl_marshal_put_GLclampf(&base, red);
+    yagl_marshal_put_GLclampf(&base, green);
+    yagl_marshal_put_GLclampf(&base, blue);
+    yagl_marshal_put_GLclampf(&base, alpha);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glClearDepthf wrapper. id = 15
+ */
+int yagl_host_glClearDepthf(GLclampf depth)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 15);
+    yagl_marshal_put_GLclampf(&base, depth);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glClearStencil wrapper. id = 16
+ */
+int yagl_host_glClearStencil(GLint s)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 16);
+    yagl_marshal_put_GLint(&base, s);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glColorMask wrapper. id = 17
+ */
+int yagl_host_glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 17);
+    yagl_marshal_put_GLboolean(&base, red);
+    yagl_marshal_put_GLboolean(&base, green);
+    yagl_marshal_put_GLboolean(&base, blue);
+    yagl_marshal_put_GLboolean(&base, alpha);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glCompressedTexImage2D wrapper. id = 18
+ */
+int yagl_host_glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid* data)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 18);
+    yagl_marshal_put_GLenum(&base, target);
+    yagl_marshal_put_GLint(&base, level);
+    yagl_marshal_put_GLenum(&base, internalformat);
+    yagl_marshal_put_GLsizei(&base, width);
+    yagl_marshal_put_GLsizei(&base, height);
+    yagl_marshal_put_GLint(&base, border);
+    yagl_marshal_put_GLsizei(&base, imageSize);
+    yagl_marshal_put_ptr(&base, data);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glCompressedTexSubImage2D wrapper. id = 19
+ */
+int yagl_host_glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const GLvoid* data)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 19);
+    yagl_marshal_put_GLenum(&base, target);
+    yagl_marshal_put_GLint(&base, level);
+    yagl_marshal_put_GLint(&base, xoffset);
+    yagl_marshal_put_GLint(&base, yoffset);
+    yagl_marshal_put_GLsizei(&base, width);
+    yagl_marshal_put_GLsizei(&base, height);
+    yagl_marshal_put_GLenum(&base, format);
+    yagl_marshal_put_GLsizei(&base, imageSize);
+    yagl_marshal_put_ptr(&base, data);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glCopyTexImage2D wrapper. id = 20
+ */
+int yagl_host_glCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 20);
+    yagl_marshal_put_GLenum(&base, target);
+    yagl_marshal_put_GLint(&base, level);
+    yagl_marshal_put_GLenum(&base, internalformat);
+    yagl_marshal_put_GLint(&base, x);
+    yagl_marshal_put_GLint(&base, y);
+    yagl_marshal_put_GLsizei(&base, width);
+    yagl_marshal_put_GLsizei(&base, height);
+    yagl_marshal_put_GLint(&base, border);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glCopyTexSubImage2D wrapper. id = 21
+ */
+int yagl_host_glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 21);
+    yagl_marshal_put_GLenum(&base, target);
+    yagl_marshal_put_GLint(&base, level);
+    yagl_marshal_put_GLint(&base, xoffset);
+    yagl_marshal_put_GLint(&base, yoffset);
+    yagl_marshal_put_GLint(&base, x);
+    yagl_marshal_put_GLint(&base, y);
+    yagl_marshal_put_GLsizei(&base, width);
+    yagl_marshal_put_GLsizei(&base, height);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glCullFace wrapper. id = 22
+ */
+int yagl_host_glCullFace(GLenum mode)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 22);
+    yagl_marshal_put_GLenum(&base, mode);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glDeleteBuffers wrapper. id = 23
+ */
+int yagl_host_glDeleteBuffers(GLsizei n, const GLuint* buffers)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 23);
+    yagl_marshal_put_GLsizei(&base, n);
+    yagl_marshal_put_ptr(&base, buffers);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glDeleteFramebuffers wrapper. id = 24
+ */
+int yagl_host_glDeleteFramebuffers(GLsizei n, const GLuint* framebuffers)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 24);
+    yagl_marshal_put_GLsizei(&base, n);
+    yagl_marshal_put_ptr(&base, framebuffers);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glDeleteRenderbuffers wrapper. id = 25
+ */
+int yagl_host_glDeleteRenderbuffers(GLsizei n, const GLuint* renderbuffers)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 25);
+    yagl_marshal_put_GLsizei(&base, n);
+    yagl_marshal_put_ptr(&base, renderbuffers);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glDeleteTextures wrapper. id = 26
+ */
+int yagl_host_glDeleteTextures(GLsizei n, const GLuint* textures)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 26);
+    yagl_marshal_put_GLsizei(&base, n);
+    yagl_marshal_put_ptr(&base, textures);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glDepthFunc wrapper. id = 27
+ */
+int yagl_host_glDepthFunc(GLenum func)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 27);
+    yagl_marshal_put_GLenum(&base, func);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glDepthMask wrapper. id = 28
+ */
+int yagl_host_glDepthMask(GLboolean flag)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 28);
+    yagl_marshal_put_GLboolean(&base, flag);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glDepthRangef wrapper. id = 29
+ */
+int yagl_host_glDepthRangef(GLclampf zNear, GLclampf zFar)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 29);
+    yagl_marshal_put_GLclampf(&base, zNear);
+    yagl_marshal_put_GLclampf(&base, zFar);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glDisable wrapper. id = 30
+ */
+int yagl_host_glDisable(GLenum cap)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 30);
+    yagl_marshal_put_GLenum(&base, cap);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glDrawArrays wrapper. id = 31
+ */
+int yagl_host_glDrawArrays(GLenum mode, GLint first, GLsizei count)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 31);
+    yagl_marshal_put_GLenum(&base, mode);
+    yagl_marshal_put_GLint(&base, first);
+    yagl_marshal_put_GLsizei(&base, count);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glDrawElements wrapper. id = 32
+ */
+int yagl_host_glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 32);
+    yagl_marshal_put_GLenum(&base, mode);
+    yagl_marshal_put_GLsizei(&base, count);
+    yagl_marshal_put_GLenum(&base, type);
+    yagl_marshal_put_ptr(&base, indices);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glEGLImageTargetTexture2DOES wrapper. id = 33
+ */
+int yagl_host_glEGLImageTargetTexture2DOES(GLenum target, yagl_host_handle image)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 33);
+    yagl_marshal_put_GLenum(&base, target);
+    yagl_marshal_put_host_handle(&base, image);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glEnable wrapper. id = 34
+ */
+int yagl_host_glEnable(GLenum cap)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 34);
+    yagl_marshal_put_GLenum(&base, cap);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glFinish wrapper. id = 35
+ */
+int yagl_host_glFinish()
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 35);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glFlush wrapper. id = 36
+ */
+int yagl_host_glFlush()
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 36);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glFramebufferTexture2D wrapper. id = 37
+ */
+int yagl_host_glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 37);
+    yagl_marshal_put_GLenum(&base, target);
+    yagl_marshal_put_GLenum(&base, attachment);
+    yagl_marshal_put_GLenum(&base, textarget);
+    yagl_marshal_put_GLuint(&base, texture);
+    yagl_marshal_put_GLint(&base, level);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glFramebufferRenderbuffer wrapper. id = 38
+ */
+int yagl_host_glFramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 38);
+    yagl_marshal_put_GLenum(&base, target);
+    yagl_marshal_put_GLenum(&base, attachment);
+    yagl_marshal_put_GLenum(&base, renderbuffertarget);
+    yagl_marshal_put_GLuint(&base, renderbuffer);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glFrontFace wrapper. id = 39
+ */
+int yagl_host_glFrontFace(GLenum mode)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 39);
+    yagl_marshal_put_GLenum(&base, mode);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glGenBuffers wrapper. id = 40
+ */
+int yagl_host_glGenBuffers(GLsizei n, GLuint* buffers)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
     yagl_marshal_put_uint32(&base, 40);
+    yagl_marshal_put_GLsizei(&base, n);
+    yagl_marshal_put_ptr(&base, buffers);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return yagl_batch_sync();
+}
+
+/*
+ * glGenerateMipmap wrapper. id = 41
+ */
+int yagl_host_glGenerateMipmap(GLenum target)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 41);
+    yagl_marshal_put_GLenum(&base, target);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glGenFramebuffers wrapper. id = 42
+ */
+int yagl_host_glGenFramebuffers(GLsizei n, GLuint* framebuffers)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 42);
+    yagl_marshal_put_GLsizei(&base, n);
+    yagl_marshal_put_ptr(&base, framebuffers);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return yagl_batch_sync();
+}
+
+/*
+ * glGenRenderbuffers wrapper. id = 43
+ */
+int yagl_host_glGenRenderbuffers(GLsizei n, GLuint* renderbuffers)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 43);
+    yagl_marshal_put_GLsizei(&base, n);
+    yagl_marshal_put_ptr(&base, renderbuffers);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return yagl_batch_sync();
+}
+
+/*
+ * glGenTextures wrapper. id = 44
+ */
+int yagl_host_glGenTextures(GLsizei n, GLuint* textures)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 44);
+    yagl_marshal_put_GLsizei(&base, n);
+    yagl_marshal_put_ptr(&base, textures);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return yagl_batch_sync();
+}
+
+/*
+ * glGetBooleanv wrapper. id = 45
+ */
+int yagl_host_glGetBooleanv(GLenum pname, GLboolean* params)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 45);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_ptr(&base, params);
     if (!yagl_batch_update_marshal(base))
@@ -717,13 +805,13 @@ int yagl_host_glGetIntegerv(GLenum pname, GLint* params)
 }
 
 /*
- * glGetTexParameteriv wrapper. id = 41
+ * glGetBufferParameteriv wrapper. id = 46
  */
-int yagl_host_glGetTexParameteriv(GLenum target, GLenum pname, GLint* params)
+int yagl_host_glGetBufferParameteriv(GLenum target, GLenum pname, GLint* params)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 41);
+    yagl_marshal_put_uint32(&base, 46);
     yagl_marshal_put_GLenum(&base, target);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_ptr(&base, params);
@@ -735,13 +823,142 @@ int yagl_host_glGetTexParameteriv(GLenum target, GLenum pname, GLint* params)
 }
 
 /*
- * glHint wrapper. id = 42
+ * glGetError wrapper. id = 47
+ */
+int yagl_host_glGetError(GLenum* retval)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 47);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    if (!yagl_batch_sync())
+    {
+        return 0;
+    }
+    base = yagl_batch_get_marshal();
+    yagl_marshal_skip(&base); // call result
+    *retval = yagl_marshal_get_GLenum(&base);
+    return 1;
+}
+
+/*
+ * glGetFloatv wrapper. id = 48
+ */
+int yagl_host_glGetFloatv(GLenum pname, GLfloat* params)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 48);
+    yagl_marshal_put_GLenum(&base, pname);
+    yagl_marshal_put_ptr(&base, params);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return yagl_batch_sync();
+}
+
+/*
+ * glGetFramebufferAttachmentParameteriv wrapper. id = 49
+ */
+int yagl_host_glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint* params)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 49);
+    yagl_marshal_put_GLenum(&base, target);
+    yagl_marshal_put_GLenum(&base, attachment);
+    yagl_marshal_put_GLenum(&base, pname);
+    yagl_marshal_put_ptr(&base, params);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return yagl_batch_sync();
+}
+
+/*
+ * glGetIntegerv wrapper. id = 50
+ */
+int yagl_host_glGetIntegerv(GLenum pname, GLint* params)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 50);
+    yagl_marshal_put_GLenum(&base, pname);
+    yagl_marshal_put_ptr(&base, params);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return yagl_batch_sync();
+}
+
+/*
+ * glGetRenderbufferParameteriv wrapper. id = 51
+ */
+int yagl_host_glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint* params)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 51);
+    yagl_marshal_put_GLenum(&base, target);
+    yagl_marshal_put_GLenum(&base, pname);
+    yagl_marshal_put_ptr(&base, params);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return yagl_batch_sync();
+}
+
+/*
+ * glGetTexParameterfv wrapper. id = 52
+ */
+int yagl_host_glGetTexParameterfv(GLenum target, GLenum pname, GLfloat* params)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 52);
+    yagl_marshal_put_GLenum(&base, target);
+    yagl_marshal_put_GLenum(&base, pname);
+    yagl_marshal_put_ptr(&base, params);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return yagl_batch_sync();
+}
+
+/*
+ * glGetTexParameteriv wrapper. id = 53
+ */
+int yagl_host_glGetTexParameteriv(GLenum target, GLenum pname, GLint* params)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 53);
+    yagl_marshal_put_GLenum(&base, target);
+    yagl_marshal_put_GLenum(&base, pname);
+    yagl_marshal_put_ptr(&base, params);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return yagl_batch_sync();
+}
+
+/*
+ * glHint wrapper. id = 54
  */
 int yagl_host_glHint(GLenum target, GLenum mode)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 42);
+    yagl_marshal_put_uint32(&base, 54);
     yagl_marshal_put_GLenum(&base, target);
     yagl_marshal_put_GLenum(&base, mode);
     if (!yagl_batch_update_marshal(base))
@@ -752,13 +969,13 @@ int yagl_host_glHint(GLenum target, GLenum mode)
 }
 
 /*
- * glIsBuffer wrapper. id = 43
+ * glIsBuffer wrapper. id = 55
  */
 int yagl_host_glIsBuffer(GLboolean* retval, GLuint buffer)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 43);
+    yagl_marshal_put_uint32(&base, 55);
     yagl_marshal_put_GLuint(&base, buffer);
     if (!yagl_batch_update_marshal(base))
     {
@@ -775,13 +992,13 @@ int yagl_host_glIsBuffer(GLboolean* retval, GLuint buffer)
 }
 
 /*
- * glIsEnabled wrapper. id = 44
+ * glIsEnabled wrapper. id = 56
  */
 int yagl_host_glIsEnabled(GLboolean* retval, GLenum cap)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 44);
+    yagl_marshal_put_uint32(&base, 56);
     yagl_marshal_put_GLenum(&base, cap);
     if (!yagl_batch_update_marshal(base))
     {
@@ -798,13 +1015,59 @@ int yagl_host_glIsEnabled(GLboolean* retval, GLenum cap)
 }
 
 /*
- * glIsTexture wrapper. id = 45
+ * glIsFramebuffer wrapper. id = 57
+ */
+int yagl_host_glIsFramebuffer(GLboolean* retval, GLuint framebuffer)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 57);
+    yagl_marshal_put_GLuint(&base, framebuffer);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    if (!yagl_batch_sync())
+    {
+        return 0;
+    }
+    base = yagl_batch_get_marshal();
+    yagl_marshal_skip(&base); // call result
+    *retval = yagl_marshal_get_GLboolean(&base);
+    return 1;
+}
+
+/*
+ * glIsRenderbuffer wrapper. id = 58
+ */
+int yagl_host_glIsRenderbuffer(GLboolean* retval, GLuint renderbuffer)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 58);
+    yagl_marshal_put_GLuint(&base, renderbuffer);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    if (!yagl_batch_sync())
+    {
+        return 0;
+    }
+    base = yagl_batch_get_marshal();
+    yagl_marshal_skip(&base); // call result
+    *retval = yagl_marshal_get_GLboolean(&base);
+    return 1;
+}
+
+/*
+ * glIsTexture wrapper. id = 59
  */
 int yagl_host_glIsTexture(GLboolean* retval, GLuint texture)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 45);
+    yagl_marshal_put_uint32(&base, 59);
     yagl_marshal_put_GLuint(&base, texture);
     if (!yagl_batch_update_marshal(base))
     {
@@ -821,13 +1084,29 @@ int yagl_host_glIsTexture(GLboolean* retval, GLuint texture)
 }
 
 /*
- * glPixelStorei wrapper. id = 46
+ * glLineWidth wrapper. id = 60
+ */
+int yagl_host_glLineWidth(GLfloat width)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 60);
+    yagl_marshal_put_GLfloat(&base, width);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glPixelStorei wrapper. id = 61
  */
 int yagl_host_glPixelStorei(GLenum pname, GLint param)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 46);
+    yagl_marshal_put_uint32(&base, 61);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_GLint(&base, param);
     if (!yagl_batch_update_marshal(base))
@@ -838,13 +1117,30 @@ int yagl_host_glPixelStorei(GLenum pname, GLint param)
 }
 
 /*
- * glReadPixels wrapper. id = 47
+ * glPolygonOffset wrapper. id = 62
+ */
+int yagl_host_glPolygonOffset(GLfloat factor, GLfloat units)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 62);
+    yagl_marshal_put_GLfloat(&base, factor);
+    yagl_marshal_put_GLfloat(&base, units);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glReadPixels wrapper. id = 63
  */
 int yagl_host_glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 47);
+    yagl_marshal_put_uint32(&base, 63);
     yagl_marshal_put_GLint(&base, x);
     yagl_marshal_put_GLint(&base, y);
     yagl_marshal_put_GLsizei(&base, width);
@@ -860,13 +1156,32 @@ int yagl_host_glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLen
 }
 
 /*
- * glSampleCoverage wrapper. id = 48
+ * glRenderbufferStorage wrapper. id = 64
+ */
+int yagl_host_glRenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 64);
+    yagl_marshal_put_GLenum(&base, target);
+    yagl_marshal_put_GLenum(&base, internalformat);
+    yagl_marshal_put_GLsizei(&base, width);
+    yagl_marshal_put_GLsizei(&base, height);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glSampleCoverage wrapper. id = 65
  */
 int yagl_host_glSampleCoverage(GLclampf value, GLboolean invert)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 48);
+    yagl_marshal_put_uint32(&base, 65);
     yagl_marshal_put_GLclampf(&base, value);
     yagl_marshal_put_GLboolean(&base, invert);
     if (!yagl_batch_update_marshal(base))
@@ -877,13 +1192,13 @@ int yagl_host_glSampleCoverage(GLclampf value, GLboolean invert)
 }
 
 /*
- * glScissor wrapper. id = 49
+ * glScissor wrapper. id = 66
  */
 int yagl_host_glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 49);
+    yagl_marshal_put_uint32(&base, 66);
     yagl_marshal_put_GLint(&base, x);
     yagl_marshal_put_GLint(&base, y);
     yagl_marshal_put_GLsizei(&base, width);
@@ -896,13 +1211,13 @@ int yagl_host_glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
 }
 
 /*
- * glStencilFunc wrapper. id = 50
+ * glStencilFunc wrapper. id = 67
  */
 int yagl_host_glStencilFunc(GLenum func, GLint ref, GLuint mask)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 50);
+    yagl_marshal_put_uint32(&base, 67);
     yagl_marshal_put_GLenum(&base, func);
     yagl_marshal_put_GLint(&base, ref);
     yagl_marshal_put_GLuint(&base, mask);
@@ -914,13 +1229,13 @@ int yagl_host_glStencilFunc(GLenum func, GLint ref, GLuint mask)
 }
 
 /*
- * glStencilMask wrapper. id = 51
+ * glStencilMask wrapper. id = 68
  */
 int yagl_host_glStencilMask(GLuint mask)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 51);
+    yagl_marshal_put_uint32(&base, 68);
     yagl_marshal_put_GLuint(&base, mask);
     if (!yagl_batch_update_marshal(base))
     {
@@ -930,13 +1245,13 @@ int yagl_host_glStencilMask(GLuint mask)
 }
 
 /*
- * glStencilOp wrapper. id = 52
+ * glStencilOp wrapper. id = 69
  */
 int yagl_host_glStencilOp(GLenum fail, GLenum zfail, GLenum zpass)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 52);
+    yagl_marshal_put_uint32(&base, 69);
     yagl_marshal_put_GLenum(&base, fail);
     yagl_marshal_put_GLenum(&base, zfail);
     yagl_marshal_put_GLenum(&base, zpass);
@@ -948,13 +1263,13 @@ int yagl_host_glStencilOp(GLenum fail, GLenum zfail, GLenum zpass)
 }
 
 /*
- * glTexImage2D wrapper. id = 53
+ * glTexImage2D wrapper. id = 70
  */
 int yagl_host_glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 53);
+    yagl_marshal_put_uint32(&base, 70);
     yagl_marshal_put_GLenum(&base, target);
     yagl_marshal_put_GLint(&base, level);
     yagl_marshal_put_GLint(&base, internalformat);
@@ -972,16 +1287,16 @@ int yagl_host_glTexImage2D(GLenum target, GLint level, GLint internalformat, GLs
 }
 
 /*
- * glTexParameteri wrapper. id = 54
+ * glTexParameterf wrapper. id = 71
  */
-int yagl_host_glTexParameteri(GLenum target, GLenum pname, GLint param)
+int yagl_host_glTexParameterf(GLenum target, GLenum pname, GLfloat param)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 54);
+    yagl_marshal_put_uint32(&base, 71);
     yagl_marshal_put_GLenum(&base, target);
     yagl_marshal_put_GLenum(&base, pname);
-    yagl_marshal_put_GLint(&base, param);
+    yagl_marshal_put_GLfloat(&base, param);
     if (!yagl_batch_update_marshal(base))
     {
         return 0;
@@ -990,13 +1305,13 @@ int yagl_host_glTexParameteri(GLenum target, GLenum pname, GLint param)
 }
 
 /*
- * glTexParameteriv wrapper. id = 55
+ * glTexParameterfv wrapper. id = 72
  */
-int yagl_host_glTexParameteriv(GLenum target, GLenum pname, const GLint* params)
+int yagl_host_glTexParameterfv(GLenum target, GLenum pname, const GLfloat* params)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 55);
+    yagl_marshal_put_uint32(&base, 72);
     yagl_marshal_put_GLenum(&base, target);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_ptr(&base, params);
@@ -1008,13 +1323,49 @@ int yagl_host_glTexParameteriv(GLenum target, GLenum pname, const GLint* params)
 }
 
 /*
- * glTexSubImage2D wrapper. id = 56
+ * glTexParameteri wrapper. id = 73
+ */
+int yagl_host_glTexParameteri(GLenum target, GLenum pname, GLint param)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 73);
+    yagl_marshal_put_GLenum(&base, target);
+    yagl_marshal_put_GLenum(&base, pname);
+    yagl_marshal_put_GLint(&base, param);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glTexParameteriv wrapper. id = 74
+ */
+int yagl_host_glTexParameteriv(GLenum target, GLenum pname, const GLint* params)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 74);
+    yagl_marshal_put_GLenum(&base, target);
+    yagl_marshal_put_GLenum(&base, pname);
+    yagl_marshal_put_ptr(&base, params);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glTexSubImage2D wrapper. id = 75
  */
 int yagl_host_glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 56);
+    yagl_marshal_put_uint32(&base, 75);
     yagl_marshal_put_GLenum(&base, target);
     yagl_marshal_put_GLint(&base, level);
     yagl_marshal_put_GLint(&base, xoffset);
@@ -1032,13 +1383,13 @@ int yagl_host_glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint y
 }
 
 /*
- * glViewport wrapper. id = 57
+ * glViewport wrapper. id = 76
  */
 int yagl_host_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 57);
+    yagl_marshal_put_uint32(&base, 76);
     yagl_marshal_put_GLint(&base, x);
     yagl_marshal_put_GLint(&base, y);
     yagl_marshal_put_GLsizei(&base, width);
@@ -1051,30 +1402,13 @@ int yagl_host_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 }
 
 /*
- * glEGLImageTargetTexture2DOES wrapper. id = 58
- */
-int yagl_host_glEGLImageTargetTexture2DOES(GLenum target, yagl_host_handle image)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 58);
-    yagl_marshal_put_GLenum(&base, target);
-    yagl_marshal_put_host_handle(&base, image);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glGetExtensionStringYAGL wrapper. id = 59
+ * glGetExtensionStringYAGL wrapper. id = 77
  */
 int yagl_host_glGetExtensionStringYAGL(GLuint* retval, GLchar* str)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 59);
+    yagl_marshal_put_uint32(&base, 77);
     yagl_marshal_put_ptr(&base, str);
     if (!yagl_batch_update_marshal(base))
     {
@@ -1091,13 +1425,13 @@ int yagl_host_glGetExtensionStringYAGL(GLuint* retval, GLchar* str)
 }
 
 /*
- * glGetVertexAttribRangeYAGL wrapper. id = 60
+ * glGetVertexAttribRangeYAGL wrapper. id = 78
  */
 int yagl_host_glGetVertexAttribRangeYAGL(GLsizei count, GLenum type, const GLvoid* indices, GLint* range_first, GLsizei* range_count)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 60);
+    yagl_marshal_put_uint32(&base, 78);
     yagl_marshal_put_GLsizei(&base, count);
     yagl_marshal_put_GLenum(&base, type);
     yagl_marshal_put_ptr(&base, indices);
@@ -1111,13 +1445,13 @@ int yagl_host_glGetVertexAttribRangeYAGL(GLsizei count, GLenum type, const GLvoi
 }
 
 /*
- * glAlphaFunc wrapper. id = 61
+ * glAlphaFunc wrapper. id = 79
  */
 int yagl_host_glAlphaFunc(GLenum func, GLclampf ref)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 61);
+    yagl_marshal_put_uint32(&base, 79);
     yagl_marshal_put_GLenum(&base, func);
     yagl_marshal_put_GLclampf(&base, ref);
     if (!yagl_batch_update_marshal(base))
@@ -1128,13 +1462,13 @@ int yagl_host_glAlphaFunc(GLenum func, GLclampf ref)
 }
 
 /*
- * glClipPlanef wrapper. id = 62
+ * glClipPlanef wrapper. id = 80
  */
 int yagl_host_glClipPlanef(GLenum plane, const GLfloat* equation)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 62);
+    yagl_marshal_put_uint32(&base, 80);
     yagl_marshal_put_GLenum(&base, plane);
     yagl_marshal_put_ptr(&base, equation);
     if (!yagl_batch_update_marshal(base))
@@ -1145,13 +1479,13 @@ int yagl_host_glClipPlanef(GLenum plane, const GLfloat* equation)
 }
 
 /*
- * glColor4f wrapper. id = 63
+ * glColor4f wrapper. id = 81
  */
 int yagl_host_glColor4f(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 63);
+    yagl_marshal_put_uint32(&base, 81);
     yagl_marshal_put_GLfloat(&base, red);
     yagl_marshal_put_GLfloat(&base, green);
     yagl_marshal_put_GLfloat(&base, blue);
@@ -1164,332 +1498,9 @@ int yagl_host_glColor4f(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
 }
 
 /*
- * glFogf wrapper. id = 64
+ * glFogf wrapper. id = 82
  */
 int yagl_host_glFogf(GLenum pname, GLfloat param)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 64);
-    yagl_marshal_put_GLenum(&base, pname);
-    yagl_marshal_put_GLfloat(&base, param);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glFogfv wrapper. id = 65
- */
-int yagl_host_glFogfv(GLenum pname, const GLfloat* params)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 65);
-    yagl_marshal_put_GLenum(&base, pname);
-    yagl_marshal_put_ptr(&base, params);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glFrustumf wrapper. id = 66
- */
-int yagl_host_glFrustumf(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 66);
-    yagl_marshal_put_GLfloat(&base, left);
-    yagl_marshal_put_GLfloat(&base, right);
-    yagl_marshal_put_GLfloat(&base, bottom);
-    yagl_marshal_put_GLfloat(&base, top);
-    yagl_marshal_put_GLfloat(&base, zNear);
-    yagl_marshal_put_GLfloat(&base, zFar);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glGetClipPlanef wrapper. id = 67
- */
-int yagl_host_glGetClipPlanef(GLenum pname, GLfloat* eqn)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 67);
-    yagl_marshal_put_GLenum(&base, pname);
-    yagl_marshal_put_ptr(&base, eqn);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return yagl_batch_sync();
-}
-
-/*
- * glGetLightfv wrapper. id = 68
- */
-int yagl_host_glGetLightfv(GLenum light, GLenum pname, GLfloat* params)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 68);
-    yagl_marshal_put_GLenum(&base, light);
-    yagl_marshal_put_GLenum(&base, pname);
-    yagl_marshal_put_ptr(&base, params);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return yagl_batch_sync();
-}
-
-/*
- * glGetMaterialfv wrapper. id = 69
- */
-int yagl_host_glGetMaterialfv(GLenum face, GLenum pname, GLfloat* params)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 69);
-    yagl_marshal_put_GLenum(&base, face);
-    yagl_marshal_put_GLenum(&base, pname);
-    yagl_marshal_put_ptr(&base, params);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return yagl_batch_sync();
-}
-
-/*
- * glGetTexEnvfv wrapper. id = 70
- */
-int yagl_host_glGetTexEnvfv(GLenum env, GLenum pname, GLfloat* params)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 70);
-    yagl_marshal_put_GLenum(&base, env);
-    yagl_marshal_put_GLenum(&base, pname);
-    yagl_marshal_put_ptr(&base, params);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return yagl_batch_sync();
-}
-
-/*
- * glLightModelf wrapper. id = 71
- */
-int yagl_host_glLightModelf(GLenum pname, GLfloat param)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 71);
-    yagl_marshal_put_GLenum(&base, pname);
-    yagl_marshal_put_GLfloat(&base, param);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glLightModelfv wrapper. id = 72
- */
-int yagl_host_glLightModelfv(GLenum pname, const GLfloat* params)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 72);
-    yagl_marshal_put_GLenum(&base, pname);
-    yagl_marshal_put_ptr(&base, params);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glLightf wrapper. id = 73
- */
-int yagl_host_glLightf(GLenum light, GLenum pname, GLfloat param)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 73);
-    yagl_marshal_put_GLenum(&base, light);
-    yagl_marshal_put_GLenum(&base, pname);
-    yagl_marshal_put_GLfloat(&base, param);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glLightfv wrapper. id = 74
- */
-int yagl_host_glLightfv(GLenum light, GLenum pname, const GLfloat* params)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 74);
-    yagl_marshal_put_GLenum(&base, light);
-    yagl_marshal_put_GLenum(&base, pname);
-    yagl_marshal_put_ptr(&base, params);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glLoadMatrixf wrapper. id = 75
- */
-int yagl_host_glLoadMatrixf(const GLfloat* m)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 75);
-    yagl_marshal_put_ptr(&base, m);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glMaterialf wrapper. id = 76
- */
-int yagl_host_glMaterialf(GLenum face, GLenum pname, GLfloat param)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 76);
-    yagl_marshal_put_GLenum(&base, face);
-    yagl_marshal_put_GLenum(&base, pname);
-    yagl_marshal_put_GLfloat(&base, param);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glMaterialfv wrapper. id = 77
- */
-int yagl_host_glMaterialfv(GLenum face, GLenum pname, const GLfloat* params)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 77);
-    yagl_marshal_put_GLenum(&base, face);
-    yagl_marshal_put_GLenum(&base, pname);
-    yagl_marshal_put_ptr(&base, params);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glMultMatrixf wrapper. id = 78
- */
-int yagl_host_glMultMatrixf(const GLfloat* m)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 78);
-    yagl_marshal_put_ptr(&base, m);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glMultiTexCoord4f wrapper. id = 79
- */
-int yagl_host_glMultiTexCoord4f(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 79);
-    yagl_marshal_put_GLenum(&base, target);
-    yagl_marshal_put_GLfloat(&base, s);
-    yagl_marshal_put_GLfloat(&base, t);
-    yagl_marshal_put_GLfloat(&base, r);
-    yagl_marshal_put_GLfloat(&base, q);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glNormal3f wrapper. id = 80
- */
-int yagl_host_glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 80);
-    yagl_marshal_put_GLfloat(&base, nx);
-    yagl_marshal_put_GLfloat(&base, ny);
-    yagl_marshal_put_GLfloat(&base, nz);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glOrthof wrapper. id = 81
- */
-int yagl_host_glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
-{
-    uint8_t* base = yagl_batch_get_marshal();
-    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 81);
-    yagl_marshal_put_GLfloat(&base, left);
-    yagl_marshal_put_GLfloat(&base, right);
-    yagl_marshal_put_GLfloat(&base, bottom);
-    yagl_marshal_put_GLfloat(&base, top);
-    yagl_marshal_put_GLfloat(&base, zNear);
-    yagl_marshal_put_GLfloat(&base, zFar);
-    if (!yagl_batch_update_marshal(base))
-    {
-        return 0;
-    }
-    return 1;
-}
-
-/*
- * glPointParameterf wrapper. id = 82
- */
-int yagl_host_glPointParameterf(GLenum pname, GLfloat param)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
@@ -1504,9 +1515,9 @@ int yagl_host_glPointParameterf(GLenum pname, GLfloat param)
 }
 
 /*
- * glPointParameterfv wrapper. id = 83
+ * glFogfv wrapper. id = 83
  */
-int yagl_host_glPointParameterfv(GLenum pname, const GLfloat* params)
+int yagl_host_glFogfv(GLenum pname, const GLfloat* params)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
@@ -1521,13 +1532,336 @@ int yagl_host_glPointParameterfv(GLenum pname, const GLfloat* params)
 }
 
 /*
- * glPointSize wrapper. id = 84
+ * glFrustumf wrapper. id = 84
+ */
+int yagl_host_glFrustumf(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 84);
+    yagl_marshal_put_GLfloat(&base, left);
+    yagl_marshal_put_GLfloat(&base, right);
+    yagl_marshal_put_GLfloat(&base, bottom);
+    yagl_marshal_put_GLfloat(&base, top);
+    yagl_marshal_put_GLfloat(&base, zNear);
+    yagl_marshal_put_GLfloat(&base, zFar);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glGetClipPlanef wrapper. id = 85
+ */
+int yagl_host_glGetClipPlanef(GLenum pname, GLfloat* eqn)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 85);
+    yagl_marshal_put_GLenum(&base, pname);
+    yagl_marshal_put_ptr(&base, eqn);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return yagl_batch_sync();
+}
+
+/*
+ * glGetLightfv wrapper. id = 86
+ */
+int yagl_host_glGetLightfv(GLenum light, GLenum pname, GLfloat* params)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 86);
+    yagl_marshal_put_GLenum(&base, light);
+    yagl_marshal_put_GLenum(&base, pname);
+    yagl_marshal_put_ptr(&base, params);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return yagl_batch_sync();
+}
+
+/*
+ * glGetMaterialfv wrapper. id = 87
+ */
+int yagl_host_glGetMaterialfv(GLenum face, GLenum pname, GLfloat* params)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 87);
+    yagl_marshal_put_GLenum(&base, face);
+    yagl_marshal_put_GLenum(&base, pname);
+    yagl_marshal_put_ptr(&base, params);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return yagl_batch_sync();
+}
+
+/*
+ * glGetTexEnvfv wrapper. id = 88
+ */
+int yagl_host_glGetTexEnvfv(GLenum env, GLenum pname, GLfloat* params)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 88);
+    yagl_marshal_put_GLenum(&base, env);
+    yagl_marshal_put_GLenum(&base, pname);
+    yagl_marshal_put_ptr(&base, params);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return yagl_batch_sync();
+}
+
+/*
+ * glLightModelf wrapper. id = 89
+ */
+int yagl_host_glLightModelf(GLenum pname, GLfloat param)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 89);
+    yagl_marshal_put_GLenum(&base, pname);
+    yagl_marshal_put_GLfloat(&base, param);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glLightModelfv wrapper. id = 90
+ */
+int yagl_host_glLightModelfv(GLenum pname, const GLfloat* params)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 90);
+    yagl_marshal_put_GLenum(&base, pname);
+    yagl_marshal_put_ptr(&base, params);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glLightf wrapper. id = 91
+ */
+int yagl_host_glLightf(GLenum light, GLenum pname, GLfloat param)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 91);
+    yagl_marshal_put_GLenum(&base, light);
+    yagl_marshal_put_GLenum(&base, pname);
+    yagl_marshal_put_GLfloat(&base, param);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glLightfv wrapper. id = 92
+ */
+int yagl_host_glLightfv(GLenum light, GLenum pname, const GLfloat* params)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 92);
+    yagl_marshal_put_GLenum(&base, light);
+    yagl_marshal_put_GLenum(&base, pname);
+    yagl_marshal_put_ptr(&base, params);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glLoadMatrixf wrapper. id = 93
+ */
+int yagl_host_glLoadMatrixf(const GLfloat* m)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 93);
+    yagl_marshal_put_ptr(&base, m);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glMaterialf wrapper. id = 94
+ */
+int yagl_host_glMaterialf(GLenum face, GLenum pname, GLfloat param)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 94);
+    yagl_marshal_put_GLenum(&base, face);
+    yagl_marshal_put_GLenum(&base, pname);
+    yagl_marshal_put_GLfloat(&base, param);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glMaterialfv wrapper. id = 95
+ */
+int yagl_host_glMaterialfv(GLenum face, GLenum pname, const GLfloat* params)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 95);
+    yagl_marshal_put_GLenum(&base, face);
+    yagl_marshal_put_GLenum(&base, pname);
+    yagl_marshal_put_ptr(&base, params);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glMultMatrixf wrapper. id = 96
+ */
+int yagl_host_glMultMatrixf(const GLfloat* m)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 96);
+    yagl_marshal_put_ptr(&base, m);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glMultiTexCoord4f wrapper. id = 97
+ */
+int yagl_host_glMultiTexCoord4f(GLenum target, GLfloat s, GLfloat t, GLfloat r, GLfloat q)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 97);
+    yagl_marshal_put_GLenum(&base, target);
+    yagl_marshal_put_GLfloat(&base, s);
+    yagl_marshal_put_GLfloat(&base, t);
+    yagl_marshal_put_GLfloat(&base, r);
+    yagl_marshal_put_GLfloat(&base, q);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glNormal3f wrapper. id = 98
+ */
+int yagl_host_glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 98);
+    yagl_marshal_put_GLfloat(&base, nx);
+    yagl_marshal_put_GLfloat(&base, ny);
+    yagl_marshal_put_GLfloat(&base, nz);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glOrthof wrapper. id = 99
+ */
+int yagl_host_glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 99);
+    yagl_marshal_put_GLfloat(&base, left);
+    yagl_marshal_put_GLfloat(&base, right);
+    yagl_marshal_put_GLfloat(&base, bottom);
+    yagl_marshal_put_GLfloat(&base, top);
+    yagl_marshal_put_GLfloat(&base, zNear);
+    yagl_marshal_put_GLfloat(&base, zFar);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glPointParameterf wrapper. id = 100
+ */
+int yagl_host_glPointParameterf(GLenum pname, GLfloat param)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 100);
+    yagl_marshal_put_GLenum(&base, pname);
+    yagl_marshal_put_GLfloat(&base, param);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glPointParameterfv wrapper. id = 101
+ */
+int yagl_host_glPointParameterfv(GLenum pname, const GLfloat* params)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
+    yagl_marshal_put_uint32(&base, 101);
+    yagl_marshal_put_GLenum(&base, pname);
+    yagl_marshal_put_ptr(&base, params);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * glPointSize wrapper. id = 102
  */
 int yagl_host_glPointSize(GLfloat size)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 84);
+    yagl_marshal_put_uint32(&base, 102);
     yagl_marshal_put_GLfloat(&base, size);
     if (!yagl_batch_update_marshal(base))
     {
@@ -1537,13 +1871,13 @@ int yagl_host_glPointSize(GLfloat size)
 }
 
 /*
- * glPointSizePointerOES wrapper. id = 85
+ * glPointSizePointerOES wrapper. id = 103
  */
 int yagl_host_glPointSizePointerOES(GLenum type, GLsizei stride, const GLvoid* pointer)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 85);
+    yagl_marshal_put_uint32(&base, 103);
     yagl_marshal_put_GLenum(&base, type);
     yagl_marshal_put_GLsizei(&base, stride);
     yagl_marshal_put_ptr(&base, pointer);
@@ -1555,13 +1889,13 @@ int yagl_host_glPointSizePointerOES(GLenum type, GLsizei stride, const GLvoid* p
 }
 
 /*
- * glRotatef wrapper. id = 86
+ * glRotatef wrapper. id = 104
  */
 int yagl_host_glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 86);
+    yagl_marshal_put_uint32(&base, 104);
     yagl_marshal_put_GLfloat(&base, angle);
     yagl_marshal_put_GLfloat(&base, x);
     yagl_marshal_put_GLfloat(&base, y);
@@ -1574,13 +1908,13 @@ int yagl_host_glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
 }
 
 /*
- * glScalef wrapper. id = 87
+ * glScalef wrapper. id = 105
  */
 int yagl_host_glScalef(GLfloat x, GLfloat y, GLfloat z)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 87);
+    yagl_marshal_put_uint32(&base, 105);
     yagl_marshal_put_GLfloat(&base, x);
     yagl_marshal_put_GLfloat(&base, y);
     yagl_marshal_put_GLfloat(&base, z);
@@ -1592,13 +1926,13 @@ int yagl_host_glScalef(GLfloat x, GLfloat y, GLfloat z)
 }
 
 /*
- * glTexEnvf wrapper. id = 88
+ * glTexEnvf wrapper. id = 106
  */
 int yagl_host_glTexEnvf(GLenum target, GLenum pname, GLfloat param)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 88);
+    yagl_marshal_put_uint32(&base, 106);
     yagl_marshal_put_GLenum(&base, target);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_GLfloat(&base, param);
@@ -1610,13 +1944,13 @@ int yagl_host_glTexEnvf(GLenum target, GLenum pname, GLfloat param)
 }
 
 /*
- * glTexEnvfv wrapper. id = 89
+ * glTexEnvfv wrapper. id = 107
  */
 int yagl_host_glTexEnvfv(GLenum target, GLenum pname, const GLfloat* params)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 89);
+    yagl_marshal_put_uint32(&base, 107);
     yagl_marshal_put_GLenum(&base, target);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_ptr(&base, params);
@@ -1628,13 +1962,13 @@ int yagl_host_glTexEnvfv(GLenum target, GLenum pname, const GLfloat* params)
 }
 
 /*
- * glTranslatef wrapper. id = 90
+ * glTranslatef wrapper. id = 108
  */
 int yagl_host_glTranslatef(GLfloat x, GLfloat y, GLfloat z)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 90);
+    yagl_marshal_put_uint32(&base, 108);
     yagl_marshal_put_GLfloat(&base, x);
     yagl_marshal_put_GLfloat(&base, y);
     yagl_marshal_put_GLfloat(&base, z);
@@ -1646,13 +1980,13 @@ int yagl_host_glTranslatef(GLfloat x, GLfloat y, GLfloat z)
 }
 
 /*
- * glAlphaFuncx wrapper. id = 91
+ * glAlphaFuncx wrapper. id = 109
  */
 int yagl_host_glAlphaFuncx(GLenum func, GLclampx ref)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 91);
+    yagl_marshal_put_uint32(&base, 109);
     yagl_marshal_put_GLenum(&base, func);
     yagl_marshal_put_GLclampx(&base, ref);
     if (!yagl_batch_update_marshal(base))
@@ -1663,13 +1997,13 @@ int yagl_host_glAlphaFuncx(GLenum func, GLclampx ref)
 }
 
 /*
- * glClearColorx wrapper. id = 92
+ * glClearColorx wrapper. id = 110
  */
 int yagl_host_glClearColorx(GLclampx red, GLclampx green, GLclampx blue, GLclampx alpha)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 92);
+    yagl_marshal_put_uint32(&base, 110);
     yagl_marshal_put_GLclampx(&base, red);
     yagl_marshal_put_GLclampx(&base, green);
     yagl_marshal_put_GLclampx(&base, blue);
@@ -1682,13 +2016,13 @@ int yagl_host_glClearColorx(GLclampx red, GLclampx green, GLclampx blue, GLclamp
 }
 
 /*
- * glClearDepthx wrapper. id = 93
+ * glClearDepthx wrapper. id = 111
  */
 int yagl_host_glClearDepthx(GLclampx depth)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 93);
+    yagl_marshal_put_uint32(&base, 111);
     yagl_marshal_put_GLclampx(&base, depth);
     if (!yagl_batch_update_marshal(base))
     {
@@ -1698,13 +2032,13 @@ int yagl_host_glClearDepthx(GLclampx depth)
 }
 
 /*
- * glClientActiveTexture wrapper. id = 94
+ * glClientActiveTexture wrapper. id = 112
  */
 int yagl_host_glClientActiveTexture(GLenum texture)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 94);
+    yagl_marshal_put_uint32(&base, 112);
     yagl_marshal_put_GLenum(&base, texture);
     if (!yagl_batch_update_marshal(base))
     {
@@ -1714,13 +2048,13 @@ int yagl_host_glClientActiveTexture(GLenum texture)
 }
 
 /*
- * glClipPlanex wrapper. id = 95
+ * glClipPlanex wrapper. id = 113
  */
 int yagl_host_glClipPlanex(GLenum plane, const GLfixed* equation)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 95);
+    yagl_marshal_put_uint32(&base, 113);
     yagl_marshal_put_GLenum(&base, plane);
     yagl_marshal_put_ptr(&base, equation);
     if (!yagl_batch_update_marshal(base))
@@ -1731,13 +2065,13 @@ int yagl_host_glClipPlanex(GLenum plane, const GLfixed* equation)
 }
 
 /*
- * glColor4ub wrapper. id = 96
+ * glColor4ub wrapper. id = 114
  */
 int yagl_host_glColor4ub(GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 96);
+    yagl_marshal_put_uint32(&base, 114);
     yagl_marshal_put_GLubyte(&base, red);
     yagl_marshal_put_GLubyte(&base, green);
     yagl_marshal_put_GLubyte(&base, blue);
@@ -1750,13 +2084,13 @@ int yagl_host_glColor4ub(GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha
 }
 
 /*
- * glColor4x wrapper. id = 97
+ * glColor4x wrapper. id = 115
  */
 int yagl_host_glColor4x(GLfixed red, GLfixed green, GLfixed blue, GLfixed alpha)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 97);
+    yagl_marshal_put_uint32(&base, 115);
     yagl_marshal_put_GLfixed(&base, red);
     yagl_marshal_put_GLfixed(&base, green);
     yagl_marshal_put_GLfixed(&base, blue);
@@ -1769,13 +2103,13 @@ int yagl_host_glColor4x(GLfixed red, GLfixed green, GLfixed blue, GLfixed alpha)
 }
 
 /*
- * glColorPointer wrapper. id = 98
+ * glColorPointer wrapper. id = 116
  */
 int yagl_host_glColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 98);
+    yagl_marshal_put_uint32(&base, 116);
     yagl_marshal_put_GLint(&base, size);
     yagl_marshal_put_GLenum(&base, type);
     yagl_marshal_put_GLsizei(&base, stride);
@@ -1788,13 +2122,13 @@ int yagl_host_glColorPointer(GLint size, GLenum type, GLsizei stride, const GLvo
 }
 
 /*
- * glDepthRangex wrapper. id = 99
+ * glDepthRangex wrapper. id = 117
  */
 int yagl_host_glDepthRangex(GLclampx zNear, GLclampx zFar)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 99);
+    yagl_marshal_put_uint32(&base, 117);
     yagl_marshal_put_GLclampx(&base, zNear);
     yagl_marshal_put_GLclampx(&base, zFar);
     if (!yagl_batch_update_marshal(base))
@@ -1805,13 +2139,13 @@ int yagl_host_glDepthRangex(GLclampx zNear, GLclampx zFar)
 }
 
 /*
- * glDisableClientState wrapper. id = 100
+ * glDisableClientState wrapper. id = 118
  */
 int yagl_host_glDisableClientState(GLenum array)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 100);
+    yagl_marshal_put_uint32(&base, 118);
     yagl_marshal_put_GLenum(&base, array);
     if (!yagl_batch_update_marshal(base))
     {
@@ -1821,13 +2155,13 @@ int yagl_host_glDisableClientState(GLenum array)
 }
 
 /*
- * glEnableClientState wrapper. id = 101
+ * glEnableClientState wrapper. id = 119
  */
 int yagl_host_glEnableClientState(GLenum array)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 101);
+    yagl_marshal_put_uint32(&base, 119);
     yagl_marshal_put_GLenum(&base, array);
     if (!yagl_batch_update_marshal(base))
     {
@@ -1837,13 +2171,13 @@ int yagl_host_glEnableClientState(GLenum array)
 }
 
 /*
- * glFogx wrapper. id = 102
+ * glFogx wrapper. id = 120
  */
 int yagl_host_glFogx(GLenum pname, GLfixed param)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 102);
+    yagl_marshal_put_uint32(&base, 120);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_GLfixed(&base, param);
     if (!yagl_batch_update_marshal(base))
@@ -1854,13 +2188,13 @@ int yagl_host_glFogx(GLenum pname, GLfixed param)
 }
 
 /*
- * glFogxv wrapper. id = 103
+ * glFogxv wrapper. id = 121
  */
 int yagl_host_glFogxv(GLenum pname, const GLfixed* params)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 103);
+    yagl_marshal_put_uint32(&base, 121);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_ptr(&base, params);
     if (!yagl_batch_update_marshal(base))
@@ -1871,13 +2205,13 @@ int yagl_host_glFogxv(GLenum pname, const GLfixed* params)
 }
 
 /*
- * glFrustumx wrapper. id = 104
+ * glFrustumx wrapper. id = 122
  */
 int yagl_host_glFrustumx(GLfixed left, GLfixed right, GLfixed bottom, GLfixed top, GLfixed zNear, GLfixed zFar)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 104);
+    yagl_marshal_put_uint32(&base, 122);
     yagl_marshal_put_GLfixed(&base, left);
     yagl_marshal_put_GLfixed(&base, right);
     yagl_marshal_put_GLfixed(&base, bottom);
@@ -1892,13 +2226,13 @@ int yagl_host_glFrustumx(GLfixed left, GLfixed right, GLfixed bottom, GLfixed to
 }
 
 /*
- * glGetClipPlanex wrapper. id = 105
+ * glGetClipPlanex wrapper. id = 123
  */
 int yagl_host_glGetClipPlanex(GLenum pname, GLfixed* eqn)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 105);
+    yagl_marshal_put_uint32(&base, 123);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_ptr(&base, eqn);
     if (!yagl_batch_update_marshal(base))
@@ -1909,13 +2243,13 @@ int yagl_host_glGetClipPlanex(GLenum pname, GLfixed* eqn)
 }
 
 /*
- * glGetFixedv wrapper. id = 106
+ * glGetFixedv wrapper. id = 124
  */
 int yagl_host_glGetFixedv(GLenum pname, GLfixed* params)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 106);
+    yagl_marshal_put_uint32(&base, 124);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_ptr(&base, params);
     if (!yagl_batch_update_marshal(base))
@@ -1926,13 +2260,13 @@ int yagl_host_glGetFixedv(GLenum pname, GLfixed* params)
 }
 
 /*
- * glGetLightxv wrapper. id = 107
+ * glGetLightxv wrapper. id = 125
  */
 int yagl_host_glGetLightxv(GLenum light, GLenum pname, GLfixed* params)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 107);
+    yagl_marshal_put_uint32(&base, 125);
     yagl_marshal_put_GLenum(&base, light);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_ptr(&base, params);
@@ -1944,13 +2278,13 @@ int yagl_host_glGetLightxv(GLenum light, GLenum pname, GLfixed* params)
 }
 
 /*
- * glGetMaterialxv wrapper. id = 108
+ * glGetMaterialxv wrapper. id = 126
  */
 int yagl_host_glGetMaterialxv(GLenum face, GLenum pname, GLfixed* params)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 108);
+    yagl_marshal_put_uint32(&base, 126);
     yagl_marshal_put_GLenum(&base, face);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_ptr(&base, params);
@@ -1962,13 +2296,13 @@ int yagl_host_glGetMaterialxv(GLenum face, GLenum pname, GLfixed* params)
 }
 
 /*
- * glGetPointerv wrapper. id = 109
+ * glGetPointerv wrapper. id = 127
  */
 int yagl_host_glGetPointerv(GLenum pname, GLvoid** params)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 109);
+    yagl_marshal_put_uint32(&base, 127);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_ptr(&base, params);
     if (!yagl_batch_update_marshal(base))
@@ -1979,13 +2313,13 @@ int yagl_host_glGetPointerv(GLenum pname, GLvoid** params)
 }
 
 /*
- * glGetTexEnviv wrapper. id = 110
+ * glGetTexEnviv wrapper. id = 128
  */
 int yagl_host_glGetTexEnviv(GLenum env, GLenum pname, GLint* params)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 110);
+    yagl_marshal_put_uint32(&base, 128);
     yagl_marshal_put_GLenum(&base, env);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_ptr(&base, params);
@@ -1997,13 +2331,13 @@ int yagl_host_glGetTexEnviv(GLenum env, GLenum pname, GLint* params)
 }
 
 /*
- * glGetTexEnvxv wrapper. id = 111
+ * glGetTexEnvxv wrapper. id = 129
  */
 int yagl_host_glGetTexEnvxv(GLenum env, GLenum pname, GLfixed* params)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 111);
+    yagl_marshal_put_uint32(&base, 129);
     yagl_marshal_put_GLenum(&base, env);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_ptr(&base, params);
@@ -2015,13 +2349,13 @@ int yagl_host_glGetTexEnvxv(GLenum env, GLenum pname, GLfixed* params)
 }
 
 /*
- * glGetTexParameterxv wrapper. id = 112
+ * glGetTexParameterxv wrapper. id = 130
  */
 int yagl_host_glGetTexParameterxv(GLenum target, GLenum pname, GLfixed* params)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 112);
+    yagl_marshal_put_uint32(&base, 130);
     yagl_marshal_put_GLenum(&base, target);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_ptr(&base, params);
@@ -2033,13 +2367,13 @@ int yagl_host_glGetTexParameterxv(GLenum target, GLenum pname, GLfixed* params)
 }
 
 /*
- * glLightModelx wrapper. id = 113
+ * glLightModelx wrapper. id = 131
  */
 int yagl_host_glLightModelx(GLenum pname, GLfixed param)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 113);
+    yagl_marshal_put_uint32(&base, 131);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_GLfixed(&base, param);
     if (!yagl_batch_update_marshal(base))
@@ -2050,13 +2384,13 @@ int yagl_host_glLightModelx(GLenum pname, GLfixed param)
 }
 
 /*
- * glLightModelxv wrapper. id = 114
+ * glLightModelxv wrapper. id = 132
  */
 int yagl_host_glLightModelxv(GLenum pname, const GLfixed* params)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 114);
+    yagl_marshal_put_uint32(&base, 132);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_ptr(&base, params);
     if (!yagl_batch_update_marshal(base))
@@ -2067,13 +2401,13 @@ int yagl_host_glLightModelxv(GLenum pname, const GLfixed* params)
 }
 
 /*
- * glLightx wrapper. id = 115
+ * glLightx wrapper. id = 133
  */
 int yagl_host_glLightx(GLenum light, GLenum pname, GLfixed param)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 115);
+    yagl_marshal_put_uint32(&base, 133);
     yagl_marshal_put_GLenum(&base, light);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_GLfixed(&base, param);
@@ -2085,13 +2419,13 @@ int yagl_host_glLightx(GLenum light, GLenum pname, GLfixed param)
 }
 
 /*
- * glLightxv wrapper. id = 116
+ * glLightxv wrapper. id = 134
  */
 int yagl_host_glLightxv(GLenum light, GLenum pname, const GLfixed* params)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 116);
+    yagl_marshal_put_uint32(&base, 134);
     yagl_marshal_put_GLenum(&base, light);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_ptr(&base, params);
@@ -2103,13 +2437,13 @@ int yagl_host_glLightxv(GLenum light, GLenum pname, const GLfixed* params)
 }
 
 /*
- * glLineWidthx wrapper. id = 117
+ * glLineWidthx wrapper. id = 135
  */
 int yagl_host_glLineWidthx(GLfixed width)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 117);
+    yagl_marshal_put_uint32(&base, 135);
     yagl_marshal_put_GLfixed(&base, width);
     if (!yagl_batch_update_marshal(base))
     {
@@ -2119,13 +2453,13 @@ int yagl_host_glLineWidthx(GLfixed width)
 }
 
 /*
- * glLoadIdentity wrapper. id = 118
+ * glLoadIdentity wrapper. id = 136
  */
 int yagl_host_glLoadIdentity()
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 118);
+    yagl_marshal_put_uint32(&base, 136);
     if (!yagl_batch_update_marshal(base))
     {
         return 0;
@@ -2134,13 +2468,13 @@ int yagl_host_glLoadIdentity()
 }
 
 /*
- * glLoadMatrixx wrapper. id = 119
+ * glLoadMatrixx wrapper. id = 137
  */
 int yagl_host_glLoadMatrixx(const GLfixed* m)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 119);
+    yagl_marshal_put_uint32(&base, 137);
     yagl_marshal_put_ptr(&base, m);
     if (!yagl_batch_update_marshal(base))
     {
@@ -2150,13 +2484,13 @@ int yagl_host_glLoadMatrixx(const GLfixed* m)
 }
 
 /*
- * glLogicOp wrapper. id = 120
+ * glLogicOp wrapper. id = 138
  */
 int yagl_host_glLogicOp(GLenum opcode)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 120);
+    yagl_marshal_put_uint32(&base, 138);
     yagl_marshal_put_GLenum(&base, opcode);
     if (!yagl_batch_update_marshal(base))
     {
@@ -2166,13 +2500,13 @@ int yagl_host_glLogicOp(GLenum opcode)
 }
 
 /*
- * glMaterialx wrapper. id = 121
+ * glMaterialx wrapper. id = 139
  */
 int yagl_host_glMaterialx(GLenum face, GLenum pname, GLfixed param)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 121);
+    yagl_marshal_put_uint32(&base, 139);
     yagl_marshal_put_GLenum(&base, face);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_GLfixed(&base, param);
@@ -2184,13 +2518,13 @@ int yagl_host_glMaterialx(GLenum face, GLenum pname, GLfixed param)
 }
 
 /*
- * glMaterialxv wrapper. id = 122
+ * glMaterialxv wrapper. id = 140
  */
 int yagl_host_glMaterialxv(GLenum face, GLenum pname, const GLfixed* params)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 122);
+    yagl_marshal_put_uint32(&base, 140);
     yagl_marshal_put_GLenum(&base, face);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_ptr(&base, params);
@@ -2202,13 +2536,13 @@ int yagl_host_glMaterialxv(GLenum face, GLenum pname, const GLfixed* params)
 }
 
 /*
- * glMatrixMode wrapper. id = 123
+ * glMatrixMode wrapper. id = 141
  */
 int yagl_host_glMatrixMode(GLenum mode)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 123);
+    yagl_marshal_put_uint32(&base, 141);
     yagl_marshal_put_GLenum(&base, mode);
     if (!yagl_batch_update_marshal(base))
     {
@@ -2218,13 +2552,13 @@ int yagl_host_glMatrixMode(GLenum mode)
 }
 
 /*
- * glMultMatrixx wrapper. id = 124
+ * glMultMatrixx wrapper. id = 142
  */
 int yagl_host_glMultMatrixx(const GLfixed* m)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 124);
+    yagl_marshal_put_uint32(&base, 142);
     yagl_marshal_put_ptr(&base, m);
     if (!yagl_batch_update_marshal(base))
     {
@@ -2234,13 +2568,13 @@ int yagl_host_glMultMatrixx(const GLfixed* m)
 }
 
 /*
- * glMultiTexCoord4x wrapper. id = 125
+ * glMultiTexCoord4x wrapper. id = 143
  */
 int yagl_host_glMultiTexCoord4x(GLenum target, GLfixed s, GLfixed t, GLfixed r, GLfixed q)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 125);
+    yagl_marshal_put_uint32(&base, 143);
     yagl_marshal_put_GLenum(&base, target);
     yagl_marshal_put_GLfixed(&base, s);
     yagl_marshal_put_GLfixed(&base, t);
@@ -2254,13 +2588,13 @@ int yagl_host_glMultiTexCoord4x(GLenum target, GLfixed s, GLfixed t, GLfixed r, 
 }
 
 /*
- * glNormal3x wrapper. id = 126
+ * glNormal3x wrapper. id = 144
  */
 int yagl_host_glNormal3x(GLfixed nx, GLfixed ny, GLfixed nz)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 126);
+    yagl_marshal_put_uint32(&base, 144);
     yagl_marshal_put_GLfixed(&base, nx);
     yagl_marshal_put_GLfixed(&base, ny);
     yagl_marshal_put_GLfixed(&base, nz);
@@ -2272,13 +2606,13 @@ int yagl_host_glNormal3x(GLfixed nx, GLfixed ny, GLfixed nz)
 }
 
 /*
- * glNormalPointer wrapper. id = 127
+ * glNormalPointer wrapper. id = 145
  */
 int yagl_host_glNormalPointer(GLenum type, GLsizei stride, const GLvoid* pointer)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 127);
+    yagl_marshal_put_uint32(&base, 145);
     yagl_marshal_put_GLenum(&base, type);
     yagl_marshal_put_GLsizei(&base, stride);
     yagl_marshal_put_ptr(&base, pointer);
@@ -2290,13 +2624,13 @@ int yagl_host_glNormalPointer(GLenum type, GLsizei stride, const GLvoid* pointer
 }
 
 /*
- * glOrthox wrapper. id = 128
+ * glOrthox wrapper. id = 146
  */
 int yagl_host_glOrthox(GLfixed left, GLfixed right, GLfixed bottom, GLfixed top, GLfixed zNear, GLfixed zFar)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 128);
+    yagl_marshal_put_uint32(&base, 146);
     yagl_marshal_put_GLfixed(&base, left);
     yagl_marshal_put_GLfixed(&base, right);
     yagl_marshal_put_GLfixed(&base, bottom);
@@ -2311,13 +2645,13 @@ int yagl_host_glOrthox(GLfixed left, GLfixed right, GLfixed bottom, GLfixed top,
 }
 
 /*
- * glPointParameterx wrapper. id = 129
+ * glPointParameterx wrapper. id = 147
  */
 int yagl_host_glPointParameterx(GLenum pname, GLfixed param)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 129);
+    yagl_marshal_put_uint32(&base, 147);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_GLfixed(&base, param);
     if (!yagl_batch_update_marshal(base))
@@ -2328,13 +2662,13 @@ int yagl_host_glPointParameterx(GLenum pname, GLfixed param)
 }
 
 /*
- * glPointParameterxv wrapper. id = 130
+ * glPointParameterxv wrapper. id = 148
  */
 int yagl_host_glPointParameterxv(GLenum pname, const GLfixed* params)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 130);
+    yagl_marshal_put_uint32(&base, 148);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_ptr(&base, params);
     if (!yagl_batch_update_marshal(base))
@@ -2345,13 +2679,13 @@ int yagl_host_glPointParameterxv(GLenum pname, const GLfixed* params)
 }
 
 /*
- * glPointSizex wrapper. id = 131
+ * glPointSizex wrapper. id = 149
  */
 int yagl_host_glPointSizex(GLfixed size)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 131);
+    yagl_marshal_put_uint32(&base, 149);
     yagl_marshal_put_GLfixed(&base, size);
     if (!yagl_batch_update_marshal(base))
     {
@@ -2361,13 +2695,13 @@ int yagl_host_glPointSizex(GLfixed size)
 }
 
 /*
- * glPolygonOffsetx wrapper. id = 132
+ * glPolygonOffsetx wrapper. id = 150
  */
 int yagl_host_glPolygonOffsetx(GLfixed factor, GLfixed units)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 132);
+    yagl_marshal_put_uint32(&base, 150);
     yagl_marshal_put_GLfixed(&base, factor);
     yagl_marshal_put_GLfixed(&base, units);
     if (!yagl_batch_update_marshal(base))
@@ -2378,13 +2712,13 @@ int yagl_host_glPolygonOffsetx(GLfixed factor, GLfixed units)
 }
 
 /*
- * glPopMatrix wrapper. id = 133
+ * glPopMatrix wrapper. id = 151
  */
 int yagl_host_glPopMatrix()
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 133);
+    yagl_marshal_put_uint32(&base, 151);
     if (!yagl_batch_update_marshal(base))
     {
         return 0;
@@ -2393,13 +2727,13 @@ int yagl_host_glPopMatrix()
 }
 
 /*
- * glPushMatrix wrapper. id = 134
+ * glPushMatrix wrapper. id = 152
  */
 int yagl_host_glPushMatrix()
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 134);
+    yagl_marshal_put_uint32(&base, 152);
     if (!yagl_batch_update_marshal(base))
     {
         return 0;
@@ -2408,13 +2742,13 @@ int yagl_host_glPushMatrix()
 }
 
 /*
- * glRotatex wrapper. id = 135
+ * glRotatex wrapper. id = 153
  */
 int yagl_host_glRotatex(GLfixed angle, GLfixed x, GLfixed y, GLfixed z)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 135);
+    yagl_marshal_put_uint32(&base, 153);
     yagl_marshal_put_GLfixed(&base, angle);
     yagl_marshal_put_GLfixed(&base, x);
     yagl_marshal_put_GLfixed(&base, y);
@@ -2427,13 +2761,13 @@ int yagl_host_glRotatex(GLfixed angle, GLfixed x, GLfixed y, GLfixed z)
 }
 
 /*
- * glSampleCoveragex wrapper. id = 136
+ * glSampleCoveragex wrapper. id = 154
  */
 int yagl_host_glSampleCoveragex(GLclampx value, GLboolean invert)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 136);
+    yagl_marshal_put_uint32(&base, 154);
     yagl_marshal_put_GLclampx(&base, value);
     yagl_marshal_put_GLboolean(&base, invert);
     if (!yagl_batch_update_marshal(base))
@@ -2444,13 +2778,13 @@ int yagl_host_glSampleCoveragex(GLclampx value, GLboolean invert)
 }
 
 /*
- * glScalex wrapper. id = 137
+ * glScalex wrapper. id = 155
  */
 int yagl_host_glScalex(GLfixed x, GLfixed y, GLfixed z)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 137);
+    yagl_marshal_put_uint32(&base, 155);
     yagl_marshal_put_GLfixed(&base, x);
     yagl_marshal_put_GLfixed(&base, y);
     yagl_marshal_put_GLfixed(&base, z);
@@ -2462,13 +2796,13 @@ int yagl_host_glScalex(GLfixed x, GLfixed y, GLfixed z)
 }
 
 /*
- * glShadeModel wrapper. id = 138
+ * glShadeModel wrapper. id = 156
  */
 int yagl_host_glShadeModel(GLenum mode)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 138);
+    yagl_marshal_put_uint32(&base, 156);
     yagl_marshal_put_GLenum(&base, mode);
     if (!yagl_batch_update_marshal(base))
     {
@@ -2478,13 +2812,13 @@ int yagl_host_glShadeModel(GLenum mode)
 }
 
 /*
- * glTexCoordPointer wrapper. id = 139
+ * glTexCoordPointer wrapper. id = 157
  */
 int yagl_host_glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 139);
+    yagl_marshal_put_uint32(&base, 157);
     yagl_marshal_put_GLint(&base, size);
     yagl_marshal_put_GLenum(&base, type);
     yagl_marshal_put_GLsizei(&base, stride);
@@ -2497,13 +2831,13 @@ int yagl_host_glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const G
 }
 
 /*
- * glTexEnvi wrapper. id = 140
+ * glTexEnvi wrapper. id = 158
  */
 int yagl_host_glTexEnvi(GLenum target, GLenum pname, GLint param)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 140);
+    yagl_marshal_put_uint32(&base, 158);
     yagl_marshal_put_GLenum(&base, target);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_GLint(&base, param);
@@ -2515,13 +2849,13 @@ int yagl_host_glTexEnvi(GLenum target, GLenum pname, GLint param)
 }
 
 /*
- * glTexEnvx wrapper. id = 141
+ * glTexEnvx wrapper. id = 159
  */
 int yagl_host_glTexEnvx(GLenum target, GLenum pname, GLfixed param)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 141);
+    yagl_marshal_put_uint32(&base, 159);
     yagl_marshal_put_GLenum(&base, target);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_GLfixed(&base, param);
@@ -2533,13 +2867,13 @@ int yagl_host_glTexEnvx(GLenum target, GLenum pname, GLfixed param)
 }
 
 /*
- * glTexEnviv wrapper. id = 142
+ * glTexEnviv wrapper. id = 160
  */
 int yagl_host_glTexEnviv(GLenum target, GLenum pname, const GLint* params)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 142);
+    yagl_marshal_put_uint32(&base, 160);
     yagl_marshal_put_GLenum(&base, target);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_ptr(&base, params);
@@ -2551,13 +2885,13 @@ int yagl_host_glTexEnviv(GLenum target, GLenum pname, const GLint* params)
 }
 
 /*
- * glTexEnvxv wrapper. id = 143
+ * glTexEnvxv wrapper. id = 161
  */
 int yagl_host_glTexEnvxv(GLenum target, GLenum pname, const GLfixed* params)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 143);
+    yagl_marshal_put_uint32(&base, 161);
     yagl_marshal_put_GLenum(&base, target);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_ptr(&base, params);
@@ -2569,13 +2903,13 @@ int yagl_host_glTexEnvxv(GLenum target, GLenum pname, const GLfixed* params)
 }
 
 /*
- * glTexParameterx wrapper. id = 144
+ * glTexParameterx wrapper. id = 162
  */
 int yagl_host_glTexParameterx(GLenum target, GLenum pname, GLfixed param)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 144);
+    yagl_marshal_put_uint32(&base, 162);
     yagl_marshal_put_GLenum(&base, target);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_GLfixed(&base, param);
@@ -2587,13 +2921,13 @@ int yagl_host_glTexParameterx(GLenum target, GLenum pname, GLfixed param)
 }
 
 /*
- * glTexParameterxv wrapper. id = 145
+ * glTexParameterxv wrapper. id = 163
  */
 int yagl_host_glTexParameterxv(GLenum target, GLenum pname, const GLfixed* params)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 145);
+    yagl_marshal_put_uint32(&base, 163);
     yagl_marshal_put_GLenum(&base, target);
     yagl_marshal_put_GLenum(&base, pname);
     yagl_marshal_put_ptr(&base, params);
@@ -2605,13 +2939,13 @@ int yagl_host_glTexParameterxv(GLenum target, GLenum pname, const GLfixed* param
 }
 
 /*
- * glTranslatex wrapper. id = 146
+ * glTranslatex wrapper. id = 164
  */
 int yagl_host_glTranslatex(GLfixed x, GLfixed y, GLfixed z)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 146);
+    yagl_marshal_put_uint32(&base, 164);
     yagl_marshal_put_GLfixed(&base, x);
     yagl_marshal_put_GLfixed(&base, y);
     yagl_marshal_put_GLfixed(&base, z);
@@ -2623,13 +2957,13 @@ int yagl_host_glTranslatex(GLfixed x, GLfixed y, GLfixed z)
 }
 
 /*
- * glVertexPointer wrapper. id = 147
+ * glVertexPointer wrapper. id = 165
  */
 int yagl_host_glVertexPointer(GLint size, GLenum type, GLsizei stride, const GLvoid* pointer)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_gles1);
-    yagl_marshal_put_uint32(&base, 147);
+    yagl_marshal_put_uint32(&base, 165);
     yagl_marshal_put_GLint(&base, size);
     yagl_marshal_put_GLenum(&base, type);
     yagl_marshal_put_GLsizei(&base, stride);

@@ -111,8 +111,13 @@ YAGL_API void glBindBuffer(GLenum target, GLuint buffer)
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
+YAGL_IMPLEMENT_API_NORET2(glBindFramebuffer, GLenum, GLuint, target, framebuffer)
+YAGL_IMPLEMENT_API_NORET2(glBindRenderbuffer, GLenum, GLuint, target, renderbuffer)
 YAGL_IMPLEMENT_API_NORET2(glBindTexture, GLenum, GLuint, target, texture)
+YAGL_IMPLEMENT_API_NORET1(glBlendEquation, GLenum, mode)
+YAGL_IMPLEMENT_API_NORET2(glBlendEquationSeparate, GLenum, GLenum, modeRGB, modeAlpha)
 YAGL_IMPLEMENT_API_NORET2(glBlendFunc, GLenum, GLenum, sfactor, dfactor)
+YAGL_IMPLEMENT_API_NORET4(glBlendFuncSeparate, GLenum, GLenum, GLenum, GLenum, srcRGB, dstRGB, srcAlpha, dstAlpha)
 
 YAGL_API void glBufferData(GLenum target, GLsizeiptr size, const GLvoid* data, GLenum usage)
 {
@@ -128,6 +133,7 @@ YAGL_API void glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, c
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
+YAGL_IMPLEMENT_API_RET1(GLenum, glCheckFramebufferStatus, GLenum, target)
 YAGL_IMPLEMENT_API_NORET1(glClear, GLbitfield, mask)
 YAGL_IMPLEMENT_API_NORET4(glClearColor, GLclampf, GLclampf, GLclampf, GLclampf, red, green, blue, alpha)
 YAGL_IMPLEMENT_API_NORET1(glClearDepthf, GLclampf, depth)
@@ -179,6 +185,20 @@ YAGL_API void glDeleteBuffers(GLsizei n, const GLuint* buffers)
 
     while (!yagl_host_glDeleteBuffers(n, yagl_batch_put_GLuints(buffers, n))) {}
 
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glDeleteFramebuffers(GLsizei n, const GLuint* framebuffers)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glDeleteFramebuffers, GLsizei, const GLuint*, n, framebuffers);
+    while (!yagl_host_glDeleteFramebuffers(n, yagl_batch_put_GLuints(framebuffers, n))) {}
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glDeleteRenderbuffers(GLsizei n, const GLuint* renderbuffers)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glDeleteRenderbuffers, GLsizei, const GLuint*, n, renderbuffers);
+    while (!yagl_host_glDeleteRenderbuffers(n, yagl_batch_put_GLuints(renderbuffers, n))) {}
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
@@ -322,6 +342,8 @@ retry:
 YAGL_IMPLEMENT_API_NORET1(glEnable, GLenum, cap)
 YAGL_IMPLEMENT_API_NORET0(glFinish)
 YAGL_IMPLEMENT_API_NORET0(glFlush)
+YAGL_IMPLEMENT_API_NORET4(glFramebufferRenderbuffer, GLenum, GLenum, GLenum, GLuint, target, attachment, renderbuffertarget, renderbuffer)
+YAGL_IMPLEMENT_API_NORET5(glFramebufferTexture2D, GLenum, GLenum, GLenum, GLuint, GLint, target, attachment, textarget, texture, level)
 YAGL_IMPLEMENT_API_NORET1(glFrontFace, GLenum, mode)
 
 YAGL_API void glGenBuffers(GLsizei n, GLuint* buffers)
@@ -331,6 +353,30 @@ YAGL_API void glGenBuffers(GLsizei n, GLuint* buffers)
     do {
         yagl_mem_probe_write(buffers, sizeof(*buffers) * n);
     } while (!yagl_host_glGenBuffers(n, buffers));
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_IMPLEMENT_API_NORET1(glGenerateMipmap, GLenum, target)
+
+YAGL_API void glGenFramebuffers(GLsizei n, GLuint* framebuffers)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glGenFramebuffers, GLsizei, GLuint*, n, framebuffers);
+
+    do {
+        yagl_mem_probe_write(framebuffers, sizeof(*framebuffers) * n);
+    } while (!yagl_host_glGenFramebuffers(n, framebuffers));
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glGenRenderbuffers(GLsizei n, GLuint* renderbuffers)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glGenRenderbuffers, GLsizei, GLuint*, n, renderbuffers);
+
+    do {
+        yagl_mem_probe_write(renderbuffers, sizeof(*renderbuffers) * n);
+    } while (!yagl_host_glGenRenderbuffers(n, renderbuffers));
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
@@ -381,6 +427,17 @@ YAGL_API void glGetFloatv(GLenum pname, GLfloat* params)
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
+YAGL_API void glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint* params)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT4(glGetFramebufferAttachmentParameteriv, GLenum, GLenum, GLenum, GLint*, target, attachment, pname, params);
+
+    do {
+        yagl_mem_probe_write_GLint(params);
+    } while (!yagl_host_glGetFramebufferAttachmentParameteriv(target, attachment, pname, params));
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
 YAGL_API void glGetIntegerv(GLenum pname, GLint* params)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT2(glGetIntegerv, GLenum, GLint*, pname, params);
@@ -388,6 +445,17 @@ YAGL_API void glGetIntegerv(GLenum pname, GLint* params)
     do {
         yagl_mem_probe_write_GLint(params);
     } while (!yagl_host_glGetIntegerv(pname, params));
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint* params)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glGetRenderbufferParameteriv, GLenum, GLenum, GLint*, target, pname, params);
+
+    do {
+        yagl_mem_probe_write_GLint(params);
+    } while (!yagl_host_glGetRenderbufferParameteriv(target, pname, params));
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
@@ -417,6 +485,8 @@ YAGL_API void glGetTexParameteriv(GLenum target, GLenum pname, GLint* params)
 YAGL_IMPLEMENT_API_NORET2(glHint, GLenum, GLenum, target, mode)
 YAGL_IMPLEMENT_API_RET1(GLboolean, glIsBuffer, GLuint, buffer)
 YAGL_IMPLEMENT_API_RET1(GLboolean, glIsEnabled, GLenum, cap)
+YAGL_IMPLEMENT_API_RET1(GLboolean, glIsFramebuffer, GLuint, framebuffer)
+YAGL_IMPLEMENT_API_RET1(GLboolean, glIsRenderbuffer, GLuint, renderbuffer)
 YAGL_IMPLEMENT_API_RET1(GLboolean, glIsTexture, GLuint, texture)
 YAGL_IMPLEMENT_API_NORET1(glLineWidth, GLfloat, width)
 
@@ -488,6 +558,7 @@ YAGL_API void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLen
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
+YAGL_IMPLEMENT_API_NORET4(glRenderbufferStorage, GLenum, GLenum, GLsizei, GLsizei, target, internalformat, width, height)
 YAGL_IMPLEMENT_API_NORET2(glSampleCoverage, GLclampf, GLboolean, value, invert)
 YAGL_IMPLEMENT_API_NORET4(glScissor, GLint, GLint, GLsizei, GLsizei, x, y, width, height)
 YAGL_IMPLEMENT_API_NORET3(glStencilFunc, GLenum, GLint, GLuint, func, ref, mask)

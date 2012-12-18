@@ -63,33 +63,11 @@ YAGL_API void glBindAttribLocation(GLuint program, GLuint index, const GLchar* n
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-YAGL_IMPLEMENT_API_NORET2(glBindFramebuffer, GLenum, GLuint, target, framebuffer)
-YAGL_IMPLEMENT_API_NORET2(glBindRenderbuffer, GLenum, GLuint, target, renderbuffer)
 YAGL_IMPLEMENT_API_NORET4(glBlendColor, GLclampf, GLclampf, GLclampf, GLclampf, red, green, blue, alpha)
-YAGL_IMPLEMENT_API_NORET1(glBlendEquation, GLenum, mode)
-YAGL_IMPLEMENT_API_NORET2(glBlendEquationSeparate, GLenum, GLenum, modeRGB, modeAlpha)
-YAGL_IMPLEMENT_API_NORET4(glBlendFuncSeparate, GLenum, GLenum, GLenum, GLenum, srcRGB, dstRGB, srcAlpha, dstAlpha)
-YAGL_IMPLEMENT_API_RET1(GLenum, glCheckFramebufferStatus, GLenum, target)
 YAGL_IMPLEMENT_API_NORET1(glCompileShader, GLuint, shader)
 YAGL_IMPLEMENT_API_RET0(GLuint, glCreateProgram)
 YAGL_IMPLEMENT_API_RET1(GLuint, glCreateShader, GLenum, type)
-
-YAGL_API void glDeleteFramebuffers(GLsizei n, const GLuint* framebuffers)
-{
-    YAGL_LOG_FUNC_ENTER_SPLIT2(glDeleteFramebuffers, GLsizei, const GLuint*, n, framebuffers);
-    while (!yagl_host_glDeleteFramebuffers(n, yagl_batch_put_GLuints(framebuffers, n))) {}
-    YAGL_LOG_FUNC_EXIT(NULL);
-}
-
 YAGL_IMPLEMENT_API_NORET1(glDeleteProgram, GLuint, program)
-
-YAGL_API void glDeleteRenderbuffers(GLsizei n, const GLuint* renderbuffers)
-{
-    YAGL_LOG_FUNC_ENTER_SPLIT2(glDeleteRenderbuffers, GLsizei, const GLuint*, n, renderbuffers);
-    while (!yagl_host_glDeleteRenderbuffers(n, yagl_batch_put_GLuints(renderbuffers, n))) {}
-    YAGL_LOG_FUNC_EXIT(NULL);
-}
-
 YAGL_IMPLEMENT_API_NORET1(glDeleteShader, GLuint, shader)
 YAGL_IMPLEMENT_API_NORET2(glDetachShader, GLuint, GLuint, program, shader)
 
@@ -127,32 +105,6 @@ YAGL_API void glDisableVertexAttribArray(GLuint index)
     }
 
     YAGL_HOST_CALL_ASSERT(yagl_host_glDisableVertexAttribArray(index));
-
-    YAGL_LOG_FUNC_EXIT(NULL);
-}
-
-YAGL_IMPLEMENT_API_NORET4(glFramebufferRenderbuffer, GLenum, GLenum, GLenum, GLuint, target, attachment, renderbuffertarget, renderbuffer)
-YAGL_IMPLEMENT_API_NORET5(glFramebufferTexture2D, GLenum, GLenum, GLenum, GLuint, GLint, target, attachment, textarget, texture, level)
-YAGL_IMPLEMENT_API_NORET1(glGenerateMipmap, GLenum, target)
-
-YAGL_API void glGenFramebuffers(GLsizei n, GLuint* framebuffers)
-{
-    YAGL_LOG_FUNC_ENTER_SPLIT2(glGenFramebuffers, GLsizei, GLuint*, n, framebuffers);
-
-    do {
-        yagl_mem_probe_write(framebuffers, sizeof(*framebuffers) * n);
-    } while (!yagl_host_glGenFramebuffers(n, framebuffers));
-
-    YAGL_LOG_FUNC_EXIT(NULL);
-}
-
-YAGL_API void glGenRenderbuffers(GLsizei n, GLuint* renderbuffers)
-{
-    YAGL_LOG_FUNC_ENTER_SPLIT2(glGenRenderbuffers, GLsizei, GLuint*, n, renderbuffers);
-
-    do {
-        yagl_mem_probe_write(renderbuffers, sizeof(*renderbuffers) * n);
-    } while (!yagl_host_glGenRenderbuffers(n, renderbuffers));
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
@@ -212,17 +164,6 @@ YAGL_API int glGetAttribLocation(GLuint program, const GLchar* name)
     return retval;
 }
 
-YAGL_API void glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint* params)
-{
-    YAGL_LOG_FUNC_ENTER_SPLIT4(glGetFramebufferAttachmentParameteriv, GLenum, GLenum, GLenum, GLint*, target, attachment, pname, params);
-
-    do {
-        yagl_mem_probe_write_GLint(params);
-    } while (!yagl_host_glGetFramebufferAttachmentParameteriv(target, attachment, pname, params));
-
-    YAGL_LOG_FUNC_EXIT(NULL);
-}
-
 YAGL_API void glGetProgramiv(GLuint program, GLenum pname, GLint* params)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT3(glGetProgramiv, GLuint, GLenum, GLint*, program, pname, params);
@@ -242,17 +183,6 @@ YAGL_API void glGetProgramInfoLog(GLuint program, GLsizei bufsize, GLsizei* leng
         yagl_mem_probe_write_GLsizei(length);
         yagl_mem_probe_write(infolog, bufsize);
     } while (!yagl_host_glGetProgramInfoLog(program, bufsize, length, infolog));
-
-    YAGL_LOG_FUNC_EXIT(NULL);
-}
-
-YAGL_API void glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint* params)
-{
-    YAGL_LOG_FUNC_ENTER_SPLIT3(glGetRenderbufferParameteriv, GLenum, GLenum, GLint*, target, pname, params);
-
-    do {
-        yagl_mem_probe_write_GLint(params);
-    } while (!yagl_host_glGetRenderbufferParameteriv(target, pname, params));
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
@@ -420,13 +350,10 @@ YAGL_API void glGetVertexAttribPointerv(GLuint index, GLenum pname, GLvoid** poi
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-YAGL_IMPLEMENT_API_RET1(GLboolean, glIsFramebuffer, GLuint, framebuffer)
 YAGL_IMPLEMENT_API_RET1(GLboolean, glIsProgram, GLuint, program)
-YAGL_IMPLEMENT_API_RET1(GLboolean, glIsRenderbuffer, GLuint, renderbuffer)
 YAGL_IMPLEMENT_API_RET1(GLboolean, glIsShader, GLuint, shader)
 YAGL_IMPLEMENT_API_NORET1(glLinkProgram, GLuint, program)
 YAGL_IMPLEMENT_API_NORET0(glReleaseShaderCompiler)
-YAGL_IMPLEMENT_API_NORET4(glRenderbufferStorage, GLenum, GLenum, GLsizei, GLsizei, target, internalformat, width, height)
 
 YAGL_API void glShaderBinary(GLsizei n, const GLuint* shaders, GLenum binaryformat, const GLvoid* binary, GLsizei length)
 {
