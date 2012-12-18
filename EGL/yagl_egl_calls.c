@@ -1252,6 +1252,23 @@ static __eglMustCastToProperFunctionPointerType yagl_get_gles2_proc_address(cons
     }
 }
 
+/* We assume that if procname ends with 'ARB', 'EXT' or 'OES' then its an
+ * extension */
+static int yagl_procname_is_extension(const char* procname)
+{
+    size_t len = strlen(procname);
+
+    procname = &procname[len - 3];
+
+    if (strcmp("OES", procname) == 0 ||
+        strcmp("ARB", procname) == 0 ||
+        strcmp("EXT", procname) == 0) {
+        return 1;
+    }
+
+    return 0;
+}
+
 YAGL_API __eglMustCastToProperFunctionPointerType eglGetProcAddress(const char* procname)
 {
     __eglMustCastToProperFunctionPointerType ret = NULL;
@@ -1263,12 +1280,8 @@ YAGL_API __eglMustCastToProperFunctionPointerType eglGetProcAddress(const char* 
             ret = (__eglMustCastToProperFunctionPointerType)&eglCreateImageKHR;
         } else if (strcmp("eglDestroyImageKHR", procname) == 0) {
             ret = (__eglMustCastToProperFunctionPointerType)&eglDestroyImageKHR;
-        } else if (strcmp("glEGLImageTargetTexture2DOES", procname) == 0) {
-            /*
-             * All GL extensions should be specified here explicitly, this is
-             * for speed, we don't want to waste time looking up what's not
-             * a GL extension.
-             */
+        } else if (yagl_procname_is_extension(procname)) {
+
             struct yagl_context *ctx = yagl_get_context();
 
             if (ctx) {
