@@ -786,7 +786,7 @@ YAGL_API EGLContext eglCreateContext( EGLDisplay dpy_,
     yagl_host_handle host_context = 0;
     struct yagl_context *ctx = NULL;
     int i = 0;
-    EGLint version = 0;
+    EGLint version = 1;
 
     YAGL_LOG_FUNC_ENTER(eglCreateContext,
                         "dpy = %u, config = %u, share_context = %u",
