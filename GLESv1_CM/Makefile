@@ -22,18 +22,18 @@ install:: $(INSTALL_LIB_DIR) $(TARGET)
 ifeq ($(V),0)
 	@echo [INSTALL] $(TARGET)
 	@cp -d $(TARGET) $(INSTALL_LIB_DIR)
-	@ln -s -f libGLES_CM.so $(INSTALL_LIB_DIR)/libGLES_CM.so.1
-	@ln -s -f libGLES_CM.so.1 $(INSTALL_LIB_DIR)/libGLES_CM.so.1.4.5
+	@ln -s -f libGLESv1_CM.so $(INSTALL_LIB_DIR)/libGLESv1_CM.so.1
+	@ln -s -f libGLESv1_CM.so.1 $(INSTALL_LIB_DIR)/libGLESv1_CM.so.1.4.5
 else
 	cp -d $(TARGET) $(INSTALL_LIB_DIR)
-	ln -s -f libGLES_CM.so $(INSTALL_LIB_DIR)/libGLES_CM.so.1
-	ln -s -f libGLES_CM.so.1 $(INSTALL_LIB_DIR)/libGLES_CM.so.1.4.5
+	ln -s -f libGLESv1_CM.so $(INSTALL_LIB_DIR)/libGLESv1_CM.so.1
+	ln -s -f libGLESv1_CM.so.1 $(INSTALL_LIB_DIR)/libGLESv1_CM.so.1.4.5
 endif
 
 install-strip:: install
 ifeq ($(V),0)
 	@echo [STRIP] $(TARGET)
-	@$(STRIP) $(INSTALL_LIB_DIR)/libGLES_CM.so
+	@$(STRIP) $(INSTALL_LIB_DIR)/libGLESv1_CM.so
 else
-	$(STRIP) $(INSTALL_LIB_DIR)/libGLES_CM.so
+	$(STRIP) $(INSTALL_LIB_DIR)/libGLESv1_CM.so
 endif

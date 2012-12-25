@@ -1240,9 +1240,9 @@ out:
 
 static __eglMustCastToProperFunctionPointerType yagl_get_gles1_proc_address(const char* procname)
 {
-    void *handle = dlopen("libGLES_CM.so.1", RTLD_NOW|RTLD_GLOBAL);
+    void *handle = dlopen("libGLESv1_CM.so.1", RTLD_NOW|RTLD_GLOBAL);
     if (!handle) {
-        handle = dlopen("libGLES_CM.so", RTLD_NOW|RTLD_GLOBAL);
+        handle = dlopen("libGLESv1_CM.so", RTLD_NOW|RTLD_GLOBAL);
     }
     if (handle) {
         return dlsym(handle, procname);
