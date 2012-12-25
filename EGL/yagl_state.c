@@ -7,6 +7,7 @@
 #include "yagl_marshal.h"
 #include "yagl_mem.h"
 #include "yagl_offscreen.h"
+#include "yagl_onscreen.h"
 #include "yagl_backend.h"
 #include <unistd.h>
 #include <pthread.h>
@@ -221,8 +222,7 @@ static struct yagl_state* yagl_get_state()
         state->backend = yagl_offscreen_create();
         break;
     case yagl_render_type_onscreen:
-        fprintf(stderr, "Critical error! Onscreen render type not supported yet!\n");
-        exit(1);
+        state->backend = yagl_onscreen_create();
         break;
     default:
         fprintf(stderr, "Critical error! Bad render type reported by kernel: %d!\n", render_type);

@@ -572,14 +572,14 @@ int yagl_host_eglSwapBuffers(EGLBoolean* retval, yagl_host_handle dpy, yagl_host
 /*
  * eglCopyBuffers wrapper. id = 24
  */
-int yagl_host_eglCopyBuffers(EGLBoolean* retval, yagl_host_handle dpy, yagl_host_handle surface, EGLNativePixmapType target)
+int yagl_host_eglCopyBuffers(EGLBoolean* retval, yagl_host_handle dpy, yagl_host_handle surface, yagl_winsys_id target)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_egl);
     yagl_marshal_put_uint32(&base, 24);
     yagl_marshal_put_host_handle(&base, dpy);
     yagl_marshal_put_host_handle(&base, surface);
-    yagl_marshal_put_EGLNativePixmapType(&base, target);
+    yagl_marshal_put_yagl_winsys_id(&base, target);
     if (!yagl_batch_update_marshal(base))
     {
         return 0;
@@ -597,7 +597,7 @@ int yagl_host_eglCopyBuffers(EGLBoolean* retval, yagl_host_handle dpy, yagl_host
 /*
  * eglCreateImageKHR wrapper. id = 25
  */
-int yagl_host_eglCreateImageKHR(yagl_host_handle* retval, yagl_host_handle dpy, yagl_host_handle ctx, EGLenum target, yagl_host_handle buffer, const EGLint* attrib_list)
+int yagl_host_eglCreateImageKHR(yagl_host_handle* retval, yagl_host_handle dpy, yagl_host_handle ctx, EGLenum target, yagl_winsys_id buffer, const EGLint* attrib_list)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_egl);
@@ -605,7 +605,7 @@ int yagl_host_eglCreateImageKHR(yagl_host_handle* retval, yagl_host_handle dpy, 
     yagl_marshal_put_host_handle(&base, dpy);
     yagl_marshal_put_host_handle(&base, ctx);
     yagl_marshal_put_EGLenum(&base, target);
-    yagl_marshal_put_host_handle(&base, buffer);
+    yagl_marshal_put_yagl_winsys_id(&base, buffer);
     yagl_marshal_put_ptr(&base, attrib_list);
     if (!yagl_batch_update_marshal(base))
     {
@@ -778,6 +778,83 @@ int yagl_host_eglUpdateOffscreenImageYAGL(yagl_host_handle dpy, yagl_host_handle
     {
         return 0;
     }
+    return 1;
+}
+
+/*
+ * eglCreateWindowSurfaceOnscreenYAGL wrapper. id = 32
+ */
+int yagl_host_eglCreateWindowSurfaceOnscreenYAGL(yagl_host_handle* retval, yagl_host_handle dpy, yagl_host_handle config, yagl_winsys_id win, const EGLint* attrib_list)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_egl);
+    yagl_marshal_put_uint32(&base, 32);
+    yagl_marshal_put_host_handle(&base, dpy);
+    yagl_marshal_put_host_handle(&base, config);
+    yagl_marshal_put_yagl_winsys_id(&base, win);
+    yagl_marshal_put_ptr(&base, attrib_list);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    if (!yagl_batch_sync())
+    {
+        return 0;
+    }
+    base = yagl_batch_get_marshal();
+    yagl_marshal_skip(&base); // call result
+    *retval = yagl_marshal_get_host_handle(&base);
+    return 1;
+}
+
+/*
+ * eglCreatePbufferSurfaceOnscreenYAGL wrapper. id = 33
+ */
+int yagl_host_eglCreatePbufferSurfaceOnscreenYAGL(yagl_host_handle* retval, yagl_host_handle dpy, yagl_host_handle config, const EGLint* attrib_list)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_egl);
+    yagl_marshal_put_uint32(&base, 33);
+    yagl_marshal_put_host_handle(&base, dpy);
+    yagl_marshal_put_host_handle(&base, config);
+    yagl_marshal_put_ptr(&base, attrib_list);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    if (!yagl_batch_sync())
+    {
+        return 0;
+    }
+    base = yagl_batch_get_marshal();
+    yagl_marshal_skip(&base); // call result
+    *retval = yagl_marshal_get_host_handle(&base);
+    return 1;
+}
+
+/*
+ * eglCreatePixmapSurfaceOnscreenYAGL wrapper. id = 34
+ */
+int yagl_host_eglCreatePixmapSurfaceOnscreenYAGL(yagl_host_handle* retval, yagl_host_handle dpy, yagl_host_handle config, yagl_winsys_id pixmap, const EGLint* attrib_list)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_egl);
+    yagl_marshal_put_uint32(&base, 34);
+    yagl_marshal_put_host_handle(&base, dpy);
+    yagl_marshal_put_host_handle(&base, config);
+    yagl_marshal_put_yagl_winsys_id(&base, pixmap);
+    yagl_marshal_put_ptr(&base, attrib_list);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
+    if (!yagl_batch_sync())
+    {
+        return 0;
+    }
+    base = yagl_batch_get_marshal();
+    yagl_marshal_skip(&base); // call result
+    *retval = yagl_marshal_get_host_handle(&base);
     return 1;
 }
 

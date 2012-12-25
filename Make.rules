@@ -23,6 +23,7 @@ X11_LIB_DIR             ?= $(X11_HOME_DIR)/lib
 
 #install dir
 INSTALL_DIR             ?= /usr/local
+INSTALL_LIB_DIR         ?= $(INSTALL_DIR)/lib
 
 #!USER CONFIGURABLE END!
 
@@ -36,7 +37,6 @@ BIN_DIR                  = $(BUILD_DIR)/bin$(BIN_PREFIX)
 LIB_DIR                  = $(BUILD_DIR)/lib
 OBJ_DIR                  = $(BUILD_DIR)/obj$(OBJ_PREFIX)
 INCLUDE_DIR              = $(TOP_DIR)/include
-INSTALL_LIB_DIR          = $(INSTALL_DIR)/lib
 
 #compiler settings
 CFLAGS                  += -Wall -Wextra -Wno-unused -Wno-return-type -D_REENTRANT -fPIC -DPIC -fvisibility=hidden

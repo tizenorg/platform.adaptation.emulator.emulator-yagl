@@ -19,6 +19,7 @@ typedef enum
 } yagl_api_id;
 
 typedef uint32_t yagl_host_handle;
+typedef uint32_t yagl_winsys_id;
 
 #define yagl_offsetof(type, member) ((size_t)&((type*)0)->member)
 

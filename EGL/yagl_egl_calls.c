@@ -414,6 +414,8 @@ YAGL_API EGLSurface eglCreateWindowSurface( EGLDisplay dpy_,
         goto fail;
     }
 
+    XSync(dpy->x_dpy, 0);
+
     surface = yagl_get_backend()->create_window_surface(dpy,
                                                         (yagl_host_handle)config,
                                                         win,
@@ -509,6 +511,8 @@ YAGL_API EGLSurface eglCreatePixmapSurface( EGLDisplay dpy_,
     if (!yagl_validate_display(dpy_, &dpy)) {
         goto fail;
     }
+
+    XSync(dpy->x_dpy, 0);
 
     surface = yagl_get_backend()->create_pixmap_surface(dpy,
                                                         (yagl_host_handle)config,
@@ -1094,6 +1098,8 @@ YAGL_API EGLBoolean eglCopyBuffers( EGLDisplay dpy_,
         goto out;
     }
 
+    XSync(dpy->x_dpy, 0);
+
     if (!surface->copy_buffers(surface, target)) {
         goto out;
     }
@@ -1140,13 +1146,15 @@ YAGL_API EGLImageKHR eglCreateImageKHR( EGLDisplay dpy_,
         goto out;
     }
 
+    XSync(dpy->x_dpy, 0);
+
     do {
         yagl_mem_probe_read_attrib_list(attrib_list);
     } while (!yagl_host_eglCreateImageKHR(&host_image,
         dpy->host_dpy,
         (yagl_host_handle)ctx,
         target,
-        0,
+        (Pixmap)buffer,
         attrib_list));
 
     if (!host_image) {
