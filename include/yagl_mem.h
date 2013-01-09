@@ -121,10 +121,25 @@ static __inline void yagl_mem_probe_write(void *data, int len)
     }
 }
 
-#define yagl_mem_probe_read_int8(value) yagl_mem_probe_read_uint8((const uint8_t*)(value))
-#define yagl_mem_probe_write_int8(value) yagl_mem_probe_write_uint8((uint8_t*)(value))
-#define yagl_mem_probe_read_int32(value) yagl_mem_probe_read_uint32((const uint32_t*)(value))
-#define yagl_mem_probe_write_int32(value) yagl_mem_probe_write_uint32((uint32_t*)(value))
+static __inline void yagl_mem_probe_read_int8(const int8_t *val_p)
+{
+    yagl_mem_probe_read_uint8((const uint8_t *)val_p);
+}
+
+static __inline void yagl_mem_probe_write_int8(int8_t *val_p)
+{
+    yagl_mem_probe_write_uint8((uint8_t *)val_p);
+}
+
+static __inline void yagl_mem_probe_read_int32(const int32_t *val_p)
+{
+    yagl_mem_probe_read_uint32((const uint32_t *)val_p);
+}
+
+static __inline void yagl_mem_probe_write_int32(int32_t *val_p)
+{
+    yagl_mem_probe_write_uint32((uint32_t *)val_p);
+}
 
 #define YAGL_HOST_CALL_ASSERT(res) \
         if (!res) { \
