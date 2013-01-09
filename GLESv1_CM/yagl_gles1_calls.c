@@ -447,7 +447,7 @@ YAGL_API void glGetTexEnviv(GLenum target, GLenum pname, GLint *params)
 
     do {
         for (i = 0; i < count; ++i) {
-            yagl_mem_probe_write_GLint(params[i]);
+            yagl_mem_probe_write_GLint(params + i);
         }
     } while (!yagl_host_glGetTexEnviv(target, pname, params));
 
@@ -479,7 +479,7 @@ YAGL_API void glGetTexEnvxv(GLenum target, GLenum pname, GLfixed *params)
 
     do {
         for (i = 0; i < count; ++i) {
-            yagl_mem_probe_write_GLfixed(params[i]);
+            yagl_mem_probe_write_GLfixed(params + i);
         }
     } while (!yagl_host_glGetTexEnvxv(target, pname, params));
 
