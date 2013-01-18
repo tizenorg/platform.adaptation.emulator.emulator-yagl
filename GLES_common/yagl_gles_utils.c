@@ -1,10 +1,11 @@
-#include <GLES/gl.h>
-#include <GLES/glext.h>
+#include <GL/gl.h>
+#include <GL/glext.h>
 #include <assert.h>
 #include "yagl_gles_utils.h"
-#include "yagl_host_gles1_calls.h"
 #include "yagl_mem_gl.h"
 #include "yagl_gles_context.h"
+
+int yagl_host_glGetIntegerv(GLenum pname, GLint* params);
 
 int yagl_gles_get_stride(GLsizei alignment,
                          GLsizei width,
@@ -12,37 +13,69 @@ int yagl_gles_get_stride(GLsizei alignment,
                          GLenum type,
                          GLsizei *stride)
 {
-    int per_byte;
+    int num_components;
     GLsizei bpp;
 
-    switch (type) {
-    case GL_UNSIGNED_BYTE:
-        per_byte = 1;
+    switch (format) {
+    case GL_ALPHA:
+        num_components = 1;
         break;
-    case GL_UNSIGNED_SHORT_5_6_5:
-    case GL_UNSIGNED_SHORT_4_4_4_4:
-    case GL_UNSIGNED_SHORT_5_5_5_1:
-        per_byte = 0;
+    case GL_RGB:
+        num_components = 3;
+        break;
+    case GL_RGBA:
+        num_components = 4;
+        break;
+    case GL_LUMINANCE:
+        num_components = 1;
+        break;
+    case GL_LUMINANCE_ALPHA:
+        num_components = 2;
+        break;
+    case GL_DEPTH_STENCIL_EXT:
+        num_components = 1;
+        break;
+    case GL_DEPTH_COMPONENT:
+        if (type != GL_UNSIGNED_SHORT && type != GL_UNSIGNED_INT) {
+            return 0;
+        }
+        num_components = 1;
         break;
     default:
         return 0;
     }
 
-    switch (format) {
-    case GL_ALPHA:
-        bpp = 1;
+    switch (type) {
+    case GL_UNSIGNED_BYTE:
+        bpp = num_components;
         break;
-    case GL_RGB:
-        bpp = (per_byte ? 3 : 2);
-        break;
-    case GL_RGBA:
-        bpp = (per_byte ? 4 : 2);
-        break;
-    case GL_LUMINANCE:
-        bpp = 1;
-        break;
-    case GL_LUMINANCE_ALPHA:
+    case GL_UNSIGNED_SHORT_5_6_5:
+        if (format != GL_RGB) {
+            return 0;
+        }
         bpp = 2;
+        break;
+    case GL_UNSIGNED_SHORT_4_4_4_4:
+    case GL_UNSIGNED_SHORT_5_5_5_1:
+        if (format != GL_RGBA) {
+            return 0;
+        }
+        bpp = 2;
+        break;
+    case GL_UNSIGNED_INT_24_8_EXT:
+        bpp = num_components * 4;
+        break;
+    case GL_UNSIGNED_SHORT:
+        if (format != GL_DEPTH_COMPONENT) {
+            return 0;
+        }
+        bpp = num_components * 2;
+        break;
+    case GL_UNSIGNED_INT:
+        if (format != GL_DEPTH_COMPONENT) {
+            return 0;
+        }
+        bpp = num_components * 4;
         break;
     default:
         return 0;
