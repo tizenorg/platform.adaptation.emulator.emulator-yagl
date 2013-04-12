@@ -18,11 +18,11 @@ ifeq ($(V),0)
 	@echo [INSTALL] $(TARGET)
 	@cp -d $(TARGET) $(INSTALL_LIB_DIR)
 	@ln -s -f libEGL.so $(INSTALL_LIB_DIR)/libEGL.so.1
-	@ln -s -f libEGL.so.1 $(INSTALL_LIB_DIR)/libEGL.so.1.4
+	@ln -s -f libEGL.so.1 $(INSTALL_LIB_DIR)/libEGL.so.1.0
 else
 	cp -d $(TARGET) $(INSTALL_LIB_DIR)
 	ln -s -f libEGL.so $(INSTALL_LIB_DIR)/libEGL.so.1
-	ln -s -f libEGL.so.1 $(INSTALL_LIB_DIR)/libEGL.so.1.4
+	ln -s -f libEGL.so.1 $(INSTALL_LIB_DIR)/libEGL.so.1.0
 endif
 
 install-strip:: install

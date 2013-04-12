@@ -1,7 +1,7 @@
 Name:       emulator-yagl
 Summary:    YaGL - OpenGLES acceleration module for emulator
 Version:    1.0
-Release:    11
+Release:    16
 Group:      TO_BE/FILLED_IN
 License:    TO_BE/FILLED_IN
 #URL:        http://www.khronos.org
@@ -10,22 +10,19 @@ BuildRequires:  pkgconfig(xfixes)
 BuildRequires:  pkgconfig(x11)
 BuildRequires:  pkgconfig(x11-xcb)
 BuildRequires:  pkgconfig(xext)
-Requires: gawk
-Requires: eet-tools
-Requires: e17-misc
+BuildRequires:  pkgconfig(xdamage)
 
-%description 
+%description
 YaGL - OpenGLES acceleration module for emulator.
 This package contains shared libraries libEGL, libGLES_CM, libGLESv2.
 
-#%package devel
-#Summary:    OpenGLES acceleration module for emulator (devel)
-#Group:      TO_BE/FILLED_IN
-#Requires:   %{name} = %{version}-%{release}
-#Requires:   pkgconfig(x11)
-#
-#%description devel
-#YaGL - OpenGLES acceleration module for emulator. (devel)
+%package devel
+Summary:    YaGL - OpenGLES acceleration module for emulator (devel)
+Requires:   %{name} = %{version}-%{release}
+Requires: pkgconfig(x11)
+
+%description devel
+YaGL - OpenGLES acceleration module for emulator (devel)
 
 %prep
 %setup -q
@@ -34,21 +31,29 @@ This package contains shared libraries libEGL, libGLES_CM, libGLESv2.
 make
 
 %install
-mkdir -p %{buildroot}/usr/lib/yagl/
-cp -r build/lib/*.so %{buildroot}/usr/lib/yagl/
-mkdir -p %{buildroot}/usr/share/yagl/
-cp -r install/* %{buildroot}/usr/share/yagl/
+make INSTALL_LIB_DIR=%{buildroot}/usr/lib/yagl install
+mkdir -p %{buildroot}/usr/lib/systemd/system
+cp packaging/emul-opengl-yagl.service %{buildroot}/usr/lib/systemd/system
+mkdir -p %{buildroot}/etc
+cp packaging/virtgl.sh %{buildroot}/etc
 
-%post
-eet -d /opt/home/root/.e/e/config/samsung/e.cfg config /usr/share/yagl/e.txt
-cd /usr/share/yagl/
-/usr/share/yagl/replace.sh /usr/share/yagl/replace.awk /usr/share/yagl/e.txt /usr/share/yagl/e1.txt
-eet -e /opt/home/root/.e/e/config/samsung/e.cfg config e1.txt 1
+mkdir -p %{buildroot}/usr/include
+cp -r include/EGL %{buildroot}/usr/include/
+cp -r include/GL %{buildroot}/usr/include/
+cp -r include/GLES %{buildroot}/usr/include/
+cp -r include/GLES2 %{buildroot}/usr/include/
+cp -r include/KHR %{buildroot}/usr/include/
 
 %files
 %defattr(-,root,root,-)
 /usr/lib/yagl/*
-/usr/share/yagl/replace.awk
-%attr(777,root,root)/usr/share/yagl/replace.sh
+/usr/lib/systemd/system/emul-opengl-yagl.service
+%attr(777,root,root)/etc/virtgl.sh
 
-%changelog
+%files devel
+%defattr(-,root,root,-)
+/usr/include/EGL
+/usr/include/GL
+/usr/include/GLES
+/usr/include/GLES2
+/usr/include/KHR

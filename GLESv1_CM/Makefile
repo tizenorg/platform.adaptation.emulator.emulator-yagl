@@ -23,11 +23,11 @@ ifeq ($(V),0)
 	@echo [INSTALL] $(TARGET)
 	@cp -d $(TARGET) $(INSTALL_LIB_DIR)
 	@ln -s -f libGLESv1_CM.so $(INSTALL_LIB_DIR)/libGLESv1_CM.so.1
-	@ln -s -f libGLESv1_CM.so.1 $(INSTALL_LIB_DIR)/libGLESv1_CM.so.1.4.5
+	@ln -s -f libGLESv1_CM.so.1 $(INSTALL_LIB_DIR)/libGLESv1_CM.so.1.0
 else
 	cp -d $(TARGET) $(INSTALL_LIB_DIR)
 	ln -s -f libGLESv1_CM.so $(INSTALL_LIB_DIR)/libGLESv1_CM.so.1
-	ln -s -f libGLESv1_CM.so.1 $(INSTALL_LIB_DIR)/libGLESv1_CM.so.1.4.5
+	ln -s -f libGLESv1_CM.so.1 $(INSTALL_LIB_DIR)/libGLESv1_CM.so.1.0
 endif
 
 install-strip:: install

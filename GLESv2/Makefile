@@ -21,12 +21,12 @@ install:: $(INSTALL_LIB_DIR) $(TARGET)
 ifeq ($(V),0)
 	@echo [INSTALL] $(TARGET)
 	@cp -d $(TARGET) $(INSTALL_LIB_DIR)
-	@ln -s -f libGLESv2.so $(INSTALL_LIB_DIR)/libGLESv2.so.2
-	@ln -s -f libGLESv2.so.2 $(INSTALL_LIB_DIR)/libGLESv2.so.2.0.0
+	@ln -s -f libGLESv2.so $(INSTALL_LIB_DIR)/libGLESv2.so.1
+	@ln -s -f libGLESv2.so.1 $(INSTALL_LIB_DIR)/libGLESv2.so.1.0
 else
 	cp -d $(TARGET) $(INSTALL_LIB_DIR)
-	ln -s -f libGLESv2.so $(INSTALL_LIB_DIR)/libGLESv2.so.2
-	ln -s -f libGLESv2.so.2 $(INSTALL_LIB_DIR)/libGLESv2.so.2.0.0
+	ln -s -f libGLESv2.so $(INSTALL_LIB_DIR)/libGLESv2.so.1
+	ln -s -f libGLESv2.so.1 $(INSTALL_LIB_DIR)/libGLESv2.so.1.0
 endif
 
 install-strip:: install
