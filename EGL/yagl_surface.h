@@ -22,7 +22,7 @@ struct yagl_surface
         Pixmap pixmap;
     } x_drawable;
 
-    int (*invalidate)(struct yagl_surface */*sfc*/);
+    int (*reset)(struct yagl_surface */*sfc*/);
 
     int (*swap_buffers)(struct yagl_surface */*sfc*/);
 

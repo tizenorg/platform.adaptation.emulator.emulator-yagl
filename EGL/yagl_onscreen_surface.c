@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <X11/extensions/Xdamage.h>
 
-static int yagl_onscreen_surface_invalidate(struct yagl_surface *sfc)
+static int yagl_onscreen_surface_reset(struct yagl_surface *sfc)
 {
     return 1;
 }
@@ -131,7 +131,7 @@ struct yagl_onscreen_surface
                              dpy,
                              x_win);
 
-    sfc->base.invalidate = &yagl_onscreen_surface_invalidate;
+    sfc->base.reset = &yagl_onscreen_surface_reset;
     sfc->base.swap_buffers = &yagl_onscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_onscreen_surface_copy_buffers;
 
@@ -174,7 +174,7 @@ struct yagl_onscreen_surface
                              dpy,
                              x_pixmap);
 
-    sfc->base.invalidate = &yagl_onscreen_surface_invalidate;
+    sfc->base.reset = &yagl_onscreen_surface_reset;
     sfc->base.swap_buffers = &yagl_onscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_onscreen_surface_copy_buffers;
 
@@ -214,7 +214,7 @@ struct yagl_onscreen_surface
                               host_surface,
                               dpy);
 
-    sfc->base.invalidate = &yagl_onscreen_surface_invalidate;
+    sfc->base.reset = &yagl_onscreen_surface_reset;
     sfc->base.swap_buffers = &yagl_onscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_onscreen_surface_copy_buffers;
 

@@ -580,7 +580,7 @@ YAGL_API EGLBoolean eglDestroySurface(EGLDisplay dpy_, EGLSurface surface_)
         goto out;
     }
 
-    if (!surface->invalidate(surface)) {
+    if (!surface->reset(surface)) {
         goto out;
     }
 
