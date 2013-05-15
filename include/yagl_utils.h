@@ -7,4 +7,6 @@
 
 YAGL_API void yagl_mutex_init(pthread_mutex_t* mutex);
 
+YAGL_API void yagl_recursive_mutex_init(pthread_mutex_t* mutex);
+
 #endif

@@ -21,6 +21,10 @@ X11_HOME_DIR            ?= /usr
 X11_INCLUDE_DIR         ?= $(X11_HOME_DIR)/include
 X11_LIB_DIR             ?= $(X11_HOME_DIR)/lib
 
+LIBDRM_HOME_DIR         ?= /usr
+LIBDRM_INCLUDE_DIR      ?= $(LIBDRM_HOME_DIR)/include/libdrm
+LIBDRM_LIB_DIR          ?= $(LIBDRM_HOME_DIR)/lib
+
 #install dir
 INSTALL_DIR             ?= /usr/local
 INSTALL_LIB_DIR         ?= $(INSTALL_DIR)/lib
@@ -39,7 +43,7 @@ OBJ_DIR                  = $(BUILD_DIR)/obj$(OBJ_PREFIX)
 INCLUDE_DIR              = $(TOP_DIR)/include
 
 #compiler settings
-CFLAGS                  += -Wall -Wextra -Wno-unused -Wno-return-type -D_REENTRANT -fPIC -DPIC -fvisibility=hidden
+CFLAGS                  += -Wall -Wextra -Wno-unused -D_REENTRANT -fPIC -DPIC -fvisibility=hidden
 LDFLAGS                 +=
 ifneq ($(DEBUG),y)
 CFLAGS                  += -DNDEBUG
@@ -50,9 +54,9 @@ endif
 ifeq ($(OPTIMIZE),y)
 CFLAGS                  += -O2
 endif
-CFLAGS                  += -I. -I$(INCLUDE_DIR) -I$(X11_INCLUDE_DIR)
-LDFLAGS                 += -L$(LIB_DIR) -L$(X11_LIB_DIR) \
-                           -Wl,-rpath-link=$(LIB_DIR) -Wl,-rpath-link=$(X11_LIB_DIR)
+CFLAGS                  += -I. -I$(INCLUDE_DIR) -I$(X11_INCLUDE_DIR) -I$(LIBDRM_INCLUDE_DIR)
+LDFLAGS                 += -L$(LIB_DIR) -L$(X11_LIB_DIR) -L$(LIBDRM_LIB_DIR) \
+                           -Wl,-rpath-link=$(LIB_DIR) -Wl,-rpath-link=$(X11_LIB_DIR) -Wl,-rpath-link=$(LIBDRM_LIB_DIR)
 CXXFLAGS                += $(CFLAGS) -fvisibility-inlines-hidden
 #objects
 SOURCES                 ?= $(wildcard *.c) $(wildcard *.cpp)

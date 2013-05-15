@@ -21,7 +21,7 @@ EGLBoolean, eglQueryContext, EGLDisplay^ dpy, EGLContext^ ctx, EGLint attribute,
 EGLBoolean, eglWaitGL
 EGLBoolean, eglWaitNative, EGLint engine
 EGLBoolean, eglSwapBuffers, EGLDisplay^ dpy, EGLSurface^ surface
-EGLBoolean, eglCopyBuffers, EGLDisplay^ dpy, EGLSurface^ surface, yagl_winsys_id target
+EGLBoolean, eglCopyBuffers, EGLDisplay^ dpy, EGLSurface^ surface
 EGLImageKHR^, eglCreateImageKHR, EGLDisplay^ dpy, EGLContext^ ctx, EGLenum target, yagl_winsys_id buffer, const EGLint* attrib_list
 EGLBoolean, eglDestroyImageKHR, EGLDisplay^ dpy, EGLImageKHR^ image
 
@@ -36,5 +36,6 @@ EGLBoolean, eglResizeOffscreenSurfaceYAGL, EGLDisplay^ dpy, EGLSurface^ surface,
 void, eglUpdateOffscreenImageYAGL, EGLDisplay^ dpy, EGLImageKHR^ image, uint32_t width, uint32_t height, uint32_t bpp, const void* pixels
 
 EGLSurface^, eglCreateWindowSurfaceOnscreenYAGL, EGLDisplay^ dpy, EGLConfig^ config, yagl_winsys_id win, const EGLint* attrib_list
-EGLSurface^, eglCreatePbufferSurfaceOnscreenYAGL, EGLDisplay^ dpy, EGLConfig^ config, const EGLint* attrib_list
+EGLSurface^, eglCreatePbufferSurfaceOnscreenYAGL, EGLDisplay^ dpy, EGLConfig^ config, yagl_winsys_id buffer, const EGLint* attrib_list
 EGLSurface^, eglCreatePixmapSurfaceOnscreenYAGL, EGLDisplay^ dpy, EGLConfig^ config, yagl_winsys_id pixmap, const EGLint* attrib_list
+void, eglInvalidateOnscreenSurfaceYAGL, EGLDisplay^ dpy, EGLSurface^ surface, yagl_winsys_id buffer

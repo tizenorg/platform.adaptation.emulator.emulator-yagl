@@ -12,6 +12,10 @@ struct yagl_image;
 
 struct yagl_backend
 {
+    struct yagl_display *(*create_display)(EGLNativeDisplayType /*display_id*/,
+                                           Display */*x_dpy*/,
+                                           yagl_host_handle /*host_dpy*/);
+
     struct yagl_surface *(*create_window_surface)(struct yagl_display */*dpy*/,
                                                   yagl_host_handle /*host_config*/,
                                                   Window /*x_win*/,
@@ -27,8 +31,9 @@ struct yagl_backend
                                                    const EGLint* /*attrib_list*/);
 
     struct yagl_image *(*create_image)(struct yagl_display */*dpy*/,
+                                       yagl_host_handle /*host_context*/,
                                        Pixmap /*x_pixmap*/,
-                                       yagl_host_handle /*host_image*/);
+                                       const EGLint* /*attrib_list*/);
 
     void (*destroy)(struct yagl_backend */*backend*/);
 };

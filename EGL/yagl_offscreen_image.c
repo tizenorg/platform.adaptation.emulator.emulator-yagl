@@ -4,6 +4,7 @@
 #include "yagl_display.h"
 #include "yagl_state.h"
 #include "yagl_host_egl_calls.h"
+#include "yagl_mem_egl.h"
 #include <string.h>
 
 static void yagl_offscreen_image_update(struct yagl_image *image)
@@ -50,14 +51,29 @@ static void yagl_offscreen_image_destroy(struct yagl_ref *ref)
 
 struct yagl_offscreen_image
     *yagl_offscreen_image_create(struct yagl_display *dpy,
+                                 yagl_host_handle host_context,
                                  Pixmap x_pixmap,
-                                 yagl_host_handle host_image)
+                                 const EGLint* attrib_list)
 {
     struct yagl_offscreen_image *image;
     unsigned int depth = 0;
     union { Window w; int i; unsigned int ui; } tmp_geom;
+    yagl_host_handle host_image = 0;
 
     image = yagl_malloc0(sizeof(*image));
+
+    do {
+        yagl_mem_probe_read_attrib_list(attrib_list);
+    } while (!yagl_host_eglCreateImageKHR(&host_image,
+        dpy->host_dpy,
+        host_context,
+        EGL_NATIVE_PIXMAP_KHR,
+        x_pixmap,
+        attrib_list));
+
+    if (!host_image) {
+        goto fail;
+    }
 
     memset(&tmp_geom, 0, sizeof(tmp_geom));
 
@@ -80,4 +96,9 @@ struct yagl_offscreen_image
     image->base.update = &yagl_offscreen_image_update;
 
     return image;
+
+fail:
+    yagl_free(image);
+
+    return NULL;
 }

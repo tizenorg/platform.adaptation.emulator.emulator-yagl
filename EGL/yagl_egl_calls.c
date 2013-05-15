@@ -9,6 +9,7 @@
 #include "yagl_image.h"
 #include "yagl_mem_egl.h"
 #include "yagl_backend.h"
+#include "yagl_render.h"
 #include <EGL/eglext.h>
 #include <stdio.h>
 #include <string.h>
@@ -37,7 +38,7 @@ static __inline int yagl_validate_display(EGLDisplay dpy_,
         return 0;
     }
 
-    if (!yagl_display_is_initialized(*dpy)) {
+    if (!yagl_display_is_prepared(*dpy)) {
         YAGL_SET_ERR(EGL_NOT_INITIALIZED);
         return 0;
     }
@@ -152,7 +153,7 @@ YAGL_API EGLBoolean eglInitialize(EGLDisplay dpy_, EGLint* major, EGLint* minor)
         goto fail;
     }
 
-    yagl_display_initialize(dpy);
+    yagl_display_prepare(dpy);
 
     YAGL_LOG_FUNC_EXIT("major = %d, minor = %d",
                        (major ? *major : -1),
@@ -414,8 +415,6 @@ YAGL_API EGLSurface eglCreateWindowSurface( EGLDisplay dpy_,
         goto fail;
     }
 
-    XSync(dpy->x_dpy, 0);
-
     surface = yagl_get_backend()->create_window_surface(dpy,
                                                         (yagl_host_handle)config,
                                                         win,
@@ -511,8 +510,6 @@ YAGL_API EGLSurface eglCreatePixmapSurface( EGLDisplay dpy_,
     if (!yagl_validate_display(dpy_, &dpy)) {
         goto fail;
     }
-
-    XSync(dpy->x_dpy, 0);
 
     surface = yagl_get_backend()->create_pixmap_surface(dpy,
                                                         (yagl_host_handle)config,
@@ -910,11 +907,19 @@ YAGL_API EGLBoolean eglMakeCurrent( EGLDisplay dpy_,
     if (ctx &&
         (ctx == yagl_get_context()) &&
         (ctx->dpy == dpy) &&
-        (ctx->draw_sfc == draw_) &&
-        (ctx->read_sfc == read_)) {
+        (draw == yagl_get_draw_surface()) &&
+        (read == yagl_get_read_surface())) {
         res = EGL_TRUE;
 
         goto out;
+    }
+
+    if (draw) {
+        draw->invalidate(draw);
+    }
+
+    if (read && (draw != read)) {
+        read->invalidate(read);
     }
 
     YAGL_HOST_CALL_ASSERT(yagl_host_eglMakeCurrent(&retval,
@@ -927,11 +932,7 @@ YAGL_API EGLBoolean eglMakeCurrent( EGLDisplay dpy_,
         goto out;
     }
 
-    yagl_set_context(ctx);
-
-    if (ctx) {
-        yagl_context_update(ctx, draw_, read_);
-    }
+    yagl_set_context(ctx, draw, read);
 
     res = EGL_TRUE;
 
@@ -960,17 +961,17 @@ YAGL_API EGLContext eglGetCurrentContext(void)
 
 YAGL_API EGLSurface eglGetCurrentSurface(EGLint readdraw)
 {
-    struct yagl_context *ctx;
+    struct yagl_surface *sfc;
     EGLSurface ret = EGL_NO_SURFACE;
 
     YAGL_LOG_FUNC_ENTER(eglGetCurrentSurface, NULL);
 
-    ctx = yagl_get_context();
-
     if (readdraw == EGL_READ) {
-        ret = (ctx ? ctx->read_sfc : EGL_NO_SURFACE);
+        sfc = yagl_get_read_surface();
+        ret = (sfc ? yagl_surface_get_handle(sfc) : EGL_NO_SURFACE);
     } else if (readdraw == EGL_DRAW) {
-        ret = (ctx ? ctx->draw_sfc : EGL_NO_SURFACE);
+        sfc = yagl_get_draw_surface();
+        ret = (sfc ? yagl_surface_get_handle(sfc) : EGL_NO_SURFACE);
     } else {
         YAGL_SET_ERR(EGL_BAD_PARAMETER);
     }
@@ -1039,7 +1040,6 @@ YAGL_IMPLEMENT_API_RET1(EGLBoolean, eglWaitNative, EGLint, engine)
 YAGL_API EGLBoolean eglSwapBuffers(EGLDisplay dpy_, EGLSurface surface_)
 {
     EGLBoolean res = EGL_FALSE;
-    EGLBoolean retval = EGL_FALSE;
     struct yagl_display *dpy = NULL;
     struct yagl_surface *surface = NULL;
 
@@ -1070,6 +1070,8 @@ YAGL_API EGLBoolean eglSwapBuffers(EGLDisplay dpy_, EGLSurface surface_)
 out:
     yagl_surface_release(surface);
 
+    yagl_render_invalidate();
+
     YAGL_LOG_FUNC_EXIT("%d", res);
 
     return res;
@@ -1080,7 +1082,6 @@ YAGL_API EGLBoolean eglCopyBuffers( EGLDisplay dpy_,
                                     EGLNativePixmapType target )
 {
     EGLBoolean res = EGL_FALSE;
-    EGLBoolean retval = EGL_FALSE;
     struct yagl_display *dpy = NULL;
     struct yagl_surface *surface = NULL;
 
@@ -1097,8 +1098,6 @@ YAGL_API EGLBoolean eglCopyBuffers( EGLDisplay dpy_,
     if (!yagl_validate_surface(dpy, surface_, &surface)) {
         goto out;
     }
-
-    XSync(dpy->x_dpy, 0);
 
     if (!surface->copy_buffers(surface, target)) {
         goto out;
@@ -1122,7 +1121,6 @@ YAGL_API EGLImageKHR eglCreateImageKHR( EGLDisplay dpy_,
 {
     EGLImageKHR ret = EGL_NO_IMAGE_KHR;
     struct yagl_display *dpy = NULL;
-    yagl_host_handle host_image = 0;
     struct yagl_image *image = NULL;
 
     YAGL_LOG_FUNC_ENTER(eglCreateImageKHR,
@@ -1146,47 +1144,28 @@ YAGL_API EGLImageKHR eglCreateImageKHR( EGLDisplay dpy_,
         goto out;
     }
 
-    XSync(dpy->x_dpy, 0);
-
-    do {
-        yagl_mem_probe_read_attrib_list(attrib_list);
-    } while (!yagl_host_eglCreateImageKHR(&host_image,
-        dpy->host_dpy,
-        (yagl_host_handle)ctx,
-        target,
-        (Pixmap)buffer,
-        attrib_list));
-
-    if (!host_image) {
-        goto out;
-    }
-
     image = yagl_get_backend()->create_image(dpy,
+                                             (yagl_host_handle)ctx,
                                              (Pixmap)buffer,
-                                             host_image);
+                                             attrib_list);
 
     if (!image) {
-        YAGL_SET_ERR(EGL_BAD_ALLOC);
         goto out;
     }
 
     if (!yagl_display_image_add(dpy, image)) {
+        EGLBoolean retval;
+        YAGL_HOST_CALL_ASSERT(yagl_host_eglDestroyImageKHR(&retval,
+                                                           dpy->host_dpy,
+                                                           image->res.handle));
         YAGL_SET_ERR(EGL_BAD_PARAMETER);
         goto out;
     }
 
     ret = yagl_image_get_handle(image);
 
-    host_image = 0;
-
 out:
     yagl_image_release(image);
-    if (host_image) {
-        EGLBoolean retval;
-        YAGL_HOST_CALL_ASSERT(yagl_host_eglDestroyImageKHR(&retval,
-                                                           dpy->host_dpy,
-                                                           host_image));
-    }
 
     YAGL_LOG_FUNC_EXIT("%p", ret);
 
@@ -1247,6 +1226,7 @@ static __eglMustCastToProperFunctionPointerType yagl_get_gles1_proc_address(cons
     if (handle) {
         return dlsym(handle, procname);
     }
+    return NULL;
 }
 
 static __eglMustCastToProperFunctionPointerType yagl_get_gles2_proc_address(const char* procname)
@@ -1258,6 +1238,7 @@ static __eglMustCastToProperFunctionPointerType yagl_get_gles2_proc_address(cons
     if (handle) {
         return dlsym(handle, procname);
     }
+    return NULL;
 }
 
 /* We assume that if procname ends with 'ARB', 'EXT' or 'OES' then its an

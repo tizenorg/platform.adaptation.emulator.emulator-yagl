@@ -15,7 +15,8 @@ struct yagl_offscreen_image
 
 struct yagl_offscreen_image
     *yagl_offscreen_image_create(struct yagl_display *dpy,
+                                 yagl_host_handle host_context,
                                  Pixmap x_pixmap,
-                                 yagl_host_handle host_image);
+                                 const EGLint* attrib_list);
 
 #endif

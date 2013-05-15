@@ -572,14 +572,13 @@ int yagl_host_eglSwapBuffers(EGLBoolean* retval, yagl_host_handle dpy, yagl_host
 /*
  * eglCopyBuffers wrapper. id = 24
  */
-int yagl_host_eglCopyBuffers(EGLBoolean* retval, yagl_host_handle dpy, yagl_host_handle surface, yagl_winsys_id target)
+int yagl_host_eglCopyBuffers(EGLBoolean* retval, yagl_host_handle dpy, yagl_host_handle surface)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_egl);
     yagl_marshal_put_uint32(&base, 24);
     yagl_marshal_put_host_handle(&base, dpy);
     yagl_marshal_put_host_handle(&base, surface);
-    yagl_marshal_put_yagl_winsys_id(&base, target);
     if (!yagl_batch_update_marshal(base))
     {
         return 0;
@@ -810,13 +809,14 @@ int yagl_host_eglCreateWindowSurfaceOnscreenYAGL(yagl_host_handle* retval, yagl_
 /*
  * eglCreatePbufferSurfaceOnscreenYAGL wrapper. id = 33
  */
-int yagl_host_eglCreatePbufferSurfaceOnscreenYAGL(yagl_host_handle* retval, yagl_host_handle dpy, yagl_host_handle config, const EGLint* attrib_list)
+int yagl_host_eglCreatePbufferSurfaceOnscreenYAGL(yagl_host_handle* retval, yagl_host_handle dpy, yagl_host_handle config, yagl_winsys_id buffer, const EGLint* attrib_list)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_egl);
     yagl_marshal_put_uint32(&base, 33);
     yagl_marshal_put_host_handle(&base, dpy);
     yagl_marshal_put_host_handle(&base, config);
+    yagl_marshal_put_yagl_winsys_id(&base, buffer);
     yagl_marshal_put_ptr(&base, attrib_list);
     if (!yagl_batch_update_marshal(base))
     {
@@ -855,6 +855,24 @@ int yagl_host_eglCreatePixmapSurfaceOnscreenYAGL(yagl_host_handle* retval, yagl_
     base = yagl_batch_get_marshal();
     yagl_marshal_skip(&base); // call result
     *retval = yagl_marshal_get_host_handle(&base);
+    return 1;
+}
+
+/*
+ * eglInvalidateOnscreenSurfaceYAGL wrapper. id = 35
+ */
+int yagl_host_eglInvalidateOnscreenSurfaceYAGL(yagl_host_handle dpy, yagl_host_handle surface, yagl_winsys_id buffer)
+{
+    uint8_t* base = yagl_batch_get_marshal();
+    yagl_marshal_put_uint32(&base, yagl_api_id_egl);
+    yagl_marshal_put_uint32(&base, 35);
+    yagl_marshal_put_host_handle(&base, dpy);
+    yagl_marshal_put_host_handle(&base, surface);
+    yagl_marshal_put_yagl_winsys_id(&base, buffer);
+    if (!yagl_batch_update_marshal(base))
+    {
+        return 0;
+    }
     return 1;
 }
 

@@ -28,7 +28,7 @@ struct yagl_display
 
     pthread_mutex_t mutex;
 
-    int initialized;
+    int prepared;
 
     struct yagl_list surfaces;
 
@@ -37,14 +37,23 @@ struct yagl_display
     struct yagl_list images;
 };
 
+void yagl_display_init(struct yagl_display *dpy,
+                       EGLNativeDisplayType display_id,
+                       Display *x_dpy,
+                       yagl_host_handle host_dpy);
+
+void yagl_display_cleanup(struct yagl_display *dpy);
+
 struct yagl_display *yagl_display_get(EGLDisplay native_dpy);
+
+struct yagl_display *yagl_display_get_x(Display *x_dpy);
 
 struct yagl_display *yagl_display_add(EGLNativeDisplayType display_id,
                                       yagl_host_handle host_dpy);
 
-void yagl_display_initialize(struct yagl_display *dpy);
+void yagl_display_prepare(struct yagl_display *dpy);
 
-int yagl_display_is_initialized(struct yagl_display *dpy);
+int yagl_display_is_prepared(struct yagl_display *dpy);
 
 void yagl_display_terminate(struct yagl_display *dpy);
 

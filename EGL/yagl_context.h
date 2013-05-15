@@ -20,9 +20,6 @@ struct yagl_context
     EGLint version;
 
     struct yagl_gles_context *gles_ctx;
-
-    EGLSurface draw_sfc;
-    EGLSurface read_sfc;
 };
 
 struct yagl_context
@@ -30,10 +27,6 @@ struct yagl_context
                          struct yagl_display *dpy,
                          EGLenum api,
                          EGLint version);
-
-void yagl_context_update(struct yagl_context *ctx,
-                         EGLSurface draw_sfc,
-                         EGLSurface read_sfc);
 
 struct yagl_gles_context
     *yagl_context_get_gles_context(struct yagl_context *ctx);

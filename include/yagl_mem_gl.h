@@ -23,6 +23,7 @@ static __inline void yagl_mem_probe_read_GLchars(const GLchar *value)
 {
     if (value) {
         volatile size_t tmp = strlen(value);
+        (void)tmp;
     }
 }
 

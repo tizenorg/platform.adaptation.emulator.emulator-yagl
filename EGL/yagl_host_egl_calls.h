@@ -126,7 +126,7 @@ int yagl_host_eglSwapBuffers(EGLBoolean* retval, yagl_host_handle dpy, yagl_host
 /*
  * eglCopyBuffers wrapper. id = 24
  */
-int yagl_host_eglCopyBuffers(EGLBoolean* retval, yagl_host_handle dpy, yagl_host_handle surface, yagl_winsys_id target);
+int yagl_host_eglCopyBuffers(EGLBoolean* retval, yagl_host_handle dpy, yagl_host_handle surface);
 
 /*
  * eglCreateImageKHR wrapper. id = 25
@@ -171,11 +171,16 @@ int yagl_host_eglCreateWindowSurfaceOnscreenYAGL(yagl_host_handle* retval, yagl_
 /*
  * eglCreatePbufferSurfaceOnscreenYAGL wrapper. id = 33
  */
-int yagl_host_eglCreatePbufferSurfaceOnscreenYAGL(yagl_host_handle* retval, yagl_host_handle dpy, yagl_host_handle config, const EGLint* attrib_list);
+int yagl_host_eglCreatePbufferSurfaceOnscreenYAGL(yagl_host_handle* retval, yagl_host_handle dpy, yagl_host_handle config, yagl_winsys_id buffer, const EGLint* attrib_list);
 
 /*
  * eglCreatePixmapSurfaceOnscreenYAGL wrapper. id = 34
  */
 int yagl_host_eglCreatePixmapSurfaceOnscreenYAGL(yagl_host_handle* retval, yagl_host_handle dpy, yagl_host_handle config, yagl_winsys_id pixmap, const EGLint* attrib_list);
+
+/*
+ * eglInvalidateOnscreenSurfaceYAGL wrapper. id = 35
+ */
+int yagl_host_eglInvalidateOnscreenSurfaceYAGL(yagl_host_handle dpy, yagl_host_handle surface, yagl_winsys_id buffer);
 
 #endif

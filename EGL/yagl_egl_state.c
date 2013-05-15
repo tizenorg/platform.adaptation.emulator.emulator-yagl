@@ -1,5 +1,6 @@
 #include "yagl_egl_state.h"
 #include "yagl_context.h"
+#include "yagl_surface.h"
 #include "yagl_log.h"
 #include "yagl_malloc.h"
 #include <pthread.h>
@@ -11,6 +12,8 @@ struct yagl_egl_state
     EGLenum api;
 
     struct yagl_context *ctx;
+    struct yagl_surface *draw_sfc;
+    struct yagl_surface *read_sfc;
 };
 
 static pthread_key_t g_state_key;
@@ -26,6 +29,8 @@ static void yagl_egl_state_free(void* ptr)
         return;
     }
 
+    yagl_surface_release(state->read_sfc);
+    yagl_surface_release(state->draw_sfc);
     yagl_context_release(state->ctx);
 
     yagl_free(state);
@@ -108,22 +113,44 @@ struct yagl_context *yagl_get_context()
     return state->ctx;
 }
 
-void yagl_set_context(struct yagl_context *ctx)
+struct yagl_surface *yagl_get_draw_surface()
+{
+    struct yagl_egl_state *state = yagl_egl_get_state();
+
+    return state->draw_sfc;
+}
+
+struct yagl_surface *yagl_get_read_surface()
+{
+    struct yagl_egl_state *state = yagl_egl_get_state();
+
+    return state->read_sfc;
+}
+
+void yagl_set_context(struct yagl_context *ctx,
+                      struct yagl_surface *draw_sfc,
+                      struct yagl_surface *read_sfc)
 {
     struct yagl_egl_state *state = yagl_egl_get_state();
 
     yagl_context_acquire(ctx);
+    yagl_surface_acquire(draw_sfc);
+    yagl_surface_acquire(read_sfc);
 
+    yagl_surface_release(state->read_sfc);
+    yagl_surface_release(state->draw_sfc);
     yagl_context_release(state->ctx);
 
     state->ctx = ctx;
+    state->read_sfc = read_sfc;
+    state->draw_sfc = draw_sfc;
 }
 
 void yagl_reset_state()
 {
     struct yagl_egl_state *state = yagl_egl_get_state();
 
-    yagl_set_context(NULL);
+    yagl_set_context(NULL, NULL, NULL);
 
     state->error = EGL_SUCCESS;
     state->api = EGL_OPENGL_ES_API;

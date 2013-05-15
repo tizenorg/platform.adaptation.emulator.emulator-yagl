@@ -42,18 +42,7 @@ struct yagl_context
 
     ctx->version = version;
 
-    ctx->draw_sfc = EGL_NO_SURFACE;
-    ctx->read_sfc = EGL_NO_SURFACE;
-
     return ctx;
-}
-
-void yagl_context_update(struct yagl_context *ctx,
-                         EGLSurface draw_sfc,
-                         EGLSurface read_sfc)
-{
-    ctx->draw_sfc = draw_sfc;
-    ctx->read_sfc = read_sfc;
 }
 
 struct yagl_gles_context

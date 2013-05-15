@@ -151,6 +151,10 @@ static int yagl_offscreen_surface_reset(struct yagl_surface *sfc)
     return 1;
 }
 
+static void yagl_offscreen_surface_invalidate(struct yagl_surface *sfc)
+{
+}
+
 static int yagl_offscreen_surface_swap_buffers(struct yagl_surface *sfc)
 {
     struct yagl_offscreen_surface *osfc = (struct yagl_offscreen_surface*)sfc;
@@ -250,8 +254,7 @@ static int yagl_offscreen_surface_copy_buffers(struct yagl_surface *sfc,
 
     YAGL_HOST_CALL_ASSERT(yagl_host_eglCopyBuffers(&retval,
                                                    sfc->dpy->host_dpy,
-                                                   sfc->res.handle,
-                                                   target));
+                                                   sfc->res.handle));
 
     if (!retval) {
         YAGL_LOG_ERROR("eglCopyBuffers failed");
@@ -367,6 +370,7 @@ struct yagl_offscreen_surface
                              x_win);
 
     sfc->base.reset = &yagl_offscreen_surface_reset;
+    sfc->base.invalidate = &yagl_offscreen_surface_invalidate;
     sfc->base.swap_buffers = &yagl_offscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_offscreen_surface_copy_buffers;
 
@@ -457,6 +461,7 @@ struct yagl_offscreen_surface
                              x_pixmap);
 
     sfc->base.reset = &yagl_offscreen_surface_reset;
+    sfc->base.invalidate = &yagl_offscreen_surface_invalidate;
     sfc->base.swap_buffers = &yagl_offscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_offscreen_surface_copy_buffers;
 
@@ -540,6 +545,7 @@ struct yagl_offscreen_surface
                               dpy);
 
     sfc->base.reset = &yagl_offscreen_surface_reset;
+    sfc->base.invalidate = &yagl_offscreen_surface_invalidate;
     sfc->base.swap_buffers = &yagl_offscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_offscreen_surface_copy_buffers;
 
