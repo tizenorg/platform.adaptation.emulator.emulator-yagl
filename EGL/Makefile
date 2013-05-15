@@ -8,9 +8,9 @@ include $(TOP_DIR)/Make.rules
 $(TARGET): $(OBJ_DIR) $(DEPS) $(OBJS) $(LIB_DIR)
 ifeq ($(V),0)
 	@echo [LD] $@
-	@$(CC) $(LDFLAGS) -pthread -shared -o $@ $(OBJS) -lX11 -lpthread -lXext -lXfixes -lXdamage -ldl -ldrm -drm_vigs
+	@$(CC) $(LDFLAGS) -pthread -shared -o $@ $(OBJS) -lX11 -lpthread -lXext -lXfixes -ldl -ldrm -ldrm_vigs
 else
-	$(CC) $(LDFLAGS) -pthread -shared -o $@ $(OBJS) -lX11 -lpthread -lXext -lXfixes -lXdamage -ldl -ldrm -ldrm_vigs
+	$(CC) $(LDFLAGS) -pthread -shared -o $@ $(OBJS) -lX11 -lpthread -lXext -lXfixes -ldl -ldrm -ldrm_vigs
 endif
 
 install:: $(INSTALL_LIB_DIR) $(TARGET)

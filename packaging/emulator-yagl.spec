@@ -1,7 +1,7 @@
 Name:       emulator-yagl
 Summary:    YaGL - OpenGLES acceleration module for emulator
 Version:    1.0
-Release:    16
+Release:    17
 Group:      TO_BE/FILLED_IN
 License:    TO_BE/FILLED_IN
 #URL:        http://www.khronos.org
@@ -10,7 +10,8 @@ BuildRequires:  pkgconfig(xfixes)
 BuildRequires:  pkgconfig(x11)
 BuildRequires:  pkgconfig(x11-xcb)
 BuildRequires:  pkgconfig(xext)
-BuildRequires:  pkgconfig(xdamage)
+BuildRequires:  pkgconfig(dri2proto)
+BuildRequires:  pkgconfig(libdrm)
 
 %description
 YaGL - OpenGLES acceleration module for emulator.
