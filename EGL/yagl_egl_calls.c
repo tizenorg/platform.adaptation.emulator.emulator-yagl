@@ -668,7 +668,22 @@ YAGL_API EGLenum eglQueryAPI()
     return ret;
 }
 
-YAGL_IMPLEMENT_API_RET0(EGLBoolean, eglWaitClient)
+YAGL_API EGLBoolean eglWaitClient()
+{
+    struct yagl_surface *draw_sfc;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT0(eglWaitClient);
+
+    draw_sfc = yagl_get_draw_surface();
+
+    if (draw_sfc) {
+        draw_sfc->wait_gl(draw_sfc);
+    }
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+
+    return EGL_TRUE;
+}
 
 YAGL_API EGLBoolean eglReleaseThread()
 {
@@ -1034,8 +1049,35 @@ out:
     return res;
 }
 
-YAGL_IMPLEMENT_API_RET0(EGLBoolean, eglWaitGL)
-YAGL_IMPLEMENT_API_RET1(EGLBoolean, eglWaitNative, EGLint, engine)
+YAGL_API EGLBoolean eglWaitGL()
+{
+    EGLBoolean ret;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT0(eglWaitGL);
+
+    ret = eglWaitClient();
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+
+    return ret;
+}
+
+YAGL_API EGLBoolean eglWaitNative(EGLint engine)
+{
+    struct yagl_surface *draw_sfc;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT1(eglWaitNative, EGLint, engine);
+
+    draw_sfc = yagl_get_draw_surface();
+
+    if (draw_sfc) {
+        draw_sfc->wait_x(draw_sfc);
+    }
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+
+    return EGL_TRUE;
+}
 
 YAGL_API EGLBoolean eglSwapBuffers(EGLDisplay dpy_, EGLSurface surface_)
 {

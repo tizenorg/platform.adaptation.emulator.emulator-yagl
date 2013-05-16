@@ -18,8 +18,6 @@ EGLContext^, eglCreateContext, EGLDisplay^ dpy, EGLConfig^ config, EGLContext^ s
 EGLBoolean, eglDestroyContext, EGLDisplay^ dpy, EGLContext^ ctx
 EGLBoolean, eglMakeCurrent, EGLDisplay^ dpy, EGLSurface^ draw, EGLSurface^ read, EGLContext^ ctx
 EGLBoolean, eglQueryContext, EGLDisplay^ dpy, EGLContext^ ctx, EGLint attribute, EGLint* value
-EGLBoolean, eglWaitGL
-EGLBoolean, eglWaitNative, EGLint engine
 EGLBoolean, eglSwapBuffers, EGLDisplay^ dpy, EGLSurface^ surface
 EGLBoolean, eglCopyBuffers, EGLDisplay^ dpy, EGLSurface^ surface
 EGLImageKHR^, eglCreateImageKHR, EGLDisplay^ dpy, EGLContext^ ctx, EGLenum target, yagl_winsys_id buffer, const EGLint* attrib_list

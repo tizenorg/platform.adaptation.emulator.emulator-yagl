@@ -29,6 +29,10 @@ struct yagl_surface
     int (*swap_buffers)(struct yagl_surface */*sfc*/);
 
     int (*copy_buffers)(struct yagl_surface */*sfc*/, Pixmap /*target*/);
+
+    void (*wait_x)(struct yagl_surface */*sfc*/);
+
+    void (*wait_gl)(struct yagl_surface */*sfc*/);
 };
 
 void yagl_surface_init_window(struct yagl_surface *sfc,

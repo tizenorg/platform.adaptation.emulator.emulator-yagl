@@ -289,6 +289,31 @@ static int yagl_offscreen_surface_copy_buffers(struct yagl_surface *sfc,
     }
 }
 
+static void yagl_offscreen_surface_wait_x(struct yagl_surface *sfc)
+{
+}
+
+static void yagl_offscreen_surface_wait_gl(struct yagl_surface *sfc)
+{
+    EGLBoolean retval;
+
+    switch (sfc->type) {
+    case EGL_PBUFFER_BIT:
+    case EGL_WINDOW_BIT:
+        /*
+         * Currently our window surfaces are always double-buffered, so
+         * this is a no-op.
+         */
+        break;
+    case EGL_PIXMAP_BIT:
+        YAGL_HOST_CALL_ASSERT(yagl_host_eglWaitClient(&retval));
+        break;
+    default:
+        assert(0);
+        break;
+    }
+}
+
 static void yagl_offscreen_surface_destroy(struct yagl_ref *ref)
 {
     struct yagl_offscreen_surface *sfc = (struct yagl_offscreen_surface*)ref;
@@ -373,6 +398,8 @@ struct yagl_offscreen_surface
     sfc->base.invalidate = &yagl_offscreen_surface_invalidate;
     sfc->base.swap_buffers = &yagl_offscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_offscreen_surface_copy_buffers;
+    sfc->base.wait_x = &yagl_offscreen_surface_wait_x;
+    sfc->base.wait_gl = &yagl_offscreen_surface_wait_gl;
 
     yagl_mutex_init(&sfc->bi_mtx);
     sfc->bi = bi;
@@ -464,6 +491,8 @@ struct yagl_offscreen_surface
     sfc->base.invalidate = &yagl_offscreen_surface_invalidate;
     sfc->base.swap_buffers = &yagl_offscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_offscreen_surface_copy_buffers;
+    sfc->base.wait_x = &yagl_offscreen_surface_wait_x;
+    sfc->base.wait_gl = &yagl_offscreen_surface_wait_gl;
 
     yagl_mutex_init(&sfc->bi_mtx);
     sfc->bi = bi;
@@ -548,6 +577,8 @@ struct yagl_offscreen_surface
     sfc->base.invalidate = &yagl_offscreen_surface_invalidate;
     sfc->base.swap_buffers = &yagl_offscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_offscreen_surface_copy_buffers;
+    sfc->base.wait_x = &yagl_offscreen_surface_wait_x;
+    sfc->base.wait_gl = &yagl_offscreen_surface_wait_gl;
 
     yagl_mutex_init(&sfc->bi_mtx);
     sfc->bi = bi;

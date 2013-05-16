@@ -9,6 +9,38 @@
 #include <assert.h>
 #include <stdio.h>
 
+static void yagl_onscreen_surface_copy_drawable(struct yagl_onscreen_surface *sfc,
+                                                int src, int dest)
+{
+    XRectangle xrect;
+    XserverRegion region;
+
+    xrect.x = 0;
+    xrect.y = 0;
+    xrect.width = sfc->width;
+    xrect.height = sfc->height;
+
+    region = XFixesCreateRegion(sfc->base.dpy->x_dpy, &xrect, 1);
+    switch (sfc->base.type) {
+    case EGL_PBUFFER_BIT:
+        yagl_DRI2CopyRegion(sfc->base.dpy->x_dpy, sfc->pbuffer_pixmap,
+                            region, dest, src);
+        break;
+    case EGL_PIXMAP_BIT:
+        yagl_DRI2CopyRegion(sfc->base.dpy->x_dpy, sfc->base.x_drawable.pixmap,
+                            region, dest, src);
+        break;
+    case EGL_WINDOW_BIT:
+        yagl_DRI2CopyRegion(sfc->base.dpy->x_dpy, sfc->base.x_drawable.win,
+                            region, dest, src);
+        break;
+    default:
+        assert(0);
+        break;
+    }
+    XFixesDestroyRegion(sfc->base.dpy->x_dpy, region);
+}
+
 static int yagl_onscreen_surface_reset(struct yagl_surface *sfc)
 {
     return 1;
@@ -130,7 +162,59 @@ static int yagl_onscreen_surface_copy_buffers(struct yagl_surface *sfc,
 
     XFreeGC(sfc->dpy->x_dpy, x_gc);
 
+    XSync(sfc->dpy->x_dpy, 0);
+
     return 1;
+}
+
+static void yagl_onscreen_surface_wait_x(struct yagl_surface *sfc)
+{
+    struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
+
+    switch (sfc->type) {
+    case EGL_PBUFFER_BIT:
+    case EGL_WINDOW_BIT:
+        /*
+         * Currently our window surfaces are always double-buffered, so
+         * this is a no-op.
+         */
+        break;
+    case EGL_PIXMAP_BIT:
+        yagl_onscreen_surface_copy_drawable(osfc,
+                                            DRI2BufferFrontLeft,
+                                            DRI2BufferFakeFrontLeft);
+        break;
+    default:
+        assert(0);
+        break;
+    }
+}
+
+static void yagl_onscreen_surface_wait_gl(struct yagl_surface *sfc)
+{
+    struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
+    EGLBoolean retval;
+
+    switch (sfc->type) {
+    case EGL_PBUFFER_BIT:
+    case EGL_WINDOW_BIT:
+        /*
+         * Currently our window surfaces are always double-buffered, so
+         * this is a no-op.
+         */
+        break;
+    case EGL_PIXMAP_BIT:
+        YAGL_HOST_CALL_ASSERT(yagl_host_eglWaitClient(&retval));
+        if (retval) {
+            yagl_onscreen_surface_copy_drawable(osfc,
+                                                DRI2BufferFakeFrontLeft,
+                                                DRI2BufferFrontLeft);
+        }
+        break;
+    default:
+        assert(0);
+        break;
+    }
 }
 
 static void yagl_onscreen_surface_destroy(struct yagl_ref *ref)
@@ -216,6 +300,8 @@ struct yagl_onscreen_surface
     sfc->base.invalidate = &yagl_onscreen_surface_invalidate;
     sfc->base.swap_buffers = &yagl_onscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_onscreen_surface_copy_buffers;
+    sfc->base.wait_x = &yagl_onscreen_surface_wait_x;
+    sfc->base.wait_gl = &yagl_onscreen_surface_wait_gl;
 
     sfc->buffer = new_buffer;
     sfc->width = new_width;
@@ -286,6 +372,8 @@ struct yagl_onscreen_surface
     sfc->base.invalidate = &yagl_onscreen_surface_invalidate;
     sfc->base.swap_buffers = &yagl_onscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_onscreen_surface_copy_buffers;
+    sfc->base.wait_x = &yagl_onscreen_surface_wait_x;
+    sfc->base.wait_gl = &yagl_onscreen_surface_wait_gl;
 
     sfc->buffer = new_buffer;
     sfc->width = new_width;
@@ -382,6 +470,8 @@ struct yagl_onscreen_surface
     sfc->base.invalidate = &yagl_onscreen_surface_invalidate;
     sfc->base.swap_buffers = &yagl_onscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_onscreen_surface_copy_buffers;
+    sfc->base.wait_x = &yagl_onscreen_surface_wait_x;
+    sfc->base.wait_gl = &yagl_onscreen_surface_wait_gl;
 
     sfc->buffer = new_buffer;
     sfc->width = width;
