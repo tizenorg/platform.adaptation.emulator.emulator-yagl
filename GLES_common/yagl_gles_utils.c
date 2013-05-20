@@ -1,5 +1,5 @@
-#include <GL/gl.h>
-#include <GL/glext.h>
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 #include <assert.h>
 #include "yagl_gles_utils.h"
 #include "yagl_mem_gl.h"
@@ -13,8 +13,8 @@ int yagl_gles_get_stride(GLsizei alignment,
                          GLenum type,
                          GLsizei *stride)
 {
-    int num_components;
-    GLsizei bpp;
+    int num_components = 0;
+    GLsizei bpp = 0;
 
     switch (format) {
     case GL_ALPHA:
@@ -32,11 +32,14 @@ int yagl_gles_get_stride(GLsizei alignment,
     case GL_LUMINANCE_ALPHA:
         num_components = 2;
         break;
-    case GL_DEPTH_STENCIL_EXT:
+    case GL_DEPTH_STENCIL_OES:
+        if ((type == GL_FLOAT) || (type == GL_HALF_FLOAT_OES)) {
+            return 0;
+        }
         num_components = 1;
         break;
     case GL_DEPTH_COMPONENT:
-        if (type != GL_UNSIGNED_SHORT && type != GL_UNSIGNED_INT) {
+        if ((type != GL_UNSIGNED_SHORT) && (type != GL_UNSIGNED_INT)) {
             return 0;
         }
         num_components = 1;
@@ -62,7 +65,7 @@ int yagl_gles_get_stride(GLsizei alignment,
         }
         bpp = 2;
         break;
-    case GL_UNSIGNED_INT_24_8_EXT:
+    case GL_UNSIGNED_INT_24_8_OES:
         bpp = num_components * 4;
         break;
     case GL_UNSIGNED_SHORT:
@@ -76,6 +79,12 @@ int yagl_gles_get_stride(GLsizei alignment,
             return 0;
         }
         bpp = num_components * 4;
+        break;
+    case GL_FLOAT:
+        bpp = num_components * 4;
+        break;
+    case GL_HALF_FLOAT_OES:
+        bpp = num_components * 2;
         break;
     default:
         return 0;
