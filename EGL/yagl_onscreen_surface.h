@@ -13,12 +13,12 @@ struct yagl_onscreen_surface
     /*
      * Backing pixmap for PBuffer surfaces. NULL otherwise.
      */
-    Pixmap pbuffer_pixmap;
+    Pixmap tmp_pixmap;
 
     /*
      * For widow surfaces this is DRI2BufferBackLeft.
      * For pixmap surfaces this is DRI2BufferFrontLeft.
-     * For pbuffer surfaces this is DRI2BufferFrontLeft of 'pbuffer_pixmap'.
+     * For pbuffer surfaces this is DRI2BufferFrontLeft of 'tmp_pixmap'.
      *
      * TODO: For window surfaces we also need to support
      * DRI2BufferFrontLeft.
