@@ -917,6 +917,17 @@ YAGL_API EGLBoolean eglMakeCurrent( EGLDisplay dpy_,
         draw = yagl_display_surface_acquire(dpy, draw_);
         read = yagl_display_surface_acquire(dpy, read_);
         ctx = yagl_display_context_acquire(dpy, ctx_);
+
+        /*
+         * A workaround for EffectsApp. It incorrectly calls
+         * eglMakeCurrent(dpy, draw, read, NULL) which is not allowed
+         * according to EGL standard. i.e. non-NULL surfaces and NULL context
+         * is not allowed.
+         */
+        if (draw && read && !ctx) {
+            ctx = yagl_get_context();
+            yagl_context_acquire(ctx);
+        }
     }
 
     if (ctx &&
