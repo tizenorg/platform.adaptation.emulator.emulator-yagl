@@ -83,6 +83,7 @@ struct yagl_backend *yagl_offscreen_create()
     backend->create_pbuffer_surface = &yagl_offscreen_create_pbuffer_surface;
     backend->create_image = &yagl_offscreen_create_image;
     backend->destroy = &yagl_offscreen_destroy;
+    backend->y_inverted = 1;
 
     return backend;
 }

@@ -212,7 +212,8 @@ YAGL_API const char* eglQueryString(EGLDisplay dpy, EGLint name)
     case EGL_EXTENSIONS:
         str = "EGL_KHR_image_base "
               "EGL_KHR_image "
-              "EGL_KHR_image_pixmap ";
+              "EGL_KHR_image_pixmap "
+              "EGL_NOK_texture_from_pixmap ";
         break;
     default:
         YAGL_SET_ERR(EGL_BAD_PARAMETER);
@@ -349,6 +350,10 @@ YAGL_API EGLBoolean eglGetConfigAttrib( EGLDisplay dpy_,
     }
 
     switch (attribute) {
+    case EGL_Y_INVERTED_NOK:
+        *value = yagl_get_backend()->y_inverted;
+        ret = EGL_TRUE;
+        break;
     case EGL_NATIVE_VISUAL_ID:
     case EGL_NATIVE_VISUAL_TYPE:
         screen = XScreenNumberOfScreen(XDefaultScreenOfDisplay(dpy->x_dpy));

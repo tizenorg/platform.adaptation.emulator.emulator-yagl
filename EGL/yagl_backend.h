@@ -36,6 +36,8 @@ struct yagl_backend
                                        const EGLint* /*attrib_list*/);
 
     void (*destroy)(struct yagl_backend */*backend*/);
+
+    EGLint y_inverted;
 };
 
 struct yagl_backend *yagl_get_backend();
