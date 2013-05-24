@@ -37,6 +37,8 @@ mkdir -p %{buildroot}/usr/lib/systemd/system
 cp packaging/emul-opengl-yagl.service %{buildroot}/usr/lib/systemd/system
 mkdir -p %{buildroot}/etc
 cp packaging/virtgl.sh %{buildroot}/etc
+mkdir -p %{buildroot}/usr/lib/udev/rules.d
+cp packaging/95-tizen-emulator.rules %{buildroot}/usr/lib/udev/rules.d
 
 mkdir -p %{buildroot}/usr/include
 cp -r include/EGL %{buildroot}/usr/include/
@@ -49,6 +51,7 @@ cp -r include/KHR %{buildroot}/usr/include/
 %defattr(-,root,root,-)
 /usr/lib/yagl/*
 /usr/lib/systemd/system/emul-opengl-yagl.service
+/usr/lib/udev/rules.d/95-tizen-emulator.rules
 %attr(777,root,root)/etc/virtgl.sh
 
 %files devel
