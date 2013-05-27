@@ -2,6 +2,8 @@
 #include "yagl_log.h"
 #include "yagl_malloc.h"
 #include <sys/fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 struct yagl_onscreen_display
     *yagl_onscreen_display_create(EGLNativeDisplayType display_id,
@@ -26,7 +28,7 @@ struct yagl_onscreen_display
     yagl_display_init(&tmp_dpy->base, display_id, x_dpy, host_dpy);
 
     if (!yagl_DRI2QueryExtension(x_dpy, &event_base, &error_base)) {
-        YAGL_LOG_ERROR("DRI2QueryExtension failed");
+        fprintf(stderr, "Critical error! Failed to DRI2QueryExtension on YaGL display, DRI2 not enabled ?\n");
         goto out;
     }
 
@@ -34,7 +36,7 @@ struct yagl_onscreen_display
                    event_base, error_base);
 
     if (!yagl_DRI2QueryVersion(x_dpy, &dri_major, &dri_minor)) {
-        YAGL_LOG_ERROR("DRI2QueryVersion failed");
+        fprintf(stderr, "Critical error! Failed to DRI2QueryVersion on YaGL display, DRI2 not enabled ?\n");
         goto out;
     }
 
@@ -45,7 +47,7 @@ struct yagl_onscreen_display
                           RootWindow(x_dpy, DefaultScreen(x_dpy)),
                           &dri_driver,
                           &dri_device)) {
-        YAGL_LOG_ERROR("DRI2Connect failed");
+        fprintf(stderr, "Critical error! Failed to DRI2Connect on YaGL display, DRI2 not enabled ?\n");
         goto out;
     }
 
@@ -55,7 +57,7 @@ struct yagl_onscreen_display
     drm_fd = open(dri_device, O_RDWR);
 
     if (drm_fd < 0) {
-        YAGL_LOG_ERROR("open(\"%s\") failed", dri_device);
+        fprintf(stderr, "Critical error! Failed to open(\"%s\"): %s\n", dri_device, strerror(errno));
         goto fail;
     }
 
@@ -64,21 +66,21 @@ struct yagl_onscreen_display
     ret = drmGetMagic(drm_fd, &magic);
 
     if (ret != 0) {
-        YAGL_LOG_ERROR("drmGetMagic failed: %s", strerror(-ret));
+        fprintf(stderr, "Critical error! drmGetMagic failed: %s\n", strerror(-ret));
         goto fail;
     }
 
     if (!yagl_DRI2Authenticate(x_dpy,
                                RootWindow(x_dpy, DefaultScreen(x_dpy)),
                                magic)) {
-        YAGL_LOG_ERROR("DRI2Authenticate failed");
+        fprintf(stderr, "Critical error! Failed to DRI2Authenticate on YaGL display, DRI2 not enabled ?\n");
         goto fail;
     }
 
     ret = vigs_drm_device_create(drm_fd, &drm_dev);
 
     if (ret != 0) {
-        YAGL_LOG_ERROR("vigs_drm_device_create failed: %s", strerror(-ret));
+        fprintf(stderr, "Critical error! vigs_drm_device_create failed: %s\n", strerror(-ret));
         goto fail;
     }
 
