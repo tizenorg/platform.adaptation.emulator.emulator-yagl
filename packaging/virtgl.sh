@@ -15,7 +15,7 @@ if grep "yagl=1" /proc/cmdline ; then
                rm -f /usr/lib/st_GL.so
                rm -f /usr/lib/egl_gallium.so
                rm -f /usr/lib/libglapi.so*
-               export ELM_ENGINE=gl
+               systemctl set-environment ELM_ENGINE=gl
 elif grep "gles=1" /proc/cmdline ; then
         echo -e "[${_G} Emulator support gles hw acceleration. ${C_}]"
         echo -e "[${_G} Change permission of /dev/glmem. ${C_}]"

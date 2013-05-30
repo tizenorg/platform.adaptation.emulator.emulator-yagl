@@ -1,7 +1,7 @@
 Name:       emulator-yagl
 Summary:    YaGL - OpenGLES acceleration module for emulator
 Version:    1.0
-Release:    17
+Release:    18
 Group:      TO_BE/FILLED_IN
 License:    TO_BE/FILLED_IN
 #URL:        http://www.khronos.org
@@ -35,8 +35,8 @@ make
 make INSTALL_LIB_DIR=%{buildroot}/usr/lib/yagl install
 mkdir -p %{buildroot}/usr/lib/systemd/system
 cp packaging/emul-opengl-yagl.service %{buildroot}/usr/lib/systemd/system
-mkdir -p %{buildroot}/etc
-cp packaging/virtgl.sh %{buildroot}/etc
+mkdir -p %{buildroot}/etc/emulator
+cp packaging/virtgl.sh %{buildroot}/etc/emulator
 mkdir -p %{buildroot}/usr/lib/udev/rules.d
 cp packaging/95-tizen-emulator.rules %{buildroot}/usr/lib/udev/rules.d
 
@@ -52,7 +52,7 @@ cp -r include/KHR %{buildroot}/usr/include/
 /usr/lib/yagl/*
 /usr/lib/systemd/system/emul-opengl-yagl.service
 /usr/lib/udev/rules.d/95-tizen-emulator.rules
-%attr(777,root,root)/etc/virtgl.sh
+%attr(777,root,root)/etc/emulator/virtgl.sh
 
 %files devel
 %defattr(-,root,root,-)
