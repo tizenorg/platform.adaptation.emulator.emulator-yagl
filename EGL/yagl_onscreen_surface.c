@@ -33,7 +33,7 @@
  * the rendering results to the pixmap itself, which is really stupid thing
  * to do... unless this is a pbuffer surface...
  */
-#define YAGL_FAKE_PIXMAP_SURFACE
+//#define YAGL_FAKE_PIXMAP_SURFACE
 
 static void yagl_onscreen_surface_copy_drawable(struct yagl_onscreen_surface *sfc,
                                                 int src, int dest)
