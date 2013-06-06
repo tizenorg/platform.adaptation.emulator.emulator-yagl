@@ -34,4 +34,13 @@
  */
 YAGL_API void yagl_render_invalidate();
 
+
+/*
+ * This must be called when client API finished rendering part of
+ * the geometry and now it's guaranteed that by that point the rendering
+ * results will be visible to direct rendering clients and X.Org. Callers
+ * of this should probably include glFinish, eglWaitClient, eglWaitGL, etc.
+ */
+YAGL_API void yagl_render_finish();
+
 #endif

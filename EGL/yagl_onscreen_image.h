@@ -5,12 +5,13 @@
 #include "yagl_types.h"
 #include "yagl_image.h"
 #include "yagl_dri2.h"
+#include "yagl_onscreen_display.h"
 
 struct yagl_onscreen_image
 {
     struct yagl_image base;
 
-    yagl_DRI2Buffer *buffer;
+    struct yagl_onscreen_buffer *buffer;
 };
 
 struct yagl_onscreen_image

@@ -155,6 +155,10 @@ static void yagl_offscreen_surface_invalidate(struct yagl_surface *sfc)
 {
 }
 
+static void yagl_offscreen_surface_finish(struct yagl_surface *sfc)
+{
+}
+
 static int yagl_offscreen_surface_swap_buffers(struct yagl_surface *sfc)
 {
     struct yagl_offscreen_surface *osfc = (struct yagl_offscreen_surface*)sfc;
@@ -396,6 +400,7 @@ struct yagl_offscreen_surface
 
     sfc->base.reset = &yagl_offscreen_surface_reset;
     sfc->base.invalidate = &yagl_offscreen_surface_invalidate;
+    sfc->base.finish = &yagl_offscreen_surface_finish;
     sfc->base.swap_buffers = &yagl_offscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_offscreen_surface_copy_buffers;
     sfc->base.wait_x = &yagl_offscreen_surface_wait_x;
@@ -489,6 +494,7 @@ struct yagl_offscreen_surface
 
     sfc->base.reset = &yagl_offscreen_surface_reset;
     sfc->base.invalidate = &yagl_offscreen_surface_invalidate;
+    sfc->base.finish = &yagl_offscreen_surface_finish;
     sfc->base.swap_buffers = &yagl_offscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_offscreen_surface_copy_buffers;
     sfc->base.wait_x = &yagl_offscreen_surface_wait_x;
@@ -575,6 +581,7 @@ struct yagl_offscreen_surface
 
     sfc->base.reset = &yagl_offscreen_surface_reset;
     sfc->base.invalidate = &yagl_offscreen_surface_invalidate;
+    sfc->base.finish = &yagl_offscreen_surface_finish;
     sfc->base.swap_buffers = &yagl_offscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_offscreen_surface_copy_buffers;
     sfc->base.wait_x = &yagl_offscreen_surface_wait_x;

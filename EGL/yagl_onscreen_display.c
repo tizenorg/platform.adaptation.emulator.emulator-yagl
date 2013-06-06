@@ -114,13 +114,10 @@ out:
     return dpy;
 }
 
-int yagl_onscreen_display_create_buffer(struct yagl_onscreen_display* dpy,
-                                        Drawable d,
-                                        unsigned int attachment,
-                                        yagl_DRI2Buffer **buffer,
-                                        yagl_winsys_id *id,
-                                        uint32_t *width,
-                                        uint32_t *height)
+struct yagl_onscreen_buffer
+    *yagl_onscreen_display_create_buffer(struct yagl_onscreen_display* dpy,
+                                         Drawable d,
+                                         unsigned int attachment)
 {
     int ret;
     unsigned int attachments[1] =
@@ -130,6 +127,7 @@ int yagl_onscreen_display_create_buffer(struct yagl_onscreen_display* dpy,
     yagl_DRI2Buffer *tmp_buffer;
     int tmp_width, tmp_height, num_buffers;
     struct vigs_drm_surface *drm_sfc;
+    struct yagl_onscreen_buffer *buffer;
 
     YAGL_LOG_FUNC_ENTER(yagl_onscreen_display_create_buffer,
                         "dpy = %p, d = 0x%X, attachment = %u",
@@ -145,7 +143,7 @@ int yagl_onscreen_display_create_buffer(struct yagl_onscreen_display* dpy,
     if (!tmp_buffer) {
         YAGL_LOG_ERROR("DRI2GetBuffers failed for drawable 0x%X", d);
         YAGL_LOG_FUNC_EXIT(NULL);
-        return 0;
+        return NULL;
     }
 
     ret = vigs_drm_surface_open(dpy->drm_dev, tmp_buffer->name, &drm_sfc);
@@ -156,22 +154,22 @@ int yagl_onscreen_display_create_buffer(struct yagl_onscreen_display* dpy,
                        strerror(-ret));
         Xfree(tmp_buffer);
         YAGL_LOG_FUNC_EXIT(NULL);
-        return 0;
+        return NULL;
     }
 
-    *buffer = tmp_buffer;
-    *id = drm_sfc->id;
-    *width = tmp_width;
-    *height = tmp_height;
+    buffer = yagl_malloc0(sizeof(*buffer));
 
-    vigs_drm_gem_unref(&drm_sfc->gem);
+    buffer->dri2_buffer = tmp_buffer;
+    buffer->drm_sfc = drm_sfc;
 
-    YAGL_LOG_FUNC_EXIT("1");
+    YAGL_LOG_FUNC_EXIT(NULL);
 
-    return 1;
+    return buffer;
 }
 
-void yagl_onscreen_display_destroy_buffer(yagl_DRI2Buffer *buffer)
+void yagl_onscreen_display_destroy_buffer(struct yagl_onscreen_buffer *buffer)
 {
-    Xfree(buffer);
+    Xfree(buffer->dri2_buffer);
+    vigs_drm_gem_unref(&buffer->drm_sfc->gem);
+    yagl_free(buffer);
 }

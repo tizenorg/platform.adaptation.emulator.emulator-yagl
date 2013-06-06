@@ -5,6 +5,7 @@
 #include "yagl_types.h"
 #include "yagl_surface.h"
 #include "yagl_dri2.h"
+#include "yagl_onscreen_display.h"
 
 struct yagl_onscreen_surface
 {
@@ -23,17 +24,7 @@ struct yagl_onscreen_surface
      * TODO: For window surfaces we also need to support
      * DRI2BufferFrontLeft.
      */
-    yagl_DRI2Buffer *buffer;
-
-    /*
-     * 'buffer' dimensions.
-     * @{
-     */
-    uint32_t width;
-    uint32_t height;
-    /*
-     * @}
-     */
+    struct yagl_onscreen_buffer *buffer;
 
     /*
      * This gets incremented in DRI2 invalidate handler, compare it to

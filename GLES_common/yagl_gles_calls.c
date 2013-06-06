@@ -349,7 +349,15 @@ retry:
 }
 
 YAGL_IMPLEMENT_API_NORET1(glEnable, GLenum, cap)
-YAGL_IMPLEMENT_API_NORET0(glFinish)
+
+YAGL_API void glFinish()
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT0(glFinish);
+    YAGL_HOST_CALL_ASSERT(yagl_host_glFinish());
+    yagl_render_finish();
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
 YAGL_IMPLEMENT_API_NORET0(glFlush)
 YAGL_IMPLEMENT_API_NORET4(glFramebufferRenderbuffer, GLenum, GLenum, GLenum, GLuint, target, attachment, renderbuffertarget, renderbuffer)
 YAGL_IMPLEMENT_API_NORET5(glFramebufferTexture2D, GLenum, GLenum, GLenum, GLuint, GLint, target, attachment, textarget, texture, level)

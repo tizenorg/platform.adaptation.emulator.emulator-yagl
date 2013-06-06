@@ -26,6 +26,8 @@ struct yagl_surface
 
     void (*invalidate)(struct yagl_surface */*sfc*/);
 
+    void (*finish)(struct yagl_surface */*sfc*/);
+
     int (*swap_buffers)(struct yagl_surface */*sfc*/);
 
     int (*copy_buffers)(struct yagl_surface */*sfc*/, Pixmap /*target*/);

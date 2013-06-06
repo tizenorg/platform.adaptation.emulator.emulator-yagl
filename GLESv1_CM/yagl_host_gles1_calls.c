@@ -630,7 +630,7 @@ int yagl_host_glFinish()
     {
         return 0;
     }
-    return 1;
+    return yagl_batch_sync();
 }
 
 /*
@@ -645,7 +645,7 @@ int yagl_host_glFlush()
     {
         return 0;
     }
-    return 1;
+    return yagl_batch_sync();
 }
 
 /*

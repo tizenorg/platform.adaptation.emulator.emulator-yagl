@@ -1,5 +1,4 @@
 #include "yagl_onscreen_surface.h"
-#include "yagl_onscreen_display.h"
 #include "yagl_host_egl_calls.h"
 #include "yagl_egl_state.h"
 #include "yagl_log.h"
@@ -43,8 +42,8 @@ static void yagl_onscreen_surface_copy_drawable(struct yagl_onscreen_surface *sf
 
     xrect.x = 0;
     xrect.y = 0;
-    xrect.width = sfc->width;
-    xrect.height = sfc->height;
+    xrect.width = sfc->buffer->drm_sfc->width;
+    xrect.height = sfc->buffer->drm_sfc->height;
 
     region = XFixesCreateRegion(sfc->base.dpy->x_dpy, &xrect, 1);
     switch (sfc->base.type) {
@@ -76,10 +75,7 @@ static void yagl_onscreen_surface_invalidate(struct yagl_surface *sfc)
 {
     struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
     struct yagl_onscreen_display *dpy = (struct yagl_onscreen_display*)sfc->dpy;
-    yagl_DRI2Buffer *new_buffer;
-    yagl_winsys_id new_id;
-    uint32_t new_width;
-    uint32_t new_height;
+    struct yagl_onscreen_buffer *new_buffer;
 
     if (osfc->last_stamp == osfc->stamp) {
         return;
@@ -89,23 +85,49 @@ static void yagl_onscreen_surface_invalidate(struct yagl_surface *sfc)
 
     osfc->last_stamp = osfc->stamp;
 
-    if (!yagl_onscreen_display_create_buffer(dpy,
-                                             sfc->x_drawable.win,
-                                             DRI2BufferBackLeft,
-                                             &new_buffer,
-                                             &new_id,
-                                             &new_width,
-                                             &new_height)) {
+    new_buffer = yagl_onscreen_display_create_buffer(dpy,
+                                                     sfc->x_drawable.win,
+                                                     DRI2BufferBackLeft);
+
+    if (!new_buffer) {
         return;
     }
 
     yagl_onscreen_display_destroy_buffer(osfc->buffer);
     osfc->buffer = new_buffer;
-    osfc->width = new_width;
-    osfc->height = new_height;
 
     YAGL_HOST_CALL_ASSERT(yagl_host_eglInvalidateOnscreenSurfaceYAGL(
-        dpy->base.host_dpy, sfc->res.handle, new_id));
+        dpy->base.host_dpy, sfc->res.handle, new_buffer->drm_sfc->id));
+}
+
+static void yagl_onscreen_surface_finish(struct yagl_surface *sfc)
+{
+    struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
+    int ret;
+
+    YAGL_LOG_FUNC_SET(yagl_onscreen_surface_finish);
+
+    switch (sfc->type) {
+    case EGL_PBUFFER_BIT:
+    case EGL_WINDOW_BIT:
+        /*
+         * Currently our window surfaces are always double-buffered, so
+         * this is a no-op. That's because there's no way other process
+         * (or X.Org) can access window's back buffer.
+         */
+        break;
+    case EGL_PIXMAP_BIT:
+        ret = vigs_drm_surface_set_gpu_dirty(osfc->buffer->drm_sfc);
+
+        if (ret != 0) {
+            YAGL_LOG_ERROR("vigs_drm_surface_set_gpu_dirty failed: %s",
+                           strerror(-ret));
+        }
+        break;
+    default:
+        assert(0);
+        break;
+    }
 }
 
 static int yagl_onscreen_surface_swap_buffers(struct yagl_surface *sfc)
@@ -159,7 +181,9 @@ static int yagl_onscreen_surface_copy_buffers(struct yagl_surface *sfc,
                       osfc->tmp_pixmap,
                       target,
                       x_gc,
-                      0, 0, osfc->width, osfc->height,
+                      0, 0,
+                      osfc->buffer->drm_sfc->width,
+                      osfc->buffer->drm_sfc->height,
                       0, 0);
             break;
         case EGL_PIXMAP_BIT:
@@ -168,14 +192,18 @@ static int yagl_onscreen_surface_copy_buffers(struct yagl_surface *sfc,
                       osfc->tmp_pixmap,
                       target,
                       x_gc,
-                      0, 0, osfc->width, osfc->height,
+                      0, 0,
+                      osfc->buffer->drm_sfc->width,
+                      osfc->buffer->drm_sfc->height,
                       0, 0);
 #else
             XCopyArea(sfc->dpy->x_dpy,
                       sfc->x_drawable.pixmap,
                       target,
                       x_gc,
-                      0, 0, osfc->width, osfc->height,
+                      0, 0,
+                      osfc->buffer->drm_sfc->width,
+                      osfc->buffer->drm_sfc->height,
                       0, 0);
 #endif
             break;
@@ -184,7 +212,9 @@ static int yagl_onscreen_surface_copy_buffers(struct yagl_surface *sfc,
                       sfc->x_drawable.win,
                       target,
                       x_gc,
-                      0, 0, osfc->width, osfc->height,
+                      0, 0,
+                      osfc->buffer->drm_sfc->width,
+                      osfc->buffer->drm_sfc->height,
                       0, 0);
             break;
         default:
@@ -241,14 +271,12 @@ static void yagl_onscreen_surface_wait_gl(struct yagl_surface *sfc)
          */
         break;
     case EGL_PIXMAP_BIT:
+        /*
+         * There used to be DRI2CopyRegion call here, but it's not needed.
+         * This call must not be distinguishable from glFinish, so just do
+         * the stuff glFinish does here and not more.
+         */
         YAGL_HOST_CALL_ASSERT(yagl_host_eglWaitClient(&retval));
-        if (retval) {
-#ifndef YAGL_FAKE_PIXMAP_SURFACE
-            yagl_onscreen_surface_copy_drawable(osfc,
-                                                DRI2BufferFakeFrontLeft,
-                                                DRI2BufferFrontLeft);
-#endif
-        }
         break;
     default:
         assert(0);
@@ -298,10 +326,7 @@ struct yagl_onscreen_surface
 {
     struct yagl_onscreen_display *odpy = (struct yagl_onscreen_display*)dpy;
     struct yagl_onscreen_surface *sfc;
-    yagl_DRI2Buffer *new_buffer = NULL;
-    yagl_winsys_id new_id;
-    uint32_t new_width;
-    uint32_t new_height;
+    struct yagl_onscreen_buffer *new_buffer = NULL;
     yagl_host_handle host_surface = 0;
 
     YAGL_LOG_FUNC_SET(eglCreateWindowSurface);
@@ -310,13 +335,11 @@ struct yagl_onscreen_surface
 
     yagl_DRI2CreateDrawable(dpy->x_dpy, x_win);
 
-    if (!yagl_onscreen_display_create_buffer(odpy,
-                                             x_win,
-                                             DRI2BufferBackLeft,
-                                             &new_buffer,
-                                             &new_id,
-                                             &new_width,
-                                             &new_height)) {
+    new_buffer = yagl_onscreen_display_create_buffer(odpy,
+                                                     x_win,
+                                                     DRI2BufferBackLeft);
+
+    if (!new_buffer) {
         yagl_set_error(EGL_BAD_NATIVE_WINDOW);
         goto fail;
     }
@@ -326,7 +349,7 @@ struct yagl_onscreen_surface
     } while (!yagl_host_eglCreateWindowSurfaceOnscreenYAGL(&host_surface,
         dpy->host_dpy,
         host_config,
-        new_id,
+        new_buffer->drm_sfc->id,
         attrib_list));
 
     if (!host_surface) {
@@ -341,14 +364,13 @@ struct yagl_onscreen_surface
 
     sfc->base.reset = &yagl_onscreen_surface_reset;
     sfc->base.invalidate = &yagl_onscreen_surface_invalidate;
+    sfc->base.finish = &yagl_onscreen_surface_finish;
     sfc->base.swap_buffers = &yagl_onscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_onscreen_surface_copy_buffers;
     sfc->base.wait_x = &yagl_onscreen_surface_wait_x;
     sfc->base.wait_gl = &yagl_onscreen_surface_wait_gl;
 
     sfc->buffer = new_buffer;
-    sfc->width = new_width;
-    sfc->height = new_height;
 
     return sfc;
 
@@ -365,9 +387,9 @@ fail:
 #ifdef YAGL_FAKE_PIXMAP_SURFACE
 struct yagl_onscreen_surface
     *yagl_onscreen_surface_create_pixmap(struct yagl_display *dpy,
-                                          yagl_host_handle host_config,
-                                          Pixmap x_pixmap,
-                                          const EGLint* attrib_list)
+                                         yagl_host_handle host_config,
+                                         Pixmap x_pixmap,
+                                         const EGLint* attrib_list)
 {
     struct yagl_onscreen_display *odpy = (struct yagl_onscreen_display*)dpy;
     struct yagl_onscreen_surface *sfc;
@@ -375,8 +397,7 @@ struct yagl_onscreen_surface
     uint32_t height = 0;
     unsigned int depth = 0;
     union { Window w; int i; unsigned int ui; } tmp_geom;
-    yagl_DRI2Buffer *new_buffer = NULL;
-    yagl_winsys_id new_id;
+    struct yagl_onscreen_buffer *new_buffer = NULL;
     yagl_host_handle host_surface = 0;
 
     YAGL_LOG_FUNC_SET(eglCreatePixmapSurface);
@@ -407,13 +428,11 @@ struct yagl_onscreen_surface
 
     yagl_DRI2CreateDrawable(dpy->x_dpy, sfc->tmp_pixmap);
 
-    if (!yagl_onscreen_display_create_buffer(odpy,
-                                             sfc->tmp_pixmap,
-                                             DRI2BufferFrontLeft,
-                                             &new_buffer,
-                                             &new_id,
-                                             &width,
-                                             &height)) {
+    new_buffer = yagl_onscreen_display_create_buffer(odpy,
+                                                     sfc->tmp_pixmap,
+                                                     DRI2BufferFrontLeft);
+
+    if (!new_buffer) {
         yagl_set_error(EGL_BAD_NATIVE_PIXMAP);
         goto fail;
     }
@@ -423,7 +442,7 @@ struct yagl_onscreen_surface
     } while (!yagl_host_eglCreatePixmapSurfaceOnscreenYAGL(&host_surface,
         dpy->host_dpy,
         host_config,
-        new_id,
+        new_buffer->drm_sfc->id,
         attrib_list));
 
     if (!host_surface) {
@@ -438,14 +457,13 @@ struct yagl_onscreen_surface
 
     sfc->base.reset = &yagl_onscreen_surface_reset;
     sfc->base.invalidate = &yagl_onscreen_surface_invalidate;
+    sfc->base.finish = &yagl_onscreen_surface_finish;
     sfc->base.swap_buffers = &yagl_onscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_onscreen_surface_copy_buffers;
     sfc->base.wait_x = &yagl_onscreen_surface_wait_x;
     sfc->base.wait_gl = &yagl_onscreen_surface_wait_gl;
 
     sfc->buffer = new_buffer;
-    sfc->width = width;
-    sfc->height = height;
 
     return sfc;
 
@@ -466,16 +484,13 @@ fail:
 #else
 struct yagl_onscreen_surface
     *yagl_onscreen_surface_create_pixmap(struct yagl_display *dpy,
-                                          yagl_host_handle host_config,
-                                          Pixmap x_pixmap,
-                                          const EGLint* attrib_list)
+                                         yagl_host_handle host_config,
+                                         Pixmap x_pixmap,
+                                         const EGLint* attrib_list)
 {
     struct yagl_onscreen_display *odpy = (struct yagl_onscreen_display*)dpy;
     struct yagl_onscreen_surface *sfc;
-    yagl_DRI2Buffer *new_buffer = NULL;
-    yagl_winsys_id new_id;
-    uint32_t new_width;
-    uint32_t new_height;
+    struct yagl_onscreen_buffer *new_buffer = NULL;
     yagl_host_handle host_surface = 0;
 
     YAGL_LOG_FUNC_SET(eglCreatePixmapSurface);
@@ -484,13 +499,11 @@ struct yagl_onscreen_surface
 
     yagl_DRI2CreateDrawable(dpy->x_dpy, x_pixmap);
 
-    if (!yagl_onscreen_display_create_buffer(odpy,
-                                             x_pixmap,
-                                             DRI2BufferFrontLeft,
-                                             &new_buffer,
-                                             &new_id,
-                                             &new_width,
-                                             &new_height)) {
+    new_buffer = yagl_onscreen_display_create_buffer(odpy,
+                                                     x_pixmap,
+                                                     DRI2BufferFrontLeft);
+
+    if (!new_buffer) {
         yagl_set_error(EGL_BAD_NATIVE_PIXMAP);
         goto fail;
     }
@@ -500,7 +513,7 @@ struct yagl_onscreen_surface
     } while (!yagl_host_eglCreatePixmapSurfaceOnscreenYAGL(&host_surface,
         dpy->host_dpy,
         host_config,
-        new_id,
+        new_buffer->drm_sfc->id,
         attrib_list));
 
     if (!host_surface) {
@@ -515,14 +528,13 @@ struct yagl_onscreen_surface
 
     sfc->base.reset = &yagl_onscreen_surface_reset;
     sfc->base.invalidate = &yagl_onscreen_surface_invalidate;
+    sfc->base.finish = &yagl_onscreen_surface_finish;
     sfc->base.swap_buffers = &yagl_onscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_onscreen_surface_copy_buffers;
     sfc->base.wait_x = &yagl_onscreen_surface_wait_x;
     sfc->base.wait_gl = &yagl_onscreen_surface_wait_gl;
 
     sfc->buffer = new_buffer;
-    sfc->width = new_width;
-    sfc->height = new_height;
 
     return sfc;
 
@@ -539,16 +551,15 @@ fail:
 
 struct yagl_onscreen_surface
     *yagl_onscreen_surface_create_pbuffer(struct yagl_display *dpy,
-                                           yagl_host_handle host_config,
-                                           const EGLint* attrib_list)
+                                          yagl_host_handle host_config,
+                                          const EGLint* attrib_list)
 {
     struct yagl_onscreen_display *odpy = (struct yagl_onscreen_display*)dpy;
     struct yagl_onscreen_surface *sfc;
     uint32_t width = 0;
     uint32_t height = 0;
     int i = 0;
-    yagl_DRI2Buffer *new_buffer = NULL;
-    yagl_winsys_id new_id;
+    struct yagl_onscreen_buffer *new_buffer = NULL;
     yagl_host_handle host_surface = 0;
 
     YAGL_LOG_FUNC_SET(eglCreatePbufferSurface);
@@ -584,13 +595,11 @@ struct yagl_onscreen_surface
 
     yagl_DRI2CreateDrawable(dpy->x_dpy, sfc->tmp_pixmap);
 
-    if (!yagl_onscreen_display_create_buffer(odpy,
-                                             sfc->tmp_pixmap,
-                                             DRI2BufferFrontLeft,
-                                             &new_buffer,
-                                             &new_id,
-                                             &width,
-                                             &height)) {
+    new_buffer = yagl_onscreen_display_create_buffer(odpy,
+                                                     sfc->tmp_pixmap,
+                                                     DRI2BufferFrontLeft);
+
+    if (!new_buffer) {
         yagl_set_error(EGL_BAD_ALLOC);
         goto fail;
     }
@@ -600,7 +609,7 @@ struct yagl_onscreen_surface
     } while (!yagl_host_eglCreatePbufferSurfaceOnscreenYAGL(&host_surface,
         dpy->host_dpy,
         host_config,
-        new_id,
+        new_buffer->drm_sfc->id,
         attrib_list));
 
     if (!host_surface) {
@@ -614,14 +623,13 @@ struct yagl_onscreen_surface
 
     sfc->base.reset = &yagl_onscreen_surface_reset;
     sfc->base.invalidate = &yagl_onscreen_surface_invalidate;
+    sfc->base.finish = &yagl_onscreen_surface_finish;
     sfc->base.swap_buffers = &yagl_onscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_onscreen_surface_copy_buffers;
     sfc->base.wait_x = &yagl_onscreen_surface_wait_x;
     sfc->base.wait_gl = &yagl_onscreen_surface_wait_gl;
 
     sfc->buffer = new_buffer;
-    sfc->width = width;
-    sfc->height = height;
 
     return sfc;
 

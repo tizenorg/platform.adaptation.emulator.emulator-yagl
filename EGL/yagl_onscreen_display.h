@@ -15,19 +15,23 @@ struct yagl_onscreen_display
     struct vigs_drm_device *drm_dev;
 };
 
+struct yagl_onscreen_buffer
+{
+    yagl_DRI2Buffer *dri2_buffer;
+
+    struct vigs_drm_surface *drm_sfc;
+};
+
 struct yagl_onscreen_display
     *yagl_onscreen_display_create(EGLNativeDisplayType display_id,
                                   Display *x_dpy,
                                   yagl_host_handle host_dpy);
 
-int yagl_onscreen_display_create_buffer(struct yagl_onscreen_display* dpy,
-                                        Drawable d,
-                                        unsigned int attachment,
-                                        yagl_DRI2Buffer **buffer,
-                                        yagl_winsys_id *id,
-                                        uint32_t *width,
-                                        uint32_t *height);
+struct yagl_onscreen_buffer
+    *yagl_onscreen_display_create_buffer(struct yagl_onscreen_display* dpy,
+                                         Drawable d,
+                                         unsigned int attachment);
 
-void yagl_onscreen_display_destroy_buffer(yagl_DRI2Buffer *buffer);
+void yagl_onscreen_display_destroy_buffer(struct yagl_onscreen_buffer *buffer);
 
 #endif

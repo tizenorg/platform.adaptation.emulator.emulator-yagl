@@ -685,6 +685,8 @@ YAGL_API EGLBoolean eglWaitClient()
         draw_sfc->wait_gl(draw_sfc);
     }
 
+    yagl_render_finish();
+
     YAGL_LOG_FUNC_EXIT(NULL);
 
     return EGL_TRUE;
