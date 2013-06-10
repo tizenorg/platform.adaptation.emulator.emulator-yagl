@@ -8,11 +8,11 @@ void yagl_render_invalidate()
     struct yagl_surface *read_sfc = yagl_get_read_surface();
 
     if (draw_sfc) {
-        draw_sfc->invalidate(draw_sfc);
+        yagl_surface_invalidate(draw_sfc);
     }
 
     if (read_sfc && (draw_sfc != read_sfc)) {
-        read_sfc->invalidate(read_sfc);
+        yagl_surface_invalidate(read_sfc);
     }
 }
 

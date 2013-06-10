@@ -213,7 +213,8 @@ YAGL_API const char* eglQueryString(EGLDisplay dpy, EGLint name)
         str = "EGL_KHR_image_base "
               "EGL_KHR_image "
               "EGL_KHR_image_pixmap "
-              "EGL_NOK_texture_from_pixmap ";
+              "EGL_NOK_texture_from_pixmap "
+              "EGL_KHR_lock_surface ";
         break;
     default:
         YAGL_SET_ERR(EGL_BAD_PARAMETER);
@@ -582,10 +583,6 @@ YAGL_API EGLBoolean eglDestroySurface(EGLDisplay dpy_, EGLSurface surface_)
         goto out;
     }
 
-    if (!surface->reset(surface)) {
-        goto out;
-    }
-
     res = EGL_TRUE;
 
 out:
@@ -601,10 +598,11 @@ YAGL_API EGLBoolean eglQuerySurface( EGLDisplay dpy_,
                                      EGLint attribute,
                                      EGLint* value )
 {
-    EGLBoolean res = EGL_FALSE;
     EGLBoolean retval = EGL_FALSE;
     struct yagl_display *dpy = NULL;
     struct yagl_surface *surface = NULL;
+    void *ptr;
+    uint32_t stride;
 
     YAGL_LOG_FUNC_ENTER(eglQuerySurface,
                         "dpy = %u, surface = %p, attribute = 0x%X, value = %p",
@@ -621,26 +619,66 @@ YAGL_API EGLBoolean eglQuerySurface( EGLDisplay dpy_,
         goto out;
     }
 
-    do {
-        yagl_mem_probe_write_EGLint(value);
-    } while (!yagl_host_eglQuerySurface(&retval,
-                                        dpy->host_dpy,
-                                        surface->res.handle,
-                                        attribute,
-                                        value));
-
-    if (!retval) {
-        goto out;
+    switch (attribute) {
+    case EGL_BITMAP_POINTER_KHR:
+        ptr = yagl_surface_map(surface, &stride);
+        if (ptr) {
+            *value = (EGLint)ptr;
+            retval = EGL_TRUE;
+        } else {
+            YAGL_SET_ERR(EGL_BAD_ACCESS);
+        }
+        break;
+    case EGL_BITMAP_PITCH_KHR:
+        ptr = yagl_surface_map(surface, &stride);
+        if (ptr) {
+            *value = stride;
+            retval = EGL_TRUE;
+        } else {
+            YAGL_SET_ERR(EGL_BAD_ACCESS);
+        }
+        break;
+    case EGL_BITMAP_ORIGIN_KHR:
+        *value = EGL_UPPER_LEFT_KHR;
+        retval = EGL_TRUE;
+        break;
+    case EGL_BITMAP_PIXEL_RED_OFFSET_KHR:
+        *value = 16;
+        retval = EGL_TRUE;
+        break;
+    case EGL_BITMAP_PIXEL_GREEN_OFFSET_KHR:
+        *value = 8;
+        retval = EGL_TRUE;
+        break;
+    case EGL_BITMAP_PIXEL_BLUE_OFFSET_KHR:
+        *value = 0;
+        retval = EGL_TRUE;
+        break;
+    case EGL_BITMAP_PIXEL_ALPHA_OFFSET_KHR:
+        *value = 24;
+        retval = EGL_TRUE;
+        break;
+    case EGL_BITMAP_PIXEL_LUMINANCE_OFFSET_KHR:
+        *value = 0;
+        retval = EGL_TRUE;
+        break;
+    default:
+        do {
+            yagl_mem_probe_write_EGLint(value);
+        } while (!yagl_host_eglQuerySurface(&retval,
+                                            dpy->host_dpy,
+                                            surface->res.handle,
+                                            attribute,
+                                            value));
+        break;
     }
-
-    res = EGL_TRUE;
 
 out:
     yagl_surface_release(surface);
 
-    YAGL_LOG_FUNC_EXIT("%d", ((res == EGL_TRUE) ? 1 : 0));
+    YAGL_LOG_FUNC_EXIT("%d", ((retval == EGL_TRUE) ? 1 : 0));
 
-    return res;
+    return retval;
 }
 
 YAGL_API EGLBoolean eglBindAPI(EGLenum api)
@@ -947,12 +985,18 @@ YAGL_API EGLBoolean eglMakeCurrent( EGLDisplay dpy_,
         goto out;
     }
 
+    if ((draw && yagl_surface_locked(draw)) ||
+        (read && yagl_surface_locked(read))) {
+        YAGL_SET_ERR(EGL_BAD_ACCESS);
+        goto out;
+    }
+
     if (draw) {
-        draw->invalidate(draw);
+        yagl_surface_invalidate(draw);
     }
 
     if (read && (draw != read)) {
-        read->invalidate(read);
+        yagl_surface_invalidate(read);
     }
 
     YAGL_HOST_CALL_ASSERT(yagl_host_eglMakeCurrent(&retval,
@@ -1116,6 +1160,17 @@ YAGL_API EGLBoolean eglSwapBuffers(EGLDisplay dpy_, EGLSurface surface_)
         goto out;
     }
 
+    if ((yagl_get_draw_surface() != surface) &&
+        (yagl_get_read_surface() != surface)) {
+        YAGL_SET_ERR(EGL_BAD_SURFACE);
+        goto out;
+    }
+
+    if (yagl_surface_locked(surface)) {
+        YAGL_SET_ERR(EGL_BAD_ACCESS);
+        goto out;
+    }
+
     if (surface->type != EGL_WINDOW_BIT) {
         res = EGL_TRUE;
         goto out;
@@ -1156,6 +1211,17 @@ YAGL_API EGLBoolean eglCopyBuffers( EGLDisplay dpy_,
     }
 
     if (!yagl_validate_surface(dpy, surface_, &surface)) {
+        goto out;
+    }
+
+    if ((yagl_get_draw_surface() != surface) &&
+        (yagl_get_read_surface() != surface)) {
+        YAGL_SET_ERR(EGL_BAD_SURFACE);
+        goto out;
+    }
+
+    if (yagl_surface_locked(surface)) {
+        YAGL_SET_ERR(EGL_BAD_ACCESS);
         goto out;
     }
 
@@ -1277,6 +1343,105 @@ out:
     return res;
 }
 
+YAGL_API EGLBoolean eglLockSurfaceKHR(EGLDisplay dpy_,
+                                      EGLSurface surface_,
+                                      const EGLint *attrib_list)
+{
+    EGLBoolean res = EGL_FALSE;
+    struct yagl_display *dpy = NULL;
+    struct yagl_surface *surface = NULL;
+    int i = 0;
+    int preserve = 0;
+    EGLint hint = 0;
+
+    YAGL_LOG_FUNC_ENTER(eglLockSurfaceKHR,
+                        "dpy = %u, surface = %p",
+                        (yagl_host_handle)dpy_,
+                        surface_);
+
+    if (!yagl_validate_display(dpy_, &dpy)) {
+        goto out;
+    }
+
+    if (!yagl_validate_surface(dpy, surface_, &surface)) {
+        goto out;
+    }
+
+    if (attrib_list) {
+        while (attrib_list[i] != EGL_NONE) {
+            switch (attrib_list[i]) {
+            case EGL_MAP_PRESERVE_PIXELS_KHR:
+                preserve = attrib_list[i + 1];
+                break;
+            case EGL_LOCK_USAGE_HINT_KHR:
+                break;
+            default:
+                YAGL_SET_ERR(EGL_BAD_ATTRIBUTE);
+                goto out;
+            }
+
+            i += 2;
+        }
+    }
+
+    if (preserve) {
+        hint = EGL_READ_SURFACE_BIT_KHR | EGL_WRITE_SURFACE_BIT_KHR;
+    } else {
+        hint = EGL_WRITE_SURFACE_BIT_KHR;
+    }
+
+    if (!yagl_surface_lock(surface, hint)) {
+        YAGL_SET_ERR(EGL_BAD_ACCESS);
+        goto out;
+    }
+
+    res = EGL_TRUE;
+
+out:
+    yagl_surface_release(surface);
+
+    YAGL_LOG_FUNC_EXIT("%d", res);
+
+    return res;
+}
+
+YAGL_API EGLBoolean eglUnlockSurfaceKHR(EGLDisplay dpy_,
+                                        EGLSurface surface_)
+{
+    EGLBoolean res = EGL_FALSE;
+    struct yagl_display *dpy = NULL;
+    struct yagl_surface *surface = NULL;
+
+    YAGL_LOG_FUNC_ENTER(eglUnlockSurfaceKHR,
+                        "dpy = %u, surface = %p",
+                        (yagl_host_handle)dpy_,
+                        surface_);
+
+    if (!yagl_validate_display(dpy_, &dpy)) {
+        goto out;
+    }
+
+    if (!yagl_validate_surface(dpy, surface_, &surface)) {
+        goto out;
+    }
+
+    if (!yagl_surface_unlock(surface)) {
+        YAGL_SET_ERR(EGL_BAD_ACCESS);
+        goto out;
+    }
+
+    yagl_surface_invalidate(surface);
+
+    res = EGL_TRUE;
+
+out:
+    yagl_surface_release(surface);
+
+    YAGL_LOG_FUNC_EXIT("%d", res);
+
+    return res;
+}
+
 static __eglMustCastToProperFunctionPointerType yagl_get_gles1_proc_address(const char* procname)
 {
     void *handle = dlopen("libGLESv1_CM.so.1", RTLD_NOW|RTLD_GLOBAL);
@@ -1329,6 +1494,10 @@ YAGL_API __eglMustCastToProperFunctionPointerType eglGetProcAddress(const char* 
             ret = (__eglMustCastToProperFunctionPointerType)&eglCreateImageKHR;
         } else if (strcmp("eglDestroyImageKHR", procname) == 0) {
             ret = (__eglMustCastToProperFunctionPointerType)&eglDestroyImageKHR;
+        } else if (strcmp("eglLockSurfaceKHR", procname) == 0) {
+            ret = (__eglMustCastToProperFunctionPointerType)&eglLockSurfaceKHR;
+        } else if (strcmp("eglUnlockSurfaceKHR", procname) == 0) {
+            ret = (__eglMustCastToProperFunctionPointerType)&eglUnlockSurfaceKHR;
         } else if (yagl_procname_is_extension(procname)) {
 
             struct yagl_context *ctx = yagl_get_context();

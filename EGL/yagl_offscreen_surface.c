@@ -6,7 +6,6 @@
 #include "yagl_log.h"
 #include "yagl_display.h"
 #include "yagl_mem_egl.h"
-#include "yagl_utils.h"
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -20,9 +19,6 @@ static int yagl_offscreen_surface_resize(struct yagl_offscreen_surface *surface)
     unsigned int height = 0;
     unsigned int depth = 0;
     union { Window w; int i; unsigned int ui; } tmp_geom;
-    unsigned int captured_width = 0;
-    unsigned int captured_height = 0;
-    unsigned int captured_depth = 0;
     struct yagl_bimage *bi = NULL;
 
     YAGL_LOG_FUNC_SET(yagl_offscreen_surface_resize);
@@ -43,26 +39,12 @@ static int yagl_offscreen_surface_resize(struct yagl_offscreen_surface *surface)
                  &tmp_geom.ui,
                  &depth);
 
-    pthread_mutex_lock(&surface->bi_mtx);
-
-    if (!surface->bi) {
-        pthread_mutex_unlock(&surface->bi_mtx);
-        YAGL_LOG_ERROR("surface->bi is NULL");
-        yagl_set_error(EGL_BAD_SURFACE);
-        goto out;
-    }
-
-    captured_width = surface->bi->width;
-    captured_height = surface->bi->height;
-    captured_depth = surface->bi->depth;
-
-    pthread_mutex_unlock(&surface->bi_mtx);
-
-    if ((width != captured_width) ||
-        (height != captured_height) ||
-        (depth != captured_depth)) {
+    if ((width != surface->bi->width) ||
+        (height != surface->bi->height) ||
+        (depth != surface->bi->depth)) {
         YAGL_LOG_DEBUG("Surface resizing from %ux%ux%u to %ux%ux%u",
-                       captured_width, captured_height, captured_depth,
+                       surface->bi->width, surface->bi->height,
+                       surface->bi->depth,
                        width, height, depth);
         /*
          * First of all, create new backing image.
@@ -100,20 +82,9 @@ static int yagl_offscreen_surface_resize(struct yagl_offscreen_surface *surface)
          * we can safely replace surface's backing image with a new one.
          */
 
-        pthread_mutex_lock(&surface->bi_mtx);
-
-        if (surface->bi) {
-            yagl_bimage_destroy(surface->bi);
-            surface->bi = bi;
-            bi = NULL;
-        } else {
-            pthread_mutex_unlock(&surface->bi_mtx);
-            YAGL_LOG_ERROR("surface->bi is NULL");
-            yagl_set_error(EGL_BAD_SURFACE);
-            goto out;
-        }
-
-        pthread_mutex_unlock(&surface->bi_mtx);
+        yagl_bimage_destroy(surface->bi);
+        surface->bi = bi;
+        bi = NULL;
     }
 
     res = 1;
@@ -124,31 +95,6 @@ out:
     }
 
     return res;
-}
-
-static int yagl_offscreen_surface_reset(struct yagl_surface *sfc)
-{
-    struct yagl_offscreen_surface *osfc = (struct yagl_offscreen_surface*)sfc;
-
-    YAGL_LOG_FUNC_SET(eglDestroySurface);
-
-    pthread_mutex_lock(&osfc->bi_mtx);
-
-    assert(osfc->bi);
-
-    if (!osfc->bi) {
-        pthread_mutex_unlock(&osfc->bi_mtx);
-        YAGL_LOG_ERROR("we're the one who destroy the surface, but bi isn't there!");
-        yagl_set_error(EGL_BAD_SURFACE);
-        return 0;
-    }
-
-    yagl_bimage_destroy(osfc->bi);
-    osfc->bi = NULL;
-
-    pthread_mutex_unlock(&osfc->bi_mtx);
-
-    return 1;
 }
 
 static void yagl_offscreen_surface_invalidate(struct yagl_surface *sfc)
@@ -183,18 +129,9 @@ static int yagl_offscreen_surface_swap_buffers(struct yagl_surface *sfc)
      * Host has updated our image, update the window.
      */
 
-    pthread_mutex_lock(&osfc->bi_mtx);
+    yagl_bimage_draw(osfc->bi, sfc->x_drawable.win, osfc->x_gc);
 
-    if (osfc->bi) {
-        yagl_bimage_draw(osfc->bi, sfc->x_drawable.win, osfc->x_gc);
-        pthread_mutex_unlock(&osfc->bi_mtx);
-        return 1;
-    } else {
-        pthread_mutex_unlock(&osfc->bi_mtx);
-        YAGL_LOG_ERROR("osfc->bi is NULL");
-        yagl_set_error(EGL_BAD_SURFACE);
-        return 0;
-    }
+    return 1;
 }
 
 static int yagl_offscreen_surface_copy_buffers(struct yagl_surface *sfc,
@@ -202,6 +139,7 @@ static int yagl_offscreen_surface_copy_buffers(struct yagl_surface *sfc,
 {
     struct yagl_offscreen_surface *osfc = (struct yagl_offscreen_surface*)sfc;
     EGLBoolean retval = EGL_FALSE;
+    GC x_gc;
 
     YAGL_LOG_FUNC_SET(eglCopyBuffers);
 
@@ -210,9 +148,6 @@ static int yagl_offscreen_surface_copy_buffers(struct yagl_surface *sfc,
         unsigned int height = 0;
         unsigned int depth = 0;
         union { Window w; int i; unsigned int ui; } tmp_geom;
-        unsigned int captured_width = 0;
-        unsigned int captured_height = 0;
-        unsigned int captured_depth = 0;
 
         memset(&tmp_geom, 0, sizeof(tmp_geom));
 
@@ -226,24 +161,9 @@ static int yagl_offscreen_surface_copy_buffers(struct yagl_surface *sfc,
                      &tmp_geom.ui,
                      &depth);
 
-        pthread_mutex_lock(&osfc->bi_mtx);
-
-        if (!osfc->bi) {
-            pthread_mutex_unlock(&osfc->bi_mtx);
-            YAGL_LOG_ERROR("osfc->bi is NULL");
-            yagl_set_error(EGL_BAD_SURFACE);
-            return 0;
-        }
-
-        captured_width = osfc->bi->width;
-        captured_height = osfc->bi->height;
-        captured_depth = osfc->bi->depth;
-
-        pthread_mutex_unlock(&osfc->bi_mtx);
-
-        if ((width != captured_width) ||
-            (height != captured_height) ||
-            (depth != captured_depth)) {
+        if ((width != osfc->bi->width) ||
+            (height != osfc->bi->height) ||
+            (depth != osfc->bi->depth)) {
             /*
              * Don't allow copying from window surfaces that
              * just changed their size, user must first update
@@ -269,28 +189,17 @@ static int yagl_offscreen_surface_copy_buffers(struct yagl_surface *sfc,
      * Host has updated our image, update the surface.
      */
 
-    pthread_mutex_lock(&osfc->bi_mtx);
+    x_gc = XCreateGC(sfc->dpy->x_dpy, target, 0, NULL);
 
-    if (osfc->bi) {
-        GC x_gc = XCreateGC(sfc->dpy->x_dpy, target, 0, NULL);
-
-        if (x_gc) {
-            yagl_bimage_draw(osfc->bi, target, x_gc);
-            XFreeGC(sfc->dpy->x_dpy, x_gc);
-        } else {
-            YAGL_LOG_ERROR("XCreateGC failed");
-            yagl_set_error(EGL_BAD_ALLOC);
-        }
-
-        pthread_mutex_unlock(&osfc->bi_mtx);
-
-        return x_gc ? 1 : 0;
+    if (x_gc) {
+        yagl_bimage_draw(osfc->bi, target, x_gc);
+        XFreeGC(sfc->dpy->x_dpy, x_gc);
     } else {
-        pthread_mutex_unlock(&osfc->bi_mtx);
-        YAGL_LOG_ERROR("osfc->bi is NULL");
-        yagl_set_error(EGL_BAD_SURFACE);
-        return 0;
+        YAGL_LOG_ERROR("XCreateGC failed");
+        yagl_set_error(EGL_BAD_ALLOC);
     }
+
+    return x_gc ? 1 : 0;
 }
 
 static void yagl_offscreen_surface_wait_x(struct yagl_surface *sfc)
@@ -318,6 +227,33 @@ static void yagl_offscreen_surface_wait_gl(struct yagl_surface *sfc)
     }
 }
 
+static void yagl_offscreen_surface_map(struct yagl_surface *sfc)
+{
+    struct yagl_offscreen_surface *osfc = (struct yagl_offscreen_surface*)sfc;
+
+    sfc->lock_ptr = osfc->bi->pixels;
+    sfc->lock_stride = osfc->bi->width * osfc->bi->bpp;
+}
+
+static void yagl_offscreen_surface_unmap(struct yagl_surface *sfc)
+{
+    struct yagl_offscreen_surface *osfc = (struct yagl_offscreen_surface*)sfc;
+
+    switch (sfc->type) {
+    case EGL_PBUFFER_BIT:
+        break;
+    case EGL_WINDOW_BIT:
+        yagl_bimage_draw(osfc->bi, sfc->x_drawable.win, osfc->x_gc);
+        break;
+    case EGL_PIXMAP_BIT:
+        yagl_bimage_draw(osfc->bi, sfc->x_drawable.pixmap, osfc->x_gc);
+        break;
+    default:
+        assert(0);
+        break;
+    }
+}
+
 static void yagl_offscreen_surface_destroy(struct yagl_ref *ref)
 {
     struct yagl_offscreen_surface *sfc = (struct yagl_offscreen_surface*)ref;
@@ -327,12 +263,8 @@ static void yagl_offscreen_surface_destroy(struct yagl_ref *ref)
         sfc->x_gc = 0;
     }
 
-    if (sfc->bi) {
-        yagl_bimage_destroy(sfc->bi);
-        sfc->bi = NULL;
-    }
-
-    pthread_mutex_destroy(&sfc->bi_mtx);
+    yagl_bimage_destroy(sfc->bi);
+    sfc->bi = NULL;
 
     yagl_surface_cleanup(&sfc->base);
 
@@ -398,15 +330,15 @@ struct yagl_offscreen_surface
                              dpy,
                              x_win);
 
-    sfc->base.reset = &yagl_offscreen_surface_reset;
     sfc->base.invalidate = &yagl_offscreen_surface_invalidate;
     sfc->base.finish = &yagl_offscreen_surface_finish;
     sfc->base.swap_buffers = &yagl_offscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_offscreen_surface_copy_buffers;
     sfc->base.wait_x = &yagl_offscreen_surface_wait_x;
     sfc->base.wait_gl = &yagl_offscreen_surface_wait_gl;
+    sfc->base.map = &yagl_offscreen_surface_map;
+    sfc->base.unmap = &yagl_offscreen_surface_unmap;
 
-    yagl_mutex_init(&sfc->bi_mtx);
     sfc->bi = bi;
     sfc->x_gc = x_gc;
 
@@ -492,15 +424,15 @@ struct yagl_offscreen_surface
                              dpy,
                              x_pixmap);
 
-    sfc->base.reset = &yagl_offscreen_surface_reset;
     sfc->base.invalidate = &yagl_offscreen_surface_invalidate;
     sfc->base.finish = &yagl_offscreen_surface_finish;
     sfc->base.swap_buffers = &yagl_offscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_offscreen_surface_copy_buffers;
     sfc->base.wait_x = &yagl_offscreen_surface_wait_x;
     sfc->base.wait_gl = &yagl_offscreen_surface_wait_gl;
+    sfc->base.map = &yagl_offscreen_surface_map;
+    sfc->base.unmap = &yagl_offscreen_surface_unmap;
 
-    yagl_mutex_init(&sfc->bi_mtx);
     sfc->bi = bi;
     sfc->x_gc = x_gc;
 
@@ -579,15 +511,15 @@ struct yagl_offscreen_surface
                               host_surface,
                               dpy);
 
-    sfc->base.reset = &yagl_offscreen_surface_reset;
     sfc->base.invalidate = &yagl_offscreen_surface_invalidate;
     sfc->base.finish = &yagl_offscreen_surface_finish;
     sfc->base.swap_buffers = &yagl_offscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_offscreen_surface_copy_buffers;
     sfc->base.wait_x = &yagl_offscreen_surface_wait_x;
     sfc->base.wait_gl = &yagl_offscreen_surface_wait_gl;
+    sfc->base.map = &yagl_offscreen_surface_map;
+    sfc->base.unmap = &yagl_offscreen_surface_unmap;
 
-    yagl_mutex_init(&sfc->bi_mtx);
     sfc->bi = bi;
 
     return sfc;

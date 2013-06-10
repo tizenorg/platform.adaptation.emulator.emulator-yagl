@@ -22,7 +22,21 @@ struct yagl_surface
         Pixmap pixmap;
     } x_drawable;
 
-    int (*reset)(struct yagl_surface */*sfc*/);
+    pthread_mutex_t mtx;
+
+    /*
+     * This is for EGL_KHR_lock_surface.
+     *
+     * 'lock_hint' is 0 when surface is not locked.
+     * 'lock_hint' is a combination of EGL_READ_SURFACE_BIT_KHR and
+     * EGL_WRITE_SURFACE_BIT_KHR when surface is locked.
+     *
+     * 'lock_ptr' is non-NULL when map has been called. This implies that the surface
+     * is locked.
+     */
+    EGLint lock_hint;
+    void *lock_ptr;
+    uint32_t lock_stride;
 
     void (*invalidate)(struct yagl_surface */*sfc*/);
 
@@ -35,6 +49,10 @@ struct yagl_surface
     void (*wait_x)(struct yagl_surface */*sfc*/);
 
     void (*wait_gl)(struct yagl_surface */*sfc*/);
+
+    void (*map)(struct yagl_surface */*sfc*/);
+
+    void (*unmap)(struct yagl_surface */*sfc*/);
 };
 
 void yagl_surface_init_window(struct yagl_surface *sfc,
@@ -63,6 +81,16 @@ void yagl_surface_cleanup(struct yagl_surface *sfc);
  * a handle, in case of pbuffer surface we'll simply use 'sfc->res.handle'.
  */
 EGLSurface yagl_surface_get_handle(struct yagl_surface *sfc);
+
+void yagl_surface_invalidate(struct yagl_surface *sfc);
+
+int yagl_surface_lock(struct yagl_surface *sfc, EGLint hint);
+
+int yagl_surface_locked(struct yagl_surface *sfc);
+
+int yagl_surface_unlock(struct yagl_surface *sfc);
+
+void *yagl_surface_map(struct yagl_surface *sfc, uint32_t *stride);
 
 /*
  * Helper functions that simply acquire/release yagl_surface::res

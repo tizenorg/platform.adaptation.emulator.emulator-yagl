@@ -4,15 +4,12 @@
 #include "yagl_export.h"
 #include "yagl_types.h"
 #include "yagl_surface.h"
-#include <pthread.h>
 
 struct yagl_bimage;
 
 struct yagl_offscreen_surface
 {
     struct yagl_surface base;
-
-    pthread_mutex_t bi_mtx;
 
     struct yagl_bimage *bi;
 

@@ -66,11 +66,6 @@ static void yagl_onscreen_surface_copy_drawable(struct yagl_onscreen_surface *sf
     XFixesDestroyRegion(sfc->base.dpy->x_dpy, region);
 }
 
-static int yagl_onscreen_surface_reset(struct yagl_surface *sfc)
-{
-    return 1;
-}
-
 static void yagl_onscreen_surface_invalidate(struct yagl_surface *sfc)
 {
     struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
@@ -284,6 +279,49 @@ static void yagl_onscreen_surface_wait_gl(struct yagl_surface *sfc)
     }
 }
 
+static void yagl_onscreen_surface_map(struct yagl_surface *sfc)
+{
+    struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
+    int ret;
+
+    YAGL_LOG_FUNC_SET(eglQuerySurface);
+
+    ret = vigs_drm_gem_map(&osfc->buffer->drm_sfc->gem);
+
+    if (ret != 0) {
+        YAGL_LOG_ERROR("vigs_drm_gem_map failed: %s",
+                       strerror(-ret));
+        return;
+    }
+
+    if ((sfc->lock_hint & EGL_READ_SURFACE_BIT_KHR) != 0) {
+        ret = vigs_drm_surface_update_vram(osfc->buffer->drm_sfc);
+        if (ret != 0) {
+            YAGL_LOG_ERROR("vigs_drm_surface_update_vram failed: %s",
+                           strerror(-ret));
+        }
+    }
+
+    sfc->lock_ptr = osfc->buffer->drm_sfc->gem.vaddr;
+    sfc->lock_stride = osfc->buffer->drm_sfc->stride;
+}
+
+static void yagl_onscreen_surface_unmap(struct yagl_surface *sfc)
+{
+    struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
+    int ret;
+
+    YAGL_LOG_FUNC_SET(eglUnlockSurfaceKHR);
+
+    if ((sfc->lock_hint & EGL_WRITE_SURFACE_BIT_KHR) != 0) {
+        ret = vigs_drm_surface_update_gpu(osfc->buffer->drm_sfc);
+        if (ret != 0) {
+            YAGL_LOG_ERROR("vigs_drm_surface_update_gpu failed: %s",
+                           strerror(-ret));
+        }
+    }
+}
+
 static void yagl_onscreen_surface_destroy(struct yagl_ref *ref)
 {
     struct yagl_onscreen_surface *sfc = (struct yagl_onscreen_surface*)ref;
@@ -362,13 +400,14 @@ struct yagl_onscreen_surface
                              dpy,
                              x_win);
 
-    sfc->base.reset = &yagl_onscreen_surface_reset;
     sfc->base.invalidate = &yagl_onscreen_surface_invalidate;
     sfc->base.finish = &yagl_onscreen_surface_finish;
     sfc->base.swap_buffers = &yagl_onscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_onscreen_surface_copy_buffers;
     sfc->base.wait_x = &yagl_onscreen_surface_wait_x;
     sfc->base.wait_gl = &yagl_onscreen_surface_wait_gl;
+    sfc->base.map = &yagl_onscreen_surface_map;
+    sfc->base.unmap = &yagl_onscreen_surface_unmap;
 
     sfc->buffer = new_buffer;
 
@@ -455,13 +494,14 @@ struct yagl_onscreen_surface
                              dpy,
                              x_pixmap);
 
-    sfc->base.reset = &yagl_onscreen_surface_reset;
     sfc->base.invalidate = &yagl_onscreen_surface_invalidate;
     sfc->base.finish = &yagl_onscreen_surface_finish;
     sfc->base.swap_buffers = &yagl_onscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_onscreen_surface_copy_buffers;
     sfc->base.wait_x = &yagl_onscreen_surface_wait_x;
     sfc->base.wait_gl = &yagl_onscreen_surface_wait_gl;
+    sfc->base.map = &yagl_onscreen_surface_map;
+    sfc->base.unmap = &yagl_onscreen_surface_unmap;
 
     sfc->buffer = new_buffer;
 
@@ -526,13 +566,14 @@ struct yagl_onscreen_surface
                              dpy,
                              x_pixmap);
 
-    sfc->base.reset = &yagl_onscreen_surface_reset;
     sfc->base.invalidate = &yagl_onscreen_surface_invalidate;
     sfc->base.finish = &yagl_onscreen_surface_finish;
     sfc->base.swap_buffers = &yagl_onscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_onscreen_surface_copy_buffers;
     sfc->base.wait_x = &yagl_onscreen_surface_wait_x;
     sfc->base.wait_gl = &yagl_onscreen_surface_wait_gl;
+    sfc->base.map = &yagl_onscreen_surface_map;
+    sfc->base.unmap = &yagl_onscreen_surface_unmap;
 
     sfc->buffer = new_buffer;
 
@@ -621,13 +662,14 @@ struct yagl_onscreen_surface
                               host_surface,
                               dpy);
 
-    sfc->base.reset = &yagl_onscreen_surface_reset;
     sfc->base.invalidate = &yagl_onscreen_surface_invalidate;
     sfc->base.finish = &yagl_onscreen_surface_finish;
     sfc->base.swap_buffers = &yagl_onscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_onscreen_surface_copy_buffers;
     sfc->base.wait_x = &yagl_onscreen_surface_wait_x;
     sfc->base.wait_gl = &yagl_onscreen_surface_wait_gl;
+    sfc->base.map = &yagl_onscreen_surface_map;
+    sfc->base.unmap = &yagl_onscreen_surface_unmap;
 
     sfc->buffer = new_buffer;
 
