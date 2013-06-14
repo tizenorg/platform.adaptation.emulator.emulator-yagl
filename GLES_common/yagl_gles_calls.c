@@ -707,3 +707,8 @@ out:
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
+
+YAGL_API void glEGLImageTargetRenderbufferStorageOES(GLenum target, GLeglImageOES image)
+{
+    fprintf(stderr, "glEGLImageTargetRenderbufferStorageOES not supported in YaGL\n");
+}
