@@ -1466,23 +1466,6 @@ static __eglMustCastToProperFunctionPointerType yagl_get_gles2_proc_address(cons
     return NULL;
 }
 
-/* We assume that if procname ends with 'ARB', 'EXT' or 'OES' then its an
- * extension */
-static int yagl_procname_is_extension(const char* procname)
-{
-    size_t len = strlen(procname);
-
-    procname = &procname[len - 3];
-
-    if (strcmp("OES", procname) == 0 ||
-        strcmp("ARB", procname) == 0 ||
-        strcmp("EXT", procname) == 0) {
-        return 1;
-    }
-
-    return 0;
-}
-
 YAGL_API __eglMustCastToProperFunctionPointerType eglGetProcAddress(const char* procname)
 {
     __eglMustCastToProperFunctionPointerType ret = NULL;
@@ -1490,15 +1473,7 @@ YAGL_API __eglMustCastToProperFunctionPointerType eglGetProcAddress(const char* 
     YAGL_LOG_FUNC_ENTER(eglGetProcAddress, "procname = %s", procname);
 
     if (procname) {
-        if (strcmp("eglCreateImageKHR", procname) == 0) {
-            ret = (__eglMustCastToProperFunctionPointerType)&eglCreateImageKHR;
-        } else if (strcmp("eglDestroyImageKHR", procname) == 0) {
-            ret = (__eglMustCastToProperFunctionPointerType)&eglDestroyImageKHR;
-        } else if (strcmp("eglLockSurfaceKHR", procname) == 0) {
-            ret = (__eglMustCastToProperFunctionPointerType)&eglLockSurfaceKHR;
-        } else if (strcmp("eglUnlockSurfaceKHR", procname) == 0) {
-            ret = (__eglMustCastToProperFunctionPointerType)&eglUnlockSurfaceKHR;
-        } else if (yagl_procname_is_extension(procname)) {
+        if (strncmp(procname, "gl", 2) == 0) {
 
             struct yagl_context *ctx = yagl_get_context();
 
@@ -1528,6 +1503,8 @@ YAGL_API __eglMustCastToProperFunctionPointerType eglGetProcAddress(const char* 
                  */
                 ret = yagl_get_gles2_proc_address(procname);
             }
+        } else if (strncmp(procname, "egl", 3) == 0) {
+            ret = dlsym(NULL, procname);
         }
     }
 
