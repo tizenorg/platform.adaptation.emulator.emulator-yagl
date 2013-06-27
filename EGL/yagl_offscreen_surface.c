@@ -220,6 +220,7 @@ static void yagl_offscreen_surface_wait_gl(struct yagl_surface *sfc)
         break;
     case EGL_PIXMAP_BIT:
         YAGL_HOST_CALL_ASSERT(yagl_host_eglWaitClient(&retval));
+        yagl_offscreen_surface_finish(sfc);
         break;
     default:
         assert(0);

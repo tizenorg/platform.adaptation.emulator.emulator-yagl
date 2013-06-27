@@ -102,26 +102,11 @@ static void yagl_onscreen_surface_finish(struct yagl_surface *sfc)
 
     YAGL_LOG_FUNC_SET(yagl_onscreen_surface_finish);
 
-    switch (sfc->type) {
-    case EGL_PBUFFER_BIT:
-    case EGL_WINDOW_BIT:
-        /*
-         * Currently our window surfaces are always double-buffered, so
-         * this is a no-op. That's because there's no way other process
-         * (or X.Org) can access window's back buffer.
-         */
-        break;
-    case EGL_PIXMAP_BIT:
-        ret = vigs_drm_surface_set_gpu_dirty(osfc->buffer->drm_sfc);
+    ret = vigs_drm_surface_set_gpu_dirty(osfc->buffer->drm_sfc);
 
-        if (ret != 0) {
-            YAGL_LOG_ERROR("vigs_drm_surface_set_gpu_dirty failed: %s",
-                           strerror(-ret));
-        }
-        break;
-    default:
-        assert(0);
-        break;
+    if (ret != 0) {
+        YAGL_LOG_ERROR("vigs_drm_surface_set_gpu_dirty failed: %s",
+                       strerror(-ret));
     }
 }
 
@@ -141,6 +126,8 @@ static int yagl_onscreen_surface_swap_buffers(struct yagl_surface *sfc)
         YAGL_LOG_ERROR("eglSwapBuffers failed");
         return 0;
     }
+
+    yagl_onscreen_surface_finish(sfc);
 
     yagl_DRI2SwapBuffers(sfc->dpy->x_dpy,
                          sfc->x_drawable.win, 0, 0, 0,
@@ -166,6 +153,8 @@ static int yagl_onscreen_surface_copy_buffers(struct yagl_surface *sfc,
         YAGL_LOG_ERROR("eglCopyBuffers failed");
         return 0;
     }
+
+    yagl_onscreen_surface_finish(sfc);
 
     x_gc = XCreateGC(sfc->dpy->x_dpy, target, 0, NULL);
 
@@ -254,29 +243,15 @@ static void yagl_onscreen_surface_wait_x(struct yagl_surface *sfc)
 
 static void yagl_onscreen_surface_wait_gl(struct yagl_surface *sfc)
 {
-    struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
     EGLBoolean retval;
 
-    switch (sfc->type) {
-    case EGL_PBUFFER_BIT:
-    case EGL_WINDOW_BIT:
-        /*
-         * Currently our window surfaces are always double-buffered, so
-         * this is a no-op.
-         */
-        break;
-    case EGL_PIXMAP_BIT:
-        /*
-         * There used to be DRI2CopyRegion call here, but it's not needed.
-         * This call must not be distinguishable from glFinish, so just do
-         * the stuff glFinish does here and not more.
-         */
-        YAGL_HOST_CALL_ASSERT(yagl_host_eglWaitClient(&retval));
-        break;
-    default:
-        assert(0);
-        break;
-    }
+    /*
+     * There used to be DRI2CopyRegion call here, but it's not needed.
+     * This call must not be distinguishable from glFinish, so just do
+     * the stuff glFinish does here and not more.
+     */
+    YAGL_HOST_CALL_ASSERT(yagl_host_eglWaitClient(&retval));
+    yagl_onscreen_surface_finish(sfc);
 }
 
 static void yagl_onscreen_surface_map(struct yagl_surface *sfc)
