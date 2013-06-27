@@ -80,9 +80,14 @@ static void yagl_onscreen_surface_invalidate(struct yagl_surface *sfc)
 
     osfc->last_stamp = osfc->stamp;
 
+    /*
+     * We only process new buffer if it's different from
+     * the current one.
+     */
     new_buffer = yagl_onscreen_display_create_buffer(dpy,
                                                      sfc->x_drawable.win,
-                                                     DRI2BufferBackLeft);
+                                                     DRI2BufferBackLeft,
+                                                     osfc->buffer->dri2_buffer->name);
 
     if (!new_buffer) {
         return;
@@ -350,7 +355,8 @@ struct yagl_onscreen_surface
 
     new_buffer = yagl_onscreen_display_create_buffer(odpy,
                                                      x_win,
-                                                     DRI2BufferBackLeft);
+                                                     DRI2BufferBackLeft,
+                                                     0);
 
     if (!new_buffer) {
         yagl_set_error(EGL_BAD_NATIVE_WINDOW);
@@ -444,7 +450,8 @@ struct yagl_onscreen_surface
 
     new_buffer = yagl_onscreen_display_create_buffer(odpy,
                                                      sfc->tmp_pixmap,
-                                                     DRI2BufferFrontLeft);
+                                                     DRI2BufferFrontLeft,
+                                                     0);
 
     if (!new_buffer) {
         yagl_set_error(EGL_BAD_NATIVE_PIXMAP);
@@ -516,7 +523,8 @@ struct yagl_onscreen_surface
 
     new_buffer = yagl_onscreen_display_create_buffer(odpy,
                                                      x_pixmap,
-                                                     DRI2BufferFrontLeft);
+                                                     DRI2BufferFrontLeft,
+                                                     0);
 
     if (!new_buffer) {
         yagl_set_error(EGL_BAD_NATIVE_PIXMAP);
@@ -613,7 +621,8 @@ struct yagl_onscreen_surface
 
     new_buffer = yagl_onscreen_display_create_buffer(odpy,
                                                      sfc->tmp_pixmap,
-                                                     DRI2BufferFrontLeft);
+                                                     DRI2BufferFrontLeft,
+                                                     0);
 
     if (!new_buffer) {
         yagl_set_error(EGL_BAD_ALLOC);

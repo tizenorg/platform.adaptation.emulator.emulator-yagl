@@ -30,7 +30,8 @@ struct yagl_onscreen_display
 struct yagl_onscreen_buffer
     *yagl_onscreen_display_create_buffer(struct yagl_onscreen_display* dpy,
                                          Drawable d,
-                                         unsigned int attachment);
+                                         unsigned int attachment,
+                                         uint32_t check_name);
 
 void yagl_onscreen_display_destroy_buffer(struct yagl_onscreen_buffer *buffer);
 

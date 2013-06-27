@@ -41,7 +41,8 @@ struct yagl_onscreen_image
 
     new_buffer = yagl_onscreen_display_create_buffer(odpy,
                                                      x_pixmap,
-                                                     DRI2BufferFrontLeft);
+                                                     DRI2BufferFrontLeft,
+                                                     0);
 
     if (!new_buffer) {
         yagl_set_error(EGL_BAD_NATIVE_PIXMAP);

@@ -117,7 +117,8 @@ out:
 struct yagl_onscreen_buffer
     *yagl_onscreen_display_create_buffer(struct yagl_onscreen_display* dpy,
                                          Drawable d,
-                                         unsigned int attachment)
+                                         unsigned int attachment,
+                                         uint32_t check_name)
 {
     int ret;
     unsigned int attachments[1] =
@@ -142,6 +143,12 @@ struct yagl_onscreen_buffer
                                      &num_buffers);
     if (!tmp_buffer) {
         YAGL_LOG_ERROR("DRI2GetBuffers failed for drawable 0x%X", d);
+        YAGL_LOG_FUNC_EXIT(NULL);
+        return NULL;
+    }
+
+    if (tmp_buffer->name == check_name) {
+        Xfree(tmp_buffer);
         YAGL_LOG_FUNC_EXIT(NULL);
         return NULL;
     }
