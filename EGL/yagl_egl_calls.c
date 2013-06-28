@@ -822,14 +822,27 @@ YAGL_API EGLBoolean eglReleaseTexImage( EGLDisplay dpy,
 
 YAGL_API EGLBoolean eglSwapInterval(EGLDisplay dpy, EGLint interval)
 {
+    struct yagl_surface *draw_sfc;
+
     YAGL_LOG_FUNC_ENTER(eglSwapInterval,
                         "dpy = %u, interval = %d",
                         (yagl_host_handle)dpy,
                         interval);
 
-    /*
-     * We don't care about this for now.
-     */
+    draw_sfc = yagl_get_draw_surface();
+
+    if (draw_sfc && (draw_sfc->type == EGL_WINDOW_BIT)) {
+        if (interval <= 0) {
+            /*
+             * Always make sure that swap interval is at least 1. Setting
+             * to 0 makes little sense with tizen since tizen compositor
+             * will still use a value of 1 and this will cause jagged rendering
+             */
+            interval = 1;
+        }
+
+        draw_sfc->set_swap_interval(draw_sfc, interval);
+    }
 
     YAGL_LOG_FUNC_EXIT("1");
 

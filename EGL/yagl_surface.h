@@ -53,6 +53,8 @@ struct yagl_surface
     void (*map)(struct yagl_surface */*sfc*/);
 
     void (*unmap)(struct yagl_surface */*sfc*/);
+
+    void (*set_swap_interval)(struct yagl_surface */*sfc*/, int /*interval*/);
 };
 
 void yagl_surface_init_window(struct yagl_surface *sfc,

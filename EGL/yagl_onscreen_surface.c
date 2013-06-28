@@ -302,6 +302,14 @@ static void yagl_onscreen_surface_unmap(struct yagl_surface *sfc)
     }
 }
 
+static void yagl_onscreen_surface_set_swap_interval(struct yagl_surface *sfc,
+                                                    int interval)
+{
+    assert(sfc->type == EGL_WINDOW_BIT);
+
+    yagl_DRI2SwapInterval(sfc->dpy->x_dpy, sfc->x_drawable.win, interval);
+}
+
 static void yagl_onscreen_surface_destroy(struct yagl_ref *ref)
 {
     struct yagl_onscreen_surface *sfc = (struct yagl_onscreen_surface*)ref;
@@ -389,6 +397,7 @@ struct yagl_onscreen_surface
     sfc->base.wait_gl = &yagl_onscreen_surface_wait_gl;
     sfc->base.map = &yagl_onscreen_surface_map;
     sfc->base.unmap = &yagl_onscreen_surface_unmap;
+    sfc->base.set_swap_interval = &yagl_onscreen_surface_set_swap_interval;
 
     sfc->buffer = new_buffer;
 
@@ -484,6 +493,7 @@ struct yagl_onscreen_surface
     sfc->base.wait_gl = &yagl_onscreen_surface_wait_gl;
     sfc->base.map = &yagl_onscreen_surface_map;
     sfc->base.unmap = &yagl_onscreen_surface_unmap;
+    sfc->base.set_swap_interval = &yagl_onscreen_surface_set_swap_interval;
 
     sfc->buffer = new_buffer;
 
@@ -557,6 +567,7 @@ struct yagl_onscreen_surface
     sfc->base.wait_gl = &yagl_onscreen_surface_wait_gl;
     sfc->base.map = &yagl_onscreen_surface_map;
     sfc->base.unmap = &yagl_onscreen_surface_unmap;
+    sfc->base.set_swap_interval = &yagl_onscreen_surface_set_swap_interval;
 
     sfc->buffer = new_buffer;
 
@@ -654,6 +665,7 @@ struct yagl_onscreen_surface
     sfc->base.wait_gl = &yagl_onscreen_surface_wait_gl;
     sfc->base.map = &yagl_onscreen_surface_map;
     sfc->base.unmap = &yagl_onscreen_surface_unmap;
+    sfc->base.set_swap_interval = &yagl_onscreen_surface_set_swap_interval;
 
     sfc->buffer = new_buffer;
 
