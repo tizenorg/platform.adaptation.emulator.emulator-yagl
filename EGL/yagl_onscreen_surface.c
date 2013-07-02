@@ -263,6 +263,7 @@ static void yagl_onscreen_surface_map(struct yagl_surface *sfc)
 {
     struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
     int ret;
+    uint32_t saf = 0;
 
     YAGL_LOG_FUNC_SET(eglQuerySurface);
 
@@ -275,11 +276,17 @@ static void yagl_onscreen_surface_map(struct yagl_surface *sfc)
     }
 
     if ((sfc->lock_hint & EGL_READ_SURFACE_BIT_KHR) != 0) {
-        ret = vigs_drm_surface_update_vram(osfc->buffer->drm_sfc);
-        if (ret != 0) {
-            YAGL_LOG_ERROR("vigs_drm_surface_update_vram failed: %s",
-                           strerror(-ret));
-        }
+        saf |= VIGS_DRM_SAF_READ;
+    }
+
+    if ((sfc->lock_hint & EGL_WRITE_SURFACE_BIT_KHR) != 0) {
+        saf |= VIGS_DRM_SAF_WRITE;
+    }
+
+    ret = vigs_drm_surface_start_access(osfc->buffer->drm_sfc, saf);
+    if (ret != 0) {
+        YAGL_LOG_ERROR("vigs_drm_surface_start_access failed: %s",
+                       strerror(-ret));
     }
 
     sfc->lock_ptr = osfc->buffer->drm_sfc->gem.vaddr;
@@ -293,12 +300,10 @@ static void yagl_onscreen_surface_unmap(struct yagl_surface *sfc)
 
     YAGL_LOG_FUNC_SET(eglUnlockSurfaceKHR);
 
-    if ((sfc->lock_hint & EGL_WRITE_SURFACE_BIT_KHR) != 0) {
-        ret = vigs_drm_surface_update_gpu(osfc->buffer->drm_sfc);
-        if (ret != 0) {
-            YAGL_LOG_ERROR("vigs_drm_surface_update_gpu failed: %s",
-                           strerror(-ret));
-        }
+    ret = vigs_drm_surface_end_access(osfc->buffer->drm_sfc, 1);
+    if (ret != 0) {
+        YAGL_LOG_ERROR("vigs_drm_surface_end_access failed: %s",
+                       strerror(-ret));
     }
 }
 
