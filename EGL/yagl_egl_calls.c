@@ -806,18 +806,88 @@ out:
     return res;
 }
 
-YAGL_API EGLBoolean eglBindTexImage( EGLDisplay dpy,
-                                     EGLSurface surface,
+YAGL_API EGLBoolean eglBindTexImage( EGLDisplay dpy_,
+                                     EGLSurface surface_,
                                      EGLint buffer )
 {
-    YAGL_UNIMPLEMENTED(eglBindTexImage, EGL_FALSE);
+    EGLBoolean res = EGL_FALSE;
+    EGLBoolean retval = EGL_FALSE;
+    struct yagl_display *dpy = NULL;
+    struct yagl_surface *surface = NULL;
+
+    YAGL_LOG_FUNC_ENTER(eglBindTexImage,
+                        "dpy = %u, surface = %p, buffer = 0x%X",
+                        (yagl_host_handle)dpy_,
+                        surface_,
+                        buffer);
+
+    if (!yagl_validate_display(dpy_, &dpy)) {
+        goto out;
+    }
+
+    if (!yagl_validate_surface(dpy, surface_, &surface)) {
+        goto out;
+    }
+
+    YAGL_HOST_CALL_ASSERT(yagl_host_eglBindTexImage(&retval,
+        dpy->host_dpy,
+        surface->res.handle,
+        buffer));
+
+    if (!retval) {
+        goto out;
+    }
+
+    res = EGL_TRUE;
+
+out:
+    yagl_surface_release(surface);
+
+    YAGL_LOG_FUNC_EXIT("%d", ((res == EGL_TRUE) ? 1 : 0));
+
+    return res;
 }
 
-YAGL_API EGLBoolean eglReleaseTexImage( EGLDisplay dpy,
-                                        EGLSurface surface,
+YAGL_API EGLBoolean eglReleaseTexImage( EGLDisplay dpy_,
+                                        EGLSurface surface_,
                                         EGLint buffer )
 {
-    YAGL_UNIMPLEMENTED(eglReleaseTexImage, EGL_FALSE);
+    EGLBoolean res = EGL_FALSE;
+    EGLBoolean retval = EGL_FALSE;
+    struct yagl_display *dpy = NULL;
+    struct yagl_surface *surface = NULL;
+
+    YAGL_LOG_FUNC_ENTER(eglReleaseTexImage,
+                        "dpy = %u, surface = %p, buffer = 0x%X",
+                        (yagl_host_handle)dpy_,
+                        surface_,
+                        buffer);
+
+    if (!yagl_validate_display(dpy_, &dpy)) {
+        goto out;
+    }
+
+    if (!yagl_validate_surface(dpy, surface_, &surface)) {
+        goto out;
+    }
+
+    YAGL_HOST_CALL_ASSERT(yagl_host_eglReleaseTexImage(&retval,
+        dpy->host_dpy,
+        surface->res.handle,
+        buffer));
+
+    if (!retval) {
+        goto out;
+    }
+
+    res = EGL_TRUE;
+
+out:
+    yagl_surface_release(surface);
+
+    YAGL_LOG_FUNC_EXIT("%d", ((res == EGL_TRUE) ? 1 : 0));
+
+    return res;
 }
 
 YAGL_API EGLBoolean eglSwapInterval(EGLDisplay dpy, EGLint interval)
