@@ -267,7 +267,7 @@ static void yagl_onscreen_surface_map(struct yagl_surface *sfc)
 
     YAGL_LOG_FUNC_SET(eglQuerySurface);
 
-    ret = vigs_drm_gem_map(&osfc->buffer->drm_sfc->gem);
+    ret = vigs_drm_gem_map(&osfc->buffer->drm_sfc->gem, 1);
 
     if (ret != 0) {
         YAGL_LOG_ERROR("vigs_drm_gem_map failed: %s",
