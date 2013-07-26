@@ -6,6 +6,7 @@ Group:      TO_BE/FILLED_IN
 License:    TO_BE/FILLED_IN
 #URL:        http://www.khronos.org
 Source0:    %{name}-%{version}.tar.gz
+BuildRequires:  cmake
 BuildRequires:  pkgconfig(xfixes)
 BuildRequires:  pkgconfig(x11)
 BuildRequires:  pkgconfig(x11-xcb)
@@ -29,10 +30,11 @@ YaGL - OpenGLES acceleration module for emulator (devel)
 %setup -q
 
 %build
+cmake -DCMAKE_INSTALL_PREFIX=%{buildroot}/usr -DINSTALL_LIB_DIR=lib/yagl
 make
 
 %install
-make INSTALL_LIB_DIR=%{buildroot}/usr/lib/yagl install
+make install
 mkdir -p %{buildroot}/usr/lib/systemd/system
 cp packaging/emul-opengl-yagl.service %{buildroot}/usr/lib/systemd/system
 mkdir -p %{buildroot}/etc/emulator

@@ -117,7 +117,6 @@ static void yagl_onscreen_surface_finish(struct yagl_surface *sfc)
 
 static int yagl_onscreen_surface_swap_buffers(struct yagl_surface *sfc)
 {
-    struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
     EGLBoolean retval = EGL_FALSE;
     CARD64 count = 0;
 
@@ -360,8 +359,6 @@ struct yagl_onscreen_surface
     struct yagl_onscreen_buffer *new_buffer = NULL;
     yagl_host_handle host_surface = 0;
 
-    YAGL_LOG_FUNC_SET(eglCreateWindowSurface);
-
     sfc = yagl_malloc0(sizeof(*sfc));
 
     yagl_DRI2CreateDrawable(dpy->x_dpy, x_win);
@@ -529,8 +526,6 @@ struct yagl_onscreen_surface
     struct yagl_onscreen_surface *sfc;
     struct yagl_onscreen_buffer *new_buffer = NULL;
     yagl_host_handle host_surface = 0;
-
-    YAGL_LOG_FUNC_SET(eglCreatePixmapSurface);
 
     sfc = yagl_malloc0(sizeof(*sfc));
 

@@ -3,8 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "yagl_host_gles1_calls.h"
-#include <GLES/glext.h>
+#include "yagl_host_gles_calls.h"
 #include "yagl_impl.h"
 #include "yagl_malloc.h"
 #include "yagl_mem_gl.h"
