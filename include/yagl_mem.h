@@ -17,6 +17,7 @@ static __inline void yagl_mem_probe_read_uint8(const uint8_t *value)
     if (value) {
         tmp = *value;
     }
+    (void)tmp;
 }
 
 static __inline void yagl_mem_probe_write_uint8(uint8_t *value)
@@ -34,6 +35,7 @@ static __inline void yagl_mem_probe_read_uint32(const uint32_t *value)
     if (value) {
         tmp = *value;
     }
+    (void)tmp;
 }
 
 static __inline void yagl_mem_probe_write_uint32(uint32_t *value)
@@ -51,6 +53,7 @@ static __inline void yagl_mem_probe_read_float(const float *value)
     if (value) {
         tmp = *value;
     }
+    (void)tmp;
 }
 
 static __inline void yagl_mem_probe_write_float(float *value)
@@ -68,6 +71,7 @@ static __inline void yagl_mem_probe_read_ptr(const void **value)
     if (value) {
         tmp = *value;
     }
+    (void)tmp;
 }
 
 static __inline void yagl_mem_probe_write_ptr(void **value)
@@ -96,6 +100,8 @@ static __inline void yagl_mem_probe_read(const void *data, int len)
         for (i = 4096 - ((uintptr_t)data & (4096 - 1)); i < len; i += 4096) {
             tmp = ((const uint8_t*)data)[i];
         }
+
+        (void)tmp;
     }
 }
 
