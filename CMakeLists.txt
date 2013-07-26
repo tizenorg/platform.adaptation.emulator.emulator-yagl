@@ -5,9 +5,18 @@ option(CROSSCOMPILING "Enable cross-compiling")
 
 if (CROSSCOMPILING)
     set(CMAKE_SYSTEM_NAME "Linux")
+    if (NOT CMAKE_FIND_ROOT_PATH_MODE_PROGRAM)
+        set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+    endif ()
+    if (NOT CMAKE_FIND_ROOT_PATH_MODE_LIBRARY)
+        set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+    endif ()
+    if (NOT CMAKE_FIND_ROOT_PATH_MODE_INCLUDE)
+        set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+    endif ()
 endif ()
 
-project(YAGL)
+project(YAGL C)
 
 # USER SETTINGS
 
@@ -35,6 +44,7 @@ set(YAGL_OUT_DIR ${YAGL_BINARY_DIR}/out)
 
 set(YAGL_INCLUDE_DIR "${YAGL_SOURCE_DIR}/include")
 include_directories(${YAGL_INCLUDE_DIR})
+include_directories(${CMAKE_FIND_ROOT_PATH}/usr/include)
 
 #find packages
 

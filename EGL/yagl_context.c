@@ -1,4 +1,4 @@
-#include <GL/gl.h>
+#include "GL/gl.h"
 #include "yagl_context.h"
 #include "yagl_malloc.h"
 #include "yagl_display.h"
