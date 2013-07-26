@@ -6,7 +6,7 @@
 
 #include "yagl_export.h"
 #include "yagl_types.h"
-#include <GLES/gl.h>
+#include "GLES/gl.h"
 
 /*
  * glActiveTexture wrapper. id = 1

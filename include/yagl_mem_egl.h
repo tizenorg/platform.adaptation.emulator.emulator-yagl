@@ -4,7 +4,7 @@
 #include "yagl_export.h"
 #include "yagl_types.h"
 #include "yagl_mem.h"
-#include <EGL/egl.h>
+#include "EGL/egl.h"
 
 #define yagl_mem_probe_read_EGLint(value) yagl_mem_probe_read_int32(value)
 #define yagl_mem_probe_write_EGLint(value) yagl_mem_probe_write_int32(value)

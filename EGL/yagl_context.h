@@ -4,7 +4,7 @@
 #include "yagl_export.h"
 #include "yagl_types.h"
 #include "yagl_resource.h"
-#include <EGL/egl.h>
+#include "EGL/egl.h"
 
 struct yagl_display;
 struct yagl_gles_context;

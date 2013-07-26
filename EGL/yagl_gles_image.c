@@ -1,5 +1,5 @@
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+#include "GLES2/gl2.h"
+#include "GLES2/gl2ext.h"
 #include "yagl_gles_image.h"
 #include "yagl_egl_state.h"
 #include "yagl_display.h"

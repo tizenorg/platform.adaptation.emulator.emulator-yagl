@@ -4,7 +4,7 @@
 #include "yagl_export.h"
 #include "yagl_types.h"
 #include "yagl_marshal.h"
-#include <EGL/egl.h>
+#include "EGL/egl.h"
 
 #define yagl_marshal_put_EGLBoolean(buff, value) yagl_marshal_put_uint32((buff), (value))
 #define yagl_marshal_get_EGLBoolean(buff) yagl_marshal_get_uint32(buff)

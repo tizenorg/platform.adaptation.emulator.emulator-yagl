@@ -3,7 +3,7 @@
 
 #include "yagl_export.h"
 #include "yagl_types.h"
-#include <EGL/egl.h>
+#include "EGL/egl.h"
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>

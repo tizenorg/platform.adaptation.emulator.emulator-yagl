@@ -6,7 +6,7 @@
 
 #include "yagl_export.h"
 #include "yagl_types.h"
-#include <EGL/egl.h>
+#include "EGL/egl.h"
 
 /*
  * eglGetError wrapper. id = 1

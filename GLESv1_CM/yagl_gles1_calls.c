@@ -6,7 +6,7 @@
 #include "yagl_mem_gl.h"
 #include "yagl_gles_context.h"
 #include "yagl_malloc.h"
-#include <GLES/glext.h>
+#include "GLES/glext.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>

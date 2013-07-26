@@ -1,5 +1,5 @@
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+#include "GLES2/gl2.h"
+#include "GLES2/gl2ext.h"
 #include <assert.h>
 #include "yagl_gles_utils.h"
 #include "yagl_mem_gl.h"

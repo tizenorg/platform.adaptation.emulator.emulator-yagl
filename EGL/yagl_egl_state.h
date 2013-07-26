@@ -3,7 +3,7 @@
 
 #include "yagl_export.h"
 #include "yagl_types.h"
-#include <EGL/egl.h>
+#include "EGL/egl.h"
 
 struct yagl_context;
 struct yagl_surface;

@@ -4,8 +4,8 @@
 #include "yagl_export.h"
 #include "yagl_types.h"
 #include "yagl_list.h"
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
+#include "EGL/egl.h"
+#include "EGL/eglext.h"
 #include <pthread.h>
 
 struct yagl_surface;

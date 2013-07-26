@@ -4,7 +4,7 @@
 #include "yagl_mem_gl.h"
 #include "yagl_batch_gl.h"
 #include "yagl_gles_context.h"
-#include <GLES2/gl2ext.h>
+#include "GLES2/gl2ext.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>

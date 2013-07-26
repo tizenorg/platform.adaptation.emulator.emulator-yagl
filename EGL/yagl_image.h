@@ -5,10 +5,10 @@
 #include "yagl_types.h"
 #include "yagl_resource.h"
 #include <X11/X.h>
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+#include "EGL/egl.h"
+#include "EGL/eglext.h"
+#include "GLES2/gl2.h"
+#include "GLES2/gl2ext.h"
 #include "yagl_gles_image.h"
 
 struct yagl_display;

@@ -1,7 +1,7 @@
 #include "yagl_surface.h"
 #include "yagl_utils.h"
 #include <assert.h>
-#include <EGL/eglext.h>
+#include "EGL/eglext.h"
 
 void yagl_surface_init_window(struct yagl_surface *sfc,
                               yagl_ref_destroy_func destroy_func,

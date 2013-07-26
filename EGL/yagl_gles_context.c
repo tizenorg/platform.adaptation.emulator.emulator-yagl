@@ -1,4 +1,4 @@
-#include <GL/gl.h>
+#include "GL/gl.h"
 #include "yagl_gles_context.h"
 #include "yagl_egl_state.h"
 #include "yagl_context.h"

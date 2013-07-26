@@ -10,7 +10,7 @@
 #include "yagl_mem_egl.h"
 #include "yagl_backend.h"
 #include "yagl_render.h"
-#include <EGL/eglext.h>
+#include "EGL/eglext.h"
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
