@@ -13,7 +13,7 @@ set(GLEXT_HEADER GLES2/gl2ext.h)
 configure_file(${YAGL_SOURCE_DIR}/GLES_common/yagl_host_gles_calls.h.in ${CMAKE_CURRENT_BINARY_DIR}/yagl_host_gles_calls.h @ONLY)
 
 add_library(GLESv2 SHARED ${SOURCES})
-set_target_properties(GLESv2 PROPERTIES VERSION 1.0 SOVERSION 1)
+set_target_properties(GLESv2 PROPERTIES VERSION 2.0 SOVERSION 2)
 
 target_link_libraries(GLESv2 EGL)
 
