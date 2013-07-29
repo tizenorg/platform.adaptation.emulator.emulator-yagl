@@ -16,7 +16,7 @@ int yagl_host_eglGetError(EGLint* retval);
 /*
  * eglGetDisplay wrapper. id = 2
  */
-int yagl_host_eglGetDisplay(yagl_host_handle* retval, Display* display_id);
+int yagl_host_eglGetDisplay(yagl_host_handle* retval, void* display_id);
 
 /*
  * eglInitialize wrapper. id = 3

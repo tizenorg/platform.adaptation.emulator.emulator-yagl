@@ -35,6 +35,8 @@ make
 
 %install
 make install
+ln -s libGLESv2.so.2.0 %{buildroot}/usr/lib/yagl/libGLESv2.so.1.0
+ln -s libGLESv2.so.1.0 %{buildroot}/usr/lib/yagl/libGLESv2.so.1
 mkdir -p %{buildroot}/usr/lib/systemd/system
 cp packaging/emul-opengl-yagl.service %{buildroot}/usr/lib/systemd/system
 mkdir -p %{buildroot}/etc/emulator

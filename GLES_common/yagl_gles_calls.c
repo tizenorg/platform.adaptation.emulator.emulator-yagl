@@ -1,4 +1,3 @@
-#include <X11/Xutil.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>

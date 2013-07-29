@@ -1,10 +1,13 @@
 #include "yagl_onscreen_image.h"
+#include "yagl_onscreen_buffer.h"
+#include "yagl_onscreen_display.h"
 #include "yagl_display.h"
 #include "yagl_log.h"
 #include "yagl_malloc.h"
 #include "yagl_host_egl_calls.h"
 #include "yagl_mem_egl.h"
 #include "yagl_egl_state.h"
+#include "vigs.h"
 
 static void yagl_onscreen_image_update(struct yagl_image *image)
 {
@@ -14,10 +17,7 @@ static void yagl_onscreen_image_destroy(struct yagl_ref *ref)
 {
     struct yagl_onscreen_image *image = (struct yagl_onscreen_image*)ref;
 
-    yagl_onscreen_display_destroy_buffer(image->buffer);
-
-    yagl_DRI2DestroyDrawable(image->base.dpy->x_dpy,
-                             image->base.x_pixmap);
+    yagl_onscreen_buffer_destroy(image->buffer);
 
     yagl_image_cleanup(&image->base);
 
@@ -27,7 +27,7 @@ static void yagl_onscreen_image_destroy(struct yagl_ref *ref)
 struct yagl_onscreen_image
     *yagl_onscreen_image_create(struct yagl_display *dpy,
                                 yagl_host_handle host_context,
-                                Pixmap x_pixmap,
+                                struct yagl_native_drawable *native_pixmap,
                                 const EGLint* attrib_list)
 {
     struct yagl_onscreen_display *odpy = (struct yagl_onscreen_display*)dpy;
@@ -37,12 +37,10 @@ struct yagl_onscreen_image
 
     image = yagl_malloc0(sizeof(*image));
 
-    yagl_DRI2CreateDrawable(dpy->x_dpy, x_pixmap);
-
-    new_buffer = yagl_onscreen_display_create_buffer(odpy,
-                                                     x_pixmap,
-                                                     DRI2BufferFrontLeft,
-                                                     0);
+    new_buffer = yagl_onscreen_buffer_create(odpy,
+                                             native_pixmap,
+                                             yagl_native_attachment_front,
+                                             0);
 
     if (!new_buffer) {
         yagl_set_error(EGL_BAD_NATIVE_PIXMAP);
@@ -66,7 +64,7 @@ struct yagl_onscreen_image
                     &yagl_onscreen_image_destroy,
                     host_image,
                     dpy,
-                    x_pixmap);
+                    native_pixmap);
 
     image->base.update = &yagl_onscreen_image_update;
 
@@ -76,8 +74,7 @@ struct yagl_onscreen_image
 
 fail:
     if (new_buffer) {
-        yagl_onscreen_display_destroy_buffer(new_buffer);
-        yagl_DRI2DestroyDrawable(dpy->x_dpy, x_pixmap);
+        yagl_onscreen_buffer_destroy(new_buffer);
     }
     yagl_free(image);
 

@@ -1,5 +1,4 @@
 set(SOURCES
-    yagl_bimage.c
     yagl_context.c
     yagl_display.c
     yagl_egl_calls.c
@@ -17,12 +16,17 @@ set(SOURCES
     yagl_onscreen_display.c
     yagl_onscreen_image.c
     yagl_onscreen_surface.c
+    yagl_onscreen_buffer.c
     yagl_ref.c
     yagl_render.c
     yagl_resource.c
     yagl_state.c
     yagl_surface.c
     yagl_utils.c
+    yagl_native_platform.c
+    yagl_native_display.c
+    yagl_native_drawable.c
+    yagl_native_image.c
 )
 
 set(LIBRARIES
@@ -34,20 +38,34 @@ set(LIBRARIES
 
 if (PLATFORM_X11)
     set(SOURCES ${SOURCES}
-        yagl_dri2.c
+        x11/yagl_dri2.c
+        x11/yagl_x11_platform.c
+        x11/yagl_x11_display.c
+        x11/yagl_x11_drawable.c
+        x11/yagl_x11_image.c
     )
     set(LIBRARIES ${LIBRARIES}
         ${X11_LIBRARIES}
         ${XEXT_LIBRARIES}
         ${XFIXES_LIBRARIES}
     )
+    add_definitions(-DYAGL_PLATFORM_X11)
 endif ()
 
 if (PLATFORM_GBM)
+    set(SOURCES ${SOURCES}
+        gbm/yagl_gbm_platform.c
+        gbm/yagl_gbm_display.c
+        gbm/yagl_gbm_drawable.c
+    )
+    add_definitions(-DYAGL_PLATFORM_GBM)
 endif ()
 
 if (PLATFORM_WAYLAND)
+    add_definitions(-DYAGL_PLATFORM_WAYLAND)
 endif ()
+
+include_directories(.)
 
 add_library(EGL SHARED ${SOURCES})
 set_target_properties(EGL PROPERTIES VERSION 1.0 SOVERSION 1)

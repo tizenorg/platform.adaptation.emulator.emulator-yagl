@@ -1,5 +1,6 @@
 #include "yagl_surface.h"
 #include "yagl_utils.h"
+#include "yagl_native_drawable.h"
 #include <assert.h>
 #include "EGL/eglext.h"
 
@@ -7,13 +8,13 @@ void yagl_surface_init_window(struct yagl_surface *sfc,
                               yagl_ref_destroy_func destroy_func,
                               yagl_host_handle handle,
                               struct yagl_display *dpy,
-                              Window x_win)
+                              struct yagl_native_drawable *native_window)
 {
     yagl_resource_init(&sfc->res, destroy_func, handle);
 
     sfc->dpy = dpy;
     sfc->type = EGL_WINDOW_BIT;
-    sfc->x_drawable.win = x_win;
+    sfc->native_drawable = native_window;
 
     yagl_recursive_mutex_init(&sfc->mtx);
 }
@@ -22,13 +23,13 @@ void yagl_surface_init_pixmap(struct yagl_surface *sfc,
                               yagl_ref_destroy_func destroy_func,
                               yagl_host_handle handle,
                               struct yagl_display *dpy,
-                              Pixmap x_pixmap)
+                              struct yagl_native_drawable *native_pixmap)
 {
     yagl_resource_init(&sfc->res, destroy_func, handle);
 
     sfc->dpy = dpy;
     sfc->type = EGL_PIXMAP_BIT;
-    sfc->x_drawable.pixmap = x_pixmap;
+    sfc->native_drawable = native_pixmap;
 
     yagl_recursive_mutex_init(&sfc->mtx);
 }
@@ -48,6 +49,10 @@ void yagl_surface_init_pbuffer(struct yagl_surface *sfc,
 
 void yagl_surface_cleanup(struct yagl_surface *sfc)
 {
+    if (sfc->native_drawable) {
+        sfc->native_drawable->destroy(sfc->native_drawable);
+        sfc->native_drawable = NULL;
+    }
     yagl_resource_cleanup(&sfc->res);
     pthread_mutex_destroy(&sfc->mtx);
 }
@@ -58,9 +63,8 @@ EGLSurface yagl_surface_get_handle(struct yagl_surface *sfc)
     case EGL_PBUFFER_BIT:
         return (EGLSurface)sfc->res.handle;
     case EGL_PIXMAP_BIT:
-        return (EGLSurface)sfc->x_drawable.pixmap;
     case EGL_WINDOW_BIT:
-        return (EGLSurface)sfc->x_drawable.win;
+        return (EGLSurface)sfc->native_drawable->os_drawable;
     default:
         assert(0);
         return NULL;

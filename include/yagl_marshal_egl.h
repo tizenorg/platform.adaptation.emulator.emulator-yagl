@@ -14,7 +14,5 @@
 #define yagl_marshal_get_EGLint(buff) yagl_marshal_get_int32(buff)
 
 #define yagl_marshal_put_EGLClientBuffer(buff, value) yagl_marshal_skip(buff)
-#define yagl_marshal_put_EGLNativePixmapType(buff, value) yagl_marshal_skip(buff)
-#define yagl_marshal_put_EGLNativeWindowType(buff, value) yagl_marshal_skip(buff)
 
 #endif

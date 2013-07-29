@@ -10,6 +10,9 @@
 #include "yagl_mem_egl.h"
 #include "yagl_backend.h"
 #include "yagl_render.h"
+#include "yagl_native_platform.h"
+#include "yagl_native_display.h"
+#include "yagl_native_drawable.h"
 #include "EGL/eglext.h"
 #include <stdio.h>
 #include <string.h>
@@ -97,24 +100,33 @@ YAGL_API EGLint eglGetError()
 
 YAGL_API EGLDisplay eglGetDisplay(EGLNativeDisplayType display_id)
 {
+    struct yagl_native_platform *platform;
     yagl_host_handle host_dpy;
     struct yagl_display *dpy;
     EGLDisplay ret = EGL_NO_DISPLAY;
 
     YAGL_LOG_FUNC_ENTER_SPLIT1(eglGetDisplay, EGLNativeDisplayType, display_id);
 
-    YAGL_HOST_CALL_ASSERT(yagl_host_eglGetDisplay(&host_dpy, display_id));
+    platform = yagl_guess_platform((yagl_os_display)display_id);
 
-    if (!host_dpy) {
-        YAGL_LOG_ERROR("unable to get host display for %p", display_id);
+    if (!platform) {
         goto out;
     }
 
-    dpy = yagl_display_add(display_id, host_dpy);
+    YAGL_HOST_CALL_ASSERT(yagl_host_eglGetDisplay(&host_dpy, display_id));
+
+    if (!host_dpy) {
+        YAGL_LOG_ERROR("unable to get host display for %p",
+                       (yagl_os_display)display_id);
+        goto out;
+    }
+
+    dpy = yagl_display_add(platform, (yagl_os_display)display_id, host_dpy);
 
     if (!dpy) {
         YAGL_SET_ERR(EGL_BAD_DISPLAY);
-        YAGL_LOG_ERROR("unable to add display %p, %u", display_id, host_dpy);
+        YAGL_LOG_ERROR("unable to add display %p, %u",
+                       (yagl_os_display)display_id, host_dpy);
         goto out;
     }
 
@@ -231,7 +243,7 @@ YAGL_API EGLBoolean eglGetConfigs( EGLDisplay dpy_,
                                    EGLint* num_config )
 {
     EGLBoolean retval = EGL_FALSE;
-    yagl_host_handle* configs = NULL;
+    yagl_host_handle *configs = NULL;
     EGLint i;
 
     YAGL_LOG_FUNC_ENTER(eglGetConfigs,
@@ -285,7 +297,7 @@ YAGL_API EGLBoolean eglChooseConfig( EGLDisplay dpy,
                                      EGLint* num_config )
 {
     EGLBoolean retval = EGL_FALSE;
-    yagl_host_handle* configs = NULL;
+    yagl_host_handle *configs = NULL;
     EGLint i;
 
     YAGL_LOG_FUNC_ENTER(eglChooseConfig, "dpy = %u", (yagl_host_handle)dpy);
@@ -337,8 +349,7 @@ YAGL_API EGLBoolean eglGetConfigAttrib( EGLDisplay dpy_,
 {
     struct yagl_display *dpy = NULL;
     EGLBoolean ret = EGL_FALSE;
-    int screen;
-    XVisualInfo vi;
+    int visual_id = 0, visual_type = 0;
 
     YAGL_LOG_FUNC_ENTER(eglGetConfigAttrib,
                         "dpy = %u, config = %u, attribute = 0x%X",
@@ -357,22 +368,18 @@ YAGL_API EGLBoolean eglGetConfigAttrib( EGLDisplay dpy_,
         break;
     case EGL_NATIVE_VISUAL_ID:
     case EGL_NATIVE_VISUAL_TYPE:
-        screen = XScreenNumberOfScreen(XDefaultScreenOfDisplay(dpy->x_dpy));
-
-        /*
-         * 24-bit is the highest supported by soft framebuffer.
-         */
-        if (!XMatchVisualInfo(dpy->x_dpy, screen, 24, TrueColor, &vi))
-        {
+        if (!dpy->native_dpy->get_visual(dpy->native_dpy,
+                                         &visual_id,
+                                         &visual_type)) {
             YAGL_SET_ERR(EGL_BAD_CONFIG);
-            YAGL_LOG_ERROR("XMatchVisualInfo failed");
+            YAGL_LOG_ERROR("get_visual failed");
             goto fail;
         }
 
         if (attribute == EGL_NATIVE_VISUAL_ID) {
-            *value = XVisualIDFromVisual(vi.visual);
+            *value = visual_id;
         } else {
-            *value = TrueColor;
+            *value = visual_type;
         }
 
         ret = EGL_TRUE;
@@ -410,6 +417,7 @@ YAGL_API EGLSurface eglCreateWindowSurface( EGLDisplay dpy_,
                                             const EGLint* attrib_list)
 {
     struct yagl_display *dpy = NULL;
+    struct yagl_native_drawable *native_win = NULL;
     struct yagl_surface *surface = NULL;
 
     YAGL_LOG_FUNC_ENTER(eglCreateWindowSurface,
@@ -421,12 +429,21 @@ YAGL_API EGLSurface eglCreateWindowSurface( EGLDisplay dpy_,
         goto fail;
     }
 
+    native_win = dpy->native_dpy->wrap_window(dpy->native_dpy,
+                                              (yagl_os_window)win);
+
+    if (!native_win) {
+        goto fail;
+    }
+
     surface = yagl_get_backend()->create_window_surface(dpy,
                                                         (yagl_host_handle)config,
-                                                        win,
+                                                        native_win,
                                                         attrib_list);
 
     if (!surface) {
+        native_win->destroy(native_win);
+        native_win = NULL;
         goto fail;
     }
 
@@ -506,6 +523,7 @@ YAGL_API EGLSurface eglCreatePixmapSurface( EGLDisplay dpy_,
                                             const EGLint* attrib_list )
 {
     struct yagl_display *dpy = NULL;
+    struct yagl_native_drawable *native_pixmap = NULL;
     struct yagl_surface *surface = NULL;
 
     YAGL_LOG_FUNC_ENTER(eglCreatePixmapSurface,
@@ -517,12 +535,21 @@ YAGL_API EGLSurface eglCreatePixmapSurface( EGLDisplay dpy_,
         goto fail;
     }
 
+    native_pixmap = dpy->native_dpy->wrap_pixmap(dpy->native_dpy,
+                                                 (yagl_os_pixmap)pixmap);
+
+    if (!native_pixmap) {
+        goto fail;
+    }
+
     surface = yagl_get_backend()->create_pixmap_surface(dpy,
                                                         (yagl_host_handle)config,
-                                                        pixmap,
+                                                        native_pixmap,
                                                         attrib_list);
 
     if (!surface) {
+        native_pixmap->destroy(native_pixmap);
+        native_pixmap = NULL;
         goto fail;
     }
 
@@ -1328,6 +1355,7 @@ YAGL_API EGLImageKHR eglCreateImageKHR( EGLDisplay dpy_,
 {
     EGLImageKHR ret = EGL_NO_IMAGE_KHR;
     struct yagl_display *dpy = NULL;
+    struct yagl_native_drawable *native_buffer = NULL;
     struct yagl_image *image = NULL;
 
     YAGL_LOG_FUNC_ENTER(eglCreateImageKHR,
@@ -1351,12 +1379,21 @@ YAGL_API EGLImageKHR eglCreateImageKHR( EGLDisplay dpy_,
         goto out;
     }
 
+    native_buffer = dpy->native_dpy->wrap_pixmap(dpy->native_dpy,
+                                                 (yagl_os_pixmap)buffer);
+
+    if (!native_buffer) {
+        goto out;
+    }
+
     image = yagl_get_backend()->create_image(dpy,
                                              (yagl_host_handle)ctx,
-                                             (Pixmap)buffer,
+                                             native_buffer,
                                              attrib_list);
 
     if (!image) {
+        native_buffer->destroy(native_buffer);
+        native_buffer = NULL;
         goto out;
     }
 

@@ -4,8 +4,9 @@
 #include "yagl_export.h"
 #include "yagl_types.h"
 #include "yagl_image.h"
-#include "yagl_dri2.h"
-#include "yagl_onscreen_display.h"
+
+struct yagl_onscreen_buffer;
+struct yagl_native_drawable;
 
 struct yagl_onscreen_image
 {
@@ -17,7 +18,7 @@ struct yagl_onscreen_image
 struct yagl_onscreen_image
     *yagl_onscreen_image_create(struct yagl_display *dpy,
                                 yagl_host_handle host_context,
-                                Pixmap x_pixmap,
+                                struct yagl_native_drawable *native_pixmap,
                                 const EGLint* attrib_list);
 
 #endif

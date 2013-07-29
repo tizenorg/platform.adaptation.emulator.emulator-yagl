@@ -31,7 +31,7 @@ int yagl_host_eglGetError(EGLint* retval)
 /*
  * eglGetDisplay wrapper. id = 2
  */
-int yagl_host_eglGetDisplay(yagl_host_handle* retval, Display* display_id)
+int yagl_host_eglGetDisplay(yagl_host_handle* retval, void* display_id)
 {
     uint8_t* base = yagl_batch_get_marshal();
     yagl_marshal_put_uint32(&base, yagl_api_id_egl);

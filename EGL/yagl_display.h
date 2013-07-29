@@ -4,6 +4,7 @@
 #include "yagl_export.h"
 #include "yagl_types.h"
 #include "yagl_list.h"
+#include "yagl_native_types.h"
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
 #include <pthread.h>
@@ -11,20 +12,18 @@
 struct yagl_surface;
 struct yagl_context;
 struct yagl_image;
+struct yagl_native_platform;
+struct yagl_native_display;
 
 struct yagl_display
 {
     struct yagl_list list;
 
-    EGLNativeDisplayType display_id;
+    yagl_os_display display_id;
 
-    Display *x_dpy;
+    struct yagl_native_display *native_dpy;
 
     yagl_host_handle host_dpy;
-
-    int xshm_images_supported;
-
-    int xshm_pixmaps_supported;
 
     pthread_mutex_t mutex;
 
@@ -37,18 +36,20 @@ struct yagl_display
     struct yagl_list images;
 };
 
+/*
+ * Takes ownership of 'native_dpy'.
+ */
 void yagl_display_init(struct yagl_display *dpy,
-                       EGLNativeDisplayType display_id,
-                       Display *x_dpy,
+                       yagl_os_display display_id,
+                       struct yagl_native_display *native_dpy,
                        yagl_host_handle host_dpy);
 
-void yagl_display_cleanup(struct yagl_display *dpy);
+struct yagl_display *yagl_display_get(EGLDisplay handle);
 
-struct yagl_display *yagl_display_get(EGLDisplay native_dpy);
+struct yagl_display *yagl_display_get_os(yagl_os_display os_dpy);
 
-struct yagl_display *yagl_display_get_x(Display *x_dpy);
-
-struct yagl_display *yagl_display_add(EGLNativeDisplayType display_id,
+struct yagl_display *yagl_display_add(struct yagl_native_platform *platform,
+                                      yagl_os_display display_id,
                                       yagl_host_handle host_dpy);
 
 void yagl_display_prepare(struct yagl_display *dpy);

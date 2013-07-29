@@ -1,5 +1,5 @@
 EGLint, eglGetError
-EGLDisplay^, eglGetDisplay, Display* display_id
+EGLDisplay^, eglGetDisplay, void* display_id
 EGLBoolean, eglInitialize, EGLDisplay^ dpy, EGLint* major, EGLint* minor
 EGLBoolean, eglTerminate, EGLDisplay^ dpy
 EGLBoolean, eglGetConfigs, EGLDisplay^ dpy, EGLConfig^* configs, EGLint config_size, EGLint* num_config

@@ -40,6 +40,10 @@ endif ()
 
 set(YAGL_OUT_DIR ${YAGL_BINARY_DIR}/out)
 
+#define stuff
+
+add_definitions(-DMESA_EGL_NO_X11_HEADERS)
+
 #set includes/libs
 
 set(YAGL_INCLUDE_DIR "${YAGL_SOURCE_DIR}/include")

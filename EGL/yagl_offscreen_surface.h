@@ -5,27 +5,26 @@
 #include "yagl_types.h"
 #include "yagl_surface.h"
 
-struct yagl_bimage;
+struct yagl_native_image;
+struct yagl_native_drawable;
 
 struct yagl_offscreen_surface
 {
     struct yagl_surface base;
 
-    struct yagl_bimage *bi;
-
-    GC x_gc;
+    struct yagl_native_image *bi;
 };
 
 struct yagl_offscreen_surface
     *yagl_offscreen_surface_create_window(struct yagl_display *dpy,
                                           yagl_host_handle host_config,
-                                          Window x_win,
+                                          struct yagl_native_drawable *native_window,
                                           const EGLint* attrib_list);
 
 struct yagl_offscreen_surface
     *yagl_offscreen_surface_create_pixmap(struct yagl_display *dpy,
                                           yagl_host_handle host_config,
-                                          Pixmap x_pixmap,
+                                          struct yagl_native_drawable *native_pixmap,
                                           const EGLint* attrib_list);
 
 struct yagl_offscreen_surface

@@ -1,7 +1,8 @@
 #include "yagl_dri2.h"
 #include "yagl_display.h"
-#include "yagl_onscreen_surface.h"
+#include "yagl_surface.h"
 #include "yagl_log.h"
+#include "yagl_native_drawable.h"
 #include <X11/extensions/Xext.h>
 #include <X11/extensions/extutil.h>
 #include <X11/extensions/dri2proto.h>
@@ -65,7 +66,7 @@ static Bool DRI2WireToEvent(Display *x_dpy, XEvent *event, xEvent *wire)
 #ifdef DRI2_InvalidateBuffers
     case DRI2_InvalidateBuffers:
         awire = (xDRI2InvalidateBuffers*)wire;
-        dpy = yagl_display_get_x(x_dpy);
+        dpy = yagl_display_get_os((yagl_os_display)x_dpy);
 
         if (!dpy) {
             YAGL_LOG_ERROR("EGL display not found for X display 0x%X", x_dpy);
@@ -75,13 +76,11 @@ static Bool DRI2WireToEvent(Display *x_dpy, XEvent *event, xEvent *wire)
         sfc = yagl_display_surface_acquire(dpy, (EGLSurface)awire->drawable);
 
         if (sfc) {
-            struct yagl_onscreen_surface *osfc =
-                (struct yagl_onscreen_surface*)sfc;
             if (sfc->type == EGL_WINDOW_BIT) {
-                ++osfc->stamp;
+                ++sfc->native_drawable->stamp;
                 YAGL_LOG_DEBUG("EGL surface 0x%X invalidated, stamp = %u",
                                awire->drawable,
-                               osfc->stamp);
+                               sfc->native_drawable->stamp);
             } else {
                 YAGL_LOG_ERROR("EGL surface 0x%X is not a window surface",
                                awire->drawable);

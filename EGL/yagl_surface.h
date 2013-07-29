@@ -3,10 +3,12 @@
 
 #include "yagl_export.h"
 #include "yagl_types.h"
+#include "yagl_native_types.h"
 #include "yagl_resource.h"
 #include "EGL/egl.h"
 
 struct yagl_display;
+struct yagl_native_drawable;
 
 struct yagl_surface
 {
@@ -16,11 +18,7 @@ struct yagl_surface
 
     EGLenum type;
 
-    union
-    {
-        Window win;
-        Pixmap pixmap;
-    } x_drawable;
+    struct yagl_native_drawable *native_drawable;
 
     pthread_mutex_t mtx;
 
@@ -44,7 +42,7 @@ struct yagl_surface
 
     int (*swap_buffers)(struct yagl_surface */*sfc*/);
 
-    int (*copy_buffers)(struct yagl_surface */*sfc*/, Pixmap /*target*/);
+    int (*copy_buffers)(struct yagl_surface */*sfc*/, yagl_os_pixmap /*target*/);
 
     void (*wait_x)(struct yagl_surface */*sfc*/);
 
@@ -57,17 +55,23 @@ struct yagl_surface
     void (*set_swap_interval)(struct yagl_surface */*sfc*/, int /*interval*/);
 };
 
+/*
+ * Takes ownership of 'native_window'.
+ */
 void yagl_surface_init_window(struct yagl_surface *sfc,
                               yagl_ref_destroy_func destroy_func,
                               yagl_host_handle handle,
                               struct yagl_display *dpy,
-                              Window x_win);
+                              struct yagl_native_drawable *native_window);
 
+/*
+ * Takes ownership of 'native_pixmap'.
+ */
 void yagl_surface_init_pixmap(struct yagl_surface *sfc,
                               yagl_ref_destroy_func destroy_func,
                               yagl_host_handle handle,
                               struct yagl_display *dpy,
-                              Pixmap x_pixmap);
+                              struct yagl_native_drawable *native_pixmap);
 
 void yagl_surface_init_pbuffer(struct yagl_surface *sfc,
                                yagl_ref_destroy_func destroy_func,

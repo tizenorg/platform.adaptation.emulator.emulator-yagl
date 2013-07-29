@@ -5,8 +5,7 @@
 #include "yagl_surface.h"
 #include "yagl_context.h"
 #include "yagl_image.h"
-#include <X11/Xutil.h>
-#include <X11/extensions/XShm.h>
+#include "yagl_native_display.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -31,19 +30,13 @@ static void yagl_displays_init(void)
 }
 
 void yagl_display_init(struct yagl_display *dpy,
-                       EGLNativeDisplayType display_id,
-                       Display *x_dpy,
+                       yagl_os_display display_id,
+                       struct yagl_native_display *native_dpy,
                        yagl_host_handle host_dpy)
 {
-    int xmajor;
-    int xminor;
-    Bool pixmaps;
-
-    YAGL_LOG_FUNC_SET(eglGetDisplay);
-
     yagl_list_init(&dpy->list);
     dpy->display_id = display_id;
-    dpy->x_dpy = x_dpy;
+    dpy->native_dpy = native_dpy;
     dpy->host_dpy = host_dpy;
     /*
      * Need recursive mutex here,
@@ -51,35 +44,15 @@ void yagl_display_init(struct yagl_display *dpy,
      */
     yagl_recursive_mutex_init(&dpy->mutex);
     dpy->prepared = 0;
-    dpy->xshm_images_supported = XShmQueryVersion(dpy->x_dpy,
-                                                  &xmajor,
-                                                  &xminor,
-                                                  &pixmaps);
-    dpy->xshm_pixmaps_supported = pixmaps;
-
-    YAGL_LOG_DEBUG("XShm images are%s supported, version %d, %d (pixmaps = %d)",
-                   (dpy->xshm_images_supported ? "" : " NOT"),
-                   xmajor,
-                   xminor,
-                   pixmaps);
 
     yagl_list_init(&dpy->surfaces);
     yagl_list_init(&dpy->contexts);
     yagl_list_init(&dpy->images);
 }
 
-void yagl_display_cleanup(struct yagl_display *dpy)
+struct yagl_display *yagl_display_get(EGLDisplay handle)
 {
-    assert(yagl_list_empty(&dpy->images));
-    assert(yagl_list_empty(&dpy->contexts));
-    assert(yagl_list_empty(&dpy->surfaces));
-    pthread_mutex_destroy(&dpy->mutex);
-    assert(yagl_list_empty(&dpy->list));
-}
-
-struct yagl_display *yagl_display_get(EGLDisplay native_dpy)
-{
-    yagl_host_handle host_dpy = (yagl_host_handle)native_dpy;
+    yagl_host_handle host_dpy = (yagl_host_handle)handle;
     struct yagl_display *dpy;
 
     yagl_displays_init();
@@ -99,7 +72,7 @@ struct yagl_display *yagl_display_get(EGLDisplay native_dpy)
     return NULL;
 }
 
-struct yagl_display *yagl_display_get_x(Display *x_dpy)
+struct yagl_display *yagl_display_get_os(yagl_os_display os_dpy)
 {
     struct yagl_display *dpy;
 
@@ -108,7 +81,7 @@ struct yagl_display *yagl_display_get_x(Display *x_dpy)
     pthread_mutex_lock(&g_displays_mutex);
 
     yagl_list_for_each(struct yagl_display, dpy, &g_displays, list) {
-        if (dpy->x_dpy == x_dpy) {
+        if (dpy->native_dpy->os_dpy == os_dpy) {
             pthread_mutex_unlock(&g_displays_mutex);
 
             return dpy;
@@ -120,11 +93,11 @@ struct yagl_display *yagl_display_get_x(Display *x_dpy)
     return NULL;
 }
 
-struct yagl_display *yagl_display_add(EGLNativeDisplayType display_id,
+struct yagl_display *yagl_display_add(struct yagl_native_platform *platform,
+                                      yagl_os_display display_id,
                                       yagl_host_handle host_dpy)
 {
     struct yagl_display *dpy;
-    Display *x_dpy;
 
     YAGL_LOG_FUNC_SET(eglGetDisplay);
 
@@ -150,29 +123,9 @@ struct yagl_display *yagl_display_add(EGLNativeDisplayType display_id,
         }
     }
 
-    if (display_id == EGL_DEFAULT_DISPLAY) {
-        x_dpy = XOpenDisplay(0);
-
-        if (!x_dpy) {
-            pthread_mutex_unlock(&g_displays_mutex);
-
-            YAGL_LOG_ERROR("unable to open display 0");
-
-            return NULL;
-        }
-    } else {
-        x_dpy = display_id;
-    }
-
-    dpy = yagl_get_backend()->create_display(display_id,
-                                             x_dpy,
-                                             host_dpy);
+    dpy = yagl_get_backend()->create_display(platform, display_id, host_dpy);
 
     if (!dpy) {
-        if (display_id == EGL_DEFAULT_DISPLAY) {
-            XCloseDisplay(x_dpy);
-        }
-
         pthread_mutex_unlock(&g_displays_mutex);
 
         return NULL;
@@ -266,7 +219,7 @@ void yagl_display_terminate(struct yagl_display *dpy)
 }
 
 int yagl_display_surface_add(struct yagl_display *dpy,
-                              struct yagl_surface *sfc)
+                             struct yagl_surface *sfc)
 {
     struct yagl_resource *res = NULL;
     EGLSurface handle = yagl_surface_get_handle(sfc);
