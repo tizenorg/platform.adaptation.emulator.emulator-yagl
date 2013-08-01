@@ -1,6 +1,5 @@
 #include "yagl_onscreen_image.h"
-#include "yagl_onscreen_buffer.h"
-#include "yagl_onscreen_display.h"
+#include "yagl_onscreen_utils.h"
 #include "yagl_display.h"
 #include "yagl_log.h"
 #include "yagl_malloc.h"
@@ -17,7 +16,7 @@ static void yagl_onscreen_image_destroy(struct yagl_ref *ref)
 {
     struct yagl_onscreen_image *image = (struct yagl_onscreen_image*)ref;
 
-    yagl_onscreen_buffer_destroy(image->buffer);
+    vigs_drm_gem_unref(&image->drm_sfc->gem);
 
     yagl_image_cleanup(&image->base);
 
@@ -30,19 +29,17 @@ struct yagl_onscreen_image
                                 struct yagl_native_drawable *native_pixmap,
                                 const EGLint* attrib_list)
 {
-    struct yagl_onscreen_display *odpy = (struct yagl_onscreen_display*)dpy;
     struct yagl_onscreen_image *image;
-    struct yagl_onscreen_buffer *new_buffer = NULL;
+    struct vigs_drm_surface *drm_sfc = NULL;
     yagl_host_handle host_image = 0;
 
     image = yagl_malloc0(sizeof(*image));
 
-    new_buffer = yagl_onscreen_buffer_create(odpy,
-                                             native_pixmap,
-                                             yagl_native_attachment_front,
-                                             0);
+    drm_sfc = yagl_onscreen_buffer_create(native_pixmap,
+                                          yagl_native_attachment_front,
+                                          NULL);
 
-    if (!new_buffer) {
+    if (!drm_sfc) {
         yagl_set_error(EGL_BAD_NATIVE_PIXMAP);
         goto fail;
     }
@@ -53,7 +50,7 @@ struct yagl_onscreen_image
         dpy->host_dpy,
         host_context,
         EGL_NATIVE_PIXMAP_KHR,
-        new_buffer->drm_sfc->id,
+        drm_sfc->id,
         attrib_list));
 
     if (!host_image) {
@@ -68,13 +65,13 @@ struct yagl_onscreen_image
 
     image->base.update = &yagl_onscreen_image_update;
 
-    image->buffer = new_buffer;
+    image->drm_sfc = drm_sfc;
 
     return image;
 
 fail:
-    if (new_buffer) {
-        yagl_onscreen_buffer_destroy(new_buffer);
+    if (drm_sfc) {
+        vigs_drm_gem_unref(&drm_sfc->gem);
     }
     yagl_free(image);
 

@@ -7,6 +7,7 @@
 struct yagl_native_platform;
 struct yagl_native_drawable;
 struct yagl_native_image;
+struct vigs_drm_device;
 
 struct yagl_native_display
 {
@@ -14,7 +15,7 @@ struct yagl_native_display
 
     yagl_os_display os_dpy;
 
-    int drm_fd;
+    struct vigs_drm_device *drm_dev;
 
     struct yagl_native_drawable *(*wrap_window)(struct yagl_native_display */*dpy*/,
                                                 yagl_os_window /*os_window*/);
@@ -42,7 +43,7 @@ struct yagl_native_display
 void yagl_native_display_init(struct yagl_native_display *dpy,
                               struct yagl_native_platform *platform,
                               yagl_os_display os_dpy,
-                              int drm_fd);
+                              struct vigs_drm_device *drm_dev);
 
 void yagl_native_display_cleanup(struct yagl_native_display *dpy);
 

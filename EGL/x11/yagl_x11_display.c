@@ -4,6 +4,7 @@
 #include "yagl_log.h"
 #include "yagl_malloc.h"
 #include "yagl_dri2.h"
+#include "vigs.h"
 #include <X11/Xutil.h>
 #include <X11/extensions/XShm.h>
 #include <sys/fcntl.h>
@@ -167,15 +168,17 @@ static void yagl_x11_display_destroy(struct yagl_native_display *dpy)
     struct yagl_x11_display *x11_dpy = (struct yagl_x11_display*)dpy;
     Display *x_dpy = YAGL_X11_DPY(dpy->os_dpy);
 
-    if (x11_dpy->own_dpy) {
-        XCloseDisplay(x_dpy);
-    }
-
-    if (dpy->drm_fd >= 0) {
-        close(dpy->drm_fd);
+    if (dpy->drm_dev) {
+        int fd = dpy->drm_dev->fd;
+        vigs_drm_device_destroy(dpy->drm_dev);
+        close(fd);
     }
 
     yagl_native_display_cleanup(dpy);
+
+    if (x11_dpy->own_dpy) {
+        XCloseDisplay(x_dpy);
+    }
 
     yagl_free(x11_dpy);
 }
@@ -190,7 +193,8 @@ struct yagl_native_display *yagl_x11_display_create(struct yagl_native_platform 
     int xmajor;
     int xminor;
     Bool pixmaps;
-    int drm_fd = -1;
+    struct vigs_drm_device *drm_dev = NULL;
+    int ret;
 
     YAGL_LOG_FUNC_SET(eglGetDisplay);
 
@@ -211,9 +215,20 @@ struct yagl_native_display *yagl_x11_display_create(struct yagl_native_platform 
                    pixmaps);
 
     if (enable_drm) {
-        drm_fd = yagl_x11_display_dri2_init(x_dpy);
+        int drm_fd = yagl_x11_display_dri2_init(x_dpy);
 
         if (drm_fd < 0) {
+            yagl_free(dpy);
+            return NULL;
+        }
+
+        ret = vigs_drm_device_create(drm_fd, &drm_dev);
+
+        if (ret != 0) {
+            fprintf(stderr,
+                    "Critical error! vigs_drm_device_create failed: %s\n",
+                    strerror(-ret));
+            close(drm_fd);
             yagl_free(dpy);
             return NULL;
         }
@@ -222,7 +237,7 @@ struct yagl_native_display *yagl_x11_display_create(struct yagl_native_platform 
     yagl_native_display_init(&dpy->base,
                              platform,
                              os_dpy,
-                             drm_fd);
+                             drm_dev);
 
     dpy->base.wrap_window = &yagl_x11_display_wrap_window;
     dpy->base.wrap_pixmap = &yagl_x11_display_wrap_pixmap;

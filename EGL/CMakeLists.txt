@@ -13,10 +13,9 @@ set(SOURCES
     yagl_offscreen_image.c
     yagl_offscreen_surface.c
     yagl_onscreen.c
-    yagl_onscreen_display.c
     yagl_onscreen_image.c
     yagl_onscreen_surface.c
-    yagl_onscreen_buffer.c
+    yagl_onscreen_utils.c
     yagl_ref.c
     yagl_render.c
     yagl_resource.c

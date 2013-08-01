@@ -1,9 +1,9 @@
 #include "yagl_onscreen.h"
-#include "yagl_onscreen_display.h"
 #include "yagl_onscreen_surface.h"
 #include "yagl_onscreen_image.h"
 #include "yagl_backend.h"
 #include "yagl_malloc.h"
+#include "yagl_display.h"
 #include "yagl_native_platform.h"
 #include "yagl_native_display.h"
 
@@ -13,7 +13,7 @@ static struct yagl_display
                                   yagl_host_handle host_dpy)
 {
     struct yagl_native_display *native_dpy;
-    struct yagl_onscreen_display *dpy;
+    struct yagl_display *dpy;
 
     native_dpy = platform->wrap_display(os_dpy, 1);
 
@@ -21,14 +21,11 @@ static struct yagl_display
         return NULL;
     }
 
-    dpy = yagl_onscreen_display_create(os_dpy, native_dpy, host_dpy);
+    dpy = yagl_malloc0(sizeof(*dpy));
 
-    if (dpy) {
-        return &dpy->base;
-    } else {
-        native_dpy->destroy(native_dpy);
-        return NULL;
-    }
+    yagl_display_init(dpy, os_dpy, native_dpy, host_dpy);
+
+    return dpy;
 }
 
 static struct yagl_surface

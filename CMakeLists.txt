@@ -25,8 +25,8 @@ if (CMAKE_BUILD_TYPE STREQUAL "")
 endif ()
 
 option(PLATFORM_X11 "Enable X11 platform" TRUE)
-option(PLATFORM_GBM "Enable GBM platform" TRUE)
-option(PLATFORM_WAYLAND "Enable wayland platform" TRUE)
+option(PLATFORM_GBM "Enable GBM platform" FALSE)
+option(PLATFORM_WAYLAND "Enable wayland platform" FALSE)
 
 set(INSTALL_LIB_DIR "lib" CACHE STRING "Where to install library files")
 
@@ -83,6 +83,13 @@ if (PLATFORM_X11)
     link_directories(${XFIXES_LIBRARY_DIRS})
 endif ()
 
+if (PLATFORM_GBM)
+    pkg_check_modules(GBM REQUIRED gbm)
+
+    add_definitions(${GBM_CFLAGS})
+    include_directories(${GBM_INCLUDE_DIRS})
+endif ()
+
 #fix output directories
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${YAGL_OUT_DIR}/lib)
@@ -123,3 +130,6 @@ message(STATUS "Install lib dir:  " ${INSTALL_LIB_DIR})
 add_subdirectory(EGL)
 add_subdirectory(GLESv1_CM)
 add_subdirectory(GLESv2)
+if (PLATFORM_GBM)
+add_subdirectory(gbm)
+endif ()

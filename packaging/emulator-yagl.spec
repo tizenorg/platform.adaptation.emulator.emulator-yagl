@@ -1,3 +1,5 @@
+%bcond_with wayland
+
 Name:       emulator-yagl
 Summary:    YaGL - OpenGLES acceleration module for emulator
 Version:    1.0
@@ -13,6 +15,9 @@ BuildRequires:  pkgconfig(x11-xcb)
 BuildRequires:  pkgconfig(xext)
 BuildRequires:  pkgconfig(dri2proto)
 BuildRequires:  pkgconfig(libdrm)
+%if %{with wayland}
+BuildRequires:  pkgconfig(gbm)
+%endif
 
 %description
 YaGL - OpenGLES acceleration module for emulator.
@@ -30,7 +35,11 @@ YaGL - OpenGLES acceleration module for emulator (devel)
 %setup -q
 
 %build
+%if %{with wayland}
+cmake -DCMAKE_INSTALL_PREFIX=%{buildroot}/usr -DINSTALL_LIB_DIR=lib/yagl -DPLATFORM_GBM=1
+%else
 cmake -DCMAKE_INSTALL_PREFIX=%{buildroot}/usr -DINSTALL_LIB_DIR=lib/yagl
+%endif
 make
 
 %install

@@ -7,12 +7,13 @@
 
 struct yagl_onscreen_buffer;
 struct yagl_native_drawable;
+struct vigs_drm_surface;
 
 struct yagl_onscreen_image
 {
     struct yagl_image base;
 
-    struct yagl_onscreen_buffer *buffer;
+    struct vigs_drm_surface *drm_sfc;
 };
 
 struct yagl_onscreen_image

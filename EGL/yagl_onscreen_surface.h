@@ -5,7 +5,7 @@
 #include "yagl_types.h"
 #include "yagl_surface.h"
 
-struct yagl_onscreen_buffer;
+struct vigs_drm_surface;
 
 struct yagl_onscreen_surface
 {
@@ -24,7 +24,7 @@ struct yagl_onscreen_surface
      * TODO: For window surfaces we also need to support
      * yagl_native_attachment_front.
      */
-    struct yagl_onscreen_buffer *buffer;
+    struct vigs_drm_surface *drm_sfc;
 
     /*
      * Last value of 'base.native_drawable->stamp'.

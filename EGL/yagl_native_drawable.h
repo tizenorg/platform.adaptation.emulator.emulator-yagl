@@ -5,6 +5,7 @@
 #include "yagl_native_types.h"
 
 struct yagl_native_image;
+struct vigs_drm_surface;
 
 struct yagl_native_drawable
 {
@@ -17,8 +18,10 @@ struct yagl_native_drawable
      */
     uint32_t stamp;
 
-    uint32_t (*get_buffer)(struct yagl_native_drawable */*drawable*/,
-                           yagl_native_attachment /*attachment*/);
+    int (*get_buffer)(struct yagl_native_drawable */*drawable*/,
+                      yagl_native_attachment /*attachment*/,
+                      uint32_t */*buffer_name*/,
+                      struct vigs_drm_surface **/*buffer_sfc*/);
 
     void (*swap_buffers)(struct yagl_native_drawable */*drawable*/);
 

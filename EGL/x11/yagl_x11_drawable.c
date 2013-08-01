@@ -9,19 +9,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static uint32_t yagl_x11_drawable_get_buffer(struct yagl_native_drawable *drawable,
-                                             yagl_native_attachment attachment)
+static int yagl_x11_drawable_get_buffer(struct yagl_native_drawable *drawable,
+                                        yagl_native_attachment attachment,
+                                        uint32_t *buffer_name,
+                                        struct vigs_drm_surface **buffer_sfc)
 {
     Display *x_dpy = YAGL_X11_DPY(drawable->dpy->os_dpy);
     Drawable x_drawable = YAGL_X11_DRAWABLE(drawable->os_drawable);
     unsigned int attachments[1];
     yagl_DRI2Buffer *buffer;
     int tmp_width, tmp_height, num_buffers;
-    uint32_t name;
 
     YAGL_LOG_FUNC_SET(yagl_x11_drawable_get_buffer);
 
-    if (drawable->dpy->drm_fd < 0) {
+    if (!drawable->dpy->drm_dev) {
         fprintf(stderr, "Asking for DRI2 buffer when DRI2 not enabled!\n");
         return 0;
     }
@@ -45,14 +46,16 @@ static uint32_t yagl_x11_drawable_get_buffer(struct yagl_native_drawable *drawab
                                  &num_buffers);
 
     if (!buffer) {
+        YAGL_LOG_ERROR("Cannot get buffer for drawable %p",
+                       drawable->os_drawable);
         return 0;
     }
 
-    name = buffer->name;
+    *buffer_name = buffer->name;
 
     Xfree(buffer);
 
-    return name;
+    return 1;
 }
 
 static void yagl_x11_drawable_swap_buffers(struct yagl_native_drawable *drawable)
@@ -61,7 +64,7 @@ static void yagl_x11_drawable_swap_buffers(struct yagl_native_drawable *drawable
     Drawable x_drawable = YAGL_X11_DRAWABLE(drawable->os_drawable);
     CARD64 count = 0;
 
-    if (drawable->dpy->drm_fd < 0) {
+    if (!drawable->dpy->drm_dev) {
         return;
     }
 
@@ -80,7 +83,7 @@ static void yagl_x11_drawable_wait(struct yagl_native_drawable *drawable,
     XRectangle xrect;
     XserverRegion region;
 
-    if (!x11_drawable->is_pixmap || (drawable->dpy->drm_fd < 0)) {
+    if (!x11_drawable->is_pixmap || !drawable->dpy->drm_dev) {
         return;
     }
 
@@ -137,7 +140,7 @@ static void yagl_x11_drawable_set_swap_interval(struct yagl_native_drawable *dra
     Display *x_dpy = YAGL_X11_DPY(drawable->dpy->os_dpy);
     Drawable x_drawable = YAGL_X11_DRAWABLE(drawable->os_drawable);
 
-    if (x11_drawable->is_pixmap || (drawable->dpy->drm_fd < 0)) {
+    if (x11_drawable->is_pixmap || !drawable->dpy->drm_dev) {
         return;
     }
 
@@ -238,7 +241,7 @@ static void yagl_x11_drawable_destroy(struct yagl_native_drawable *drawable)
         XFreeGC(x_dpy, x11_drawable->x_gc);
     }
 
-    if (drawable->dpy->drm_fd >= 0) {
+    if (drawable->dpy->drm_dev) {
         yagl_DRI2DestroyDrawable(x_dpy, x_drawable);
     }
 
@@ -285,7 +288,7 @@ struct yagl_native_drawable *yagl_x11_drawable_create(struct yagl_native_display
     drawable->is_pixmap = is_pixmap;
     yagl_mutex_init(&drawable->mtx);
 
-    if (dpy->drm_fd >= 0) {
+    if (dpy->drm_dev) {
         yagl_DRI2CreateDrawable(x_dpy, x_drawable);
     }
 

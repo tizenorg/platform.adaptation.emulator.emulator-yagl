@@ -1,12 +1,12 @@
 #include "yagl_onscreen_surface.h"
-#include "yagl_onscreen_buffer.h"
-#include "yagl_onscreen_display.h"
+#include "yagl_onscreen_utils.h"
 #include "yagl_host_egl_calls.h"
 #include "yagl_egl_state.h"
 #include "yagl_log.h"
 #include "yagl_mem_egl.h"
 #include "yagl_utils.h"
 #include "yagl_malloc.h"
+#include "yagl_display.h"
 #include "yagl_native_display.h"
 #include "yagl_native_drawable.h"
 #include "vigs.h"
@@ -18,8 +18,7 @@
 static void yagl_onscreen_surface_invalidate(struct yagl_surface *sfc)
 {
     struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
-    struct yagl_onscreen_display *dpy = (struct yagl_onscreen_display*)sfc->dpy;
-    struct yagl_onscreen_buffer *new_buffer;
+    struct vigs_drm_surface *new_drm_sfc;
 
     if (osfc->last_stamp == sfc->native_drawable->stamp) {
         return;
@@ -33,20 +32,19 @@ static void yagl_onscreen_surface_invalidate(struct yagl_surface *sfc)
      * We only process new buffer if it's different from
      * the current one.
      */
-    new_buffer = yagl_onscreen_buffer_create(dpy,
-                                             sfc->native_drawable,
-                                             yagl_native_attachment_back,
-                                             osfc->buffer->name);
+    new_drm_sfc = yagl_onscreen_buffer_create(sfc->native_drawable,
+                                              yagl_native_attachment_back,
+                                              osfc->drm_sfc);
 
-    if (!new_buffer) {
+    if (!new_drm_sfc) {
         return;
     }
 
-    yagl_onscreen_buffer_destroy(osfc->buffer);
-    osfc->buffer = new_buffer;
+    vigs_drm_gem_unref(&osfc->drm_sfc->gem);
+    osfc->drm_sfc = new_drm_sfc;
 
     YAGL_HOST_CALL_ASSERT(yagl_host_eglInvalidateOnscreenSurfaceYAGL(
-        dpy->base.host_dpy, sfc->res.handle, new_buffer->drm_sfc->id));
+        sfc->dpy->host_dpy, sfc->res.handle, new_drm_sfc->id));
 }
 
 static void yagl_onscreen_surface_finish(struct yagl_surface *sfc)
@@ -56,7 +54,7 @@ static void yagl_onscreen_surface_finish(struct yagl_surface *sfc)
 
     YAGL_LOG_FUNC_SET(yagl_onscreen_surface_finish);
 
-    ret = vigs_drm_surface_set_gpu_dirty(osfc->buffer->drm_sfc);
+    ret = vigs_drm_surface_set_gpu_dirty(osfc->drm_sfc);
 
     if (ret != 0) {
         YAGL_LOG_ERROR("vigs_drm_surface_set_gpu_dirty failed: %s",
@@ -107,8 +105,8 @@ static int yagl_onscreen_surface_copy_buffers(struct yagl_surface *sfc,
 
     sfc->native_drawable->copy_to_pixmap(sfc->native_drawable,
                                          target, 0, 0, 0, 0,
-                                         osfc->buffer->drm_sfc->width,
-                                         osfc->buffer->drm_sfc->height);
+                                         osfc->drm_sfc->width,
+                                         osfc->drm_sfc->height);
 
     return 1;
 }
@@ -127,8 +125,8 @@ static void yagl_onscreen_surface_wait_x(struct yagl_surface *sfc)
         break;
     case EGL_PIXMAP_BIT:
         sfc->native_drawable->wait(sfc->native_drawable,
-                                   osfc->buffer->drm_sfc->width,
-                                   osfc->buffer->drm_sfc->height);
+                                   osfc->drm_sfc->width,
+                                   osfc->drm_sfc->height);
         break;
     default:
         assert(0);
@@ -156,7 +154,7 @@ static void yagl_onscreen_surface_map(struct yagl_surface *sfc)
 
     YAGL_LOG_FUNC_SET(eglQuerySurface);
 
-    ret = vigs_drm_gem_map(&osfc->buffer->drm_sfc->gem, 1);
+    ret = vigs_drm_gem_map(&osfc->drm_sfc->gem, 1);
 
     if (ret != 0) {
         YAGL_LOG_ERROR("vigs_drm_gem_map failed: %s",
@@ -172,14 +170,14 @@ static void yagl_onscreen_surface_map(struct yagl_surface *sfc)
         saf |= VIGS_DRM_SAF_WRITE;
     }
 
-    ret = vigs_drm_surface_start_access(osfc->buffer->drm_sfc, saf);
+    ret = vigs_drm_surface_start_access(osfc->drm_sfc, saf);
     if (ret != 0) {
         YAGL_LOG_ERROR("vigs_drm_surface_start_access failed: %s",
                        strerror(-ret));
     }
 
-    sfc->lock_ptr = osfc->buffer->drm_sfc->gem.vaddr;
-    sfc->lock_stride = osfc->buffer->drm_sfc->stride;
+    sfc->lock_ptr = osfc->drm_sfc->gem.vaddr;
+    sfc->lock_stride = osfc->drm_sfc->stride;
 }
 
 static void yagl_onscreen_surface_unmap(struct yagl_surface *sfc)
@@ -189,7 +187,7 @@ static void yagl_onscreen_surface_unmap(struct yagl_surface *sfc)
 
     YAGL_LOG_FUNC_SET(eglUnlockSurfaceKHR);
 
-    ret = vigs_drm_surface_end_access(osfc->buffer->drm_sfc, 1);
+    ret = vigs_drm_surface_end_access(osfc->drm_sfc, 1);
     if (ret != 0) {
         YAGL_LOG_ERROR("vigs_drm_surface_end_access failed: %s",
                        strerror(-ret));
@@ -208,7 +206,7 @@ static void yagl_onscreen_surface_destroy(struct yagl_ref *ref)
 {
     struct yagl_onscreen_surface *sfc = (struct yagl_onscreen_surface*)ref;
 
-    yagl_onscreen_buffer_destroy(sfc->buffer);
+    vigs_drm_gem_unref(&sfc->drm_sfc->gem);
 
     if (sfc->tmp_pixmap) {
         sfc->tmp_pixmap->destroy(sfc->tmp_pixmap);
@@ -226,19 +224,17 @@ struct yagl_onscreen_surface
                                          struct yagl_native_drawable *native_window,
                                          const EGLint* attrib_list)
 {
-    struct yagl_onscreen_display *odpy = (struct yagl_onscreen_display*)dpy;
     struct yagl_onscreen_surface *sfc;
-    struct yagl_onscreen_buffer *new_buffer = NULL;
+    struct vigs_drm_surface *drm_sfc = NULL;
     yagl_host_handle host_surface = 0;
 
     sfc = yagl_malloc0(sizeof(*sfc));
 
-    new_buffer = yagl_onscreen_buffer_create(odpy,
-                                             native_window,
-                                             yagl_native_attachment_back,
-                                             0);
+    drm_sfc = yagl_onscreen_buffer_create(native_window,
+                                          yagl_native_attachment_back,
+                                          NULL);
 
-    if (!new_buffer) {
+    if (!drm_sfc) {
         yagl_set_error(EGL_BAD_NATIVE_WINDOW);
         goto fail;
     }
@@ -248,7 +244,7 @@ struct yagl_onscreen_surface
     } while (!yagl_host_eglCreateWindowSurfaceOnscreenYAGL(&host_surface,
         dpy->host_dpy,
         host_config,
-        new_buffer->drm_sfc->id,
+        drm_sfc->id,
         attrib_list));
 
     if (!host_surface) {
@@ -271,13 +267,13 @@ struct yagl_onscreen_surface
     sfc->base.unmap = &yagl_onscreen_surface_unmap;
     sfc->base.set_swap_interval = &yagl_onscreen_surface_set_swap_interval;
 
-    sfc->buffer = new_buffer;
+    sfc->drm_sfc = drm_sfc;
 
     return sfc;
 
 fail:
-    if (new_buffer) {
-        yagl_onscreen_buffer_destroy(new_buffer);
+    if (drm_sfc) {
+        vigs_drm_gem_unref(&drm_sfc->gem);
     }
     yagl_free(sfc);
 
@@ -290,19 +286,17 @@ struct yagl_onscreen_surface
                                          struct yagl_native_drawable *native_pixmap,
                                          const EGLint* attrib_list)
 {
-    struct yagl_onscreen_display *odpy = (struct yagl_onscreen_display*)dpy;
     struct yagl_onscreen_surface *sfc;
-    struct yagl_onscreen_buffer *new_buffer = NULL;
+    struct vigs_drm_surface *drm_sfc = NULL;
     yagl_host_handle host_surface = 0;
 
     sfc = yagl_malloc0(sizeof(*sfc));
 
-    new_buffer = yagl_onscreen_buffer_create(odpy,
-                                             native_pixmap,
-                                             yagl_native_attachment_front,
-                                             0);
+    drm_sfc = yagl_onscreen_buffer_create(native_pixmap,
+                                          yagl_native_attachment_front,
+                                          NULL);
 
-    if (!new_buffer) {
+    if (!drm_sfc) {
         yagl_set_error(EGL_BAD_NATIVE_PIXMAP);
         goto fail;
     }
@@ -312,7 +306,7 @@ struct yagl_onscreen_surface
     } while (!yagl_host_eglCreatePixmapSurfaceOnscreenYAGL(&host_surface,
         dpy->host_dpy,
         host_config,
-        new_buffer->drm_sfc->id,
+        drm_sfc->id,
         attrib_list));
 
     if (!host_surface) {
@@ -335,13 +329,13 @@ struct yagl_onscreen_surface
     sfc->base.unmap = &yagl_onscreen_surface_unmap;
     sfc->base.set_swap_interval = &yagl_onscreen_surface_set_swap_interval;
 
-    sfc->buffer = new_buffer;
+    sfc->drm_sfc = drm_sfc;
 
     return sfc;
 
 fail:
-    if (new_buffer) {
-        yagl_onscreen_buffer_destroy(new_buffer);
+    if (drm_sfc) {
+        vigs_drm_gem_unref(&drm_sfc->gem);
     }
     yagl_free(sfc);
 
@@ -353,12 +347,11 @@ struct yagl_onscreen_surface
                                           yagl_host_handle host_config,
                                           const EGLint* attrib_list)
 {
-    struct yagl_onscreen_display *odpy = (struct yagl_onscreen_display*)dpy;
     struct yagl_onscreen_surface *sfc;
     uint32_t width = 0;
     uint32_t height = 0;
     int i = 0;
-    struct yagl_onscreen_buffer *new_buffer = NULL;
+    struct vigs_drm_surface *drm_sfc = NULL;
     yagl_host_handle host_surface = 0;
 
     YAGL_LOG_FUNC_SET(eglCreatePbufferSurface);
@@ -393,12 +386,11 @@ struct yagl_onscreen_surface
         goto fail;
     }
 
-    new_buffer = yagl_onscreen_buffer_create(odpy,
-                                             sfc->tmp_pixmap,
-                                             yagl_native_attachment_front,
-                                             0);
+    drm_sfc = yagl_onscreen_buffer_create(sfc->tmp_pixmap,
+                                          yagl_native_attachment_front,
+                                          NULL);
 
-    if (!new_buffer) {
+    if (!drm_sfc) {
         yagl_set_error(EGL_BAD_ALLOC);
         goto fail;
     }
@@ -408,7 +400,7 @@ struct yagl_onscreen_surface
     } while (!yagl_host_eglCreatePbufferSurfaceOnscreenYAGL(&host_surface,
         dpy->host_dpy,
         host_config,
-        new_buffer->drm_sfc->id,
+        drm_sfc->id,
         attrib_list));
 
     if (!host_surface) {
@@ -430,15 +422,15 @@ struct yagl_onscreen_surface
     sfc->base.unmap = &yagl_onscreen_surface_unmap;
     sfc->base.set_swap_interval = &yagl_onscreen_surface_set_swap_interval;
 
-    sfc->buffer = new_buffer;
+    sfc->drm_sfc = drm_sfc;
 
     return sfc;
 
 fail:
     if (sfc) {
         if (sfc->tmp_pixmap) {
-            if (new_buffer) {
-                yagl_onscreen_buffer_destroy(new_buffer);
+            if (drm_sfc) {
+                vigs_drm_gem_unref(&drm_sfc->gem);
             }
             sfc->tmp_pixmap->destroy(sfc->tmp_pixmap);
             sfc->tmp_pixmap = NULL;
