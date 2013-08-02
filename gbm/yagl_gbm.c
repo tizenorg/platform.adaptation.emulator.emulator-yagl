@@ -66,7 +66,7 @@ static void gbm_free(void *ptr)
 }
 
 static struct vigs_drm_surface
-    *yagl_gbm_surface_get_back(struct gbm_surface *sfc)
+    *yagl_gbm_surface_acquire_back(struct gbm_surface *sfc)
 {
     struct yagl_gbm_surface *yagl_sfc = (struct yagl_gbm_surface*)sfc;
     int i;
@@ -156,6 +156,7 @@ YAGL_API struct gbm_device *gbm_create_device(int fd)
 
     gbm = gbm_malloc0(sizeof(*gbm));
 
+    gbm->dummy = &gbm_create_device;
     gbm->drm_dev = drm_dev;
 
     return gbm;
@@ -166,6 +167,7 @@ YAGL_API struct gbm_bo *gbm_bo_create(struct gbm_device *gbm,
                                       uint32_t format, uint32_t flags)
 {
     vigs_drm_surface_format sfc_format;
+    uint32_t depth;
     struct yagl_gbm_bo *bo;
     struct vigs_drm_surface *sfc;
     int ret;
@@ -174,10 +176,12 @@ YAGL_API struct gbm_bo *gbm_bo_create(struct gbm_device *gbm,
     case GBM_BO_FORMAT_XRGB8888:
     case GBM_FORMAT_XRGB8888:
         sfc_format = vigs_drm_surface_bgrx8888;
+        depth = 24;
         break;
     case GBM_BO_FORMAT_ARGB8888:
     case GBM_FORMAT_ARGB8888:
         sfc_format = vigs_drm_surface_bgra8888;
+        depth = 32;
         break;
     default:
         fprintf(stderr, "GBM: Bad format = %u\n", format);
@@ -203,6 +207,7 @@ YAGL_API struct gbm_bo *gbm_bo_create(struct gbm_device *gbm,
 
     bo->base.gbm = gbm;
     bo->base.drm_sfc = sfc;
+    bo->base.depth = depth;
 
     bo->format = format;
     bo->handle.u32 = sfc->gem.handle;
@@ -319,17 +324,33 @@ YAGL_API struct gbm_surface *gbm_surface_create(struct gbm_device *gbm,
                                                 uint32_t width, uint32_t height,
                                                 uint32_t format, uint32_t flags)
 {
+    uint32_t depth;
     struct yagl_gbm_surface *sfc;
+
+    switch (format) {
+    case GBM_BO_FORMAT_XRGB8888:
+    case GBM_FORMAT_XRGB8888:
+        depth = 24;
+        break;
+    case GBM_BO_FORMAT_ARGB8888:
+    case GBM_FORMAT_ARGB8888:
+        depth = 32;
+        break;
+    default:
+        fprintf(stderr, "GBM: Bad format = %u\n", format);
+        return NULL;
+    }
 
     sfc = gbm_malloc0(sizeof(*sfc));
 
     sfc->base.gbm = gbm;
     sfc->base.width = width;
+    sfc->base.depth = depth;
     sfc->base.height = height;
     sfc->base.format = format;
     sfc->base.flags = flags;
 
-    sfc->base.get_back = &yagl_gbm_surface_get_back;
+    sfc->base.acquire_back = &yagl_gbm_surface_acquire_back;
     sfc->base.swap_buffers = &yagl_gbm_surface_swap_buffers;
 
     return &sfc->base;

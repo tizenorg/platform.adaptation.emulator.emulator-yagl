@@ -11,7 +11,7 @@ struct vigs_drm_surface
                                  struct vigs_drm_surface *check_sfc)
 {
     int ret;
-    uint32_t buffer_name;
+    uint32_t buffer_name = 0;
     struct vigs_drm_surface *buffer_sfc = NULL;
 
     YAGL_LOG_FUNC_ENTER(yagl_onscreen_buffer_create,

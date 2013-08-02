@@ -55,7 +55,11 @@ if (PLATFORM_GBM)
     set(SOURCES ${SOURCES}
         gbm/yagl_gbm_platform.c
         gbm/yagl_gbm_display.c
-        gbm/yagl_gbm_drawable.c
+        gbm/yagl_gbm_window.c
+        gbm/yagl_gbm_pixmap.c
+    )
+    set(LIBRARIES ${LIBRARIES}
+        gbm-yagl
     )
     add_definitions(-DYAGL_PLATFORM_GBM)
 endif ()
