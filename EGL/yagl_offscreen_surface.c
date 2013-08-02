@@ -136,10 +136,6 @@ static void yagl_offscreen_surface_invalidate(struct yagl_surface *sfc)
 {
 }
 
-static void yagl_offscreen_surface_finish(struct yagl_surface *sfc)
-{
-}
-
 static int yagl_offscreen_surface_swap_buffers(struct yagl_surface *sfc)
 {
     struct yagl_offscreen_surface *osfc = (struct yagl_offscreen_surface*)sfc;
@@ -164,7 +160,9 @@ static int yagl_offscreen_surface_swap_buffers(struct yagl_surface *sfc)
      * Host has updated our image, update the window.
      */
 
-    osfc->bi->draw(osfc->bi, sfc->native_drawable);
+    if (sfc->native_drawable) {
+        osfc->bi->draw(osfc->bi, sfc->native_drawable);
+    }
 
     return 1;
 }
@@ -226,24 +224,6 @@ static void yagl_offscreen_surface_wait_x(struct yagl_surface *sfc)
 
 static void yagl_offscreen_surface_wait_gl(struct yagl_surface *sfc)
 {
-    EGLBoolean retval;
-
-    switch (sfc->type) {
-    case EGL_PBUFFER_BIT:
-    case EGL_WINDOW_BIT:
-        /*
-         * Currently our window surfaces are always double-buffered, so
-         * this is a no-op.
-         */
-        break;
-    case EGL_PIXMAP_BIT:
-        YAGL_HOST_CALL_ASSERT(yagl_host_eglWaitClient(&retval));
-        yagl_offscreen_surface_finish(sfc);
-        break;
-    default:
-        assert(0);
-        break;
-    }
 }
 
 static void yagl_offscreen_surface_map(struct yagl_surface *sfc)
@@ -340,7 +320,6 @@ struct yagl_offscreen_surface
                              native_window);
 
     sfc->base.invalidate = &yagl_offscreen_surface_invalidate;
-    sfc->base.finish = &yagl_offscreen_surface_finish;
     sfc->base.swap_buffers = &yagl_offscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_offscreen_surface_copy_buffers;
     sfc->base.wait_x = &yagl_offscreen_surface_wait_x;
@@ -416,7 +395,6 @@ struct yagl_offscreen_surface
                              native_pixmap);
 
     sfc->base.invalidate = &yagl_offscreen_surface_invalidate;
-    sfc->base.finish = &yagl_offscreen_surface_finish;
     sfc->base.swap_buffers = &yagl_offscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_offscreen_surface_copy_buffers;
     sfc->base.wait_x = &yagl_offscreen_surface_wait_x;
@@ -502,7 +480,6 @@ struct yagl_offscreen_surface
                               dpy);
 
     sfc->base.invalidate = &yagl_offscreen_surface_invalidate;
-    sfc->base.finish = &yagl_offscreen_surface_finish;
     sfc->base.swap_buffers = &yagl_offscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_offscreen_surface_copy_buffers;
     sfc->base.wait_x = &yagl_offscreen_surface_wait_x;

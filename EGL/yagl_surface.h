@@ -18,6 +18,9 @@ struct yagl_surface
 
     EGLenum type;
 
+    /*
+     * Non-NULL only for window and pixmap surfaces.
+     */
     struct yagl_native_drawable *native_drawable;
 
     pthread_mutex_t mtx;
@@ -37,8 +40,6 @@ struct yagl_surface
     uint32_t lock_stride;
 
     void (*invalidate)(struct yagl_surface */*sfc*/);
-
-    void (*finish)(struct yagl_surface */*sfc*/);
 
     int (*swap_buffers)(struct yagl_surface */*sfc*/);
 

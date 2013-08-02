@@ -15,24 +15,31 @@
 #include <stdlib.h>
 #include <string.h>
 
+static struct yagl_native_drawable
+    *native_drawable(struct yagl_onscreen_surface *osfc)
+{
+    return osfc->tmp_pixmap ? osfc->tmp_pixmap : osfc->base.native_drawable;
+}
+
 static void yagl_onscreen_surface_invalidate(struct yagl_surface *sfc)
 {
     struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
+    struct yagl_native_drawable *drawable = native_drawable(osfc);
     struct vigs_drm_surface *new_drm_sfc;
 
-    if (osfc->last_stamp == sfc->native_drawable->stamp) {
+    if (osfc->last_stamp == drawable->stamp) {
         return;
     }
 
     assert(sfc->type == EGL_WINDOW_BIT);
 
-    osfc->last_stamp = sfc->native_drawable->stamp;
+    osfc->last_stamp = drawable->stamp;
 
     /*
      * We only process new buffer if it's different from
      * the current one.
      */
-    new_drm_sfc = yagl_onscreen_buffer_create(sfc->native_drawable,
+    new_drm_sfc = yagl_onscreen_buffer_create(drawable,
                                               yagl_native_attachment_back,
                                               osfc->drm_sfc);
 
@@ -47,23 +54,11 @@ static void yagl_onscreen_surface_invalidate(struct yagl_surface *sfc)
         sfc->dpy->host_dpy, sfc->res.handle, new_drm_sfc->id));
 }
 
-static void yagl_onscreen_surface_finish(struct yagl_surface *sfc)
-{
-    struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
-    int ret;
-
-    YAGL_LOG_FUNC_SET(yagl_onscreen_surface_finish);
-
-    ret = vigs_drm_surface_set_gpu_dirty(osfc->drm_sfc);
-
-    if (ret != 0) {
-        YAGL_LOG_ERROR("vigs_drm_surface_set_gpu_dirty failed: %s",
-                       strerror(-ret));
-    }
-}
-
 static int yagl_onscreen_surface_swap_buffers(struct yagl_surface *sfc)
 {
+    struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
+    struct yagl_native_drawable *drawable = native_drawable(osfc);
+    int ret;
     EGLBoolean retval = EGL_FALSE;
 
     YAGL_LOG_FUNC_SET(eglSwapBuffers);
@@ -77,9 +72,14 @@ static int yagl_onscreen_surface_swap_buffers(struct yagl_surface *sfc)
         return 0;
     }
 
-    yagl_onscreen_surface_finish(sfc);
+    ret = vigs_drm_surface_set_gpu_dirty(osfc->drm_sfc);
 
-    sfc->native_drawable->swap_buffers(sfc->native_drawable);
+    if (ret != 0) {
+        YAGL_LOG_ERROR("vigs_drm_surface_set_gpu_dirty failed: %s",
+                       strerror(-ret));
+    }
+
+    drawable->swap_buffers(drawable);
 
     return 1;
 }
@@ -88,7 +88,9 @@ static int yagl_onscreen_surface_copy_buffers(struct yagl_surface *sfc,
                                               yagl_os_pixmap target)
 {
     struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
+    struct yagl_native_drawable *drawable = native_drawable(osfc);
     EGLBoolean retval = EGL_FALSE;
+    int ret;
 
     YAGL_LOG_FUNC_SET(eglCopyBuffers);
 
@@ -101,12 +103,17 @@ static int yagl_onscreen_surface_copy_buffers(struct yagl_surface *sfc,
         return 0;
     }
 
-    yagl_onscreen_surface_finish(sfc);
+    ret = vigs_drm_surface_set_gpu_dirty(osfc->drm_sfc);
 
-    sfc->native_drawable->copy_to_pixmap(sfc->native_drawable,
-                                         target, 0, 0, 0, 0,
-                                         osfc->drm_sfc->width,
-                                         osfc->drm_sfc->height);
+    if (ret != 0) {
+        YAGL_LOG_ERROR("vigs_drm_surface_set_gpu_dirty failed: %s",
+                       strerror(-ret));
+    }
+
+    drawable->copy_to_pixmap(drawable,
+                             target, 0, 0, 0, 0,
+                             osfc->drm_sfc->width,
+                             osfc->drm_sfc->height);
 
     return 1;
 }
@@ -136,14 +143,20 @@ static void yagl_onscreen_surface_wait_x(struct yagl_surface *sfc)
 
 static void yagl_onscreen_surface_wait_gl(struct yagl_surface *sfc)
 {
+    struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
     EGLBoolean retval;
+    int ret;
 
-    /*
-     * This call must not be distinguishable from glFinish, so just do
-     * the stuff glFinish does here and not more.
-     */
+    YAGL_LOG_FUNC_SET(yagl_onscreen_surface_wait_gl);
+
     YAGL_HOST_CALL_ASSERT(yagl_host_eglWaitClient(&retval));
-    yagl_onscreen_surface_finish(sfc);
+
+    ret = vigs_drm_surface_set_gpu_dirty(osfc->drm_sfc);
+
+    if (ret != 0) {
+        YAGL_LOG_ERROR("vigs_drm_surface_set_gpu_dirty failed: %s",
+                       strerror(-ret));
+    }
 }
 
 static void yagl_onscreen_surface_map(struct yagl_surface *sfc)
@@ -197,9 +210,12 @@ static void yagl_onscreen_surface_unmap(struct yagl_surface *sfc)
 static void yagl_onscreen_surface_set_swap_interval(struct yagl_surface *sfc,
                                                     int interval)
 {
+    struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
+    struct yagl_native_drawable *drawable = native_drawable(osfc);
+
     assert(sfc->type == EGL_WINDOW_BIT);
 
-    sfc->native_drawable->set_swap_interval(sfc->native_drawable, interval);
+    drawable->set_swap_interval(drawable, interval);
 }
 
 static void yagl_onscreen_surface_destroy(struct yagl_ref *ref)
@@ -258,7 +274,6 @@ struct yagl_onscreen_surface
                              native_window);
 
     sfc->base.invalidate = &yagl_onscreen_surface_invalidate;
-    sfc->base.finish = &yagl_onscreen_surface_finish;
     sfc->base.swap_buffers = &yagl_onscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_onscreen_surface_copy_buffers;
     sfc->base.wait_x = &yagl_onscreen_surface_wait_x;
@@ -320,7 +335,6 @@ struct yagl_onscreen_surface
                              native_pixmap);
 
     sfc->base.invalidate = &yagl_onscreen_surface_invalidate;
-    sfc->base.finish = &yagl_onscreen_surface_finish;
     sfc->base.swap_buffers = &yagl_onscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_onscreen_surface_copy_buffers;
     sfc->base.wait_x = &yagl_onscreen_surface_wait_x;
@@ -413,7 +427,6 @@ struct yagl_onscreen_surface
                               dpy);
 
     sfc->base.invalidate = &yagl_onscreen_surface_invalidate;
-    sfc->base.finish = &yagl_onscreen_surface_finish;
     sfc->base.swap_buffers = &yagl_onscreen_surface_swap_buffers;
     sfc->base.copy_buffers = &yagl_onscreen_surface_copy_buffers;
     sfc->base.wait_x = &yagl_onscreen_surface_wait_x;

@@ -21,6 +21,6 @@ void yagl_render_finish()
     struct yagl_surface *draw_sfc = yagl_get_draw_surface();
 
     if (draw_sfc) {
-        draw_sfc->finish(draw_sfc);
+        draw_sfc->wait_gl(draw_sfc);
     }
 }

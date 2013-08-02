@@ -351,7 +351,6 @@ YAGL_IMPLEMENT_API_NORET1(glEnable, GLenum, cap)
 YAGL_API void glFinish()
 {
     YAGL_LOG_FUNC_ENTER_SPLIT0(glFinish);
-    YAGL_HOST_CALL_ASSERT(yagl_host_glFinish());
     yagl_render_finish();
     YAGL_LOG_FUNC_EXIT(NULL);
 }
