@@ -26,6 +26,9 @@ int yagl_gles_get_stride(GLsizei alignment,
     case GL_RGBA:
         num_components = 4;
         break;
+    case GL_BGRA_EXT:
+        num_components = 4;
+        break;
     case GL_LUMINANCE:
         num_components = 1;
         break;
