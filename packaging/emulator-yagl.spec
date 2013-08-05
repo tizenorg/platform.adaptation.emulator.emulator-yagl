@@ -4,8 +4,7 @@ Name:       emulator-yagl
 Summary:    YaGL - OpenGLES acceleration module for emulator
 Version:    1.0
 Release:    18
-Group:      TO_BE/FILLED_IN
-License:    TO_BE/FILLED_IN
+License:    MIT
 #URL:        http://www.khronos.org
 Source0:    %{name}-%{version}.tar.gz
 BuildRequires:  cmake
@@ -17,6 +16,9 @@ BuildRequires:  pkgconfig(dri2proto)
 BuildRequires:  pkgconfig(libdrm)
 %if %{with wayland}
 BuildRequires:  pkgconfig(gbm)
+BuildRequires:  pkgconfig(libudev)
+BuildRequires:  pkgconfig(wayland-client)
+BuildRequires:  pkgconfig(wayland-server)
 %endif
 
 %description
@@ -36,7 +38,7 @@ YaGL - OpenGLES acceleration module for emulator (devel)
 
 %build
 %if %{with wayland}
-cmake -DCMAKE_INSTALL_PREFIX=%{buildroot}/usr -DINSTALL_LIB_DIR=lib/yagl -DPLATFORM_GBM=1
+cmake -DCMAKE_INSTALL_PREFIX=%{buildroot}/usr -DINSTALL_LIB_DIR=lib/yagl -DPLATFORM_GBM=1 -DPLATFORM_WAYLAND=1
 %else
 cmake -DCMAKE_INSTALL_PREFIX=%{buildroot}/usr -DINSTALL_LIB_DIR=lib/yagl
 %endif

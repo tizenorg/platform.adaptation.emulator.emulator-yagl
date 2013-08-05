@@ -1,6 +1,9 @@
 #include "yagl_onscreen.h"
 #include "yagl_onscreen_surface.h"
-#include "yagl_onscreen_image.h"
+#include "yagl_onscreen_image_pixmap.h"
+#ifdef YAGL_PLATFORM_WAYLAND
+#include "yagl_onscreen_image_wl_buffer.h"
+#endif
 #include "yagl_backend.h"
 #include "yagl_malloc.h"
 #include "yagl_display.h"
@@ -70,18 +73,37 @@ static struct yagl_surface
 }
 
 static struct yagl_image
-    *yagl_onscreen_create_image(struct yagl_display *dpy,
-                                yagl_host_handle host_context,
-                                struct yagl_native_drawable *native_pixmap,
-                                const EGLint* attrib_list)
+    *yagl_onscreen_create_image_pixmap(struct yagl_display *dpy,
+                                       yagl_host_handle host_context,
+                                       struct yagl_native_drawable *native_pixmap,
+                                       const EGLint* attrib_list)
 {
-    struct yagl_onscreen_image *image =
-        yagl_onscreen_image_create(dpy,
-                                   host_context,
-                                   native_pixmap,
-                                   attrib_list);
+    struct yagl_onscreen_image_pixmap *image =
+        yagl_onscreen_image_pixmap_create(dpy,
+                                          host_context,
+                                          native_pixmap,
+                                          attrib_list);
 
     return image ? &image->base : NULL;
+}
+
+static struct yagl_image
+    *yagl_onscreen_create_image_wl_buffer(struct yagl_display *dpy,
+                                          yagl_host_handle host_context,
+                                          struct wl_resource *buffer,
+                                          const EGLint* attrib_list)
+{
+#ifdef YAGL_PLATFORM_WAYLAND
+    struct yagl_onscreen_image_wl_buffer *image =
+        yagl_onscreen_image_wl_buffer_create(dpy,
+                                             host_context,
+                                             buffer,
+                                             attrib_list);
+
+    return image ? &image->base : NULL;
+#else
+    return NULL;
+#endif
 }
 
 static void yagl_onscreen_destroy(struct yagl_backend *backend)
@@ -99,7 +121,8 @@ struct yagl_backend *yagl_onscreen_create()
     backend->create_window_surface = &yagl_onscreen_create_window_surface;
     backend->create_pixmap_surface = &yagl_onscreen_create_pixmap_surface;
     backend->create_pbuffer_surface = &yagl_onscreen_create_pbuffer_surface;
-    backend->create_image = &yagl_onscreen_create_image;
+    backend->create_image_pixmap = &yagl_onscreen_create_image_pixmap;
+    backend->create_image_wl_buffer = &yagl_onscreen_create_image_wl_buffer;
     backend->destroy = &yagl_onscreen_destroy;
     backend->y_inverted = 0;
 

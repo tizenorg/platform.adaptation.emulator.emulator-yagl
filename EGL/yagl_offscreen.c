@@ -1,6 +1,6 @@
 #include "yagl_offscreen.h"
 #include "yagl_offscreen_surface.h"
-#include "yagl_offscreen_image.h"
+#include "yagl_offscreen_image_pixmap.h"
 #include "yagl_display.h"
 #include "yagl_backend.h"
 #include "yagl_malloc.h"
@@ -69,18 +69,27 @@ static struct yagl_surface
 }
 
 static struct yagl_image
-    *yagl_offscreen_create_image(struct yagl_display *dpy,
-                                 yagl_host_handle host_context,
-                                 struct yagl_native_drawable *native_pixmap,
-                                 const EGLint* attrib_list)
+    *yagl_offscreen_create_image_pixmap(struct yagl_display *dpy,
+                                        yagl_host_handle host_context,
+                                        struct yagl_native_drawable *native_pixmap,
+                                        const EGLint* attrib_list)
 {
-    struct yagl_offscreen_image *image =
-        yagl_offscreen_image_create(dpy,
-                                    host_context,
-                                    native_pixmap,
-                                    attrib_list);
+    struct yagl_offscreen_image_pixmap *image =
+        yagl_offscreen_image_pixmap_create(dpy,
+                                           host_context,
+                                           native_pixmap,
+                                           attrib_list);
 
     return image ? &image->base : NULL;
+}
+
+static struct yagl_image
+    *yagl_offscreen_create_image_wl_buffer(struct yagl_display *dpy,
+                                           yagl_host_handle host_context,
+                                           struct wl_resource *buffer,
+                                           const EGLint* attrib_list)
+{
+    return NULL;
 }
 
 static void yagl_offscreen_destroy(struct yagl_backend *backend)
@@ -98,7 +107,8 @@ struct yagl_backend *yagl_offscreen_create()
     backend->create_window_surface = &yagl_offscreen_create_window_surface;
     backend->create_pixmap_surface = &yagl_offscreen_create_pixmap_surface;
     backend->create_pbuffer_surface = &yagl_offscreen_create_pbuffer_surface;
-    backend->create_image = &yagl_offscreen_create_image;
+    backend->create_image_pixmap = &yagl_offscreen_create_image_pixmap;
+    backend->create_image_wl_buffer = &yagl_offscreen_create_image_wl_buffer;
     backend->destroy = &yagl_offscreen_destroy;
     backend->y_inverted = 1;
 

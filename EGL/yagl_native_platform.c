@@ -5,6 +5,9 @@
 #ifdef YAGL_PLATFORM_GBM
 #include "gbm/yagl_gbm_platform.h"
 #endif
+#ifdef YAGL_PLATFORM_WAYLAND
+#include "wayland/yagl_wayland_platform.h"
+#endif
 #include "yagl_log.h"
 #include <stdlib.h>
 #include <string.h>
@@ -15,6 +18,9 @@ static struct
    const char *name;
 } g_platforms[] =
 {
+#ifdef YAGL_PLATFORM_WAYLAND
+    {&yagl_wayland_platform, "wayland"},
+#endif
 #ifdef YAGL_PLATFORM_GBM
     {&yagl_gbm_platform, "gbm"},
 #endif

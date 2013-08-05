@@ -29,6 +29,8 @@ struct yagl_display
 
     int prepared;
 
+    char *extensions;
+
     struct yagl_list surfaces;
 
     struct yagl_list contexts;
@@ -57,6 +59,11 @@ void yagl_display_prepare(struct yagl_display *dpy);
 int yagl_display_is_prepared(struct yagl_display *dpy);
 
 void yagl_display_terminate(struct yagl_display *dpy);
+
+/*
+ * 'dpy' can be NULL here.
+ */
+const char *yagl_display_get_extensions(struct yagl_display *dpy);
 
 /*
  * Surfaces.

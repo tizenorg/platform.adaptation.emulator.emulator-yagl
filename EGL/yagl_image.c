@@ -11,28 +11,21 @@ static void yagl_gles_image_update(struct yagl_gles_image *image)
 
 void yagl_image_init(struct yagl_image *image,
                      yagl_ref_destroy_func destroy_func,
-                     yagl_host_handle handle,
+                     yagl_host_handle host_handle,
                      struct yagl_display *dpy,
-                     struct yagl_native_drawable *native_pixmap)
+                     EGLImageKHR client_handle)
 {
-    yagl_resource_init(&image->res, destroy_func, handle);
+    yagl_resource_init(&image->res, destroy_func, host_handle);
 
     image->dpy = dpy;
-    image->native_pixmap = native_pixmap;
-    image->gles_image.host_image = handle;
+    image->client_handle = client_handle;
+    image->gles_image.host_image = host_handle;
     image->gles_image.update = &yagl_gles_image_update;
 }
 
 void yagl_image_cleanup(struct yagl_image *image)
 {
-    image->native_pixmap->destroy(image->native_pixmap);
-    image->native_pixmap = NULL;
     yagl_resource_cleanup(&image->res);
-}
-
-EGLImageKHR yagl_image_get_handle(struct yagl_image *image)
-{
-    return (EGLImageKHR)image->native_pixmap->os_drawable;
 }
 
 void yagl_image_acquire(struct yagl_image *image)

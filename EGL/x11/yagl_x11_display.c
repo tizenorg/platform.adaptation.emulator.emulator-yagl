@@ -11,17 +11,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static int yagl_x11_display_dri2_init(Display *x_dpy)
+static int yagl_x11_display_dri2_authenticate(Display *x_dpy, uint32_t id)
+{
+    if (!yagl_DRI2Authenticate(x_dpy,
+                               RootWindow(x_dpy, DefaultScreen(x_dpy)),
+                               id)) {
+        fprintf(stderr, "Critical error! Failed to DRI2Authenticate on YaGL display, DRI2 not enabled ?\n");
+        return 0;
+    }
+
+    return 1;
+}
+
+static int yagl_x11_display_dri2_init(Display *x_dpy, char **dri_device)
 {
     int ret;
     int event_base, error_base;
     int dri_major, dri_minor;
     char *dri_driver = NULL;
-    char *dri_device = NULL;
     int drm_fd = -1;
     drm_magic_t magic;
 
     YAGL_LOG_FUNC_SET(eglGetDisplay);
+
+    *dri_device = NULL;
 
     if (!yagl_DRI2QueryExtension(x_dpy, &event_base, &error_base)) {
         fprintf(stderr, "Critical error! Failed to DRI2QueryExtension on YaGL display, DRI2 not enabled ?\n");
@@ -42,18 +55,18 @@ static int yagl_x11_display_dri2_init(Display *x_dpy)
     if (!yagl_DRI2Connect(x_dpy,
                           RootWindow(x_dpy, DefaultScreen(x_dpy)),
                           &dri_driver,
-                          &dri_device)) {
+                          dri_device)) {
         fprintf(stderr, "Critical error! Failed to DRI2Connect on YaGL display, DRI2 not enabled ?\n");
         goto fail;
     }
 
     YAGL_LOG_TRACE("DRI2Connect returned %s %s",
-                   dri_driver, dri_device);
+                   dri_driver, *dri_device);
 
-    drm_fd = open(dri_device, O_RDWR);
+    drm_fd = open(*dri_device, O_RDWR);
 
     if (drm_fd < 0) {
-        fprintf(stderr, "Critical error! Failed to open(\"%s\"): %s\n", dri_device, strerror(errno));
+        fprintf(stderr, "Critical error! Failed to open(\"%s\"): %s\n", *dri_device, strerror(errno));
         goto fail;
     }
 
@@ -66,10 +79,7 @@ static int yagl_x11_display_dri2_init(Display *x_dpy)
         goto fail;
     }
 
-    if (!yagl_DRI2Authenticate(x_dpy,
-                               RootWindow(x_dpy, DefaultScreen(x_dpy)),
-                               magic)) {
-        fprintf(stderr, "Critical error! Failed to DRI2Authenticate on YaGL display, DRI2 not enabled ?\n");
+    if (!yagl_x11_display_dri2_authenticate(x_dpy, magic)) {
         goto fail;
     }
 
@@ -80,15 +90,23 @@ fail:
         close(drm_fd);
         drm_fd = -1;
     }
+    if (*dri_device) {
+        Xfree(*dri_device);
+    }
 out:
     if (dri_driver) {
         Xfree(dri_driver);
     }
-    if (dri_device) {
-        Xfree(dri_device);
-    }
 
     return drm_fd;
+}
+
+static int yagl_x11_display_authenticate(struct yagl_native_display *dpy,
+                                         uint32_t id)
+{
+    Display *x_dpy = YAGL_X11_DPY(dpy->os_dpy);
+
+    return yagl_x11_display_dri2_authenticate(x_dpy, id);
 }
 
 static struct yagl_native_drawable
@@ -194,6 +212,7 @@ struct yagl_native_display *yagl_x11_display_create(struct yagl_native_platform 
     int xminor;
     Bool pixmaps;
     struct vigs_drm_device *drm_dev = NULL;
+    char *dri_device = NULL;
     int ret;
 
     YAGL_LOG_FUNC_SET(eglGetDisplay);
@@ -215,7 +234,7 @@ struct yagl_native_display *yagl_x11_display_create(struct yagl_native_platform 
                    pixmaps);
 
     if (enable_drm) {
-        int drm_fd = yagl_x11_display_dri2_init(x_dpy);
+        int drm_fd = yagl_x11_display_dri2_init(x_dpy, &dri_device);
 
         if (drm_fd < 0) {
             yagl_free(dpy);
@@ -229,6 +248,7 @@ struct yagl_native_display *yagl_x11_display_create(struct yagl_native_platform 
                     "Critical error! vigs_drm_device_create failed: %s\n",
                     strerror(-ret));
             close(drm_fd);
+            Xfree(dri_device);
             yagl_free(dpy);
             return NULL;
         }
@@ -237,14 +257,20 @@ struct yagl_native_display *yagl_x11_display_create(struct yagl_native_platform 
     yagl_native_display_init(&dpy->base,
                              platform,
                              os_dpy,
-                             drm_dev);
+                             drm_dev,
+                             dri_device);
 
+    dpy->base.authenticate = &yagl_x11_display_authenticate;
     dpy->base.wrap_window = &yagl_x11_display_wrap_window;
     dpy->base.wrap_pixmap = &yagl_x11_display_wrap_pixmap;
     dpy->base.create_pixmap = &yagl_x11_display_create_pixmap;
     dpy->base.create_image = &yagl_x11_display_create_image;
     dpy->base.get_visual = &yagl_x11_display_get_visual;
     dpy->base.destroy = &yagl_x11_display_destroy;
+
+    if (dri_device) {
+        Xfree(dri_device);
+    }
 
     return &dpy->base;
 }

@@ -7,21 +7,6 @@
 #include <string.h>
 #include <unistd.h>
 
-/*
- * Temporary, move this to libdrm!
- * @{
- */
-
-typedef enum
-{
-    vigs_drm_surface_bgrx8888 = 0x0,
-    vigs_drm_surface_bgra8888 = 0x1,
-} vigs_drm_surface_format;
-
-/*
- * @}
- */
-
 struct yagl_gbm_bo
 {
     struct gbm_bo base;

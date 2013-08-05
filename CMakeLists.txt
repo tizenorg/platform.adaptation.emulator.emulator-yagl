@@ -18,6 +18,8 @@ endif ()
 
 project(YAGL C)
 
+set(CMAKE_MODULE_PATH "${YAGL_SOURCE_DIR}/CMake")
+
 # USER SETTINGS
 
 if (CMAKE_BUILD_TYPE STREQUAL "")
@@ -88,6 +90,23 @@ if (PLATFORM_GBM)
 
     add_definitions(${GBM_CFLAGS})
     include_directories(${GBM_INCLUDE_DIRS})
+
+    pkg_check_modules(LIBUDEV REQUIRED libudev)
+
+    add_definitions(${LIBUDEV_CFLAGS})
+    include_directories(${LIBUDEV_INCLUDE_DIRS})
+endif ()
+
+if (PLATFORM_WAYLAND)
+    pkg_check_modules(WAYLAND_CLIENT REQUIRED wayland-client)
+
+    add_definitions(${WAYLAND_CLIENT_CFLAGS})
+    include_directories(${WAYLAND_CLIENT_INCLUDE_DIRS})
+
+    pkg_check_modules(WAYLAND_SERVER REQUIRED wayland-server)
+
+    add_definitions(${WAYLAND_SERVER_CFLAGS})
+    include_directories(${WAYLAND_SERVER_INCLUDE_DIRS})
 endif ()
 
 #fix output directories
@@ -129,6 +148,9 @@ message(STATUS "Install lib dir:  " ${INSTALL_LIB_DIR})
 
 if (PLATFORM_GBM)
 add_subdirectory(gbm)
+endif ()
+if (PLATFORM_WAYLAND)
+add_subdirectory(wayland-egl)
 endif ()
 add_subdirectory(EGL)
 add_subdirectory(GLESv1_CM)

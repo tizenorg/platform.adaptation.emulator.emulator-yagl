@@ -6,9 +6,21 @@
 #include "yagl_context.h"
 #include "yagl_image.h"
 #include "yagl_native_display.h"
+#include "yagl_native_platform.h"
+#include "yagl_malloc.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
+
+#define YAGL_EGL_BASE_EXTENSIONS "EGL_KHR_image_base " \
+                                 "EGL_KHR_lock_surface "
+
+#define YAGL_EGL_PIXMAPS_EXTENSIONS "EGL_KHR_image " \
+                                    "EGL_KHR_image_pixmap " \
+                                    "EGL_NOK_texture_from_pixmap "
+
+#define YAGL_EGL_WL_BIND_WAYLAND_DISPLAY_EXTENSIONS "EGL_WL_bind_wayland_display "
 
 static pthread_once_t g_displays_init = PTHREAD_ONCE_INIT;
 static pthread_mutex_t g_displays_mutex;
@@ -218,6 +230,43 @@ void yagl_display_terminate(struct yagl_display *dpy)
     assert(yagl_list_empty(&tmp_list));
 }
 
+const char *yagl_display_get_extensions(struct yagl_display *dpy)
+{
+    if (!dpy) {
+        return YAGL_EGL_BASE_EXTENSIONS;
+    }
+
+    pthread_mutex_lock(&dpy->mutex);
+
+    if (!dpy->extensions) {
+        uint32_t len = strlen(YAGL_EGL_BASE_EXTENSIONS);
+
+        if (dpy->native_dpy->platform->pixmaps_supported) {
+            len += strlen(YAGL_EGL_PIXMAPS_EXTENSIONS);
+        }
+
+        if (dpy->native_dpy->WL_bind_wayland_display_supported) {
+            len += strlen(YAGL_EGL_WL_BIND_WAYLAND_DISPLAY_EXTENSIONS);
+        }
+
+        dpy->extensions = yagl_malloc(len + 1);
+
+        strcpy(dpy->extensions, YAGL_EGL_BASE_EXTENSIONS);
+
+        if (dpy->native_dpy->platform->pixmaps_supported) {
+            strcat(dpy->extensions, YAGL_EGL_PIXMAPS_EXTENSIONS);
+        }
+
+        if (dpy->native_dpy->WL_bind_wayland_display_supported) {
+            strcat(dpy->extensions, YAGL_EGL_WL_BIND_WAYLAND_DISPLAY_EXTENSIONS);
+        }
+    }
+
+    pthread_mutex_unlock(&dpy->mutex);
+
+    return dpy->extensions;
+}
+
 int yagl_display_surface_add(struct yagl_display *dpy,
                              struct yagl_surface *sfc)
 {
@@ -335,12 +384,11 @@ int yagl_display_image_add(struct yagl_display *dpy,
                            struct yagl_image *image)
 {
     struct yagl_resource *res = NULL;
-    EGLImageKHR handle = yagl_image_get_handle(image);
 
     pthread_mutex_lock(&dpy->mutex);
 
     yagl_list_for_each(struct yagl_resource, res, &dpy->images, list) {
-        if (yagl_image_get_handle((struct yagl_image*)res) == handle) {
+        if (((struct yagl_image*)res)->client_handle == image->client_handle) {
             pthread_mutex_unlock(&dpy->mutex);
             return 0;
         }
@@ -362,7 +410,7 @@ struct yagl_image *yagl_display_image_acquire(struct yagl_display *dpy,
     pthread_mutex_lock(&dpy->mutex);
 
     yagl_list_for_each(struct yagl_resource, res, &dpy->images, list) {
-        if (yagl_image_get_handle((struct yagl_image*)res) == handle) {
+        if (((struct yagl_image*)res)->client_handle == handle) {
             yagl_resource_acquire(res);
             pthread_mutex_unlock(&dpy->mutex);
             return (struct yagl_image*)res;
@@ -382,7 +430,7 @@ int yagl_display_image_remove(struct yagl_display *dpy,
     pthread_mutex_lock(&dpy->mutex);
 
     yagl_list_for_each(struct yagl_resource, res, &dpy->images, list) {
-        if (yagl_image_get_handle((struct yagl_image*)res) == handle) {
+        if (((struct yagl_image*)res)->client_handle == handle) {
             yagl_list_remove(&res->list);
             yagl_resource_release(res);
             pthread_mutex_unlock(&dpy->mutex);

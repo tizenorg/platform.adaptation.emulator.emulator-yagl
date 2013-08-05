@@ -202,13 +202,13 @@ out:
     return ret;
 }
 
-YAGL_API const char* eglQueryString(EGLDisplay dpy, EGLint name)
+YAGL_API const char* eglQueryString(EGLDisplay dpy_, EGLint name)
 {
     const char *str = NULL;
 
     YAGL_LOG_FUNC_ENTER(eglQueryString,
                         "dpy = %u, name = %d",
-                        (yagl_host_handle)dpy,
+                        (yagl_host_handle)dpy_,
                         name);
 
     switch (name) {
@@ -222,11 +222,7 @@ YAGL_API const char* eglQueryString(EGLDisplay dpy, EGLint name)
         str = "OpenGL_ES";
         break;
     case EGL_EXTENSIONS:
-        str = "EGL_KHR_image_base "
-              "EGL_KHR_image "
-              "EGL_KHR_image_pixmap "
-              "EGL_NOK_texture_from_pixmap "
-              "EGL_KHR_lock_surface ";
+        str = yagl_display_get_extensions(yagl_display_get(dpy_));
         break;
     default:
         YAGL_SET_ERR(EGL_BAD_PARAMETER);
@@ -362,10 +358,6 @@ YAGL_API EGLBoolean eglGetConfigAttrib( EGLDisplay dpy_,
     }
 
     switch (attribute) {
-    case EGL_Y_INVERTED_NOK:
-        *value = yagl_get_backend()->y_inverted;
-        ret = EGL_TRUE;
-        break;
     case EGL_NATIVE_VISUAL_ID:
     case EGL_NATIVE_VISUAL_TYPE:
         if (!dpy->native_dpy->get_visual(dpy->native_dpy,
@@ -385,6 +377,13 @@ YAGL_API EGLBoolean eglGetConfigAttrib( EGLDisplay dpy_,
         ret = EGL_TRUE;
 
         break;
+    case EGL_Y_INVERTED_NOK:
+        if (dpy->native_dpy->platform->pixmaps_supported) {
+            *value = yagl_get_backend()->y_inverted;
+            ret = EGL_TRUE;
+            break;
+        }
+        /* Fall through. */
     default:
         do {
             yagl_mem_probe_write_EGLint(value);
@@ -1357,6 +1356,7 @@ YAGL_API EGLImageKHR eglCreateImageKHR( EGLDisplay dpy_,
     struct yagl_display *dpy = NULL;
     struct yagl_native_drawable *native_buffer = NULL;
     struct yagl_image *image = NULL;
+    int i = 0;
 
     YAGL_LOG_FUNC_ENTER(eglCreateImageKHR,
                         "dpy = %u, ctx = %u, target = %u, buffer = %p",
@@ -1364,11 +1364,6 @@ YAGL_API EGLImageKHR eglCreateImageKHR( EGLDisplay dpy_,
                         (yagl_host_handle)ctx,
                         target,
                         buffer);
-
-    if (target != EGL_NATIVE_PIXMAP_KHR) {
-        YAGL_SET_ERR(EGL_BAD_PARAMETER);
-        goto out;
-    }
 
     if (!buffer) {
         YAGL_SET_ERR(EGL_BAD_PARAMETER);
@@ -1379,21 +1374,78 @@ YAGL_API EGLImageKHR eglCreateImageKHR( EGLDisplay dpy_,
         goto out;
     }
 
-    native_buffer = dpy->native_dpy->wrap_pixmap(dpy->native_dpy,
-                                                 (yagl_os_pixmap)buffer);
+    switch (target) {
+    case EGL_NATIVE_PIXMAP_KHR:
+        if (!dpy->native_dpy->platform->pixmaps_supported) {
+            YAGL_SET_ERR(EGL_BAD_PARAMETER);
+            goto out;
+        }
 
-    if (!native_buffer) {
-        goto out;
-    }
+        if (attrib_list) {
+            while (attrib_list[i] != EGL_NONE) {
+                switch (attrib_list[i]) {
+                case EGL_IMAGE_PRESERVED_KHR:
+                    break;
+                default:
+                    YAGL_SET_ERR(EGL_BAD_ATTRIBUTE);
+                    goto out;
+                }
 
-    image = yagl_get_backend()->create_image(dpy,
-                                             (yagl_host_handle)ctx,
-                                             native_buffer,
-                                             attrib_list);
+                i += 2;
+            }
+        }
 
-    if (!image) {
-        native_buffer->destroy(native_buffer);
-        native_buffer = NULL;
+        native_buffer = dpy->native_dpy->wrap_pixmap(dpy->native_dpy,
+                                                     (yagl_os_pixmap)buffer);
+
+        if (!native_buffer) {
+            goto out;
+        }
+
+        image = yagl_get_backend()->create_image_pixmap(dpy,
+                                                        (yagl_host_handle)ctx,
+                                                        native_buffer,
+                                                        attrib_list);
+
+        if (!image) {
+            native_buffer->destroy(native_buffer);
+            goto out;
+        }
+
+        break;
+    case EGL_WAYLAND_BUFFER_WL:
+        if (!dpy->native_dpy->WL_bind_wayland_display_supported) {
+            YAGL_SET_ERR(EGL_BAD_PARAMETER);
+            goto out;
+        }
+
+        if (attrib_list) {
+            while (attrib_list[i] != EGL_NONE) {
+                switch (attrib_list[i]) {
+                case EGL_IMAGE_PRESERVED_KHR:
+                case EGL_WAYLAND_PLANE_WL:
+                    break;
+                default:
+                    YAGL_SET_ERR(EGL_BAD_ATTRIBUTE);
+                    goto out;
+                }
+
+                i += 2;
+            }
+        }
+
+        image = yagl_get_backend()->create_image_wl_buffer(dpy,
+                                                           (yagl_host_handle)ctx,
+                                                           (struct wl_resource*)buffer,
+                                                           attrib_list);
+
+        if (!image) {
+            goto out;
+        }
+
+        break;
+    default:
+        YAGL_SET_ERR(EGL_BAD_PARAMETER);
         goto out;
     }
 
@@ -1406,7 +1458,7 @@ YAGL_API EGLImageKHR eglCreateImageKHR( EGLDisplay dpy_,
         goto out;
     }
 
-    ret = yagl_image_get_handle(image);
+    ret = image->client_handle;
 
 out:
     yagl_image_release(image);
@@ -1559,6 +1611,116 @@ out:
 
     return res;
 }
+
+#ifdef YAGL_PLATFORM_WAYLAND
+struct wl_display;
+struct wl_resource;
+
+YAGL_API EGLBoolean eglBindWaylandDisplayWL(EGLDisplay dpy_,
+                                            struct wl_display *display)
+{
+    EGLBoolean res = EGL_FALSE;
+    struct yagl_display *dpy = NULL;
+
+    YAGL_LOG_FUNC_ENTER(eglBindWaylandDisplayWL,
+                        "dpy = %u, display = %p",
+                        (yagl_host_handle)dpy_,
+                        display);
+
+    if (!yagl_validate_display(dpy_, &dpy)) {
+        goto out;
+    }
+
+    if (!display) {
+        YAGL_SET_ERR(EGL_BAD_PARAMETER);
+        goto out;
+    }
+
+    if (!dpy->native_dpy->WL_bind_wayland_display_supported) {
+        YAGL_SET_ERR(EGL_BAD_PARAMETER);
+        goto out;
+    }
+
+    res = yagl_native_display_bind_wl_display(dpy->native_dpy, display);
+
+out:
+    YAGL_LOG_FUNC_EXIT("%d", res);
+
+    return res;
+}
+
+YAGL_API EGLBoolean eglUnbindWaylandDisplayWL(EGLDisplay dpy_,
+                                              struct wl_display *display)
+{
+    EGLBoolean res = EGL_FALSE;
+    struct yagl_display *dpy = NULL;
+
+    YAGL_LOG_FUNC_ENTER(eglUnbindWaylandDisplayWL,
+                        "dpy = %u, display = %p",
+                        (yagl_host_handle)dpy_,
+                        display);
+
+    if (!yagl_validate_display(dpy_, &dpy)) {
+        goto out;
+    }
+
+    if (!display) {
+        YAGL_SET_ERR(EGL_BAD_PARAMETER);
+        goto out;
+    }
+
+    if (!dpy->native_dpy->WL_bind_wayland_display_supported) {
+        YAGL_SET_ERR(EGL_BAD_PARAMETER);
+        goto out;
+    }
+
+    res = yagl_native_display_unbind_wl_display(dpy->native_dpy);
+
+out:
+    YAGL_LOG_FUNC_EXIT("%d", res);
+
+    return res;
+}
+
+YAGL_API EGLBoolean eglQueryWaylandBufferWL(EGLDisplay dpy_,
+                                            struct wl_resource *buffer,
+                                            EGLint attribute,
+                                            EGLint *value)
+{
+    EGLBoolean res = EGL_FALSE;
+    struct yagl_display *dpy = NULL;
+
+    YAGL_LOG_FUNC_ENTER(eglQueryWaylandBufferWL,
+                        "dpy = %u, buffer = %p, attribute = 0x%X",
+                        (yagl_host_handle)dpy_,
+                        buffer,
+                        attribute);
+
+    if (!yagl_validate_display(dpy_, &dpy)) {
+        goto out;
+    }
+
+    if (!buffer) {
+        YAGL_SET_ERR(EGL_BAD_PARAMETER);
+        goto out;
+    }
+
+    if (!dpy->native_dpy->WL_bind_wayland_display_supported) {
+        YAGL_SET_ERR(EGL_BAD_PARAMETER);
+        goto out;
+    }
+
+    res = yagl_native_display_query_wl_buffer(dpy->native_dpy,
+                                              buffer,
+                                              attribute,
+                                              value);
+
+out:
+    YAGL_LOG_FUNC_EXIT("%d", res);
+
+    return res;
+}
+#endif
 
 static __eglMustCastToProperFunctionPointerType yagl_get_gles1_proc_address(const char* procname)
 {
