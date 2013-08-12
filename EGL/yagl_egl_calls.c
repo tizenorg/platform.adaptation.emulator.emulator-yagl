@@ -219,7 +219,7 @@ YAGL_API const char* eglQueryString(EGLDisplay dpy_, EGLint name)
         str = "1.4";
         break;
     case EGL_CLIENT_APIS:
-        str = "OpenGL_ES";
+        str = "OpenGL_ES OpenGL_ES2";
         break;
     case EGL_EXTENSIONS:
         str = yagl_display_get_extensions(yagl_display_get(dpy_));
