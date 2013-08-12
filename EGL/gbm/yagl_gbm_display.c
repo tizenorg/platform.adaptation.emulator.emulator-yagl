@@ -103,7 +103,10 @@ static int yagl_gbm_display_get_visual(struct yagl_native_display *dpy,
                                        int *visual_id,
                                        int *visual_type)
 {
-    return 0;
+    *visual_id = 0;
+    *visual_type = 0;
+
+    return 1;
 }
 
 static void yagl_gbm_display_destroy(struct yagl_native_display *dpy)
