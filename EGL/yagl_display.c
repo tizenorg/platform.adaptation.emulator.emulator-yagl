@@ -14,7 +14,8 @@
 #include <string.h>
 
 #define YAGL_EGL_BASE_EXTENSIONS "EGL_KHR_image_base " \
-                                 "EGL_KHR_lock_surface "
+                                 "EGL_KHR_lock_surface " \
+                                 "EGL_KHR_surfaceless_context "
 
 #define YAGL_EGL_PIXMAPS_EXTENSIONS "EGL_KHR_image " \
                                     "EGL_KHR_image_pixmap " \

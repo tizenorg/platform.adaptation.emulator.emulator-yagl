@@ -248,7 +248,7 @@ YAGL_API const GLubyte* glGetString(GLenum name)
         str = "Samsung";
         break;
     case GL_VERSION:
-        str = "2.0";
+        str = "OpenGL ES 2.0";
         break;
     case GL_RENDERER:
         str = "YaGL GLESv2";
