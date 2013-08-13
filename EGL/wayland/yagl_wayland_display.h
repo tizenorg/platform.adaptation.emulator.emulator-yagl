@@ -13,6 +13,8 @@ struct yagl_wayland_display
 {
     struct yagl_native_display base;
 
+    int own_dpy;
+
     struct wl_event_queue *queue;
 
     struct wl_registry *registry;
@@ -28,6 +30,7 @@ struct yagl_wayland_display
 
 struct yagl_native_display
     *yagl_wayland_display_create(struct yagl_native_platform *platform,
-                                 yagl_os_display os_dpy);
+                                 yagl_os_display os_dpy,
+                                 int own_dpy);
 
 #endif

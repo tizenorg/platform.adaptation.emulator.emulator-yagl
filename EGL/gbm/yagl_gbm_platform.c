@@ -1,7 +1,8 @@
 #include "yagl_gbm_platform.h"
 #include "yagl_gbm_display.h"
-#include "yagl_native_platform.h"
 #include "yagl_gbm.h"
+#include "yagl_native_platform.h"
+#include "yagl_log.h"
 #include "EGL/egl.h"
 
 static int yagl_gbm_platform_probe(yagl_os_display os_dpy)
@@ -21,7 +22,14 @@ static struct yagl_native_display
     *yagl_gbm_wrap_display(yagl_os_display os_dpy,
                            int enable_drm)
 {
-    return yagl_gbm_display_create(&yagl_gbm_platform, os_dpy);
+    YAGL_LOG_FUNC_SET(eglGetDisplay);
+
+    if (os_dpy != (yagl_os_display)EGL_DEFAULT_DISPLAY) {
+        return yagl_gbm_display_create(&yagl_gbm_platform, os_dpy);
+    } else {
+        YAGL_LOG_ERROR("Default display not supported on GBM");
+        return NULL;
+    }
 }
 
 struct yagl_native_platform yagl_gbm_platform =

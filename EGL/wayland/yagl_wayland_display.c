@@ -235,6 +235,7 @@ static int yagl_wayland_display_get_visual(struct yagl_native_display *dpy,
 static void yagl_wayland_display_destroy(struct yagl_native_display *dpy)
 {
     struct yagl_wayland_display *wayland_dpy = (struct yagl_wayland_display*)dpy;
+    struct wl_display *wl_dpy = YAGL_WAYLAND_DPY(dpy->os_dpy);
 
     free(wayland_dpy->drm_dev_name);
     wayland_dpy->drm_dev_name = NULL;
@@ -250,12 +251,17 @@ static void yagl_wayland_display_destroy(struct yagl_native_display *dpy)
 
     yagl_native_display_cleanup(dpy);
 
+    if (wayland_dpy->own_dpy) {
+        wl_display_disconnect(wl_dpy);
+    }
+
     yagl_free(wayland_dpy);
 }
 
 struct yagl_native_display
     *yagl_wayland_display_create(struct yagl_native_platform *platform,
-                                 yagl_os_display os_dpy)
+                                 yagl_os_display os_dpy,
+                                 int own_dpy)
 {
     struct wl_display *wl_dpy = YAGL_WAYLAND_DPY(os_dpy);
     struct yagl_wayland_display *dpy;
@@ -266,6 +272,8 @@ struct yagl_native_display
                         "os_dpy = %p", os_dpy);
 
     dpy = yagl_malloc0(sizeof(*dpy));
+
+    dpy->own_dpy = own_dpy;
 
     dpy->drm_fd = -1;
 
