@@ -7,18 +7,8 @@
 struct wl_drm;
 struct wl_resource;
 struct wl_display;
+struct wl_drm_buffer;
 struct vigs_drm_surface;
-
-struct wl_drm_buffer
-{
-    struct wl_resource *resource;
-
-    struct wl_drm *drm;
-
-    uint32_t format;
-
-    struct vigs_drm_surface *drm_sfc;
-};
 
 struct wayland_drm_callbacks
 {
@@ -37,5 +27,7 @@ struct wl_drm *wayland_drm_create(struct wl_display *display,
 void wayland_drm_destroy(struct wl_drm *drm);
 
 struct wl_drm_buffer *wayland_drm_get_buffer(struct wl_resource *resource);
+
+struct vigs_drm_surface *wayland_drm_buffer_get_sfc(struct wl_drm_buffer *buffer);
 
 #endif

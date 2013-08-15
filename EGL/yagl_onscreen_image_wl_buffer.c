@@ -28,6 +28,7 @@ struct yagl_onscreen_image_wl_buffer
 {
     struct yagl_onscreen_image_wl_buffer *image;
     struct wl_drm_buffer *drm_buffer;
+    struct vigs_drm_surface *drm_sfc;
     yagl_host_handle host_image = 0;
 
     image = yagl_malloc0(sizeof(*image));
@@ -42,13 +43,15 @@ struct yagl_onscreen_image_wl_buffer
         goto fail;
     }
 
+    drm_sfc = wayland_drm_buffer_get_sfc(drm_buffer);
+
     do {
         yagl_mem_probe_read_attrib_list(attrib_list);
     } while (!yagl_host_eglCreateImageKHR(&host_image,
         dpy->host_dpy,
         host_context,
         EGL_WAYLAND_BUFFER_WL,
-        drm_buffer->drm_sfc->id,
+        drm_sfc->id,
         attrib_list));
 
     if (!host_image) {
@@ -59,7 +62,7 @@ struct yagl_onscreen_image_wl_buffer
                     &yagl_onscreen_image_wl_buffer_destroy,
                     host_image,
                     dpy,
-                    (EGLImageKHR)drm_buffer->drm_sfc->gem.name);
+                    (EGLImageKHR)drm_sfc->gem.name);
 
     image->base.update = &yagl_onscreen_image_wl_buffer_update;
 

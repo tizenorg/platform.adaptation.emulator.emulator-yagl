@@ -14,6 +14,15 @@ struct wl_drm
     void *user_data;
 };
 
+struct wl_drm_buffer
+{
+    struct wl_resource resource;
+
+    struct wl_drm *drm;
+
+    struct vigs_drm_surface *drm_sfc;
+};
+
 static void buffer_destroy(struct wl_resource *resource)
 {
     struct wl_drm_buffer *buffer = resource->data;
@@ -71,24 +80,17 @@ static void drm_create_buffer(struct wl_client *client,
         return;
     }
 
-    buffer->resource = wl_resource_create(client,
-                                          &wl_buffer_interface,
-                                          1,
-                                          id);
-    if (!buffer->resource) {
-        wl_resource_post_no_memory(resource);
-        vigs_drm_gem_unref(&buffer->drm_sfc->gem);
-        yagl_free(buffer);
-        return;
-    }
-
     buffer->drm = drm;
-    buffer->format = format;
 
-    wl_resource_set_implementation(buffer->resource,
-                                   (void(**)(void))&drm_buffer_interface,
-                                   buffer,
-                                   buffer_destroy);
+    buffer->resource.object.id = id;
+    buffer->resource.object.interface = &wl_buffer_interface;
+    buffer->resource.object.implementation = (void(**)(void))&drm_buffer_interface;
+    buffer->resource.data = buffer;
+
+    buffer->resource.destroy = buffer_destroy;
+    buffer->resource.client = resource->client;
+
+    wl_client_add_resource(resource->client, &buffer->resource);
 }
 
 static void drm_create_planar_buffer(struct wl_client *client,
@@ -191,4 +193,9 @@ struct wl_drm_buffer *wayland_drm_get_buffer(struct wl_resource *resource)
     } else {
         return NULL;
     }
+}
+
+struct vigs_drm_surface *wayland_drm_buffer_get_sfc(struct wl_drm_buffer *buffer)
+{
+    return buffer->drm_sfc;
 }

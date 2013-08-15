@@ -104,14 +104,17 @@ int yagl_native_display_query_wl_buffer(struct yagl_native_display *dpy,
                                         EGLint *value)
 {
     struct wl_drm_buffer *drm_buffer = wayland_drm_get_buffer(buffer);
+    struct vigs_drm_surface *drm_sfc;
 
     if (!drm_buffer) {
         return 0;
     }
 
+    drm_sfc = wayland_drm_buffer_get_sfc(drm_buffer);
+
     switch (attribute) {
     case EGL_TEXTURE_FORMAT:
-        switch (drm_buffer->drm_sfc->format) {
+        switch (drm_sfc->format) {
         case vigs_drm_surface_bgrx8888:
             *value = EGL_TEXTURE_RGB;
             break;
@@ -123,10 +126,10 @@ int yagl_native_display_query_wl_buffer(struct yagl_native_display *dpy,
         }
         break;
     case EGL_WIDTH:
-        *value = drm_buffer->drm_sfc->width;
+        *value = drm_sfc->width;
         break;
     case EGL_HEIGHT:
-        *value = drm_buffer->drm_sfc->height;
+        *value = drm_sfc->height;
         break;
     default:
         return 0;
