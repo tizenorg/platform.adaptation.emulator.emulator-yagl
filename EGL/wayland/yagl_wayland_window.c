@@ -17,13 +17,25 @@ static void yagl_wayland_window_buffer_release(void *data,
     struct yagl_wayland_window *window = data;
     int i;
 
+    YAGL_LOG_FUNC_SET(yagl_wayland_window_buffer_release);
+
     for (i = 0;
          i < sizeof(window->color_buffers)/sizeof(window->color_buffers[0]);
          ++i) {
         if (window->color_buffers[i].wl_buffer == buffer) {
+            if ((window->color_buffers[i].drm_sfc->width != window->width) ||
+                (window->color_buffers[i].drm_sfc->height != window->height)) {
+                /*
+                 * Window was resized, destroy the buffer.
+                 */
+                wl_buffer_destroy(window->color_buffers[i].wl_buffer);
+                vigs_drm_gem_unref(&window->color_buffers[i].drm_sfc->gem);
+                window->color_buffers[i].wl_buffer = NULL;
+                window->color_buffers[i].drm_sfc = NULL;
+            }
+
             /*
-             * The buffer is still in the pool, just unlock,
-             * don't destroy it.
+             * Unlock the buffer.
              */
             window->color_buffers[i].locked = 0;
             return;
@@ -31,9 +43,9 @@ static void yagl_wayland_window_buffer_release(void *data,
     }
 
     /*
-     * Buffer is not in the pool, drop it.
+     * Buffer is not in the pool, can't be!
      */
-    wl_buffer_destroy(buffer);
+    YAGL_LOG_ERROR("Buffer is not in the pool, logic error!");
 }
 
 static struct wl_buffer_listener yagl_wayland_window_buffer_listener =
@@ -107,6 +119,7 @@ static int yagl_wayland_window_lock_back(struct yagl_wayland_window *window)
     }
 
     if (!window->back->drm_sfc) {
+        window->back = NULL;
         return 0;
     }
 
@@ -124,8 +137,9 @@ static void yagl_wayland_window_resize(struct wl_egl_window *egl_window,
 
     ++window->base.stamp;
 
-    YAGL_LOG_DEBUG("window %p resized, stamp = %u",
-                   egl_window, window->base.stamp);
+    YAGL_LOG_DEBUG("window %p resized to %dx%d, stamp = %u",
+                   egl_window, window->width, window->height,
+                   window->base.stamp);
 }
 
 static int yagl_wayland_window_get_buffer(struct yagl_native_drawable *drawable,
@@ -153,54 +167,45 @@ static int yagl_wayland_window_get_buffer(struct yagl_native_drawable *drawable,
         for (i = 0;
              i < sizeof(window->color_buffers)/sizeof(window->color_buffers[0]);
              ++i) {
-            if (window->color_buffers[i].wl_buffer &&
-                !window->color_buffers[i].locked) {
+            if (window->color_buffers[i].locked &&
+                (window->back != &window->color_buffers[i])) {
+                /*
+                 * Buffer is locked and it's not a back buffer.
+                 */
+                continue;
+            }
+            if (window->color_buffers[i].wl_buffer) {
                 wl_buffer_destroy(window->color_buffers[i].wl_buffer);
             }
             if (window->color_buffers[i].drm_sfc) {
                 vigs_drm_gem_unref(&window->color_buffers[i].drm_sfc->gem);
             }
+
             window->color_buffers[i].wl_buffer = NULL;
             window->color_buffers[i].drm_sfc = NULL;
-            window->color_buffers[i].locked = 0;
+
+            if (window->back == &window->color_buffers[i]) {
+                /*
+                 * If it's a back buffer and the window was resized
+                 * then we MUST destroy it and create a new one
+                 * later in 'yagl_wayland_window_lock_back'.
+                 *
+                 * Otherwise, we'll get very obscure resizing bugs.
+                 */
+                window->color_buffers[i].locked = 0;
+                window->back = NULL;
+            }
         }
 
         window->width = egl_window->width;
         window->height = egl_window->height;
+        window->dx = egl_window->dx;
+        window->dy = egl_window->dy;
     }
-
-    window->dx = egl_window->dx;
-    window->dy = egl_window->dy;
 
     if (!yagl_wayland_window_lock_back(window)) {
         YAGL_LOG_ERROR("Cannot lock back for egl_window %p", egl_window);
         return 0;
-    }
-
-    /*
-     * What this does is handles the case when there was triple buffering
-     * for some period of time and now we're back to double buffering.
-     * Since we're back to double buffering we can free buffers
-     * in order not to waste memory.
-     *
-     * Some detailed explanation since it's not that trivial: When triple
-     * buffering is in place we'll allocate all 3 buffers in 'color_buffers',
-     * the release code only sets 'locked' to 0, it doesn't destroy the buffers,
-     * so they could be reused. So, with triple buffering all 3 buffers will be
-     * locked all the time, but once the "pressure" on the compositor will
-     * lower it'll release the excess buffer and here we just check for that
-     * excess buffer and destroy it, so we won't waste memory in vain.
-     */
-    for (i = 0;
-         i < sizeof(window->color_buffers)/sizeof(window->color_buffers[0]);
-         ++i) {
-        if (window->color_buffers[i].wl_buffer &&
-            !window->color_buffers[i].locked) {
-            wl_buffer_destroy(window->color_buffers[i].wl_buffer);
-            vigs_drm_gem_unref(&window->color_buffers[i].drm_sfc->gem);
-            window->color_buffers[i].wl_buffer = NULL;
-            window->color_buffers[i].drm_sfc = NULL;
-        }
     }
 
     vigs_drm_gem_ref(&window->back->drm_sfc->gem);
@@ -228,9 +233,7 @@ static void yagl_wayland_window_swap_buffers(struct yagl_native_drawable *drawab
     }
 
     if (ret < 0) {
-        /*
-         * Is this possible ?
-         */
+        YAGL_LOG_ERROR("wl_display_dispatch_queue failed for egl_window %p: %d", egl_window, ret);
         return;
     }
 
@@ -356,6 +359,7 @@ static void yagl_wayland_window_destroy(struct yagl_native_drawable *drawable)
 
     if (window->frame_callback) {
         wl_callback_destroy(window->frame_callback);
+        window->frame_callback = NULL;
     }
 
     yagl_native_drawable_cleanup(drawable);

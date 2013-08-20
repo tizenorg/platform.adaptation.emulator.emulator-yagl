@@ -1289,10 +1289,10 @@ YAGL_API EGLBoolean eglSwapBuffers(EGLDisplay dpy_, EGLSurface surface_)
 
     res = EGL_TRUE;
 
+    yagl_render_invalidate();
+
 out:
     yagl_surface_release(surface);
-
-    yagl_render_invalidate();
 
     YAGL_LOG_FUNC_EXIT("%d", res);
 

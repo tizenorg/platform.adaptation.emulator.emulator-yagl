@@ -228,6 +228,8 @@ YAGL_API void glDrawArrays(GLenum mode, GLint first, GLsizei count)
 
     YAGL_LOG_FUNC_ENTER_SPLIT3(glDrawArrays, GLenum, GLint, GLsizei, mode, first, count);
 
+    yagl_render_invalidate();
+
     yagl_update_ebo();
     yagl_update_arrays();
 
@@ -273,6 +275,8 @@ YAGL_API void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvo
     int index_size = 0;
 
     YAGL_LOG_FUNC_ENTER_SPLIT4(glDrawElements, GLenum, GLsizei, GLenum, const GLvoid*, mode, count, type, indices);
+
+    yagl_render_invalidate();
 
     yagl_update_ebo();
     yagl_update_arrays();
@@ -546,6 +550,8 @@ YAGL_API void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLen
 
     YAGL_LOG_FUNC_ENTER_SPLIT7(glReadPixels, GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, GLvoid*, x, y, width, height, format, type, pixels);
 
+    yagl_render_invalidate();
+
     yagl_update_pack_alignment();
 
     ctx = yagl_gles_context_get();
@@ -574,7 +580,15 @@ YAGL_API void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLen
 
 YAGL_IMPLEMENT_API_NORET4(glRenderbufferStorage, GLenum, GLenum, GLsizei, GLsizei, target, internalformat, width, height)
 YAGL_IMPLEMENT_API_NORET2(glSampleCoverage, GLclampf, GLboolean, value, invert)
-YAGL_IMPLEMENT_API_NORET4(glScissor, GLint, GLint, GLsizei, GLsizei, x, y, width, height)
+
+YAGL_API void glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT4(glScissor, GLint, GLint, GLsizei, GLsizei, x, y, width, height);
+    yagl_render_invalidate();
+    YAGL_HOST_CALL_ASSERT(yagl_host_glScissor(x, y, width, height));
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
 YAGL_IMPLEMENT_API_NORET3(glStencilFunc, GLenum, GLint, GLuint, func, ref, mask)
 YAGL_IMPLEMENT_API_NORET1(glStencilMask, GLuint, mask)
 YAGL_IMPLEMENT_API_NORET3(glStencilOp, GLenum, GLenum, GLenum, fail, zfail, zpass)
