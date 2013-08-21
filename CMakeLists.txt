@@ -50,6 +50,7 @@ add_definitions(-DMESA_EGL_NO_X11_HEADERS)
 
 set(YAGL_INCLUDE_DIR "${YAGL_SOURCE_DIR}/include")
 include_directories(${YAGL_INCLUDE_DIR})
+include_directories(${YAGL_OUT_DIR}/include)
 include_directories(${CMAKE_FIND_ROOT_PATH}/usr/include)
 
 #find packages
@@ -146,11 +147,12 @@ endif ()
 message(STATUS "Install prefix:   " ${CMAKE_INSTALL_PREFIX})
 message(STATUS "Install lib dir:  " ${INSTALL_LIB_DIR})
 
-if (PLATFORM_GBM)
-add_subdirectory(gbm)
-endif ()
 if (PLATFORM_WAYLAND)
 add_subdirectory(wayland-egl)
+add_subdirectory(wayland-drm)
+endif ()
+if (PLATFORM_GBM)
+add_subdirectory(gbm)
 endif ()
 add_subdirectory(EGL)
 add_subdirectory(GLESv1_CM)

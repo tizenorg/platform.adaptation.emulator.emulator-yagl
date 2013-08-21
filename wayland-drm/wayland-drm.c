@@ -1,10 +1,10 @@
 #include "wayland-drm.h"
 #include <wayland-server.h>
 #include "wayland-drm-server-protocol.h"
-#include "yagl_malloc.h"
 #include "vigs.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 struct wl_drm
 {
@@ -29,7 +29,7 @@ static void buffer_destroy(struct wl_resource *resource)
 
     vigs_drm_gem_unref(&buffer->drm_sfc->gem);
 
-    yagl_free(buffer);
+    free(buffer);
 }
 
 static void drm_buffer_destroy(struct wl_client *client,
@@ -63,12 +63,14 @@ static void drm_create_buffer(struct wl_client *client,
         return;
     }
 
-    buffer = yagl_malloc0(sizeof(*buffer));
+    buffer = malloc(sizeof(*buffer));
 
     if (!buffer) {
         wl_resource_post_no_memory(resource);
         return;
     }
+
+    memset(buffer, 0, sizeof(*buffer));
 
     buffer->drm_sfc = drm->callbacks->acquire_buffer(drm->user_data, name);
 
@@ -76,7 +78,7 @@ static void drm_create_buffer(struct wl_client *client,
         wl_resource_post_error(resource,
                                WL_DRM_ERROR_INVALID_NAME,
                                "invalid name");
-        yagl_free(buffer);
+        free(buffer);
         return;
     }
 
@@ -161,7 +163,15 @@ struct wl_drm *wayland_drm_create(struct wl_display *display,
 {
     struct wl_drm *drm;
 
-    drm = yagl_malloc0(sizeof(*drm));
+    drm = malloc(sizeof(*drm));
+
+    if (!drm) {
+        fprintf(stderr, "wayland-drm: Critical error! Unable to allocate wl_drm!\n");
+        exit(1);
+        return NULL;
+    }
+
+    memset(drm, 0, sizeof(*drm));
 
     drm->display = display;
     drm->device_name = strdup(device_name);
@@ -177,7 +187,7 @@ void wayland_drm_destroy(struct wl_drm *drm)
 {
     free(drm->device_name);
 
-    yagl_free(drm);
+    free(drm);
 }
 
 struct wl_drm_buffer *wayland_drm_get_buffer(struct wl_resource *resource)

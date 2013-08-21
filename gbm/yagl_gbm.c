@@ -1,6 +1,9 @@
 #include "yagl_export.h"
 #include "yagl_gbm.h"
 #include "vigs.h"
+#ifdef YAGL_PLATFORM_WAYLAND
+#include "wayland-drm.h"
+#endif
 #include <gbm.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -203,8 +206,54 @@ YAGL_API struct gbm_bo *gbm_bo_create(struct gbm_device *gbm,
 YAGL_API struct gbm_bo *gbm_bo_import(struct gbm_device *gbm, uint32_t type,
                                       void *buffer, uint32_t usage)
 {
-    fprintf(stderr, "GBM: bo_import not supported\n");
-    return NULL;
+#ifdef YAGL_PLATFORM_WAYLAND
+    struct wl_drm_buffer *drm_buffer;
+#endif
+    struct vigs_drm_surface *drm_sfc;
+    struct yagl_gbm_bo *bo;
+
+    switch (type) {
+#ifdef YAGL_PLATFORM_WAYLAND
+    case GBM_BO_IMPORT_WL_BUFFER:
+        drm_buffer = wayland_drm_get_buffer((struct wl_resource*)buffer);
+
+        if (!drm_buffer) {
+            return NULL;
+        }
+
+        drm_sfc = wayland_drm_buffer_get_sfc(drm_buffer);
+
+        vigs_drm_gem_ref(&drm_sfc->gem);
+
+        break;
+#endif
+    default:
+        fprintf(stderr, "GBM: bo_import bad type = %u\n", type);
+        return NULL;
+    }
+
+    bo = gbm_malloc0(sizeof(*bo));
+
+    bo->base.gbm = gbm;
+    bo->base.drm_sfc = drm_sfc;
+
+    bo->handle.u32 = drm_sfc->gem.handle;
+
+    switch (drm_sfc->format) {
+    case vigs_drm_surface_bgrx8888:
+        bo->format = GBM_FORMAT_XRGB8888;
+        bo->base.depth = 24;
+        break;
+    case vigs_drm_surface_bgra8888:
+        bo->format = GBM_FORMAT_ARGB8888;
+        bo->base.depth = 32;
+        break;
+    default:
+        fprintf(stderr, "GBM: bo_import, bad format = %u\n", drm_sfc->format);
+        return NULL;
+    }
+
+    return &bo->base;
 }
 
 YAGL_API uint32_t gbm_bo_get_width(struct gbm_bo *bo)

@@ -1,5 +1,3 @@
-include (WPCodegenTarget)
-
 set(SOURCES
     yagl_context.c
     yagl_display.c
@@ -72,24 +70,16 @@ if (PLATFORM_WAYLAND)
         wayland/yagl_wayland_platform.c
         wayland/yagl_wayland_display.c
         wayland/yagl_wayland_window.c
-        ${CMAKE_CURRENT_BINARY_DIR}/wayland-drm-server-protocol.h
-        ${CMAKE_CURRENT_BINARY_DIR}/wayland-drm-client-protocol.h
-        ${CMAKE_CURRENT_BINARY_DIR}/wayland-drm-protocol.c
-        wayland-drm.c
         yagl_onscreen_image_wl_buffer.c
     )
     set(LIBRARIES ${LIBRARIES}
         wayland-egl-yagl
+        wayland-drm
         ${WAYLAND_CLIENT_LIBRARIES}
-        ${WAYLAND_SERVER_LIBRARIES}
     )
     add_definitions(-DYAGL_PLATFORM_WAYLAND)
-    wp_codegen_target(wayland-drm
-                      ${CMAKE_CURRENT_SOURCE_DIR}/wayland-drm.xml
-                      ${CMAKE_CURRENT_BINARY_DIR})
 endif ()
 
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(.)
 
 add_library(EGL SHARED ${SOURCES})
