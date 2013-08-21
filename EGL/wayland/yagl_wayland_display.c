@@ -158,9 +158,17 @@ static void yagl_wayland_display_registry_global(void *data,
     }
 }
 
+static void
+    yagl_wayland_display_registry_global_remove(void *data,
+                                                struct wl_registry *registry,
+                                                uint32_t name)
+{
+}
+
 static struct wl_registry_listener yagl_wayland_display_registry_listener =
 {
-    yagl_wayland_display_registry_global
+    yagl_wayland_display_registry_global,
+    yagl_wayland_display_registry_global_remove
 };
 
 static int yagl_wayland_display_authenticate(struct yagl_native_display *dpy,
@@ -282,6 +290,10 @@ struct yagl_native_display
     if (!dpy->queue) {
         YAGL_LOG_ERROR("Unable to create event queue");
         goto fail;
+    }
+
+    if (own_dpy) {
+        wl_display_dispatch_pending(wl_dpy);
     }
 
     dpy->registry = wl_display_get_registry(wl_dpy);
