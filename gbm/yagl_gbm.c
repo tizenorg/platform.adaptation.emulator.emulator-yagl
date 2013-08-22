@@ -160,6 +160,10 @@ YAGL_API struct gbm_bo *gbm_bo_create(struct gbm_device *gbm,
     struct vigs_drm_surface *sfc;
     int ret;
 
+    if ((flags & GBM_BO_USE_CURSOR_64X64) != 0) {
+        return NULL;
+    }
+
     switch (format) {
     case GBM_BO_FORMAT_XRGB8888:
     case GBM_FORMAT_XRGB8888:
