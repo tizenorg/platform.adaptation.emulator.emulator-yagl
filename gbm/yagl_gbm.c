@@ -31,6 +31,7 @@ struct yagl_gbm_surface
     {
         struct gbm_bo *bo;
         int locked;
+        int age;
     } color_buffers[3], *back, *front;
 };
 
@@ -53,10 +54,8 @@ static void gbm_free(void *ptr)
     free(ptr);
 }
 
-static struct vigs_drm_surface
-    *yagl_gbm_surface_acquire_back(struct gbm_surface *sfc)
+static int yagl_gbm_surface_ensure_back(struct yagl_gbm_surface *yagl_sfc)
 {
-    struct yagl_gbm_surface *yagl_sfc = (struct yagl_gbm_surface*)sfc;
     int i;
 
     if (!yagl_sfc->back) {
@@ -71,16 +70,29 @@ static struct vigs_drm_surface
     }
 
     if (!yagl_sfc->back) {
-        return NULL;
+        return 0;
     }
 
     if (!yagl_sfc->back->bo) {
-        yagl_sfc->back->bo = gbm_bo_create(sfc->gbm, sfc->width,
-                                           sfc->height, sfc->format,
-                                           sfc->flags);
+        yagl_sfc->back->bo = gbm_bo_create(yagl_sfc->base.gbm, yagl_sfc->base.width,
+                                           yagl_sfc->base.height, yagl_sfc->base.format,
+                                           yagl_sfc->base.flags);
     }
 
     if (!yagl_sfc->back->bo) {
+        yagl_sfc->back = NULL;
+        return 0;
+    }
+
+    return 1;
+}
+
+static struct vigs_drm_surface
+    *yagl_gbm_surface_acquire_back(struct gbm_surface *sfc)
+{
+    struct yagl_gbm_surface *yagl_sfc = (struct yagl_gbm_surface*)sfc;
+
+    if (!yagl_gbm_surface_ensure_back(yagl_sfc)) {
         return NULL;
     }
 
@@ -92,8 +104,30 @@ static struct vigs_drm_surface
 static void yagl_gbm_surface_swap_buffers(struct gbm_surface *sfc)
 {
     struct yagl_gbm_surface *yagl_sfc = (struct yagl_gbm_surface*)sfc;
+    int i;
+
+    for (i = 0;
+         i < sizeof(yagl_sfc->color_buffers)/sizeof(yagl_sfc->color_buffers[0]);
+         ++i) {
+        if (yagl_sfc->color_buffers[i].age > 0) {
+            ++yagl_sfc->color_buffers[i].age;
+        }
+    }
+
     yagl_sfc->front = yagl_sfc->back;
+    yagl_sfc->front->age = 1;
     yagl_sfc->back = NULL;
+}
+
+static int yagl_gbm_surface_get_buffer_age(struct gbm_surface *sfc)
+{
+    struct yagl_gbm_surface *yagl_sfc = (struct yagl_gbm_surface*)sfc;
+
+    if (!yagl_gbm_surface_ensure_back(yagl_sfc)) {
+        return 0;
+    }
+
+    return yagl_sfc->back->age;
 }
 
 YAGL_API int gbm_device_get_fd(struct gbm_device *gbm)
@@ -390,6 +424,7 @@ YAGL_API struct gbm_surface *gbm_surface_create(struct gbm_device *gbm,
 
     sfc->base.acquire_back = &yagl_gbm_surface_acquire_back;
     sfc->base.swap_buffers = &yagl_gbm_surface_swap_buffers;
+    sfc->base.get_buffer_age = &yagl_gbm_surface_get_buffer_age;
 
     return &sfc->base;
 }

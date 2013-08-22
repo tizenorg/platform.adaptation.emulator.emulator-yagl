@@ -688,6 +688,14 @@ YAGL_API EGLBoolean eglQuerySurface( EGLDisplay dpy_,
         *value = 0;
         retval = EGL_TRUE;
         break;
+    case EGL_BUFFER_AGE_EXT:
+        if (dpy->native_dpy->platform->buffer_age_supported &&
+            surface->native_drawable) {
+            *value = surface->native_drawable->get_buffer_age(surface->native_drawable);
+            retval = EGL_TRUE;
+            break;
+        }
+        /* Fall through. */
     default:
         do {
             yagl_mem_probe_write_EGLint(value);

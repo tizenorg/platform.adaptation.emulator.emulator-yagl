@@ -58,6 +58,11 @@ static int yagl_x11_drawable_get_buffer(struct yagl_native_drawable *drawable,
     return 1;
 }
 
+static int yagl_x11_drawable_get_buffer_age(struct yagl_native_drawable *drawable)
+{
+    return 0;
+}
+
 static void yagl_x11_drawable_swap_buffers(struct yagl_native_drawable *drawable)
 {
     Display *x_dpy = YAGL_X11_DPY(drawable->dpy->os_dpy);
@@ -276,6 +281,7 @@ struct yagl_native_drawable *yagl_x11_drawable_create(struct yagl_native_display
                               os_drawable);
 
     drawable->base.get_buffer = &yagl_x11_drawable_get_buffer;
+    drawable->base.get_buffer_age = &yagl_x11_drawable_get_buffer_age;
     drawable->base.swap_buffers = &yagl_x11_drawable_swap_buffers;
     drawable->base.wait = &yagl_x11_drawable_wait;
     drawable->base.copy_to_pixmap = &yagl_x11_drawable_copy_to_pixmap;

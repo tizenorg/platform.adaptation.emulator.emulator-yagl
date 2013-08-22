@@ -35,6 +35,7 @@ static struct yagl_native_display
 struct yagl_native_platform yagl_gbm_platform =
 {
     .pixmaps_supported = 1,
+    .buffer_age_supported = 1,
     .probe = yagl_gbm_platform_probe,
     .wrap_display = yagl_gbm_wrap_display
 };

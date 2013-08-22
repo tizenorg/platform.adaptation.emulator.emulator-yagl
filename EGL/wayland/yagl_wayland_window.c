@@ -116,6 +116,7 @@ static int yagl_wayland_window_lock_back(struct yagl_wayland_window *window)
                     strerror(-ret));
             window->back->drm_sfc = NULL;
         }
+        window->back->age = 0;
     }
 
     if (!window->back->drm_sfc) {
@@ -215,13 +216,28 @@ static int yagl_wayland_window_get_buffer(struct yagl_native_drawable *drawable,
     return 1;
 }
 
+static int yagl_wayland_window_get_buffer_age(struct yagl_native_drawable *drawable)
+{
+    struct yagl_wayland_window *window = (struct yagl_wayland_window*)drawable;
+
+    YAGL_LOG_FUNC_SET(yagl_wayland_window_get_buffer_age);
+
+    if (!yagl_wayland_window_lock_back(window)) {
+        YAGL_LOG_ERROR("Cannot lock back for egl_window %p",
+                       YAGL_WAYLAND_WINDOW(drawable->os_drawable));
+        return 0;
+    }
+
+    return window->back->age;
+}
+
 static void yagl_wayland_window_swap_buffers(struct yagl_native_drawable *drawable)
 {
     struct yagl_wayland_window *window = (struct yagl_wayland_window*)drawable;
     struct yagl_wayland_display *dpy = (struct yagl_wayland_display*)drawable->dpy;
     struct wl_display *wl_dpy = YAGL_WAYLAND_DPY(drawable->dpy->os_dpy);
     struct wl_egl_window *egl_window = YAGL_WAYLAND_WINDOW(drawable->os_drawable);
-    int ret = 0;
+    int i, ret = 0;
 
     YAGL_LOG_FUNC_SET(yagl_wayland_window_swap_buffers);
 
@@ -243,6 +259,14 @@ static void yagl_wayland_window_swap_buffers(struct yagl_native_drawable *drawab
                              window);
     wl_proxy_set_queue((struct wl_proxy*)window->frame_callback, dpy->queue);
 
+    for (i = 0;
+         i < sizeof(window->color_buffers)/sizeof(window->color_buffers[0]);
+         ++i) {
+        if (window->color_buffers[i].age > 0) {
+            ++window->color_buffers[i].age;
+        }
+    }
+
     /*
      * Make sure we have a back buffer in case we're swapping without ever
      * rendering.
@@ -253,6 +277,7 @@ static void yagl_wayland_window_swap_buffers(struct yagl_native_drawable *drawab
     }
 
     window->front = window->back;
+    window->front->age = 1;
     window->back = NULL;
 
     if (!window->front->wl_buffer) {
@@ -389,6 +414,7 @@ struct yagl_native_drawable
     yagl_native_drawable_init(&window->base, dpy, os_window);
 
     window->base.get_buffer = &yagl_wayland_window_get_buffer;
+    window->base.get_buffer_age = &yagl_wayland_window_get_buffer_age;
     window->base.swap_buffers = &yagl_wayland_window_swap_buffers;
     window->base.wait = &yagl_wayland_window_wait;
     window->base.copy_to_pixmap = &yagl_wayland_window_copy_to_pixmap;

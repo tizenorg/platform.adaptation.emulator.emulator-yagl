@@ -40,6 +40,8 @@ struct gbm_surface
     struct vigs_drm_surface *(*acquire_back)(struct gbm_surface */*sfc*/);
 
     void (*swap_buffers)(struct gbm_surface */*sfc*/);
+
+    int (*get_buffer_age)(struct gbm_surface */*sfc*/);
 };
 
 #endif

@@ -18,6 +18,7 @@ struct yagl_wayland_window
         struct vigs_drm_surface *drm_sfc;
         struct wl_buffer *wl_buffer;
         int locked;
+        int age;
     } color_buffers[3], *back, *front;
 
     int width;

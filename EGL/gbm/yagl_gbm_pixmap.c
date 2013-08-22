@@ -30,6 +30,11 @@ static int yagl_gbm_pixmap_get_buffer(struct yagl_native_drawable *drawable,
     return 1;
 }
 
+static int yagl_gbm_pixmap_get_buffer_age(struct yagl_native_drawable *drawable)
+{
+    return 0;
+}
+
 static void yagl_gbm_pixmap_swap_buffers(struct yagl_native_drawable *drawable)
 {
 }
@@ -94,6 +99,7 @@ struct yagl_native_drawable
     yagl_native_drawable_init(pixmap, dpy, os_pixmap);
 
     pixmap->get_buffer = &yagl_gbm_pixmap_get_buffer;
+    pixmap->get_buffer_age = &yagl_gbm_pixmap_get_buffer_age;
     pixmap->swap_buffers = &yagl_gbm_pixmap_swap_buffers;
     pixmap->wait = &yagl_gbm_pixmap_wait;
     pixmap->copy_to_pixmap = &yagl_gbm_pixmap_copy_to_pixmap;

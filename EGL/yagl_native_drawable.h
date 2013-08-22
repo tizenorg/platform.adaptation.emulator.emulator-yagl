@@ -23,6 +23,8 @@ struct yagl_native_drawable
                       uint32_t */*buffer_name*/,
                       struct vigs_drm_surface **/*buffer_sfc*/);
 
+    int (*get_buffer_age)(struct yagl_native_drawable */*drawable*/);
+
     void (*swap_buffers)(struct yagl_native_drawable */*drawable*/);
 
     /*

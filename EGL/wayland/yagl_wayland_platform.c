@@ -53,6 +53,7 @@ static struct yagl_native_display
 struct yagl_native_platform yagl_wayland_platform =
 {
     .pixmaps_supported = 0,
+    .buffer_age_supported = 1,
     .probe = yagl_wayland_platform_probe,
     .wrap_display = yagl_wayland_wrap_display
 };

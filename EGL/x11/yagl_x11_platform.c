@@ -51,6 +51,7 @@ static struct yagl_native_display
 struct yagl_native_platform yagl_x11_platform =
 {
     .pixmaps_supported = 1,
+    .buffer_age_supported = 0,
     .probe = yagl_x11_platform_probe,
     .wrap_display = yagl_x11_wrap_display
 };

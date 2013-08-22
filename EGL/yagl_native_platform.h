@@ -10,6 +10,8 @@ struct yagl_native_platform
 {
     int pixmaps_supported;
 
+    int buffer_age_supported;
+
     int (*probe)(yagl_os_display /*os_dpy*/);
 
     struct yagl_native_display *(*wrap_display)(yagl_os_display /*os_dpy*/,

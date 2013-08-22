@@ -33,6 +33,13 @@ static int yagl_gbm_window_get_buffer(struct yagl_native_drawable *drawable,
     return 1;
 }
 
+static int yagl_gbm_window_get_buffer_age(struct yagl_native_drawable *drawable)
+{
+    struct gbm_surface *sfc = YAGL_GBM_WINDOW(drawable->os_drawable);
+
+    return sfc->get_buffer_age(sfc);
+}
+
 static void yagl_gbm_window_swap_buffers(struct yagl_native_drawable *drawable)
 {
     struct gbm_surface *sfc = YAGL_GBM_WINDOW(drawable->os_drawable);
@@ -102,6 +109,7 @@ struct yagl_native_drawable
     yagl_native_drawable_init(window, dpy, os_window);
 
     window->get_buffer = &yagl_gbm_window_get_buffer;
+    window->get_buffer_age = &yagl_gbm_window_get_buffer_age;
     window->swap_buffers = &yagl_gbm_window_swap_buffers;
     window->wait = &yagl_gbm_window_wait;
     window->copy_to_pixmap = &yagl_gbm_window_copy_to_pixmap;
