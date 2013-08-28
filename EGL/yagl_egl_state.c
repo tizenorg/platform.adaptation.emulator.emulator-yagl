@@ -43,6 +43,25 @@ static void yagl_egl_state_key_init()
     pthread_key_create(&g_state_key, yagl_egl_state_free);
 }
 
+static void yagl_egl_state_atfork()
+{
+    struct yagl_egl_state *state;
+
+    /*
+     * See yagl_state.c:yagl_state_atfork.
+     */
+
+    pthread_once(&g_state_key_init, yagl_egl_state_key_init);
+
+    state = (struct yagl_egl_state*)pthread_getspecific(g_state_key);
+
+    if (state) {
+        yagl_free(state);
+    }
+
+    pthread_setspecific(g_state_key, NULL);
+}
+
 static void yagl_egl_state_init()
 {
     struct yagl_egl_state *state;
@@ -61,6 +80,8 @@ static void yagl_egl_state_init()
     state->api = EGL_OPENGL_ES_API;
 
     pthread_setspecific(g_state_key, state);
+
+    pthread_atfork(NULL, NULL, &yagl_egl_state_atfork);
 
     YAGL_LOG_FUNC_EXIT("%p", state);
 }

@@ -110,6 +110,48 @@ static void yagl_state_key_init()
     pthread_key_create(&g_state_key, yagl_state_free);
 }
 
+static void yagl_state_atfork()
+{
+    struct yagl_state* state;
+
+    /*
+     * We're currently in forked child, this means that someone
+     * issued some GL calls and then forked!
+     * The only thing we can do here is resetting the state
+     * and make the next GL call behave as the first one.
+     */
+
+    YAGL_LOG_FUNC_SET(yagl_state_atfork);
+
+    YAGL_LOG_WARN("Forking after GL calls!");
+
+    pthread_once(&g_state_key_init, yagl_state_key_init);
+
+    state = (struct yagl_state*)pthread_getspecific(g_state_key);
+
+    if (state) {
+        /*
+         * 'fork' was called by a GL thread. Close
+         * parent resources here.
+         */
+
+        yagl_free(state->data_base);
+
+        munmap(state->regs_base, sysconf(_SC_PAGE_SIZE));
+        munmap(state->marshal_base, YAGL_MARSHAL_SIZE);
+
+        close(state->fd);
+
+        yagl_free(state);
+    } else {
+        /*
+         * 'fork' was called by a non-GL thread. No-op.
+         */
+    }
+
+    pthread_setspecific(g_state_key, NULL);
+}
+
 static struct yagl_state* yagl_get_state()
 {
     struct yagl_state* state;
@@ -230,6 +272,8 @@ static struct yagl_state* yagl_get_state()
     }
 
     pthread_setspecific(g_state_key, state);
+
+    pthread_atfork(NULL, NULL, &yagl_state_atfork);
 
     YAGL_LOG_FUNC_EXIT("%p", state);
 
