@@ -7,12 +7,12 @@
 #include "yagl_surface.h"
 #include "yagl_context.h"
 #include "yagl_image.h"
-#include "yagl_mem_egl.h"
 #include "yagl_backend.h"
 #include "yagl_render.h"
 #include "yagl_native_platform.h"
 #include "yagl_native_display.h"
 #include "yagl_native_drawable.h"
+#include "yagl_transport_egl.h"
 #include "EGL/eglext.h"
 #include <stdio.h>
 #include <string.h>
@@ -90,7 +90,7 @@ YAGL_API EGLint eglGetError()
     retval = yagl_get_error();
 
     if (retval == EGL_SUCCESS) {
-        YAGL_HOST_CALL_ASSERT(yagl_host_eglGetError(&retval));
+        retval = yagl_host_eglGetError();
     }
 
     YAGL_LOG_FUNC_EXIT_SPLIT(EGLint, retval);
@@ -113,7 +113,7 @@ YAGL_API EGLDisplay eglGetDisplay(EGLNativeDisplayType display_id)
         goto out;
     }
 
-    YAGL_HOST_CALL_ASSERT(yagl_host_eglGetDisplay(&host_dpy, display_id));
+    host_dpy = yagl_host_eglGetDisplay((uint32_t)display_id);
 
     if (!host_dpy) {
         YAGL_LOG_ERROR("unable to get host display for %p",
@@ -144,7 +144,6 @@ out:
 
 YAGL_API EGLBoolean eglInitialize(EGLDisplay dpy_, EGLint* major, EGLint* minor)
 {
-    EGLBoolean retval = EGL_FALSE;
     struct yagl_display *dpy;
 
     YAGL_LOG_FUNC_ENTER(eglInitialize, "dpy = %u", (yagl_host_handle)dpy_);
@@ -156,12 +155,7 @@ YAGL_API EGLBoolean eglInitialize(EGLDisplay dpy_, EGLint* major, EGLint* minor)
         goto fail;
     }
 
-    do {
-        yagl_mem_probe_write_EGLint(major);
-        yagl_mem_probe_write_EGLint(minor);
-    } while (!yagl_host_eglInitialize(&retval, dpy->host_dpy, major, minor));
-
-    if (!retval) {
+    if (!yagl_host_eglInitialize(dpy->host_dpy, major, minor)) {
         goto fail;
     }
 
@@ -190,7 +184,7 @@ YAGL_API EGLBoolean eglTerminate(EGLDisplay dpy_)
         goto out;
     }
 
-    YAGL_HOST_CALL_ASSERT(yagl_host_eglTerminate(&ret, dpy->host_dpy));
+    ret = yagl_host_eglTerminate(dpy->host_dpy);
 
     if (ret) {
         yagl_display_terminate(dpy);
@@ -202,7 +196,7 @@ out:
     return ret;
 }
 
-YAGL_API const char* eglQueryString(EGLDisplay dpy_, EGLint name)
+YAGL_API const char *eglQueryString(EGLDisplay dpy_, EGLint name)
 {
     const char *str = NULL;
 
@@ -233,115 +227,75 @@ YAGL_API const char* eglQueryString(EGLDisplay dpy_, EGLint name)
     return str;
 }
 
-YAGL_API EGLBoolean eglGetConfigs( EGLDisplay dpy_,
-                                   EGLConfig* configs_,
-                                   EGLint config_size,
-                                   EGLint* num_config )
+YAGL_API EGLBoolean eglGetConfigs(EGLDisplay dpy,
+                                  EGLConfig *configs,
+                                  EGLint config_size,
+                                  EGLint *num_config)
 {
-    EGLBoolean retval = EGL_FALSE;
-    yagl_host_handle *configs = NULL;
-    EGLint i;
-
     YAGL_LOG_FUNC_ENTER(eglGetConfigs,
                         "dpy = %u, configs = %p, config_size = %d",
-                        (yagl_host_handle)dpy_,
-                        configs_,
+                        (yagl_host_handle)dpy,
+                        configs,
                         config_size);
 
-    if (configs_) {
-        configs = yagl_malloc(config_size * sizeof(yagl_host_handle));
-    }
-
-    do {
-        yagl_mem_probe_write(configs, config_size * sizeof(yagl_host_handle));
-        yagl_mem_probe_write_EGLint(num_config);
-    } while (!yagl_host_eglGetConfigs(&retval,
-                                      (yagl_host_handle)dpy_,
-                                      configs,
-                                      config_size,
-                                      num_config));
-
-    if (!retval) {
+    if (!num_config) {
+        YAGL_SET_ERR(EGL_BAD_PARAMETER);
         goto fail;
     }
 
-    if (configs_) {
-        for (i = 0; i < config_size; ++i) {
-            configs_[i] = (EGLConfig)configs[i];
-        }
+    if (!yagl_host_eglGetConfigs((yagl_host_handle)dpy,
+                                 (yagl_host_handle*)configs,
+                                 config_size,
+                                 num_config)) {
+        goto fail;
     }
 
-    YAGL_LOG_FUNC_EXIT("num_config = %d",
-                       (num_config ? *num_config : -1));
-
-    yagl_free(configs);
+    YAGL_LOG_FUNC_EXIT("num_config = %d", *num_config);
 
     return EGL_TRUE;
 
 fail:
     YAGL_LOG_FUNC_EXIT(NULL);
 
-    yagl_free(configs);
-
     return EGL_FALSE;
 }
 
-YAGL_API EGLBoolean eglChooseConfig( EGLDisplay dpy,
-                                     const EGLint* attrib_list,
-                                     EGLConfig* configs_,
-                                     EGLint config_size,
-                                     EGLint* num_config )
+YAGL_API EGLBoolean eglChooseConfig(EGLDisplay dpy,
+                                    const EGLint *attrib_list,
+                                    EGLConfig *configs,
+                                    EGLint config_size,
+                                    EGLint *num_config)
 {
-    EGLBoolean retval = EGL_FALSE;
-    yagl_host_handle *configs = NULL;
-    EGLint i;
-
     YAGL_LOG_FUNC_ENTER(eglChooseConfig, "dpy = %u", (yagl_host_handle)dpy);
 
-    if (configs_) {
-        configs = yagl_malloc(config_size * sizeof(yagl_host_handle));
-    }
-
-    do {
-        yagl_mem_probe_read_attrib_list(attrib_list);
-        yagl_mem_probe_write(configs, config_size * sizeof(yagl_host_handle));
-        yagl_mem_probe_write_EGLint(num_config);
-    } while(!yagl_host_eglChooseConfig(&retval,
-                                       (yagl_host_handle)dpy,
-                                       attrib_list,
-                                       configs,
-                                       config_size,
-                                       num_config));
-
-    if (!retval) {
+    if (!num_config) {
+        YAGL_SET_ERR(EGL_BAD_PARAMETER);
         goto fail;
     }
 
-    if (configs_) {
-        for (i = 0; i < config_size; ++i) {
-            configs_[i] = (EGLConfig)configs[i];
-        }
+    if (!yagl_host_eglChooseConfig((yagl_host_handle)dpy,
+                                   attrib_list,
+                                   yagl_transport_attrib_list_count(attrib_list),
+                                   (yagl_host_handle*)configs,
+                                   config_size,
+                                   num_config)) {
+        goto fail;
     }
 
-    YAGL_LOG_FUNC_EXIT("num_config = %d",
-                       (num_config ? *num_config : -1));
-
-    yagl_free(configs);
+    YAGL_LOG_FUNC_EXIT("num_config = %d", *num_config);
 
     return EGL_TRUE;
 
 fail:
     YAGL_LOG_FUNC_EXIT(NULL);
 
-    yagl_free(configs);
-
     return EGL_FALSE;
 }
 
-YAGL_API EGLBoolean eglGetConfigAttrib( EGLDisplay dpy_,
-                                        EGLConfig config,
-                                        EGLint attribute,
-                                        EGLint* value )
+YAGL_API EGLBoolean eglGetConfigAttrib(EGLDisplay dpy_,
+                                       EGLConfig config,
+                                       EGLint attribute,
+                                       EGLint *value)
 {
     struct yagl_display *dpy = NULL;
     EGLBoolean ret = EGL_FALSE;
@@ -385,13 +339,10 @@ YAGL_API EGLBoolean eglGetConfigAttrib( EGLDisplay dpy_,
         }
         /* Fall through. */
     default:
-        do {
-            yagl_mem_probe_write_EGLint(value);
-        } while (!yagl_host_eglGetConfigAttrib(&ret,
-                                               (yagl_host_handle)dpy_,
-                                               (yagl_host_handle)config,
-                                               attribute,
-                                               value));
+        ret = yagl_host_eglGetConfigAttrib((yagl_host_handle)dpy_,
+                                           (yagl_host_handle)config,
+                                           attribute,
+                                           value);
 
         break;
     }
@@ -410,10 +361,10 @@ fail:
     return ret;
 }
 
-YAGL_API EGLSurface eglCreateWindowSurface( EGLDisplay dpy_,
-                                            EGLConfig config,
-                                            EGLNativeWindowType win,
-                                            const EGLint* attrib_list)
+YAGL_API EGLSurface eglCreateWindowSurface(EGLDisplay dpy_,
+                                           EGLConfig config,
+                                           EGLNativeWindowType win,
+                                           const EGLint *attrib_list)
 {
     struct yagl_display *dpy = NULL;
     struct yagl_native_drawable *native_win = NULL;
@@ -447,10 +398,7 @@ YAGL_API EGLSurface eglCreateWindowSurface( EGLDisplay dpy_,
     }
 
     if (!yagl_display_surface_add(dpy, surface)) {
-        EGLBoolean retval;
-        YAGL_HOST_CALL_ASSERT(yagl_host_eglDestroySurface(&retval,
-                                                          dpy->host_dpy,
-                                                          surface->res.handle));
+        yagl_host_eglDestroySurface(dpy->host_dpy, surface->res.handle);
         YAGL_SET_ERR(EGL_BAD_ALLOC);
         goto fail;
     }
@@ -469,9 +417,9 @@ fail:
     return EGL_NO_SURFACE;
 }
 
-YAGL_API EGLSurface eglCreatePbufferSurface( EGLDisplay dpy_,
-                                             EGLConfig config,
-                                             const EGLint* attrib_list )
+YAGL_API EGLSurface eglCreatePbufferSurface(EGLDisplay dpy_,
+                                            EGLConfig config,
+                                            const EGLint *attrib_list)
 {
     struct yagl_display *dpy = NULL;
     struct yagl_surface *surface = NULL;
@@ -494,10 +442,7 @@ YAGL_API EGLSurface eglCreatePbufferSurface( EGLDisplay dpy_,
     }
 
     if (!yagl_display_surface_add(dpy, surface)) {
-        EGLBoolean retval;
-        YAGL_HOST_CALL_ASSERT(yagl_host_eglDestroySurface(&retval,
-                                                          dpy->host_dpy,
-                                                          surface->res.handle));
+        yagl_host_eglDestroySurface(dpy->host_dpy, surface->res.handle);
         YAGL_SET_ERR(EGL_BAD_ALLOC);
         goto fail;
     }
@@ -516,10 +461,10 @@ fail:
     return EGL_NO_SURFACE;
 }
 
-YAGL_API EGLSurface eglCreatePixmapSurface( EGLDisplay dpy_,
-                                            EGLConfig config,
-                                            EGLNativePixmapType pixmap,
-                                            const EGLint* attrib_list )
+YAGL_API EGLSurface eglCreatePixmapSurface(EGLDisplay dpy_,
+                                           EGLConfig config,
+                                           EGLNativePixmapType pixmap,
+                                           const EGLint *attrib_list)
 {
     struct yagl_display *dpy = NULL;
     struct yagl_native_drawable *native_pixmap = NULL;
@@ -553,10 +498,7 @@ YAGL_API EGLSurface eglCreatePixmapSurface( EGLDisplay dpy_,
     }
 
     if (!yagl_display_surface_add(dpy, surface)) {
-        EGLBoolean retval;
-        YAGL_HOST_CALL_ASSERT(yagl_host_eglDestroySurface(&retval,
-                                                          dpy->host_dpy,
-                                                          surface->res.handle));
+        yagl_host_eglDestroySurface(dpy->host_dpy, surface->res.handle);
         YAGL_SET_ERR(EGL_BAD_ALLOC);
         goto fail;
     }
@@ -578,7 +520,6 @@ fail:
 YAGL_API EGLBoolean eglDestroySurface(EGLDisplay dpy_, EGLSurface surface_)
 {
     EGLBoolean res = EGL_FALSE;
-    EGLBoolean retval = EGL_FALSE;
     struct yagl_display *dpy = NULL;
     struct yagl_surface *surface = NULL;
 
@@ -595,11 +536,7 @@ YAGL_API EGLBoolean eglDestroySurface(EGLDisplay dpy_, EGLSurface surface_)
         goto out;
     }
 
-    YAGL_HOST_CALL_ASSERT(yagl_host_eglDestroySurface(&retval,
-                                                      dpy->host_dpy,
-                                                      surface->res.handle));
-
-    if (!retval) {
+    if (!yagl_host_eglDestroySurface(dpy->host_dpy, surface->res.handle)) {
         goto out;
     }
 
@@ -619,10 +556,10 @@ out:
     return res;
 }
 
-YAGL_API EGLBoolean eglQuerySurface( EGLDisplay dpy_,
-                                     EGLSurface surface_,
-                                     EGLint attribute,
-                                     EGLint* value )
+YAGL_API EGLBoolean eglQuerySurface(EGLDisplay dpy_,
+                                    EGLSurface surface_,
+                                    EGLint attribute,
+                                    EGLint *value)
 {
     EGLBoolean retval = EGL_FALSE;
     struct yagl_display *dpy = NULL;
@@ -697,13 +634,10 @@ YAGL_API EGLBoolean eglQuerySurface( EGLDisplay dpy_,
         }
         /* Fall through. */
     default:
-        do {
-            yagl_mem_probe_write_EGLint(value);
-        } while (!yagl_host_eglQuerySurface(&retval,
-                                            dpy->host_dpy,
-                                            surface->res.handle,
-                                            attribute,
-                                            value));
+        retval = yagl_host_eglQuerySurface(dpy->host_dpy,
+                                           surface->res.handle,
+                                           attribute,
+                                           value);
         break;
     }
 
@@ -721,7 +655,7 @@ YAGL_API EGLBoolean eglBindAPI(EGLenum api)
 
     YAGL_LOG_FUNC_ENTER_SPLIT1(eglBindAPI, EGLenum, api);
 
-    YAGL_HOST_CALL_ASSERT(yagl_host_eglBindAPI(&ret, api));
+    ret = yagl_host_eglBindAPI(api);
 
     if (ret) {
         yagl_set_api(api);
@@ -764,13 +698,9 @@ YAGL_API EGLBoolean eglWaitClient()
 
 YAGL_API EGLBoolean eglReleaseThread()
 {
-    EGLBoolean retval;
-
     YAGL_LOG_FUNC_ENTER(eglReleaseThread, NULL);
 
-    YAGL_HOST_CALL_ASSERT(yagl_host_eglReleaseThread(&retval));
-
-    if (!retval) {
+    if (!yagl_host_eglReleaseThread()) {
         goto fail;
     }
 
@@ -786,22 +716,21 @@ fail:
     return EGL_FALSE;
 }
 
-YAGL_API EGLSurface eglCreatePbufferFromClientBuffer( EGLDisplay dpy,
-                                                      EGLenum buftype,
-                                                      EGLClientBuffer buffer,
-                                                      EGLConfig config,
-                                                      const EGLint* attrib_list )
+YAGL_API EGLSurface eglCreatePbufferFromClientBuffer(EGLDisplay dpy,
+                                                     EGLenum buftype,
+                                                     EGLClientBuffer buffer,
+                                                     EGLConfig config,
+                                                     const EGLint *attrib_list)
 {
     YAGL_UNIMPLEMENTED(eglCreatePbufferFromClientBuffer, EGL_NO_SURFACE);
 }
 
-YAGL_API EGLBoolean eglSurfaceAttrib( EGLDisplay dpy_,
-                                      EGLSurface surface_,
-                                      EGLint attribute,
-                                      EGLint value )
+YAGL_API EGLBoolean eglSurfaceAttrib(EGLDisplay dpy_,
+                                     EGLSurface surface_,
+                                     EGLint attribute,
+                                     EGLint value)
 {
     EGLBoolean res = EGL_FALSE;
-    EGLBoolean retval = EGL_FALSE;
     struct yagl_display *dpy = NULL;
     struct yagl_surface *surface = NULL;
 
@@ -820,13 +749,10 @@ YAGL_API EGLBoolean eglSurfaceAttrib( EGLDisplay dpy_,
         goto out;
     }
 
-    YAGL_HOST_CALL_ASSERT(yagl_host_eglSurfaceAttrib(&retval,
-        dpy->host_dpy,
-        surface->res.handle,
-        attribute,
-        value));
-
-    if (!retval) {
+    if (!yagl_host_eglSurfaceAttrib(dpy->host_dpy,
+                                    surface->res.handle,
+                                    attribute,
+                                    value)) {
         goto out;
     }
 
@@ -840,12 +766,11 @@ out:
     return res;
 }
 
-YAGL_API EGLBoolean eglBindTexImage( EGLDisplay dpy_,
-                                     EGLSurface surface_,
-                                     EGLint buffer )
+YAGL_API EGLBoolean eglBindTexImage(EGLDisplay dpy_,
+                                    EGLSurface surface_,
+                                    EGLint buffer)
 {
     EGLBoolean res = EGL_FALSE;
-    EGLBoolean retval = EGL_FALSE;
     struct yagl_display *dpy = NULL;
     struct yagl_surface *surface = NULL;
 
@@ -863,12 +788,9 @@ YAGL_API EGLBoolean eglBindTexImage( EGLDisplay dpy_,
         goto out;
     }
 
-    YAGL_HOST_CALL_ASSERT(yagl_host_eglBindTexImage(&retval,
-        dpy->host_dpy,
-        surface->res.handle,
-        buffer));
-
-    if (!retval) {
+    if (!yagl_host_eglBindTexImage(dpy->host_dpy,
+                                   surface->res.handle,
+                                   buffer)) {
         goto out;
     }
 
@@ -882,12 +804,11 @@ out:
     return res;
 }
 
-YAGL_API EGLBoolean eglReleaseTexImage( EGLDisplay dpy_,
-                                        EGLSurface surface_,
-                                        EGLint buffer )
+YAGL_API EGLBoolean eglReleaseTexImage(EGLDisplay dpy_,
+                                       EGLSurface surface_,
+                                       EGLint buffer)
 {
     EGLBoolean res = EGL_FALSE;
-    EGLBoolean retval = EGL_FALSE;
     struct yagl_display *dpy = NULL;
     struct yagl_surface *surface = NULL;
 
@@ -905,12 +826,9 @@ YAGL_API EGLBoolean eglReleaseTexImage( EGLDisplay dpy_,
         goto out;
     }
 
-    YAGL_HOST_CALL_ASSERT(yagl_host_eglReleaseTexImage(&retval,
-        dpy->host_dpy,
-        surface->res.handle,
-        buffer));
-
-    if (!retval) {
+    if (!yagl_host_eglReleaseTexImage(dpy->host_dpy,
+                                      surface->res.handle,
+                                      buffer)) {
         goto out;
     }
 
@@ -953,10 +871,10 @@ YAGL_API EGLBoolean eglSwapInterval(EGLDisplay dpy, EGLint interval)
     return EGL_TRUE;
 }
 
-YAGL_API EGLContext eglCreateContext( EGLDisplay dpy_,
-                                      EGLConfig config,
-                                      EGLContext share_context,
-                                      const EGLint* attrib_list )
+YAGL_API EGLContext eglCreateContext(EGLDisplay dpy_,
+                                     EGLConfig config,
+                                     EGLContext share_context,
+                                     const EGLint *attrib_list)
 {
     struct yagl_display *dpy = NULL;
     yagl_host_handle host_context = 0;
@@ -988,13 +906,12 @@ YAGL_API EGLContext eglCreateContext( EGLDisplay dpy_,
         }
     }
 
-    do {
-        yagl_mem_probe_read_attrib_list(attrib_list);
-    } while (!yagl_host_eglCreateContext(&host_context,
-        dpy->host_dpy,
-        (yagl_host_handle)config,
-        (yagl_host_handle)share_context,
-        attrib_list));
+    host_context =
+        yagl_host_eglCreateContext(dpy->host_dpy,
+                                   (yagl_host_handle)config,
+                                   (yagl_host_handle)share_context,
+                                   attrib_list,
+                                   yagl_transport_attrib_list_count(attrib_list));
 
     if (!host_context) {
         goto fail;
@@ -1017,10 +934,8 @@ fail:
     return EGL_NO_CONTEXT;
 }
 
-YAGL_API EGLBoolean eglDestroyContext( EGLDisplay dpy_,
-                                       EGLContext ctx )
+YAGL_API EGLBoolean eglDestroyContext(EGLDisplay dpy_, EGLContext ctx)
 {
-    EGLBoolean retval = EGL_FALSE;
     struct yagl_display *dpy = NULL;
 
     YAGL_LOG_FUNC_ENTER(eglDestroyContext,
@@ -1032,11 +947,7 @@ YAGL_API EGLBoolean eglDestroyContext( EGLDisplay dpy_,
         goto fail;
     }
 
-    YAGL_HOST_CALL_ASSERT(yagl_host_eglDestroyContext(&retval,
-                                                      dpy->host_dpy,
-                                                      (yagl_host_handle)ctx));
-
-    if (!retval) {
+    if (!yagl_host_eglDestroyContext(dpy->host_dpy, (yagl_host_handle)ctx)) {
         goto fail;
     }
 
@@ -1052,13 +963,12 @@ fail:
     return EGL_FALSE;
 }
 
-YAGL_API EGLBoolean eglMakeCurrent( EGLDisplay dpy_,
-                                    EGLSurface draw_,
-                                    EGLSurface read_,
-                                    EGLContext ctx_ )
+YAGL_API EGLBoolean eglMakeCurrent(EGLDisplay dpy_,
+                                   EGLSurface draw_,
+                                   EGLSurface read_,
+                                   EGLContext ctx_)
 {
     EGLBoolean res = EGL_FALSE;
-    EGLBoolean retval = EGL_FALSE;
     struct yagl_display *dpy = NULL;
     struct yagl_surface *draw = NULL;
     struct yagl_surface *read = NULL;
@@ -1114,13 +1024,10 @@ YAGL_API EGLBoolean eglMakeCurrent( EGLDisplay dpy_,
         yagl_surface_invalidate(read);
     }
 
-    YAGL_HOST_CALL_ASSERT(yagl_host_eglMakeCurrent(&retval,
-        (yagl_host_handle)dpy_,
-        (draw ? draw->res.handle : 0),
-        (read ? read->res.handle : 0),
-        (ctx ? ctx->res.handle : 0)));
-
-    if (!retval) {
+    if (!yagl_host_eglMakeCurrent((yagl_host_handle)dpy_,
+                                  (draw ? draw->res.handle : 0),
+                                  (read ? read->res.handle : 0),
+                                  (ctx ? ctx->res.handle : 0))) {
         goto out;
     }
 
@@ -1186,13 +1093,12 @@ YAGL_API EGLDisplay eglGetCurrentDisplay(void)
     return (ctx ? (EGLDisplay)ctx->dpy->host_dpy : EGL_NO_DISPLAY);
 }
 
-YAGL_API EGLBoolean eglQueryContext( EGLDisplay dpy_,
-                                     EGLContext ctx,
-                                     EGLint attribute,
-                                     EGLint* value )
+YAGL_API EGLBoolean eglQueryContext(EGLDisplay dpy_,
+                                    EGLContext ctx,
+                                    EGLint attribute,
+                                    EGLint *value)
 {
     EGLBoolean res = EGL_FALSE;
-    EGLBoolean retval = EGL_FALSE;
     struct yagl_display *dpy = NULL;
 
     YAGL_LOG_FUNC_ENTER(eglQueryContext,
@@ -1206,15 +1112,10 @@ YAGL_API EGLBoolean eglQueryContext( EGLDisplay dpy_,
         goto out;
     }
 
-    do {
-        yagl_mem_probe_write_EGLint(value);
-    } while (!yagl_host_eglQueryContext(&retval,
-        dpy->host_dpy,
-        (yagl_host_handle)ctx,
-        attribute,
-        value));
-
-    if (!retval) {
+    if (!yagl_host_eglQueryContext(dpy->host_dpy,
+                                   (yagl_host_handle)ctx,
+                                   attribute,
+                                   value)) {
         goto out;
     }
 
@@ -1307,9 +1208,9 @@ out:
     return res;
 }
 
-YAGL_API EGLBoolean eglCopyBuffers( EGLDisplay dpy_,
-                                    EGLSurface surface_,
-                                    EGLNativePixmapType target )
+YAGL_API EGLBoolean eglCopyBuffers(EGLDisplay dpy_,
+                                   EGLSurface surface_,
+                                   EGLNativePixmapType target)
 {
     EGLBoolean res = EGL_FALSE;
     struct yagl_display *dpy = NULL;
@@ -1354,11 +1255,11 @@ out:
     return res;
 }
 
-YAGL_API EGLImageKHR eglCreateImageKHR( EGLDisplay dpy_,
-                                        EGLContext ctx,
-                                        EGLenum target,
-                                        EGLClientBuffer buffer,
-                                        const EGLint *attrib_list )
+YAGL_API EGLImageKHR eglCreateImageKHR(EGLDisplay dpy_,
+                                       EGLContext ctx,
+                                       EGLenum target,
+                                       EGLClientBuffer buffer,
+                                       const EGLint *attrib_list)
 {
     EGLImageKHR ret = EGL_NO_IMAGE_KHR;
     struct yagl_display *dpy = NULL;
@@ -1458,10 +1359,7 @@ YAGL_API EGLImageKHR eglCreateImageKHR( EGLDisplay dpy_,
     }
 
     if (!yagl_display_image_add(dpy, image)) {
-        EGLBoolean retval;
-        YAGL_HOST_CALL_ASSERT(yagl_host_eglDestroyImageKHR(&retval,
-                                                           dpy->host_dpy,
-                                                           image->res.handle));
+        yagl_host_eglDestroyImageKHR(dpy->host_dpy, image->res.handle);
         YAGL_SET_ERR(EGL_BAD_PARAMETER);
         goto out;
     }
@@ -1480,7 +1378,6 @@ YAGL_API EGLBoolean eglDestroyImageKHR( EGLDisplay dpy_,
                                         EGLImageKHR image_ )
 {
     EGLBoolean res = EGL_FALSE;
-    EGLBoolean retval = EGL_FALSE;
     struct yagl_display *dpy = NULL;
     struct yagl_image *image = NULL;
 
@@ -1497,11 +1394,7 @@ YAGL_API EGLBoolean eglDestroyImageKHR( EGLDisplay dpy_,
         goto out;
     }
 
-    YAGL_HOST_CALL_ASSERT(yagl_host_eglDestroyImageKHR(&retval,
-                                                       dpy->host_dpy,
-                                                       image->res.handle));
-
-    if (!retval) {
+    if (!yagl_host_eglDestroyImageKHR(dpy->host_dpy, image->res.handle)) {
         goto out;
     }
 

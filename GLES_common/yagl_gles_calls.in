@@ -1,80 +1,82 @@
-void, glActiveTexture, GLenum texture
-void, glBindBuffer, GLenum target, GLuint buffer
-void, glBindFramebuffer, GLenum target, GLuint framebuffer
-void, glBindRenderbuffer, GLenum target, GLuint renderbuffer
-void, glBindTexture, GLenum target, GLuint texture
-void, glBlendEquation,  GLenum mode
-void, glBlendEquationSeparate, GLenum modeRGB, GLenum modeAlpha
-void, glBlendFunc, GLenum sfactor, GLenum dfactor
-void, glBlendFuncSeparate, GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha
-void, glBufferData, GLenum target, GLsizeiptr size, const GLvoid* data, GLenum usage
-void, glBufferSubData, GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid* data
-GLenum, glCheckFramebufferStatus, GLenum target
-void, glClear, GLbitfield mask
-void, glClearColor, GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha
-void, glClearDepthf, GLclampf depth
-void, glClearStencil, GLint s
-void, glColorMask, GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha
-void, glCompressedTexImage2D, GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid* data
-void, glCompressedTexSubImage2D, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const GLvoid* data
-void, glCopyTexImage2D, GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border
-void, glCopyTexSubImage2D, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height
-void, glCullFace, GLenum mode
-void, glDeleteBuffers, GLsizei n, const GLuint* buffers
-void, glDeleteFramebuffers, GLsizei n, const GLuint* framebuffers
-void, glDeleteRenderbuffers, GLsizei n, const GLuint* renderbuffers
-void, glDeleteTextures, GLsizei n, const GLuint* textures
-void, glDepthFunc, GLenum func
-void, glDepthMask, GLboolean flag
-void, glDepthRangef, GLclampf zNear, GLclampf zFar
-void, glDisable, GLenum cap
-void, glDrawArrays, GLenum mode, GLint first, GLsizei count
-void, glDrawElements, GLenum mode, GLsizei count, GLenum type, const GLvoid* indices
-void, glEGLImageTargetTexture2DOES, GLenum target, GLeglImageOES^ image
-void, glEnable, GLenum cap
-@void, glFlush
-void, glFramebufferTexture2D, GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level
-void, glFramebufferRenderbuffer, GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer
-void, glFrontFace, GLenum mode
-@void, glGenBuffers, GLsizei n, GLuint* buffers
-void, glGenerateMipmap, GLenum target
-@void, glGenFramebuffers, GLsizei n, GLuint* framebuffers
-@void, glGenRenderbuffers, GLsizei n, GLuint* renderbuffers
-@void, glGenTextures, GLsizei n, GLuint* textures
-@void, glGetBooleanv, GLenum pname, GLboolean* params
-@void, glGetBufferParameteriv, GLenum target, GLenum pname, GLint* params
-GLenum, glGetError
-@void, glGetFloatv, GLenum pname, GLfloat* params
-@void, glGetFramebufferAttachmentParameteriv, GLenum target, GLenum attachment, GLenum pname, GLint* params
-@void, glGetIntegerv, GLenum pname, GLint* params
-@void, glGetRenderbufferParameteriv, GLenum target, GLenum pname, GLint* params
-@void, glGetTexParameterfv, GLenum target, GLenum pname, GLfloat* params
-@void, glGetTexParameteriv, GLenum target, GLenum pname, GLint* params
-void, glHint, GLenum target, GLenum mode
-GLboolean, glIsBuffer, GLuint buffer
-GLboolean, glIsEnabled, GLenum cap
-GLboolean, glIsFramebuffer, GLuint framebuffer
-GLboolean, glIsRenderbuffer, GLuint renderbuffer
-GLboolean, glIsTexture, GLuint texture
-void, glLineWidth, GLfloat width
-void, glPixelStorei, GLenum pname, GLint param
-void, glPolygonOffset, GLfloat factor, GLfloat units
-@void, glReadPixels, GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels
-void, glRenderbufferStorage, GLenum target, GLenum internalformat, GLsizei width, GLsizei height
-void, glSampleCoverage, GLclampf value, GLboolean invert
-void, glScissor, GLint x, GLint y, GLsizei width, GLsizei height
-void, glStencilFunc, GLenum func, GLint ref, GLuint mask
-void, glStencilMask, GLuint mask
-void, glStencilOp, GLenum fail, GLenum zfail, GLenum zpass
-void, glTexImage2D, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels
-void, glTexParameterf, GLenum target, GLenum pname, GLfloat param
-void, glTexParameterfv, GLenum target, GLenum pname, const GLfloat* params
-void, glTexParameteri, GLenum target, GLenum pname, GLint param
-void, glTexParameteriv, GLenum target, GLenum pname, const GLint* params
-void, glTexSubImage2D, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels
-void, glViewport, GLint x, GLint y, GLsizei width, GLsizei height
+void glActiveTexture(GLenum texture)
+void glBindBuffer(GLenum target, GLuint buffer)
+void glBindFramebuffer(GLenum target, GLuint framebuffer)
+void glBindRenderbuffer(GLenum target, GLuint renderbuffer)
+void glBindTexture(GLenum target, GLuint texture)
+void glBlendEquation(GLenum mode)
+void glBlendEquationSeparate(GLenum modeRGB, GLenum modeAlpha)
+void glBlendFunc(GLenum sfactor, GLenum dfactor)
+void glBlendFuncSeparate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha)
+void glBufferData(GLenum target, const GLvoid *data, GLenum usage)
+void glBufferSubData(GLenum target, GLsizei offset, const GLvoid *data)
+GLenum glCheckFramebufferStatus(GLenum target)
+void glClear(GLbitfield mask)
+void glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
+void glClearDepthf(GLclampf depth)
+void glClearStencil(GLint s)
+void glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)
+void glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, const GLvoid *data)
+void glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, const GLvoid *data)
+void glCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
+void glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
+void glCullFace(GLenum mode)
+void glDeleteBuffers(const GLuint *buffers)
+void glDeleteFramebuffers(const GLuint *framebuffers)
+void glDeleteRenderbuffers(const GLuint *renderbuffers)
+void glDeleteTextures(const GLuint *textures)
+void glDepthFunc(GLenum func)
+void glDepthMask(GLboolean flag)
+void glDepthRangef(GLclampf zNear, GLclampf zFar)
+void glDisable(GLenum cap)
+void glDrawArrays(GLenum mode, GLint first, GLsizei count)
+void glEGLImageTargetTexture2DOES(GLenum target, yagl_host_handle image)
+void glEnable(GLenum cap)
+@void glFlush()
+void glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
+void glFramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer)
+void glFrontFace(GLenum mode)
+void glGenBuffers(GLuint *buffers)
+void glGenerateMipmap(GLenum target)
+void glGenFramebuffers(GLuint *framebuffers)
+void glGenRenderbuffers(GLuint *renderbuffers)
+void glGenTextures(GLuint *textures)
+void glGetBooleanv(GLenum pname, GLboolean *params)
+void glGetBufferParameteriv(GLenum target, GLenum pname, GLint &param)
+GLenum glGetError()
+void glGetFloatv(GLenum pname, GLfloat *params)
+void glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint &param)
+void glGetIntegerv(GLenum pname, GLint *params)
+void glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint &param)
+void glGetTexParameterfv(GLenum target, GLenum pname, GLfloat &param)
+void glGetTexParameteriv(GLenum target, GLenum pname, GLint &param)
+void glHint(GLenum target, GLenum mode)
+GLboolean glIsBuffer(GLuint buffer)
+GLboolean glIsEnabled(GLenum cap)
+GLboolean glIsFramebuffer(GLuint framebuffer)
+GLboolean glIsRenderbuffer(GLuint renderbuffer)
+GLboolean glIsTexture(GLuint texture)
+void glLineWidth(GLfloat width)
+void glPixelStorei(GLenum pname, GLint param)
+void glPolygonOffset(GLfloat factor, GLfloat units)
+void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels)
+void glRenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height)
+void glSampleCoverage(GLclampf value, GLboolean invert)
+void glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
+void glStencilFunc(GLenum func, GLint ref, GLuint mask)
+void glStencilMask(GLuint mask)
+void glStencilOp(GLenum fail, GLenum zfail, GLenum zpass)
+void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels)
+void glTexParameterf(GLenum target, GLenum pname, GLfloat param)
+void glTexParameterfv(GLenum target, GLenum pname, const GLfloat* params)
+void glTexParameteri(GLenum target, GLenum pname, GLint param)
+void glTexParameteriv(GLenum target, GLenum pname, const GLint* params)
+void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels)
+void glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 #
 # YaGL Extensions
 #
-GLuint, glGetExtensionStringYAGL, GLchar* str
-@void, glGetVertexAttribRangeYAGL, GLsizei count, GLenum type, const GLvoid* indices, GLint* range_first, GLsizei* range_count
+void glTransferArrayYAGL(GLuint indx, GLint first, const GLvoid *data)
+void glDrawElementsIndicesYAGL(GLenum mode, GLenum type, const GLvoid *indices)
+void glDrawElementsOffsetYAGL(GLenum mode, GLenum type, GLsizei offset, GLsizei count)
+void glGetExtensionStringYAGL(GLchar* str)
+void glGetVertexAttribRangeYAGL(GLenum type, GLsizei offset, GLsizei count, GLint &range_first, GLsizei &range_count)

@@ -5,19 +5,10 @@
 #include "yagl_host_gles_calls.h"
 #include "yagl_impl.h"
 #include "yagl_malloc.h"
-#include "yagl_mem_gl.h"
-#include "yagl_batch_gl.h"
 #include "yagl_gles_context.h"
 #include "yagl_gles_utils.h"
 #include "yagl_gles_image.h"
 #include "yagl_render.h"
-
-/*
- * TODO: add 'yagl_mem_probe_xxx' where missing, currently it's glGetIntegerv
- * and friends. It's a little bit tricky since we don't know the number of
- * returned parameters in advance and I don't want to duplicate host code
- * here.
- */
 
 static void yagl_update_pack_alignment(void)
 {
@@ -63,13 +54,53 @@ static inline void yagl_update_ebo(void)
     }
 }
 
-static void yagl_mem_probe_read_array(struct yagl_gles_array *array,
-                                      GLint first,
-                                      GLsizei count)
+static void yagl_get_minmax_index(const GLvoid *indices,
+                                  GLsizei count,
+                                  GLenum type,
+                                  GLint *range_first,
+                                  GLsizei *range_count)
 {
-    if (array->enabled && array->ptr) {
-        yagl_mem_probe_read((const uint8_t*)array->ptr + (first * array->stride),
-                            (count * array->stride));
+    uint32_t first_idx = UINT32_MAX, last_idx = 0;
+    int i;
+
+    if (!indices) {
+        *range_count = 0;
+        return;
+    }
+
+    switch (type) {
+    case GL_UNSIGNED_BYTE:
+        for (i = 0; i < count; ++i) {
+            uint32_t idx = ((uint8_t*)indices)[i];
+            if (idx < first_idx) {
+                first_idx = idx;
+            }
+            if (idx > last_idx) {
+                last_idx = idx;
+            }
+        }
+        break;
+    case GL_UNSIGNED_SHORT:
+        for (i = 0; i < count; ++i) {
+            uint32_t idx = ((uint16_t*)indices)[i];
+            if (idx < first_idx) {
+                first_idx = idx;
+            }
+            if (idx > last_idx) {
+                last_idx = idx;
+            }
+        }
+        break;
+    default:
+        *range_count = 0;
+        return;
+    }
+
+    if (count > 0) {
+        *range_first = first_idx;
+        *range_count = last_idx + 1 - first_idx;
+    } else {
+        *range_count = 0;
     }
 }
 
@@ -105,7 +136,7 @@ YAGL_API void glBindBuffer(GLenum target, GLuint buffer)
         }
     }
 
-    YAGL_HOST_CALL_ASSERT(yagl_host_glBindBuffer(target, buffer));
+    yagl_host_glBindBuffer(target, buffer);
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
@@ -118,17 +149,17 @@ YAGL_IMPLEMENT_API_NORET2(glBlendEquationSeparate, GLenum, GLenum, modeRGB, mode
 YAGL_IMPLEMENT_API_NORET2(glBlendFunc, GLenum, GLenum, sfactor, dfactor)
 YAGL_IMPLEMENT_API_NORET4(glBlendFuncSeparate, GLenum, GLenum, GLenum, GLenum, srcRGB, dstRGB, srcAlpha, dstAlpha)
 
-YAGL_API void glBufferData(GLenum target, GLsizeiptr size, const GLvoid* data, GLenum usage)
+YAGL_API void glBufferData(GLenum target, GLsizeiptr size, const GLvoid *data, GLenum usage)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT4(glBufferData, GLenum, GLsizeiptr, const GLvoid*, GLenum, target, size, data, usage);
-    while (!yagl_host_glBufferData(target, size, yagl_batch_put(data, size), usage)) {}
+    yagl_host_glBufferData(target, data, size, usage);
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-YAGL_API void glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid* data)
+YAGL_API void glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid *data)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT4(glBufferSubData, GLenum, GLintptr, GLsizeiptr, const GLvoid*, target, offset, size, data);
-    while (!yagl_host_glBufferSubData(target, offset, size, yagl_batch_put(data, size))) {}
+    yagl_host_glBufferSubData(target, offset, data, size);
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
@@ -138,7 +169,7 @@ YAGL_API void glClear(GLbitfield mask)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT1(glClear, GLbitfield, mask);
     yagl_render_invalidate();
-    YAGL_HOST_CALL_ASSERT(yagl_host_glClear(mask));
+    yagl_host_glClear(mask);
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
@@ -147,17 +178,17 @@ YAGL_IMPLEMENT_API_NORET1(glClearDepthf, GLclampf, depth)
 YAGL_IMPLEMENT_API_NORET1(glClearStencil, GLint, s)
 YAGL_IMPLEMENT_API_NORET4(glColorMask, GLboolean, GLboolean, GLboolean, GLboolean, red, green, blue, alpha)
 
-YAGL_API void glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid* data)
+YAGL_API void glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid *data)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT8(glCompressedTexImage2D, GLenum, GLint, GLenum, GLsizei, GLsizei, GLint, GLsizei, const GLvoid*, target, level, internalformat, width, height, border, imageSize, data);
-    while (!yagl_host_glCompressedTexImage2D(target, level, internalformat, width, height, border, imageSize, yagl_batch_put(data, imageSize))) {}
+    yagl_host_glCompressedTexImage2D(target, level, internalformat, width, height, border, data, imageSize);
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-YAGL_API void glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const GLvoid* data)
+YAGL_API void glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const GLvoid *data)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT9(glCompressedTexSubImage2D, GLenum, GLint, GLint, GLint, GLsizei, GLsizei, GLenum, GLsizei, const GLvoid*, target, level, xoffset, yoffset, width, height, format, imageSize, data);
-    while (!yagl_host_glCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, yagl_batch_put(data, imageSize))) {}
+    yagl_host_glCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, data, imageSize);
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
@@ -165,7 +196,7 @@ YAGL_IMPLEMENT_API_NORET8(glCopyTexImage2D, GLenum, GLint, GLenum, GLint, GLint,
 YAGL_IMPLEMENT_API_NORET8(glCopyTexSubImage2D, GLenum, GLint, GLint, GLint, GLint, GLint, GLsizei, GLsizei, target, level, xoffset, yoffset, x, y, width, height)
 YAGL_IMPLEMENT_API_NORET1(glCullFace, GLenum, mode)
 
-YAGL_API void glDeleteBuffers(GLsizei n, const GLuint* buffers)
+YAGL_API void glDeleteBuffers(GLsizei n, const GLuint *buffers)
 {
     struct yagl_gles_context *ctx;
 
@@ -190,29 +221,29 @@ YAGL_API void glDeleteBuffers(GLsizei n, const GLuint* buffers)
         }
     }
 
-    while (!yagl_host_glDeleteBuffers(n, yagl_batch_put_GLuints(buffers, n))) {}
+    yagl_host_glDeleteBuffers(buffers, n);
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-YAGL_API void glDeleteFramebuffers(GLsizei n, const GLuint* framebuffers)
+YAGL_API void glDeleteFramebuffers(GLsizei n, const GLuint *framebuffers)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT2(glDeleteFramebuffers, GLsizei, const GLuint*, n, framebuffers);
-    while (!yagl_host_glDeleteFramebuffers(n, yagl_batch_put_GLuints(framebuffers, n))) {}
+    yagl_host_glDeleteFramebuffers(framebuffers, n);
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-YAGL_API void glDeleteRenderbuffers(GLsizei n, const GLuint* renderbuffers)
+YAGL_API void glDeleteRenderbuffers(GLsizei n, const GLuint *renderbuffers)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT2(glDeleteRenderbuffers, GLsizei, const GLuint*, n, renderbuffers);
-    while (!yagl_host_glDeleteRenderbuffers(n, yagl_batch_put_GLuints(renderbuffers, n))) {}
+    yagl_host_glDeleteRenderbuffers(renderbuffers, n);
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-YAGL_API void glDeleteTextures(GLsizei n, const GLuint* textures)
+YAGL_API void glDeleteTextures(GLsizei n, const GLuint *textures)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT2(glDeleteTextures, GLsizei, const GLuint*, n, textures);
-    while (!yagl_host_glDeleteTextures(n, yagl_batch_put_GLuints(textures, n))) {}
+    yagl_host_glDeleteTextures(textures, n);
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
@@ -224,7 +255,6 @@ YAGL_IMPLEMENT_API_NORET1(glDisable, GLenum, cap)
 YAGL_API void glDrawArrays(GLenum mode, GLint first, GLsizei count)
 {
     struct yagl_gles_context *ctx;
-    int can_batch = 1;
 
     YAGL_LOG_FUNC_ENTER_SPLIT3(glDrawArrays, GLenum, GLint, GLsizei, mode, first, count);
 
@@ -235,44 +265,37 @@ YAGL_API void glDrawArrays(GLenum mode, GLint first, GLsizei count)
 
     ctx = yagl_gles_context_get();
 
-retry:
     if (ctx) {
         GLuint i;
         for (i = 0; i < ctx->num_arrays; ++i) {
-            if (ctx->arrays[i].enabled && (ctx->arrays[i].vbo == 0)) {
+            if (ctx->arrays[i].enabled &&
+                (ctx->arrays[i].vbo == 0) &&
+                ctx->arrays[i].ptr &&
+                (first >= 0) &&
+                (count > 0)) {
                 /*
-                 * There's at least one enabled array without bounded VBO,
-                 * we're forced to flush the batch.
+                 * Enabled array without bounded VBO, transfer it.
                  */
-                can_batch = 0;
+                yagl_host_glTransferArrayYAGL(i,
+                    first,
+                    (const uint8_t*)ctx->arrays[i].ptr + first * ctx->arrays[i].stride,
+                    count * ctx->arrays[i].stride);
             }
-            yagl_mem_probe_read_array(&ctx->arrays[i],
-                                      first,
-                                      count);
-        }
-    } else {
-        can_batch = 0;
-    }
-
-    if (!yagl_host_glDrawArrays(mode, first, count)) {
-        YAGL_HOST_CALL_ASSERT(!can_batch);
-        goto retry;
-    }
-
-    if (!can_batch) {
-        if (!yagl_batch_sync()) {
-            goto retry;
         }
     }
+
+    yagl_host_glDrawArrays(mode, first, count);
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-YAGL_API void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices)
+YAGL_API void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices)
 {
     struct yagl_gles_context *ctx;
-    int can_batch = 1;
-    int index_size = 0;
+    int have_range = 0;
+    GLint range_first;
+    GLsizei range_count = 0;
+    GLuint i;
 
     YAGL_LOG_FUNC_ENTER_SPLIT4(glDrawElements, GLenum, GLsizei, GLenum, const GLvoid*, mode, count, type, indices);
 
@@ -283,68 +306,63 @@ YAGL_API void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvo
 
     ctx = yagl_gles_context_get();
 
-retry:
-    if (ctx) {
-        GLuint i;
-        for (i = 0; i < ctx->num_arrays; ++i) {
-            if (ctx->arrays[i].enabled && (ctx->arrays[i].vbo == 0)) {
-                /*
-                 * There's at least one enabled array without bounded VBO,
-                 * we're forced to flush the batch.
-                 */
-                can_batch = 0;
-                break;
-            }
-        }
-    } else {
-        can_batch = 0;
+    if (!ctx) {
+        /*
+         * Just to report about missing context.
+         */
+
+        yagl_host_glDrawElementsOffsetYAGL(mode, type, (GLsizei)indices, count);
+
+        YAGL_LOG_FUNC_EXIT(NULL);
+
+        return;
     }
 
-    if (!yagl_get_index_size(type, &index_size)) {
-        can_batch = 0;
+    for (i = 0; i < ctx->num_arrays; ++i) {
+        if (!ctx->arrays[i].enabled ||
+            (ctx->arrays[i].vbo != 0) ||
+            !ctx->arrays[i].ptr) {
+            continue;
+        }
+
+        /*
+         * Enabled array without bounded VBO, transfer it.
+         */
+
+        if (!have_range) {
+            if (ctx->ebo == 0) {
+                yagl_get_minmax_index(indices, count, type,
+                                      &range_first, &range_count);
+            } else {
+                yagl_host_glGetVertexAttribRangeYAGL(type,
+                                                     (GLsizei)indices,
+                                                     count,
+                                                     &range_first,
+                                                     &range_count);
+            }
+            have_range = 1;
+        }
+
+        if (range_count > 0) {
+            yagl_host_glTransferArrayYAGL(i,
+                range_first,
+                (const uint8_t*)ctx->arrays[i].ptr + range_first * ctx->arrays[i].stride,
+                range_count * ctx->arrays[i].stride);
+        }
     }
 
-    if (can_batch) {
-        while (!yagl_host_glDrawElements(mode,
-            count,
-            type,
-            ((ctx->ebo == 0) ? yagl_batch_put(indices, index_size * count) : indices))) {}
+    if (ctx->ebo == 0) {
+        int index_size;
+
+        if (yagl_get_index_size(type, &index_size)) {
+            count *= index_size;
+        } else {
+            count = 0;
+        }
+
+        yagl_host_glDrawElementsIndicesYAGL(mode, type, indices, count);
     } else {
-        if (ctx->ebo == 0) {
-            yagl_mem_probe_read(indices, index_size * count);
-        }
-        if (!yagl_host_glDrawElements(mode, count, type, indices) ||
-            !yagl_batch_sync()) {
-            GLuint i;
-            GLint range_first;
-            GLsizei range_count;
-
-            /*
-             * Get array range, fault in array data and retry.
-             */
-
-            do
-            {
-                if (ctx->ebo == 0) {
-                    yagl_mem_probe_read(indices, index_size * count);
-                }
-                yagl_mem_probe_write_GLint(&range_first);
-                yagl_mem_probe_write_GLsizei(&range_count);
-            } while (!yagl_host_glGetVertexAttribRangeYAGL(count,
-                                                           type,
-                                                           indices,
-                                                           &range_first,
-                                                           &range_count));
-
-
-            for (i = 0; i < ctx->num_arrays; ++i) {
-                yagl_mem_probe_read_array(&ctx->arrays[i],
-                                          range_first,
-                                          range_count);
-            }
-
-            goto retry;
-        }
+        yagl_host_glDrawElementsOffsetYAGL(mode, type, (GLsizei)indices, count);
     }
 
     YAGL_LOG_FUNC_EXIT(NULL);
@@ -364,139 +382,109 @@ YAGL_IMPLEMENT_API_NORET4(glFramebufferRenderbuffer, GLenum, GLenum, GLenum, GLu
 YAGL_IMPLEMENT_API_NORET5(glFramebufferTexture2D, GLenum, GLenum, GLenum, GLuint, GLint, target, attachment, textarget, texture, level)
 YAGL_IMPLEMENT_API_NORET1(glFrontFace, GLenum, mode)
 
-YAGL_API void glGenBuffers(GLsizei n, GLuint* buffers)
+YAGL_API void glGenBuffers(GLsizei n, GLuint *buffers)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT2(glGenBuffers, GLsizei, GLuint*, n, buffers);
-
-    do {
-        yagl_mem_probe_write(buffers, sizeof(*buffers) * n);
-    } while (!yagl_host_glGenBuffers(n, buffers));
-
+    yagl_host_glGenBuffers(buffers, n, NULL);
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
 YAGL_IMPLEMENT_API_NORET1(glGenerateMipmap, GLenum, target)
 
-YAGL_API void glGenFramebuffers(GLsizei n, GLuint* framebuffers)
+YAGL_API void glGenFramebuffers(GLsizei n, GLuint *framebuffers)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT2(glGenFramebuffers, GLsizei, GLuint*, n, framebuffers);
-
-    do {
-        yagl_mem_probe_write(framebuffers, sizeof(*framebuffers) * n);
-    } while (!yagl_host_glGenFramebuffers(n, framebuffers));
-
+    yagl_host_glGenFramebuffers(framebuffers, n, NULL);
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-YAGL_API void glGenRenderbuffers(GLsizei n, GLuint* renderbuffers)
+YAGL_API void glGenRenderbuffers(GLsizei n, GLuint *renderbuffers)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT2(glGenRenderbuffers, GLsizei, GLuint*, n, renderbuffers);
-
-    do {
-        yagl_mem_probe_write(renderbuffers, sizeof(*renderbuffers) * n);
-    } while (!yagl_host_glGenRenderbuffers(n, renderbuffers));
-
+    yagl_host_glGenRenderbuffers(renderbuffers, n, NULL);
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-YAGL_API void glGenTextures(GLsizei n, GLuint* textures)
+YAGL_API void glGenTextures(GLsizei n, GLuint *textures)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT2(glGenTextures, GLsizei, GLuint*, n, textures);
-
-    do {
-        yagl_mem_probe_write(textures, sizeof(*textures) * n);
-    } while (!yagl_host_glGenTextures(n, textures));
-
+    yagl_host_glGenTextures(textures, n, NULL);
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-YAGL_API void glGetBooleanv(GLenum pname, GLboolean* params)
+YAGL_API void glGetBooleanv(GLenum pname, GLboolean *params)
 {
+    GLboolean tmp[100]; // This fits all cases.
+    int32_t num = 0;
+
     YAGL_LOG_FUNC_ENTER_SPLIT2(glGetBooleanv, GLenum, GLboolean*, pname, params);
-
-    do {
-        yagl_mem_probe_write_GLboolean(params);
-    } while (!yagl_host_glGetBooleanv(pname, params));
-
+    yagl_host_glGetBooleanv(pname, tmp, sizeof(tmp)/sizeof(tmp[0]), &num);
+    if (params) {
+        memcpy(params, tmp, num * sizeof(tmp[0]));
+    }
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-YAGL_API void glGetBufferParameteriv(GLenum target, GLenum pname, GLint* params)
+YAGL_API void glGetBufferParameteriv(GLenum target, GLenum pname, GLint *params)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT3(glGetBufferParameteriv, GLenum, GLenum, GLint*, target, pname, params);
-
-    do {
-        yagl_mem_probe_write_GLint(params);
-    } while (!yagl_host_glGetBufferParameteriv(target, pname, params));
-
+    yagl_host_glGetBufferParameteriv(target, pname, params);
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
 YAGL_IMPLEMENT_API_RET0(GLenum, glGetError)
 
-YAGL_API void glGetFloatv(GLenum pname, GLfloat* params)
+YAGL_API void glGetFloatv(GLenum pname, GLfloat *params)
 {
+    GLfloat tmp[100]; // This fits all cases.
+    int32_t num = 0;
+
     YAGL_LOG_FUNC_ENTER_SPLIT2(glGetFloatv, GLenum, GLfloat*, pname, params);
-
-    do {
-        yagl_mem_probe_write_GLfloat(params);
-    } while (!yagl_host_glGetFloatv(pname, params));
-
+    yagl_host_glGetFloatv(pname, tmp, sizeof(tmp)/sizeof(tmp[0]), &num);
+    if (params) {
+        memcpy(params, tmp, num * sizeof(tmp[0]));
+    }
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-YAGL_API void glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint* params)
+YAGL_API void glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint *params)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT4(glGetFramebufferAttachmentParameteriv, GLenum, GLenum, GLenum, GLint*, target, attachment, pname, params);
-
-    do {
-        yagl_mem_probe_write_GLint(params);
-    } while (!yagl_host_glGetFramebufferAttachmentParameteriv(target, attachment, pname, params));
-
+    yagl_host_glGetFramebufferAttachmentParameteriv(target, attachment, pname, params);
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-YAGL_API void glGetIntegerv(GLenum pname, GLint* params)
+YAGL_API void glGetIntegerv(GLenum pname, GLint *params)
 {
+    GLint tmp[100]; // This fits all cases.
+    int32_t num = 0;
+
     YAGL_LOG_FUNC_ENTER_SPLIT2(glGetIntegerv, GLenum, GLint*, pname, params);
-
-    do {
-        yagl_mem_probe_write_GLint(params);
-    } while (!yagl_host_glGetIntegerv(pname, params));
-
+    yagl_host_glGetIntegerv(pname, tmp, sizeof(tmp)/sizeof(tmp[0]), &num);
+    if (params) {
+        memcpy(params, tmp, num * sizeof(tmp[0]));
+    }
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-YAGL_API void glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint* params)
+YAGL_API void glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint *params)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT3(glGetRenderbufferParameteriv, GLenum, GLenum, GLint*, target, pname, params);
-
-    do {
-        yagl_mem_probe_write_GLint(params);
-    } while (!yagl_host_glGetRenderbufferParameteriv(target, pname, params));
-
+    yagl_host_glGetRenderbufferParameteriv(target, pname, params);
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-YAGL_API void glGetTexParameterfv(GLenum target, GLenum pname, GLfloat* params)
+YAGL_API void glGetTexParameterfv(GLenum target, GLenum pname, GLfloat *params)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT3(glGetTexParameterfv, GLenum, GLenum, GLfloat*, target, pname, params);
-
-    do {
-        yagl_mem_probe_write_GLfloat(params);
-    } while (!yagl_host_glGetTexParameterfv(target, pname, params));
-
+    yagl_host_glGetTexParameterfv(target, pname, params);
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-YAGL_API void glGetTexParameteriv(GLenum target, GLenum pname, GLint* params)
+YAGL_API void glGetTexParameteriv(GLenum target, GLenum pname, GLint *params)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT3(glGetTexParameteriv, GLenum, GLenum, GLint*, target, pname, params);
-
-    do {
-        yagl_mem_probe_write_GLint(params);
-    } while (!yagl_host_glGetTexParameteriv(target, pname, params));
-
+    yagl_host_glGetTexParameteriv(target, pname, params);
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
@@ -537,14 +525,14 @@ YAGL_API void glPixelStorei(GLenum pname, GLint param)
         break;
     }
 
-    YAGL_HOST_CALL_ASSERT(yagl_host_glPixelStorei(pname, param));
+    yagl_host_glPixelStorei(pname, param);
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
 YAGL_IMPLEMENT_API_NORET2(glPolygonOffset, GLfloat, GLfloat, factor, units)
 
-YAGL_API void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels)
+YAGL_API void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels)
 {
     struct yagl_gles_context *ctx;
 
@@ -563,9 +551,7 @@ YAGL_API void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLen
                                  format,
                                  type,
                                  &stride)) {
-            do {
-                yagl_mem_probe_write(pixels, stride * height);
-            } while (!yagl_host_glReadPixels(x, y, width, height, format, type, pixels));
+            yagl_host_glReadPixels(x, y, width, height, format, type, pixels, stride * height, NULL);
 
             YAGL_LOG_FUNC_EXIT(NULL);
 
@@ -573,7 +559,11 @@ YAGL_API void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLen
         }
     }
 
-    yagl_host_glReadPixels(x, y, width, height, format, type, pixels);
+    /*
+     * Just to report about missing context / bad format.
+     */
+
+    yagl_host_glReadPixels(x, y, width, height, format, type, pixels, 0, NULL);
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
@@ -585,7 +575,7 @@ YAGL_API void glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT4(glScissor, GLint, GLint, GLsizei, GLsizei, x, y, width, height);
     yagl_render_invalidate();
-    YAGL_HOST_CALL_ASSERT(yagl_host_glScissor(x, y, width, height));
+    yagl_host_glScissor(x, y, width, height);
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
@@ -593,7 +583,7 @@ YAGL_IMPLEMENT_API_NORET3(glStencilFunc, GLenum, GLint, GLuint, func, ref, mask)
 YAGL_IMPLEMENT_API_NORET1(glStencilMask, GLuint, mask)
 YAGL_IMPLEMENT_API_NORET3(glStencilOp, GLenum, GLenum, GLenum, fail, zfail, zpass)
 
-YAGL_API void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels)
+YAGL_API void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels)
 {
     struct yagl_gles_context *ctx;
 
@@ -610,15 +600,16 @@ YAGL_API void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLs
                                  format,
                                  type,
                                  &stride)) {
-            while (!yagl_host_glTexImage2D(target,
-                                           level,
-                                           internalformat,
-                                           width,
-                                           height,
-                                           border,
-                                           format,
-                                           type,
-                                           yagl_batch_put(pixels, stride * height))) {}
+            yagl_host_glTexImage2D(target,
+                                   level,
+                                   internalformat,
+                                   width,
+                                   height,
+                                   border,
+                                   format,
+                                   type,
+                                   pixels,
+                                   stride * height);
 
             YAGL_LOG_FUNC_EXIT(NULL);
 
@@ -626,30 +617,34 @@ YAGL_API void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLs
         }
     }
 
-    yagl_host_glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
+    /*
+     * Just to report about missing context / bad format.
+     */
+
+    yagl_host_glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels, 0);
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
 YAGL_IMPLEMENT_API_NORET3(glTexParameterf, GLenum, GLenum, GLfloat, target, pname, param)
 
-YAGL_API void glTexParameterfv(GLenum target, GLenum pname, const GLfloat* params)
+YAGL_API void glTexParameterfv(GLenum target, GLenum pname, const GLfloat *params)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT3(glTexParameterfv, GLenum, GLenum, const GLfloat*, target, pname, params);
-    while (!yagl_host_glTexParameterfv(target, pname, yagl_batch_put_GLfloats(params, 1))) {}
+    yagl_host_glTexParameterfv(target, pname, params, 1);
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
 YAGL_IMPLEMENT_API_NORET3(glTexParameteri, GLenum, GLenum, GLint, target, pname, param)
 
-YAGL_API void glTexParameteriv(GLenum target, GLenum pname, const GLint* params)
+YAGL_API void glTexParameteriv(GLenum target, GLenum pname, const GLint *params)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT3(glTexParameteriv, GLenum, GLenum, const GLint*, target, pname, params);
-    while (!yagl_host_glTexParameteriv(target, pname, yagl_batch_put_GLints(params, 1))) {}
+    yagl_host_glTexParameteriv(target, pname, params, 1);
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-YAGL_API void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels)
+YAGL_API void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels)
 {
     struct yagl_gles_context *ctx;
 
@@ -666,15 +661,16 @@ YAGL_API void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint y
                                  format,
                                  type,
                                  &stride)) {
-            while (!yagl_host_glTexSubImage2D(target,
-                                              level,
-                                              xoffset,
-                                              yoffset,
-                                              width,
-                                              height,
-                                              format,
-                                              type,
-                                              yagl_batch_put(pixels, stride * height))) {}
+            yagl_host_glTexSubImage2D(target,
+                                      level,
+                                      xoffset,
+                                      yoffset,
+                                      width,
+                                      height,
+                                      format,
+                                      type,
+                                      pixels,
+                                      stride * height);
 
             YAGL_LOG_FUNC_EXIT(NULL);
 
@@ -682,7 +678,11 @@ YAGL_API void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint y
         }
     }
 
-    yagl_host_glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels);
+    /*
+     * Just to report about missing context / bad format.
+     */
+
+    yagl_host_glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels, 0);
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
@@ -691,7 +691,7 @@ YAGL_API void glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT4(glViewport, GLint, GLint, GLsizei, GLsizei, x, y, width, height);
     yagl_render_invalidate();
-    YAGL_HOST_CALL_ASSERT(yagl_host_glViewport(x, y, width, height));
+    yagl_host_glViewport(x, y, width, height);
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
@@ -710,8 +710,7 @@ YAGL_API void glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOES image)
 
     image_obj->update(image_obj);
 
-    YAGL_HOST_CALL_ASSERT(yagl_host_glEGLImageTargetTexture2DOES(target,
-        image_obj->host_image));
+    yagl_host_glEGLImageTargetTexture2DOES(target, image_obj->host_image);
 
 out:
     yagl_gles_image_release(image_obj);

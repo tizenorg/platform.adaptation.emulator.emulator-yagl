@@ -4,9 +4,9 @@
 #include "yagl_display.h"
 #include "yagl_state.h"
 #include "yagl_host_egl_calls.h"
-#include "yagl_mem_egl.h"
 #include "yagl_native_drawable.h"
 #include "yagl_native_image.h"
+#include "yagl_transport_egl.h"
 #include <string.h>
 
 static void yagl_offscreen_image_pixmap_update(struct yagl_image *image)
@@ -25,14 +25,13 @@ static void yagl_offscreen_image_pixmap_update(struct yagl_image *image)
         return;
     }
 
-    while (!yagl_host_eglUpdateOffscreenImageYAGL(image->dpy->host_dpy,
-            image->res.handle,
-            native_image->width,
-            native_image->height,
-            native_image->bpp,
-            yagl_batch_put(native_image->pixels, (native_image->width *
-                                                  native_image->height *
-                                                  native_image->bpp)))) {}
+    yagl_host_eglUpdateOffscreenImageYAGL(image->dpy->host_dpy,
+                                          image->res.handle,
+                                          native_image->width,
+                                          native_image->height,
+                                          native_image->bpp,
+                                          native_image->pixels,
+                                          native_image->width * native_image->height * native_image->bpp);
 
     native_image->destroy(native_image);
 }
@@ -53,20 +52,18 @@ struct yagl_offscreen_image_pixmap
     *yagl_offscreen_image_pixmap_create(struct yagl_display *dpy,
                                         yagl_host_handle host_context,
                                         struct yagl_native_drawable *native_pixmap,
-                                        const EGLint* attrib_list)
+                                        const EGLint *attrib_list)
 {
     yagl_host_handle host_image = 0;
     struct yagl_offscreen_image_pixmap *image;
     uint32_t depth;
 
-    do {
-        yagl_mem_probe_read_attrib_list(attrib_list);
-    } while (!yagl_host_eglCreateImageKHR(&host_image,
-        dpy->host_dpy,
-        host_context,
-        EGL_NATIVE_PIXMAP_KHR,
-        0,
-        attrib_list));
+    host_image = yagl_host_eglCreateImageKHR(dpy->host_dpy,
+                                             host_context,
+                                             EGL_NATIVE_PIXMAP_KHR,
+                                             0,
+                                             attrib_list,
+                                             yagl_transport_attrib_list_count(attrib_list));
 
     if (!host_image) {
         return NULL;

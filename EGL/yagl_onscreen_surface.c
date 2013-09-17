@@ -3,12 +3,12 @@
 #include "yagl_host_egl_calls.h"
 #include "yagl_egl_state.h"
 #include "yagl_log.h"
-#include "yagl_mem_egl.h"
 #include "yagl_utils.h"
 #include "yagl_malloc.h"
 #include "yagl_display.h"
 #include "yagl_native_display.h"
 #include "yagl_native_drawable.h"
+#include "yagl_transport_egl.h"
 #include "vigs.h"
 #include <assert.h>
 #include <stdio.h>
@@ -50,8 +50,9 @@ static void yagl_onscreen_surface_invalidate(struct yagl_surface *sfc)
     vigs_drm_gem_unref(&osfc->drm_sfc->gem);
     osfc->drm_sfc = new_drm_sfc;
 
-    YAGL_HOST_CALL_ASSERT(yagl_host_eglInvalidateOnscreenSurfaceYAGL(
-        sfc->dpy->host_dpy, sfc->res.handle, new_drm_sfc->id));
+    yagl_host_eglInvalidateOnscreenSurfaceYAGL(sfc->dpy->host_dpy,
+                                               sfc->res.handle,
+                                               new_drm_sfc->id);
 }
 
 static int yagl_onscreen_surface_swap_buffers(struct yagl_surface *sfc)
@@ -59,15 +60,11 @@ static int yagl_onscreen_surface_swap_buffers(struct yagl_surface *sfc)
     struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
     struct yagl_native_drawable *drawable = native_drawable(osfc);
     int ret;
-    EGLBoolean retval = EGL_FALSE;
 
     YAGL_LOG_FUNC_SET(eglSwapBuffers);
 
-    YAGL_HOST_CALL_ASSERT(yagl_host_eglSwapBuffers(&retval,
-                                                   sfc->dpy->host_dpy,
-                                                   sfc->res.handle));
-
-    if (!retval) {
+    if (!yagl_host_eglSwapBuffers(sfc->dpy->host_dpy,
+                                  sfc->res.handle)) {
         YAGL_LOG_ERROR("eglSwapBuffers failed");
         return 0;
     }
@@ -89,16 +86,12 @@ static int yagl_onscreen_surface_copy_buffers(struct yagl_surface *sfc,
 {
     struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
     struct yagl_native_drawable *drawable = native_drawable(osfc);
-    EGLBoolean retval = EGL_FALSE;
     int ret;
 
     YAGL_LOG_FUNC_SET(eglCopyBuffers);
 
-    YAGL_HOST_CALL_ASSERT(yagl_host_eglCopyBuffers(&retval,
-                                                   sfc->dpy->host_dpy,
-                                                   sfc->res.handle));
-
-    if (!retval) {
+    if (!yagl_host_eglCopyBuffers(sfc->dpy->host_dpy,
+                                  sfc->res.handle)) {
         YAGL_LOG_ERROR("eglCopyBuffers failed");
         return 0;
     }
@@ -144,12 +137,11 @@ static void yagl_onscreen_surface_wait_x(struct yagl_surface *sfc)
 static void yagl_onscreen_surface_wait_gl(struct yagl_surface *sfc)
 {
     struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
-    EGLBoolean retval;
     int ret;
 
     YAGL_LOG_FUNC_SET(yagl_onscreen_surface_wait_gl);
 
-    YAGL_HOST_CALL_ASSERT(yagl_host_eglWaitClient(&retval));
+    yagl_host_eglWaitClient();
 
     ret = vigs_drm_surface_set_gpu_dirty(osfc->drm_sfc);
 
@@ -255,13 +247,11 @@ struct yagl_onscreen_surface
         goto fail;
     }
 
-    do {
-        yagl_mem_probe_read_attrib_list(attrib_list);
-    } while (!yagl_host_eglCreateWindowSurfaceOnscreenYAGL(&host_surface,
-        dpy->host_dpy,
-        host_config,
-        drm_sfc->id,
-        attrib_list));
+    host_surface = yagl_host_eglCreateWindowSurfaceOnscreenYAGL(dpy->host_dpy,
+                                                                host_config,
+                                                                drm_sfc->id,
+                                                                attrib_list,
+                                                                yagl_transport_attrib_list_count(attrib_list));
 
     if (!host_surface) {
         goto fail;
@@ -316,13 +306,11 @@ struct yagl_onscreen_surface
         goto fail;
     }
 
-    do {
-        yagl_mem_probe_read_attrib_list(attrib_list);
-    } while (!yagl_host_eglCreatePixmapSurfaceOnscreenYAGL(&host_surface,
-        dpy->host_dpy,
-        host_config,
-        drm_sfc->id,
-        attrib_list));
+    host_surface = yagl_host_eglCreatePixmapSurfaceOnscreenYAGL(dpy->host_dpy,
+                                                                host_config,
+                                                                drm_sfc->id,
+                                                                attrib_list,
+                                                                yagl_transport_attrib_list_count(attrib_list));
 
     if (!host_surface) {
         goto fail;
@@ -409,13 +397,11 @@ struct yagl_onscreen_surface
         goto fail;
     }
 
-    do {
-        yagl_mem_probe_read_attrib_list(attrib_list);
-    } while (!yagl_host_eglCreatePbufferSurfaceOnscreenYAGL(&host_surface,
-        dpy->host_dpy,
-        host_config,
-        drm_sfc->id,
-        attrib_list));
+    host_surface = yagl_host_eglCreatePbufferSurfaceOnscreenYAGL(dpy->host_dpy,
+                                                                 host_config,
+                                                                 drm_sfc->id,
+                                                                 attrib_list,
+                                                                 yagl_transport_attrib_list_count(attrib_list));
 
     if (!host_surface) {
         goto fail;

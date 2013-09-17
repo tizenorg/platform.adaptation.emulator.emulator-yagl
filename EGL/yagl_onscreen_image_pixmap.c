@@ -4,9 +4,9 @@
 #include "yagl_log.h"
 #include "yagl_malloc.h"
 #include "yagl_host_egl_calls.h"
-#include "yagl_mem_egl.h"
 #include "yagl_egl_state.h"
 #include "yagl_native_drawable.h"
+#include "yagl_transport_egl.h"
 #include "vigs.h"
 
 static void yagl_onscreen_image_pixmap_update(struct yagl_image *image)
@@ -48,14 +48,12 @@ struct yagl_onscreen_image_pixmap
         goto fail;
     }
 
-    do {
-        yagl_mem_probe_read_attrib_list(attrib_list);
-    } while (!yagl_host_eglCreateImageKHR(&host_image,
-        dpy->host_dpy,
-        host_context,
-        EGL_NATIVE_PIXMAP_KHR,
-        drm_sfc->id,
-        attrib_list));
+    host_image = yagl_host_eglCreateImageKHR(dpy->host_dpy,
+                                             host_context,
+                                             EGL_NATIVE_PIXMAP_KHR,
+                                             drm_sfc->id,
+                                             attrib_list,
+                                             yagl_transport_attrib_list_count(attrib_list));
 
     if (!host_image) {
         goto fail;

@@ -1,39 +1,38 @@
-EGLint, eglGetError
-EGLDisplay^, eglGetDisplay, void* display_id
-EGLBoolean, eglInitialize, EGLDisplay^ dpy, EGLint* major, EGLint* minor
-EGLBoolean, eglTerminate, EGLDisplay^ dpy
-EGLBoolean, eglGetConfigs, EGLDisplay^ dpy, EGLConfig^* configs, EGLint config_size, EGLint* num_config
-EGLBoolean, eglChooseConfig, EGLDisplay^ dpy, const EGLint* attrib_list, EGLConfig^* configs, EGLint config_size, EGLint* num_config
-EGLBoolean, eglGetConfigAttrib, EGLDisplay^ dpy, EGLConfig^ config, EGLint attribute, EGLint* value
-EGLBoolean, eglDestroySurface, EGLDisplay^ dpy, EGLSurface^ surface
-EGLBoolean, eglQuerySurface, EGLDisplay^ dpy, EGLSurface^ surface, EGLint attribute, EGLint* value
-EGLBoolean, eglBindAPI, EGLenum api
-EGLBoolean, eglWaitClient
-EGLBoolean, eglReleaseThread
-EGLSurface^, eglCreatePbufferFromClientBuffer, EGLDisplay^ dpy, EGLenum buftype, EGLClientBuffer^ buffer, EGLConfig^ config, const EGLint* attrib_list
-EGLBoolean, eglSurfaceAttrib, EGLDisplay^ dpy, EGLSurface^ surface, EGLint attribute, EGLint value
-EGLBoolean, eglBindTexImage, EGLDisplay^ dpy, EGLSurface^ surface, EGLint buffer
-EGLBoolean, eglReleaseTexImage, EGLDisplay^ dpy, EGLSurface^ surface, EGLint buffer
-EGLContext^, eglCreateContext, EGLDisplay^ dpy, EGLConfig^ config, EGLContext^ share_context, const EGLint* attrib_list
-EGLBoolean, eglDestroyContext, EGLDisplay^ dpy, EGLContext^ ctx
-EGLBoolean, eglMakeCurrent, EGLDisplay^ dpy, EGLSurface^ draw, EGLSurface^ read, EGLContext^ ctx
-EGLBoolean, eglQueryContext, EGLDisplay^ dpy, EGLContext^ ctx, EGLint attribute, EGLint* value
-EGLBoolean, eglSwapBuffers, EGLDisplay^ dpy, EGLSurface^ surface
-EGLBoolean, eglCopyBuffers, EGLDisplay^ dpy, EGLSurface^ surface
-EGLImageKHR^, eglCreateImageKHR, EGLDisplay^ dpy, EGLContext^ ctx, EGLenum target, yagl_winsys_id buffer, const EGLint* attrib_list
-EGLBoolean, eglDestroyImageKHR, EGLDisplay^ dpy, EGLImageKHR^ image
+EGLint eglGetError()
+yagl_host_handle eglGetDisplay(uint32_t display_id)
+EGLBoolean eglInitialize(yagl_host_handle dpy, EGLint &major, EGLint &minor)
+EGLBoolean eglTerminate(yagl_host_handle dpy)
+EGLBoolean eglGetConfigs(yagl_host_handle dpy, yagl_host_handle *configs)
+EGLBoolean eglChooseConfig(yagl_host_handle dpy, const EGLint *attrib_list, yagl_host_handle *configs)
+EGLBoolean eglGetConfigAttrib(yagl_host_handle dpy, yagl_host_handle config, EGLint attribute, EGLint &value)
+EGLBoolean eglDestroySurface(yagl_host_handle dpy, yagl_host_handle surface)
+EGLBoolean eglQuerySurface(yagl_host_handle dpy, yagl_host_handle surface, EGLint attribute, EGLint &value)
+EGLBoolean eglBindAPI(EGLenum api)
+EGLBoolean eglWaitClient()
+EGLBoolean eglReleaseThread()
+EGLBoolean eglSurfaceAttrib(yagl_host_handle dpy, yagl_host_handle surface, EGLint attribute, EGLint value)
+EGLBoolean eglBindTexImage(yagl_host_handle dpy, yagl_host_handle surface, EGLint buffer)
+EGLBoolean eglReleaseTexImage(yagl_host_handle dpy, yagl_host_handle surface, EGLint buffer)
+yagl_host_handle eglCreateContext(yagl_host_handle dpy, yagl_host_handle config, yagl_host_handle share_context, const EGLint *attrib_list)
+EGLBoolean eglDestroyContext(yagl_host_handle dpy, yagl_host_handle ctx)
+EGLBoolean eglMakeCurrent(yagl_host_handle dpy, yagl_host_handle draw, yagl_host_handle read, yagl_host_handle ctx)
+EGLBoolean eglQueryContext(yagl_host_handle dpy, yagl_host_handle ctx, EGLint attribute, EGLint &value)
+EGLBoolean eglSwapBuffers(yagl_host_handle dpy, yagl_host_handle surface)
+EGLBoolean eglCopyBuffers(yagl_host_handle dpy, yagl_host_handle surface)
+yagl_host_handle eglCreateImageKHR(yagl_host_handle dpy, yagl_host_handle ctx, EGLenum target, yagl_winsys_id buffer, const EGLint *attrib_list)
+EGLBoolean eglDestroyImageKHR(yagl_host_handle dpy, yagl_host_handle image)
 
 #
 # YaGL Extensions
 #
 
-EGLSurface^, eglCreateWindowSurfaceOffscreenYAGL, EGLDisplay^ dpy, EGLConfig^ config, uint32_t width, uint32_t height, uint32_t bpp, void* pixels, const EGLint* attrib_list
-EGLSurface^, eglCreatePbufferSurfaceOffscreenYAGL, EGLDisplay^ dpy, EGLConfig^ config, uint32_t width, uint32_t height, uint32_t bpp, void* pixels, const EGLint* attrib_list
-EGLSurface^, eglCreatePixmapSurfaceOffscreenYAGL, EGLDisplay^ dpy, EGLConfig^ config, uint32_t width, uint32_t height, uint32_t bpp, void* pixels, const EGLint* attrib_list
-EGLBoolean, eglResizeOffscreenSurfaceYAGL, EGLDisplay^ dpy, EGLSurface^ surface, uint32_t width, uint32_t height, uint32_t bpp, void* pixels
-void, eglUpdateOffscreenImageYAGL, EGLDisplay^ dpy, EGLImageKHR^ image, uint32_t width, uint32_t height, uint32_t bpp, const void* pixels
+yagl_host_handle eglCreateWindowSurfaceOffscreenYAGL(yagl_host_handle dpy, yagl_host_handle config, uint32_t width, uint32_t height, uint32_t bpp, void ^pixels, const EGLint *attrib_list)
+yagl_host_handle eglCreatePbufferSurfaceOffscreenYAGL(yagl_host_handle dpy, yagl_host_handle config, uint32_t width, uint32_t height, uint32_t bpp, void ^pixels, const EGLint *attrib_list)
+yagl_host_handle eglCreatePixmapSurfaceOffscreenYAGL(yagl_host_handle dpy, yagl_host_handle config, uint32_t width, uint32_t height, uint32_t bpp, void ^pixels, const EGLint *attrib_list)
+EGLBoolean eglResizeOffscreenSurfaceYAGL(yagl_host_handle dpy, yagl_host_handle surface, uint32_t width, uint32_t height, uint32_t bpp, void ^pixels)
+void eglUpdateOffscreenImageYAGL(yagl_host_handle dpy, yagl_host_handle image, uint32_t width, uint32_t height, uint32_t bpp, const void *pixels)
 
-EGLSurface^, eglCreateWindowSurfaceOnscreenYAGL, EGLDisplay^ dpy, EGLConfig^ config, yagl_winsys_id win, const EGLint* attrib_list
-EGLSurface^, eglCreatePbufferSurfaceOnscreenYAGL, EGLDisplay^ dpy, EGLConfig^ config, yagl_winsys_id buffer, const EGLint* attrib_list
-EGLSurface^, eglCreatePixmapSurfaceOnscreenYAGL, EGLDisplay^ dpy, EGLConfig^ config, yagl_winsys_id pixmap, const EGLint* attrib_list
-void, eglInvalidateOnscreenSurfaceYAGL, EGLDisplay^ dpy, EGLSurface^ surface, yagl_winsys_id buffer
+yagl_host_handle eglCreateWindowSurfaceOnscreenYAGL(yagl_host_handle dpy, yagl_host_handle config, yagl_winsys_id win, const EGLint *attrib_list)
+yagl_host_handle eglCreatePbufferSurfaceOnscreenYAGL(yagl_host_handle dpy, yagl_host_handle config, yagl_winsys_id buffer, const EGLint *attrib_list)
+yagl_host_handle eglCreatePixmapSurfaceOnscreenYAGL(yagl_host_handle dpy, yagl_host_handle config, yagl_winsys_id pixmap, const EGLint *attrib_list)
+void eglInvalidateOnscreenSurfaceYAGL(yagl_host_handle dpy, yagl_host_handle surface, yagl_winsys_id buffer)

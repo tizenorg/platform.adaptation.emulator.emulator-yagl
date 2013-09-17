@@ -21,6 +21,6 @@ struct yagl_offscreen_image_pixmap
     *yagl_offscreen_image_pixmap_create(struct yagl_display *dpy,
                                         yagl_host_handle host_context,
                                         struct yagl_native_drawable *native_pixmap,
-                                        const EGLint* attrib_list);
+                                        const EGLint *attrib_list);
 
 #endif

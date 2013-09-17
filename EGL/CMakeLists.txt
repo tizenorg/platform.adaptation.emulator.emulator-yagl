@@ -1,4 +1,5 @@
 set(SOURCES
+    yagl_transport.c
     yagl_context.c
     yagl_display.c
     yagl_egl_calls.c

@@ -4,16 +4,20 @@
 #include "yagl_malloc.h"
 #include "yagl_log.h"
 #include "yagl_display.h"
-#include "yagl_mem_egl.h"
 #include "yagl_native_display.h"
 #include "yagl_native_drawable.h"
 #include "yagl_native_image.h"
+#include "yagl_transport_egl.h"
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
 #include <sys/mman.h>
 #include <errno.h>
+
+int yagl_mlock(void *ptr, uint32_t size);
+
+int yagl_munlock(void *ptr);
 
 static struct yagl_native_image
     *yagl_offscreen_surface_create_bi(struct yagl_native_display *dpy,
@@ -30,7 +34,7 @@ static struct yagl_native_image
         return NULL;
     }
 
-    if (mlock(bi->pixels, bi->width * bi->height * bi->bpp) == -1) {
+    if (yagl_mlock(bi->pixels, bi->width * bi->height * bi->bpp) == -1) {
         fprintf(stderr, "Critical error! Unable to lock YaGL bi memory: %s!\n", strerror(errno));
         exit(1);
     }
@@ -39,14 +43,14 @@ static struct yagl_native_image
      * Probe in immediately.
      */
 
-    yagl_mem_probe_write(bi->pixels, bi->width * bi->height * bi->bpp);
+    yagl_transport_probe_write(bi->pixels, bi->width * bi->height * bi->bpp);
 
     return bi;
 }
 
 static void yagl_offscreen_surface_destroy_bi(struct yagl_native_image *bi)
 {
-    if (munlock(bi->pixels, bi->width * bi->height * bi->bpp) == -1) {
+    if (yagl_munlock(bi->pixels) == -1) {
         fprintf(stderr, "Critical error! Unable to unlock YaGL bi memory: %s!\n", strerror(errno));
         exit(1);
     }
@@ -57,7 +61,6 @@ static void yagl_offscreen_surface_destroy_bi(struct yagl_native_image *bi)
 static int yagl_offscreen_surface_resize(struct yagl_offscreen_surface *surface)
 {
     int res = 0;
-    EGLBoolean retval = EGL_FALSE;
     uint32_t width = 0;
     uint32_t height = 0;
     uint32_t depth = 0;
@@ -98,15 +101,12 @@ static int yagl_offscreen_surface_resize(struct yagl_offscreen_surface *surface)
          * Tell the host that it should use new backing image from now on.
          */
 
-        YAGL_HOST_CALL_ASSERT(yagl_host_eglResizeOffscreenSurfaceYAGL(&retval,
-            surface->base.dpy->host_dpy,
-            surface->base.res.handle,
-            bi->width,
-            bi->height,
-            bi->bpp,
-            bi->pixels));
-
-        if (!retval) {
+        if (!yagl_host_eglResizeOffscreenSurfaceYAGL(surface->base.dpy->host_dpy,
+                                                     surface->base.res.handle,
+                                                     bi->width,
+                                                     bi->height,
+                                                     bi->bpp,
+                                                     bi->pixels)) {
             YAGL_LOG_ERROR("eglResizeOffscreenSurfaceYAGL failed");
             goto out;
         }
@@ -139,7 +139,6 @@ static void yagl_offscreen_surface_invalidate(struct yagl_surface *sfc)
 static int yagl_offscreen_surface_swap_buffers(struct yagl_surface *sfc)
 {
     struct yagl_offscreen_surface *osfc = (struct yagl_offscreen_surface*)sfc;
-    EGLBoolean retval = EGL_FALSE;
 
     YAGL_LOG_FUNC_SET(eglSwapBuffers);
 
@@ -147,11 +146,8 @@ static int yagl_offscreen_surface_swap_buffers(struct yagl_surface *sfc)
         return 0;
     }
 
-    YAGL_HOST_CALL_ASSERT(yagl_host_eglSwapBuffers(&retval,
-                                                   sfc->dpy->host_dpy,
-                                                   sfc->res.handle));
-
-    if (!retval) {
+    if (!yagl_host_eglSwapBuffers(sfc->dpy->host_dpy,
+                                  sfc->res.handle)) {
         YAGL_LOG_ERROR("eglSwapBuffers failed");
         return 0;
     }
@@ -171,7 +167,6 @@ static int yagl_offscreen_surface_copy_buffers(struct yagl_surface *sfc,
                                                yagl_os_pixmap target)
 {
     struct yagl_offscreen_surface *osfc = (struct yagl_offscreen_surface*)sfc;
-    EGLBoolean retval = EGL_FALSE;
 
     YAGL_LOG_FUNC_SET(eglCopyBuffers);
 
@@ -200,11 +195,8 @@ static int yagl_offscreen_surface_copy_buffers(struct yagl_surface *sfc,
         }
     }
 
-    YAGL_HOST_CALL_ASSERT(yagl_host_eglCopyBuffers(&retval,
-                                                   sfc->dpy->host_dpy,
-                                                   sfc->res.handle));
-
-    if (!retval) {
+    if (!yagl_host_eglCopyBuffers(sfc->dpy->host_dpy,
+                                  sfc->res.handle)) {
         YAGL_LOG_ERROR("eglCopyBuffers failed");
         return 0;
     }
@@ -298,16 +290,14 @@ struct yagl_offscreen_surface
         goto fail;
     }
 
-    do {
-        yagl_mem_probe_read_attrib_list(attrib_list);
-    } while (!yagl_host_eglCreateWindowSurfaceOffscreenYAGL(&host_surface,
-        dpy->host_dpy,
-        host_config,
-        bi->width,
-        bi->height,
-        bi->bpp,
-        bi->pixels,
-        attrib_list));
+    host_surface = yagl_host_eglCreateWindowSurfaceOffscreenYAGL(dpy->host_dpy,
+                                                                 host_config,
+                                                                 bi->width,
+                                                                 bi->height,
+                                                                 bi->bpp,
+                                                                 bi->pixels,
+                                                                 attrib_list,
+                                                                 yagl_transport_attrib_list_count(attrib_list));
 
     if (!host_surface) {
         goto fail;
@@ -373,16 +363,14 @@ struct yagl_offscreen_surface
         goto fail;
     }
 
-    do {
-        yagl_mem_probe_read_attrib_list(attrib_list);
-    } while (!yagl_host_eglCreatePixmapSurfaceOffscreenYAGL(&host_surface,
-        dpy->host_dpy,
-        host_config,
-        bi->width,
-        bi->height,
-        bi->bpp,
-        bi->pixels,
-        attrib_list));
+    host_surface = yagl_host_eglCreatePixmapSurfaceOffscreenYAGL(dpy->host_dpy,
+                                                                 host_config,
+                                                                 bi->width,
+                                                                 bi->height,
+                                                                 bi->bpp,
+                                                                 bi->pixels,
+                                                                 attrib_list,
+                                                                 yagl_transport_attrib_list_count(attrib_list));
 
     if (!host_surface) {
         goto fail;
@@ -459,16 +447,14 @@ struct yagl_offscreen_surface
         goto fail;
     }
 
-    do {
-        yagl_mem_probe_read_attrib_list(attrib_list);
-    } while (!yagl_host_eglCreatePbufferSurfaceOffscreenYAGL(&host_surface,
-        dpy->host_dpy,
-        host_config,
-        bi->width,
-        bi->height,
-        bi->bpp,
-        bi->pixels,
-        attrib_list));
+    host_surface = yagl_host_eglCreatePbufferSurfaceOffscreenYAGL(dpy->host_dpy,
+                                                                  host_config,
+                                                                  bi->width,
+                                                                  bi->height,
+                                                                  bi->bpp,
+                                                                  bi->pixels,
+                                                                  attrib_list,
+                                                                  yagl_transport_attrib_list_count(attrib_list));
 
     if (!host_surface) {
         goto fail;

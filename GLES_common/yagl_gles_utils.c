@@ -2,10 +2,12 @@
 #include "GLES2/gl2ext.h"
 #include <assert.h>
 #include "yagl_gles_utils.h"
-#include "yagl_mem_gl.h"
 #include "yagl_gles_context.h"
 
-int yagl_host_glGetIntegerv(GLenum pname, GLint* params);
+void yagl_host_glGetIntegerv(GLenum pname,
+                             GLint *params,
+                             uint32_t params_maxcount,
+                             uint32_t *params_count);
 
 int yagl_gles_get_stride(GLsizei alignment,
                          GLsizei width,
@@ -131,9 +133,7 @@ GLint yagl_get_integer(GLenum pname)
 {
     GLint param = 0;
 
-    do {
-        yagl_mem_probe_write_GLint(&param);
-    } while (!yagl_host_glGetIntegerv(pname, &param));
+    yagl_host_glGetIntegerv(pname, &param, 1, NULL);
 
     return param;
 }
