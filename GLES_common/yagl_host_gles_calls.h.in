@@ -1,0 +1,7 @@
+#ifndef _YAGL_HOST_GLES_CALLS_H_
+#define _YAGL_HOST_GLES_CALLS_H_
+
+#include "@HOST_GLES_CALLS_HEADER@"
+#include "@GLEXT_HEADER@"
+
+#endif

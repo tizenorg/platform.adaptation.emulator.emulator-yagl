@@ -1,0 +1,6 @@
+KERNEL=="glmem",	MODE="0666", SMACK="*"
+KERNEL=="yagl",		MODE="0666", SMACK="*"
+KERNEL=="vdpram*",      MODE="0644", SYMLINK+="dpram/%n"
+
+# Moved from /etc/rc.d/rc3.d/S30brightness
+SUBSYSTEM=="lcd", ATTR{lcd_power}=="?*", RUN+="/bin/chown :system_bklight 0664 %S/%p/lcd_power"
