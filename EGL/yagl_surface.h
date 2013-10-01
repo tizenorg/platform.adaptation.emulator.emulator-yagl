@@ -9,6 +9,9 @@
 
 struct yagl_display;
 struct yagl_native_drawable;
+struct yagl_client_interface;
+struct yagl_client_image;
+struct yagl_tex_image_binding;
 
 struct yagl_surface
 {
@@ -39,6 +42,10 @@ struct yagl_surface
     void *lock_ptr;
     uint32_t lock_stride;
 
+    struct yagl_tex_image_binding *binding;
+
+    int current;
+
     void (*invalidate)(struct yagl_surface */*sfc*/);
 
     int (*swap_buffers)(struct yagl_surface */*sfc*/);
@@ -54,6 +61,9 @@ struct yagl_surface
     void (*unmap)(struct yagl_surface */*sfc*/);
 
     void (*set_swap_interval)(struct yagl_surface */*sfc*/, int /*interval*/);
+
+    struct yagl_client_image *(*create_image)(struct yagl_surface */*sfc*/,
+                                              struct yagl_client_interface */*iface*/);
 };
 
 /*
@@ -98,6 +108,23 @@ int yagl_surface_locked(struct yagl_surface *sfc);
 int yagl_surface_unlock(struct yagl_surface *sfc);
 
 void *yagl_surface_map(struct yagl_surface *sfc, uint32_t *stride);
+
+/*
+ * Guaranteed to succeed.
+ */
+struct yagl_tex_image_binding
+    *yagl_surface_create_tex_image_binding(struct yagl_surface *sfc,
+                                           struct yagl_client_interface *iface);
+
+/*
+ * Takes ownership of 'binding'.
+ */
+int yagl_surface_bind_tex_image(struct yagl_surface *sfc,
+                                struct yagl_tex_image_binding *binding);
+
+void yagl_surface_release_tex_image(struct yagl_surface *sfc);
+
+int yagl_surface_mark_current(struct yagl_surface *sfc, int current);
 
 /*
  * Helper functions that simply acquire/release yagl_surface::res

@@ -8,6 +8,7 @@
 #include "yagl_onscreen.h"
 #include "yagl_backend.h"
 #include "yagl_transport.h"
+#include "yagl_utils.h"
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/mman.h>
@@ -18,8 +19,8 @@
 #include <fcntl.h>
 #include <string.h>
 
-#define YAGL_DEFAULT_MAX_BUFF_SIZE 524288
-#define YAGL_DEFAULT_MAX_CALL_SIZE 524288
+#define YAGL_DEFAULT_MAX_BUFF_SIZE 1048576
+#define YAGL_DEFAULT_MAX_CALL_SIZE 1048576
 
 #define YAGL_REG_BUFFPTR 0
 #define YAGL_REG_TRIGGER 4
@@ -47,6 +48,9 @@ struct yagl_state
 
 static pthread_key_t g_state_key;
 static pthread_once_t g_state_key_init = PTHREAD_ONCE_INIT;
+
+static pthread_mutex_t g_name_gen_mutex;
+static uint32_t g_name_gen_next = 0;
 
 static void *yagl_state_transport_resize(void *ops_data, uint32_t size)
 {
@@ -118,6 +122,8 @@ static void yagl_state_free(void *ptr)
 static void yagl_state_key_init()
 {
     pthread_key_create(&g_state_key, yagl_state_free);
+
+    yagl_mutex_init(&g_name_gen_mutex);
 }
 
 static void yagl_state_atfork()
@@ -305,6 +311,29 @@ uint8_t *yagl_get_tmp_buffer(uint32_t size)
     state->tmp_buff = yagl_malloc(state->tmp_buff_size);
 
     return state->tmp_buff;
+}
+
+yagl_object_name yagl_get_global_name()
+{
+    uint32_t ret;
+
+    pthread_once(&g_state_key_init, yagl_state_key_init);
+
+    pthread_mutex_lock(&g_name_gen_mutex);
+
+    if (!g_name_gen_next) {
+        /*
+         * 0 handles are invalid.
+         */
+
+        ++g_name_gen_next;
+    }
+
+    ret = g_name_gen_next++;
+
+    pthread_mutex_unlock(&g_name_gen_mutex);
+
+    return ret;
 }
 
 struct yagl_backend *yagl_get_backend()

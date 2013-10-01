@@ -11,6 +11,7 @@ struct yagl_surface;
 struct yagl_image;
 struct yagl_native_platform;
 struct yagl_native_drawable;
+struct yagl_client_interface;
 struct wl_resource;
 
 struct yagl_backend
@@ -43,14 +44,12 @@ struct yagl_backend
      * Takes ownership of 'native_pixmap'.
      */
     struct yagl_image *(*create_image_pixmap)(struct yagl_display */*dpy*/,
-                                              yagl_host_handle /*host_context*/,
                                               struct yagl_native_drawable */*native_pixmap*/,
-                                              const EGLint */*attrib_list*/);
+                                              struct yagl_client_interface */*iface*/);
 
     struct yagl_image *(*create_image_wl_buffer)(struct yagl_display */*dpy*/,
-                                                 yagl_host_handle /*host_context*/,
                                                  struct wl_resource */*buffer*/,
-                                                 const EGLint */*attrib_list*/);
+                                                 struct yagl_client_interface */*iface*/);
 
     void (*destroy)(struct yagl_backend */*backend*/);
 

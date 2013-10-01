@@ -7,6 +7,9 @@
 #include "yagl_native_drawable.h"
 #include "yagl_native_image.h"
 #include "yagl_transport_egl.h"
+#include "yagl_client_interface.h"
+#include "yagl_client_image.h"
+#include "yagl_egl_state.h"
 #include <string.h>
 
 static void yagl_offscreen_image_pixmap_update(struct yagl_image *image)
@@ -25,13 +28,11 @@ static void yagl_offscreen_image_pixmap_update(struct yagl_image *image)
         return;
     }
 
-    yagl_host_eglUpdateOffscreenImageYAGL(image->dpy->host_dpy,
-                                          image->res.handle,
-                                          native_image->width,
-                                          native_image->height,
-                                          native_image->bpp,
-                                          native_image->pixels,
-                                          native_image->width * native_image->height * native_image->bpp);
+    oimage->base.client_image->update(oimage->base.client_image,
+                                      native_image->width,
+                                      native_image->height,
+                                      native_image->bpp,
+                                      native_image->pixels);
 
     native_image->destroy(native_image);
 }
@@ -50,32 +51,34 @@ static void yagl_offscreen_image_pixmap_destroy(struct yagl_ref *ref)
 
 struct yagl_offscreen_image_pixmap
     *yagl_offscreen_image_pixmap_create(struct yagl_display *dpy,
-                                        yagl_host_handle host_context,
                                         struct yagl_native_drawable *native_pixmap,
-                                        const EGLint *attrib_list)
+                                        struct yagl_client_interface *iface)
 {
-    yagl_host_handle host_image = 0;
+    EGLint error = 0;
+    yagl_object_name tex_global_name = yagl_get_global_name();
+    struct yagl_client_image *client_image;
     struct yagl_offscreen_image_pixmap *image;
     uint32_t depth;
 
-    host_image = yagl_host_eglCreateImageKHR(dpy->host_dpy,
-                                             host_context,
-                                             EGL_NATIVE_PIXMAP_KHR,
-                                             0,
-                                             attrib_list,
-                                             yagl_transport_attrib_list_count(attrib_list));
-
-    if (!host_image) {
+    if (!yagl_host_eglCreateImageYAGL(tex_global_name,
+                                      dpy->host_dpy,
+                                      0,
+                                      &error)) {
+        yagl_set_error(error);
         return NULL;
     }
+
+    client_image = iface->create_image(iface, tex_global_name);
 
     image = yagl_malloc0(sizeof(*image));
 
     yagl_image_init(&image->base,
                     &yagl_offscreen_image_pixmap_destroy,
-                    host_image,
                     dpy,
-                    (EGLImageKHR)native_pixmap->os_drawable);
+                    (EGLImageKHR)native_pixmap->os_drawable,
+                    client_image);
+
+    yagl_client_image_release(client_image);
 
     image->base.update = &yagl_offscreen_image_pixmap_update;
 

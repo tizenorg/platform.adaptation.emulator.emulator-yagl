@@ -8,6 +8,7 @@
 struct wl_resource;
 struct wl_drm_buffer;
 struct vigs_drm_surface;
+struct yagl_client_interface;
 
 struct yagl_onscreen_image_wl_buffer
 {
@@ -18,8 +19,7 @@ struct yagl_onscreen_image_wl_buffer
 
 struct yagl_onscreen_image_wl_buffer
     *yagl_onscreen_image_wl_buffer_create(struct yagl_display *dpy,
-                                          yagl_host_handle host_context,
                                           struct wl_resource *buffer,
-                                          const EGLint* attrib_list);
+                                          struct yagl_client_interface *iface);
 
 #endif

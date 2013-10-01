@@ -33,6 +33,12 @@ static __inline void yagl_transport_put_out_GLboolean(struct yagl_transport *t,
     yagl_transport_put_out_uint8_t(t, value);
 }
 
+static __inline void yagl_transport_put_out_GLubyte(struct yagl_transport *t,
+                                                    GLubyte value)
+{
+    yagl_transport_put_out_uint8_t(t, value);
+}
+
 static __inline void yagl_transport_put_out_GLsizei(struct yagl_transport *t,
                                                     GLsizei value)
 {

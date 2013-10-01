@@ -163,7 +163,6 @@ def generateTargetHeader(output_file, guard, includes, entries):
 #define _%s_H_
 
 #include "yagl_export.h"
-#include "yagl_types.h"
 """ % (guard, guard)
 
     for include in includes:

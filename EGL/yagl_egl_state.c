@@ -3,7 +3,10 @@
 #include "yagl_surface.h"
 #include "yagl_log.h"
 #include "yagl_malloc.h"
+#include "yagl_client_interface.h"
+#include "yagl_client_context.h"
 #include <pthread.h>
+#include <dlfcn.h>
 
 struct yagl_egl_state
 {
@@ -14,10 +17,55 @@ struct yagl_egl_state
     struct yagl_context *ctx;
     struct yagl_surface *draw_sfc;
     struct yagl_surface *read_sfc;
+
+    struct yagl_client_interface *gles1_iface;
+    struct yagl_client_interface *gles2_iface;
 };
 
 static pthread_key_t g_state_key;
 static pthread_once_t g_state_key_init = PTHREAD_ONCE_INIT;
+
+void *yagl_get_gles1_sym(const char *name)
+{
+    void *handle;
+    void *sym = dlsym(NULL, name);
+
+    if (sym) {
+        return sym;
+    }
+
+    handle = dlopen("libGLESv1_CM.so.1", RTLD_NOW|RTLD_GLOBAL);
+    if (!handle) {
+        handle = dlopen("libGLESv1_CM.so", RTLD_NOW|RTLD_GLOBAL);
+    }
+
+    if (handle) {
+        return dlsym(handle, name);
+    }
+
+    return NULL;
+}
+
+void *yagl_get_gles2_sym(const char *name)
+{
+    void *handle;
+    void *sym = dlsym(NULL, name);
+
+    if (sym) {
+        return sym;
+    }
+
+    handle = dlopen("libGLESv2.so.1", RTLD_NOW|RTLD_GLOBAL);
+    if (!handle) {
+        handle = dlopen("libGLESv2.so", RTLD_NOW|RTLD_GLOBAL);
+    }
+
+    if (handle) {
+        return dlsym(handle, name);
+    }
+
+    return NULL;
+}
 
 static void yagl_egl_state_free(void* ptr)
 {
@@ -148,11 +196,47 @@ struct yagl_surface *yagl_get_read_surface()
     return state->read_sfc;
 }
 
-void yagl_set_context(struct yagl_context *ctx,
-                      struct yagl_surface *draw_sfc,
-                      struct yagl_surface *read_sfc)
+int yagl_set_context(struct yagl_context *ctx,
+                     struct yagl_surface *draw_sfc,
+                     struct yagl_surface *read_sfc)
 {
     struct yagl_egl_state *state = yagl_egl_get_state();
+    int ctx_marked = 0, draw_sfc_marked = 0;
+
+    if (ctx && (state->ctx != ctx)) {
+        if (!yagl_context_mark_current(ctx, 1)) {
+            goto fail;
+        }
+        ctx_marked = 1;
+    }
+
+    if (draw_sfc && (state->draw_sfc != draw_sfc)) {
+        if (!yagl_surface_mark_current(draw_sfc, 1)) {
+            goto fail;
+        }
+        draw_sfc_marked = 1;
+    }
+
+    if (read_sfc &&
+        (state->read_sfc != read_sfc) &&
+        (read_sfc != draw_sfc) &&
+        !yagl_surface_mark_current(read_sfc, 1)) {
+        goto fail;
+    }
+
+    if (state->ctx && (state->ctx != ctx)) {
+        yagl_context_mark_current(state->ctx, 0);
+    }
+
+    if (state->draw_sfc && (state->draw_sfc != draw_sfc)) {
+        yagl_surface_mark_current(state->draw_sfc, 0);
+    }
+
+    if (state->read_sfc &&
+        (state->read_sfc != read_sfc) &&
+        (state->read_sfc != state->draw_sfc)) {
+        yagl_surface_mark_current(state->read_sfc, 0);
+    }
 
     yagl_context_acquire(ctx);
     yagl_surface_acquire(draw_sfc);
@@ -165,6 +249,18 @@ void yagl_set_context(struct yagl_context *ctx,
     state->ctx = ctx;
     state->read_sfc = read_sfc;
     state->draw_sfc = draw_sfc;
+
+    return 1;
+
+fail:
+    if (ctx_marked) {
+        yagl_context_mark_current(ctx, 0);
+    }
+    if (draw_sfc_marked) {
+        yagl_surface_mark_current(draw_sfc, 0);
+    }
+
+    return 0;
 }
 
 void yagl_reset_state()
@@ -175,4 +271,31 @@ void yagl_reset_state()
 
     state->error = EGL_SUCCESS;
     state->api = EGL_OPENGL_ES_API;
+}
+
+struct yagl_client_context *yagl_get_client_context(void)
+{
+    struct yagl_egl_state *state = yagl_egl_get_state();
+
+    return state->ctx ? state->ctx->client_ctx : NULL;
+}
+
+struct yagl_client_interface *yagl_get_client_interface(yagl_client_api client_api)
+{
+    struct yagl_egl_state *state = yagl_egl_get_state();
+
+    switch (client_api) {
+    case yagl_client_api_gles1:
+        if (!state->gles1_iface) {
+            state->gles1_iface = yagl_get_gles1_sym("yagl_gles1_interface");
+        }
+        return state->gles1_iface;
+    case yagl_client_api_gles2:
+        if (!state->gles2_iface) {
+            state->gles2_iface = yagl_get_gles1_sym("yagl_gles2_interface");
+        }
+        return state->gles2_iface;
+    default:
+        return NULL;
+    }
 }

@@ -1,8 +1,34 @@
 #include "yagl_surface.h"
 #include "yagl_utils.h"
 #include "yagl_native_drawable.h"
+#include "yagl_malloc.h"
+#include "yagl_client_interface.h"
+#include "yagl_tex_image_binding.h"
 #include <assert.h>
 #include "EGL/eglext.h"
+
+struct yagl_surface_tex_image_binding
+{
+    struct yagl_tex_image_binding base;
+
+    struct yagl_client_interface *iface;
+
+    struct yagl_surface *sfc; /* Weak pointer. */
+};
+
+static void yagl_surface_tex_image_unbind(struct yagl_tex_image_binding *binding)
+{
+    struct yagl_surface_tex_image_binding *sfc_binding =
+        (struct yagl_surface_tex_image_binding*)binding;
+    struct yagl_surface *sfc = sfc_binding->sfc;
+
+    pthread_mutex_lock(&sfc->mtx);
+
+    yagl_free(sfc->binding);
+    sfc->binding = NULL;
+
+    pthread_mutex_unlock(&sfc->mtx);
+}
 
 void yagl_surface_init_window(struct yagl_surface *sfc,
                               yagl_ref_destroy_func destroy_func,
@@ -49,6 +75,8 @@ void yagl_surface_init_pbuffer(struct yagl_surface *sfc,
 
 void yagl_surface_cleanup(struct yagl_surface *sfc)
 {
+    yagl_surface_release_tex_image(sfc);
+
     if (sfc->native_drawable) {
         sfc->native_drawable->destroy(sfc->native_drawable);
         sfc->native_drawable = NULL;
@@ -153,6 +181,79 @@ void *yagl_surface_map(struct yagl_surface *sfc, uint32_t *stride)
             ret = sfc->lock_ptr;
             *stride = sfc->lock_stride;
         }
+    }
+
+    pthread_mutex_unlock(&sfc->mtx);
+
+    return ret;
+}
+
+struct yagl_tex_image_binding
+    *yagl_surface_create_tex_image_binding(struct yagl_surface *sfc,
+                                           struct yagl_client_interface *iface)
+{
+    struct yagl_surface_tex_image_binding *binding;
+
+    binding = yagl_malloc0(sizeof(*binding));
+
+    binding->base.unbind = &yagl_surface_tex_image_unbind;
+    binding->iface = iface;
+    binding->sfc = sfc;
+
+    return &binding->base;
+}
+
+int yagl_surface_bind_tex_image(struct yagl_surface *sfc,
+                                struct yagl_tex_image_binding *binding)
+{
+    struct yagl_surface_tex_image_binding *sfc_binding =
+        (struct yagl_surface_tex_image_binding*)binding;
+    int ret = 0;
+
+    pthread_mutex_lock(&sfc->mtx);
+
+    if (sfc->binding || (sfc_binding->sfc != sfc)) {
+        goto out;
+    }
+
+    sfc->binding = binding;
+
+    ret = 1;
+
+out:
+    pthread_mutex_unlock(&sfc->mtx);
+
+    return ret;
+}
+
+void yagl_surface_release_tex_image(struct yagl_surface *sfc)
+{
+    struct yagl_surface_tex_image_binding *binding;
+
+    pthread_mutex_lock(&sfc->mtx);
+
+    if (sfc->binding) {
+        binding = (struct yagl_surface_tex_image_binding*)sfc->binding;
+
+        binding->iface->release_tex_image(binding->iface, binding->base.cookie);
+
+        yagl_free(sfc->binding);
+        sfc->binding = NULL;
+    }
+
+    pthread_mutex_unlock(&sfc->mtx);
+}
+
+int yagl_surface_mark_current(struct yagl_surface *sfc, int current)
+{
+    int ret = 1;
+
+    pthread_mutex_lock(&sfc->mtx);
+
+    if ((!current ^ !sfc->current) != 0) {
+        sfc->current = current;
+    } else {
+        ret = 0;
     }
 
     pthread_mutex_unlock(&sfc->mtx);

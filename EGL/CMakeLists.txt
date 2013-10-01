@@ -1,11 +1,16 @@
 set(SOURCES
+    yagl_avl.c
+    yagl_vector.c
+    yagl_range_list.c
+    yagl_object.c
+    yagl_namespace.c
+    yagl_sharegroup.c
+    yagl_client_image.c
     yagl_transport.c
     yagl_context.c
     yagl_display.c
     yagl_egl_calls.c
     yagl_egl_state.c
-    yagl_gles_context.c
-    yagl_gles_image.c
     yagl_host_egl_calls.c
     yagl_image.c
     yagl_log.c

@@ -33,12 +33,20 @@ typedef enum
 typedef enum
 {
     yagl_api_id_egl = 1,
-    yagl_api_id_gles1 = 2,
-    yagl_api_id_gles2 = 3,
+    yagl_api_id_gles = 2,
 } yagl_api_id;
+
+typedef enum
+{
+    yagl_client_api_ogl = 0,
+    yagl_client_api_gles1 = 1,
+    yagl_client_api_gles2 = 2,
+    yagl_client_api_ovg = 3
+} yagl_client_api;
 
 typedef uint32_t yagl_host_handle;
 typedef uint32_t yagl_winsys_id;
+typedef uint32_t yagl_object_name;
 
 #define yagl_offsetof(type, member) ((size_t)&((type*)0)->member)
 

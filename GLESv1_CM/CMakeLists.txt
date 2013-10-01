@@ -1,21 +1,18 @@
 set(SOURCES
+    yagl_gles1_context.c
+    yagl_gles1_interface.c
+    yagl_gles1_validate.c
     yagl_gles1_calls.c
-    yagl_host_gles1_calls.c
-    ${YAGL_SOURCE_DIR}/GLES_common/yagl_gles_calls.c
-    ${YAGL_SOURCE_DIR}/GLES_common/yagl_gles_utils.c
 )
 
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(${YAGL_SOURCE_DIR}/GLES_common)
 include_directories(.)
-
-set(HOST_GLES_CALLS_HEADER yagl_host_gles1_calls.h)
-set(GLEXT_HEADER GLES/glext.h)
-configure_file(${YAGL_SOURCE_DIR}/GLES_common/yagl_host_gles_calls.h.in ${CMAKE_CURRENT_BINARY_DIR}/yagl_host_gles_calls.h @ONLY)
+link_directories(${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
 
 add_library(GLESv1_CM SHARED ${SOURCES})
 set_target_properties(GLESv1_CM PROPERTIES VERSION 1.0 SOVERSION 1)
 
-target_link_libraries(GLESv1_CM EGL)
+target_link_libraries(GLESv1_CM "-Wl,-whole-archive" GLES_common "-Wl,-no-whole-archive" EGL)
 
 install(
     TARGETS GLESv1_CM

@@ -1,6 +1,7 @@
 #include "yagl_offscreen_surface.h"
 #include "yagl_host_egl_calls.h"
 #include "yagl_egl_state.h"
+#include "yagl_state.h"
 #include "yagl_malloc.h"
 #include "yagl_log.h"
 #include "yagl_display.h"
@@ -8,6 +9,8 @@
 #include "yagl_native_drawable.h"
 #include "yagl_native_image.h"
 #include "yagl_transport_egl.h"
+#include "yagl_client_interface.h"
+#include "yagl_client_image.h"
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -60,6 +63,7 @@ static void yagl_offscreen_surface_destroy_bi(struct yagl_native_image *bi)
 
 static int yagl_offscreen_surface_resize(struct yagl_offscreen_surface *surface)
 {
+    EGLint error = 0;
     int res = 0;
     uint32_t width = 0;
     uint32_t height = 0;
@@ -106,7 +110,9 @@ static int yagl_offscreen_surface_resize(struct yagl_offscreen_surface *surface)
                                                      bi->width,
                                                      bi->height,
                                                      bi->bpp,
-                                                     bi->pixels)) {
+                                                     bi->pixels,
+                                                     &error)) {
+            yagl_set_error(error);
             YAGL_LOG_ERROR("eglResizeOffscreenSurfaceYAGL failed");
             goto out;
         }
@@ -138,6 +144,7 @@ static void yagl_offscreen_surface_invalidate(struct yagl_surface *sfc)
 
 static int yagl_offscreen_surface_swap_buffers(struct yagl_surface *sfc)
 {
+    EGLint error = 0;
     struct yagl_offscreen_surface *osfc = (struct yagl_offscreen_surface*)sfc;
 
     YAGL_LOG_FUNC_SET(eglSwapBuffers);
@@ -147,7 +154,9 @@ static int yagl_offscreen_surface_swap_buffers(struct yagl_surface *sfc)
     }
 
     if (!yagl_host_eglSwapBuffers(sfc->dpy->host_dpy,
-                                  sfc->res.handle)) {
+                                  sfc->res.handle,
+                                  &error)) {
+        yagl_set_error(error);
         YAGL_LOG_ERROR("eglSwapBuffers failed");
         return 0;
     }
@@ -166,6 +175,7 @@ static int yagl_offscreen_surface_swap_buffers(struct yagl_surface *sfc)
 static int yagl_offscreen_surface_copy_buffers(struct yagl_surface *sfc,
                                                yagl_os_pixmap target)
 {
+    EGLint error = 0;
     struct yagl_offscreen_surface *osfc = (struct yagl_offscreen_surface*)sfc;
 
     YAGL_LOG_FUNC_SET(eglCopyBuffers);
@@ -196,7 +206,9 @@ static int yagl_offscreen_surface_copy_buffers(struct yagl_surface *sfc,
     }
 
     if (!yagl_host_eglCopyBuffers(sfc->dpy->host_dpy,
-                                  sfc->res.handle)) {
+                                  sfc->res.handle,
+                                  &error)) {
+        yagl_set_error(error);
         YAGL_LOG_ERROR("eglCopyBuffers failed");
         return 0;
     }
@@ -248,6 +260,24 @@ static void yagl_offscreen_surface_set_swap_interval(struct yagl_surface *sfc,
 {
 }
 
+static struct yagl_client_image
+    *yagl_offscreen_surface_create_image(struct yagl_surface *sfc,
+                                         struct yagl_client_interface *iface)
+{
+    EGLint error = 0;
+    yagl_object_name tex_global_name = yagl_get_global_name();
+
+    if (!yagl_host_eglCreateImageYAGL(tex_global_name,
+                                      sfc->dpy->host_dpy,
+                                      0,
+                                      &error)) {
+        yagl_set_error(error);
+        return NULL;
+    }
+
+    return iface->create_image(iface, tex_global_name);
+}
+
 static void yagl_offscreen_surface_destroy(struct yagl_ref *ref)
 {
     struct yagl_offscreen_surface *sfc = (struct yagl_offscreen_surface*)ref;
@@ -266,6 +296,7 @@ struct yagl_offscreen_surface
                                           struct yagl_native_drawable *native_window,
                                           const EGLint* attrib_list)
 {
+    EGLint error = 0;
     struct yagl_offscreen_surface *sfc;
     uint32_t width = 0;
     uint32_t height = 0;
@@ -297,9 +328,11 @@ struct yagl_offscreen_surface
                                                                  bi->bpp,
                                                                  bi->pixels,
                                                                  attrib_list,
-                                                                 yagl_transport_attrib_list_count(attrib_list));
+                                                                 yagl_transport_attrib_list_count(attrib_list),
+                                                                 &error);
 
     if (!host_surface) {
+        yagl_set_error(error);
         goto fail;
     }
 
@@ -317,6 +350,7 @@ struct yagl_offscreen_surface
     sfc->base.map = &yagl_offscreen_surface_map;
     sfc->base.unmap = &yagl_offscreen_surface_unmap;
     sfc->base.set_swap_interval = &yagl_offscreen_surface_set_swap_interval;
+    sfc->base.create_image = &yagl_offscreen_surface_create_image;
 
     sfc->bi = bi;
 
@@ -339,6 +373,7 @@ struct yagl_offscreen_surface
                                           struct yagl_native_drawable *native_pixmap,
                                           const EGLint* attrib_list)
 {
+    EGLint error = 0;
     struct yagl_offscreen_surface *sfc;
     uint32_t width = 0;
     uint32_t height = 0;
@@ -370,9 +405,11 @@ struct yagl_offscreen_surface
                                                                  bi->bpp,
                                                                  bi->pixels,
                                                                  attrib_list,
-                                                                 yagl_transport_attrib_list_count(attrib_list));
+                                                                 yagl_transport_attrib_list_count(attrib_list),
+                                                                 &error);
 
     if (!host_surface) {
+        yagl_set_error(error);
         goto fail;
     }
 
@@ -390,6 +427,7 @@ struct yagl_offscreen_surface
     sfc->base.map = &yagl_offscreen_surface_map;
     sfc->base.unmap = &yagl_offscreen_surface_unmap;
     sfc->base.set_swap_interval = &yagl_offscreen_surface_set_swap_interval;
+    sfc->base.create_image = &yagl_offscreen_surface_create_image;
 
     sfc->bi = bi;
 
@@ -411,6 +449,7 @@ struct yagl_offscreen_surface
                                            yagl_host_handle host_config,
                                            const EGLint* attrib_list)
 {
+    EGLint error = 0;
     struct yagl_offscreen_surface *sfc;
     uint32_t width = 0;
     uint32_t height = 0;
@@ -454,9 +493,11 @@ struct yagl_offscreen_surface
                                                                   bi->bpp,
                                                                   bi->pixels,
                                                                   attrib_list,
-                                                                  yagl_transport_attrib_list_count(attrib_list));
+                                                                  yagl_transport_attrib_list_count(attrib_list),
+                                                                  &error);
 
     if (!host_surface) {
+        yagl_set_error(error);
         goto fail;
     }
 
@@ -473,6 +514,7 @@ struct yagl_offscreen_surface
     sfc->base.map = &yagl_offscreen_surface_map;
     sfc->base.unmap = &yagl_offscreen_surface_unmap;
     sfc->base.set_swap_interval = &yagl_offscreen_surface_set_swap_interval;
+    sfc->base.create_image = &yagl_offscreen_surface_create_image;
 
     sfc->bi = bi;
 

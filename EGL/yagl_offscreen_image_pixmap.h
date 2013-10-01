@@ -6,6 +6,7 @@
 #include "yagl_image.h"
 
 struct yagl_native_drawable;
+struct yagl_client_interface;
 
 struct yagl_offscreen_image_pixmap
 {
@@ -19,8 +20,7 @@ struct yagl_offscreen_image_pixmap
 
 struct yagl_offscreen_image_pixmap
     *yagl_offscreen_image_pixmap_create(struct yagl_display *dpy,
-                                        yagl_host_handle host_context,
                                         struct yagl_native_drawable *native_pixmap,
-                                        const EGLint *attrib_list);
+                                        struct yagl_client_interface *iface);
 
 #endif

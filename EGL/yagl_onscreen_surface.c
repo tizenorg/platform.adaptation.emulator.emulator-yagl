@@ -2,6 +2,7 @@
 #include "yagl_onscreen_utils.h"
 #include "yagl_host_egl_calls.h"
 #include "yagl_egl_state.h"
+#include "yagl_state.h"
 #include "yagl_log.h"
 #include "yagl_utils.h"
 #include "yagl_malloc.h"
@@ -9,6 +10,7 @@
 #include "yagl_native_display.h"
 #include "yagl_native_drawable.h"
 #include "yagl_transport_egl.h"
+#include "yagl_client_interface.h"
 #include "vigs.h"
 #include <assert.h>
 #include <stdio.h>
@@ -57,6 +59,7 @@ static void yagl_onscreen_surface_invalidate(struct yagl_surface *sfc)
 
 static int yagl_onscreen_surface_swap_buffers(struct yagl_surface *sfc)
 {
+    EGLint error = 0;
     struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
     struct yagl_native_drawable *drawable = native_drawable(osfc);
     int ret;
@@ -64,7 +67,9 @@ static int yagl_onscreen_surface_swap_buffers(struct yagl_surface *sfc)
     YAGL_LOG_FUNC_SET(eglSwapBuffers);
 
     if (!yagl_host_eglSwapBuffers(sfc->dpy->host_dpy,
-                                  sfc->res.handle)) {
+                                  sfc->res.handle,
+                                  &error)) {
+        yagl_set_error(error);
         YAGL_LOG_ERROR("eglSwapBuffers failed");
         return 0;
     }
@@ -84,6 +89,7 @@ static int yagl_onscreen_surface_swap_buffers(struct yagl_surface *sfc)
 static int yagl_onscreen_surface_copy_buffers(struct yagl_surface *sfc,
                                               yagl_os_pixmap target)
 {
+    EGLint error = 0;
     struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
     struct yagl_native_drawable *drawable = native_drawable(osfc);
     int ret;
@@ -91,7 +97,9 @@ static int yagl_onscreen_surface_copy_buffers(struct yagl_surface *sfc,
     YAGL_LOG_FUNC_SET(eglCopyBuffers);
 
     if (!yagl_host_eglCopyBuffers(sfc->dpy->host_dpy,
-                                  sfc->res.handle)) {
+                                  sfc->res.handle,
+                                  &error)) {
+        yagl_set_error(error);
         YAGL_LOG_ERROR("eglCopyBuffers failed");
         return 0;
     }
@@ -210,6 +218,25 @@ static void yagl_onscreen_surface_set_swap_interval(struct yagl_surface *sfc,
     drawable->set_swap_interval(drawable, interval);
 }
 
+static struct yagl_client_image
+    *yagl_onscreen_surface_create_image(struct yagl_surface *sfc,
+                                        struct yagl_client_interface *iface)
+{
+    struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
+    EGLint error = 0;
+    yagl_object_name tex_global_name = yagl_get_global_name();
+
+    if (!yagl_host_eglCreateImageYAGL(tex_global_name,
+                                      sfc->dpy->host_dpy,
+                                      osfc->drm_sfc->id,
+                                      &error)) {
+        yagl_set_error(error);
+        return NULL;
+    }
+
+    return iface->create_image(iface, tex_global_name);
+}
+
 static void yagl_onscreen_surface_destroy(struct yagl_ref *ref)
 {
     struct yagl_onscreen_surface *sfc = (struct yagl_onscreen_surface*)ref;
@@ -232,6 +259,7 @@ struct yagl_onscreen_surface
                                          struct yagl_native_drawable *native_window,
                                          const EGLint* attrib_list)
 {
+    EGLint error = 0;
     struct yagl_onscreen_surface *sfc;
     struct vigs_drm_surface *drm_sfc = NULL;
     yagl_host_handle host_surface = 0;
@@ -251,9 +279,11 @@ struct yagl_onscreen_surface
                                                                 host_config,
                                                                 drm_sfc->id,
                                                                 attrib_list,
-                                                                yagl_transport_attrib_list_count(attrib_list));
+                                                                yagl_transport_attrib_list_count(attrib_list),
+                                                                &error);
 
     if (!host_surface) {
+        yagl_set_error(error);
         goto fail;
     }
 
@@ -271,6 +301,7 @@ struct yagl_onscreen_surface
     sfc->base.map = &yagl_onscreen_surface_map;
     sfc->base.unmap = &yagl_onscreen_surface_unmap;
     sfc->base.set_swap_interval = &yagl_onscreen_surface_set_swap_interval;
+    sfc->base.create_image = &yagl_onscreen_surface_create_image;
 
     sfc->drm_sfc = drm_sfc;
 
@@ -291,6 +322,7 @@ struct yagl_onscreen_surface
                                          struct yagl_native_drawable *native_pixmap,
                                          const EGLint* attrib_list)
 {
+    EGLint error = 0;
     struct yagl_onscreen_surface *sfc;
     struct vigs_drm_surface *drm_sfc = NULL;
     yagl_host_handle host_surface = 0;
@@ -310,9 +342,11 @@ struct yagl_onscreen_surface
                                                                 host_config,
                                                                 drm_sfc->id,
                                                                 attrib_list,
-                                                                yagl_transport_attrib_list_count(attrib_list));
+                                                                yagl_transport_attrib_list_count(attrib_list),
+                                                                &error);
 
     if (!host_surface) {
+        yagl_set_error(error);
         goto fail;
     }
 
@@ -330,6 +364,7 @@ struct yagl_onscreen_surface
     sfc->base.map = &yagl_onscreen_surface_map;
     sfc->base.unmap = &yagl_onscreen_surface_unmap;
     sfc->base.set_swap_interval = &yagl_onscreen_surface_set_swap_interval;
+    sfc->base.create_image = &yagl_onscreen_surface_create_image;
 
     sfc->drm_sfc = drm_sfc;
 
@@ -349,6 +384,7 @@ struct yagl_onscreen_surface
                                           yagl_host_handle host_config,
                                           const EGLint* attrib_list)
 {
+    EGLint error = 0;
     struct yagl_onscreen_surface *sfc;
     uint32_t width = 0;
     uint32_t height = 0;
@@ -401,9 +437,11 @@ struct yagl_onscreen_surface
                                                                  host_config,
                                                                  drm_sfc->id,
                                                                  attrib_list,
-                                                                 yagl_transport_attrib_list_count(attrib_list));
+                                                                 yagl_transport_attrib_list_count(attrib_list),
+                                                                 &error);
 
     if (!host_surface) {
+        yagl_set_error(error);
         goto fail;
     }
 
@@ -420,6 +458,7 @@ struct yagl_onscreen_surface
     sfc->base.map = &yagl_onscreen_surface_map;
     sfc->base.unmap = &yagl_onscreen_surface_unmap;
     sfc->base.set_swap_interval = &yagl_onscreen_surface_set_swap_interval;
+    sfc->base.create_image = &yagl_onscreen_surface_create_image;
 
     sfc->drm_sfc = drm_sfc;
 

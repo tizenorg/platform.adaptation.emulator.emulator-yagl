@@ -74,31 +74,27 @@ static struct yagl_surface
 
 static struct yagl_image
     *yagl_onscreen_create_image_pixmap(struct yagl_display *dpy,
-                                       yagl_host_handle host_context,
                                        struct yagl_native_drawable *native_pixmap,
-                                       const EGLint* attrib_list)
+                                       struct yagl_client_interface *iface)
 {
     struct yagl_onscreen_image_pixmap *image =
         yagl_onscreen_image_pixmap_create(dpy,
-                                          host_context,
                                           native_pixmap,
-                                          attrib_list);
+                                          iface);
 
     return image ? &image->base : NULL;
 }
 
 static struct yagl_image
     *yagl_onscreen_create_image_wl_buffer(struct yagl_display *dpy,
-                                          yagl_host_handle host_context,
                                           struct wl_resource *buffer,
-                                          const EGLint* attrib_list)
+                                          struct yagl_client_interface *iface)
 {
 #ifdef YAGL_PLATFORM_WAYLAND
     struct yagl_onscreen_image_wl_buffer *image =
         yagl_onscreen_image_wl_buffer_create(dpy,
-                                             host_context,
                                              buffer,
-                                             attrib_list);
+                                             iface);
 
     return image ? &image->base : NULL;
 #else
