@@ -18,7 +18,7 @@
 #include "yagl_client_context.h"
 #include "yagl_sharegroup.h"
 #include "yagl_tex_image_binding.h"
-#include "EGL/eglext.h"
+#include "EGL/eglmesaext.h"
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>

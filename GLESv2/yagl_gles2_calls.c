@@ -1214,7 +1214,7 @@ YAGL_API void glShaderBinary(GLsizei n, const GLuint *shaders, GLenum binaryform
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-YAGL_API void glShaderSource(GLuint shader, GLsizei count, const GLchar **string, const GLint *length)
+YAGL_API void glShaderSource(GLuint shader, GLsizei count, const GLchar * const *string, const GLint *length)
 {
     struct yagl_gles2_shader *shader_obj = NULL;
     int have_strings = 0;
