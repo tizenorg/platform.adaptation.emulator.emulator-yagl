@@ -1,4 +1,5 @@
 #include "GL/gl.h"
+#include "GL/glext.h"
 #include "yagl_gles_calls.h"
 #include "yagl_host_gles_calls.h"
 #include "yagl_impl.h"
@@ -2017,3 +2018,47 @@ YAGL_API void glEGLImageTargetRenderbufferStorageOES(GLenum target, GLeglImageOE
 {
     fprintf(stderr, "glEGLImageTargetRenderbufferStorageOES not supported in YaGL\n");
 }
+
+/*
+ * GL_OES_vertex_array_object.
+ * @{
+ */
+
+YAGL_API void glBindVertexArray(GLuint array)
+{
+}
+YAGL_API YAGL_ALIAS(glBindVertexArray, glBindVertexArrayOES);
+
+YAGL_API void glDeleteVertexArrays(GLsizei n, const GLuint *arrays)
+{
+}
+YAGL_API YAGL_ALIAS(glDeleteVertexArrays, glDeleteVertexArraysOES);
+
+YAGL_API void glGenVertexArrays(GLsizei n, GLuint *arrays)
+{
+}
+YAGL_API YAGL_ALIAS(glGenVertexArrays, glGenVertexArraysOES);
+
+YAGL_API GLboolean glIsVertexArray(GLuint array)
+{
+    return GL_FALSE;
+}
+YAGL_API YAGL_ALIAS(glIsVertexArray, glIsVertexArrayOES);
+
+/*
+ * @}
+ */
+
+/*
+ * GL_EXT_draw_buffers.
+ * @{
+ */
+
+YAGL_API void glDrawBuffers(GLsizei n, const GLenum *bufs)
+{
+}
+YAGL_API YAGL_ALIAS(glDrawBuffers, glDrawBuffersEXT);
+
+/*
+ * @}
+ */

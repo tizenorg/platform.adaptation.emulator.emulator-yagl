@@ -5,6 +5,7 @@ set(SOURCES
     yagl_gles2_shader.c
     yagl_gles2_validate.c
     yagl_gles2_calls.c
+    yagl_gles3_calls.c
 )
 
 include_directories(${YAGL_SOURCE_DIR}/GLES_common)
