@@ -821,45 +821,6 @@ out:
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-YAGL_API const GLubyte* glGetString(GLenum name)
-{
-    struct yagl_gles1_context *ctx;
-    const char *str = NULL;
-
-    YAGL_LOG_FUNC_ENTER(glGetString, "name = 0x%X", name);
-
-    ctx = (struct yagl_gles1_context*)yagl_get_client_context();
-
-    if (!ctx || (ctx->base.base.client_api != yagl_client_api_gles1)) {
-        ctx = NULL;
-    }
-
-    switch (name) {
-    case GL_VENDOR:
-        str = "Samsung";
-        break;
-    case GL_VERSION:
-        str = "OpenGL ES-CM 1.1";
-        break;
-    case GL_RENDERER:
-        str = "YaGL GLESv1_CM";
-        break;
-    case GL_EXTENSIONS:
-        if (ctx) {
-            str = yagl_gles_context_get_extensions(&ctx->base);
-        } else {
-            str = "";
-        }
-        break;
-    default:
-        str = "";
-    }
-
-    YAGL_LOG_FUNC_EXIT("%s", str);
-
-    return (const GLubyte*)str;
-}
-
 YAGL_API void glGetTexEnviv(GLenum target, GLenum pname, GLint *params)
 {
     int count = 0;

@@ -271,6 +271,26 @@ static void yagl_gles1_context_destroy(struct yagl_client_context *ctx)
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
+static const GLchar
+    *yagl_gles1_context_get_string(struct yagl_gles_context *ctx,
+                                   GLenum name)
+{
+    const char *str = NULL;
+
+    switch (name) {
+    case GL_VERSION:
+        str = "OpenGL ES-CM 1.1";
+        break;
+    case GL_RENDERER:
+        str = "YaGL GLESv1_CM";
+        break;
+    default:
+        str = "";
+    }
+
+    return str;
+}
+
 static GLchar *yagl_gles1_context_get_extensions(struct yagl_gles_context *ctx)
 {
     struct yagl_gles1_context *gles1_ctx = (struct yagl_gles1_context*)ctx;
@@ -1194,6 +1214,7 @@ struct yagl_client_context *yagl_gles1_context_create(struct yagl_sharegroup *sg
 
     gles1_ctx->base.base.prepare = &yagl_gles1_context_prepare;
     gles1_ctx->base.base.destroy = &yagl_gles1_context_destroy;
+    gles1_ctx->base.get_string = &yagl_gles1_context_get_string;
     gles1_ctx->base.get_extensions = &yagl_gles1_context_get_extensions;
     gles1_ctx->base.compressed_tex_image = &yagl_gles1_context_compressed_tex_image;
     gles1_ctx->base.enable = &yagl_gles1_context_enable;

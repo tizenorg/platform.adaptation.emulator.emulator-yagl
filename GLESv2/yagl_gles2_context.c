@@ -64,92 +64,40 @@ static void yagl_gles2_array_apply(struct yagl_gles_array *array,
     }
 }
 
-static void yagl_gles2_context_prepare(struct yagl_client_context *ctx)
-{
-    struct yagl_gles2_context *gles2_ctx = (struct yagl_gles2_context*)ctx;
-    GLint i, num_arrays = 0, num_texture_units = 0;
-    struct yagl_gles_array *arrays;
-    int32_t size = 0;
-    char *extensions, *conformant;
-
-    YAGL_LOG_FUNC_ENTER(yagl_gles2_context_prepare, "%p", ctx);
-
-    yagl_host_glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &num_arrays, 1, NULL);
-
-    arrays = yagl_malloc(num_arrays * sizeof(*arrays));
-
-    for (i = 0; i < num_arrays; ++i) {
-        yagl_gles_array_init(&arrays[i],
-                             i,
-                             &yagl_gles2_array_apply,
-                             gles2_ctx);
-    }
-
-    yagl_host_glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS,
-                            &num_texture_units, 1, NULL);
-
-    /*
-     * We limit this by 32 for conformance.
-     */
-    if (num_texture_units > 32) {
-        num_texture_units = 32;
-    }
-
-    yagl_gles_context_prepare(&gles2_ctx->base, arrays, num_arrays,
-                              num_texture_units);
-
-    conformant = getenv("YAGL_CONFORMANT");
-
-    if (conformant && atoi(conformant)) {
-        /*
-         * Generating variable locations on target is faster, but
-         * it's not conformant (will not pass some khronos tests)
-         * since we can't know if variable with a given name exists or not,
-         * so we just assume it exists.
-         */
-        gles2_ctx->gen_locations = 0;
-    } else {
-        gles2_ctx->gen_locations = 1;
-    }
-
-    yagl_host_glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS,
-                            &gles2_ctx->num_compressed_texture_formats,
-                            1, NULL);
-
-    /*
-     * We don't support it for now...
-     */
-    gles2_ctx->num_shader_binary_formats = 0;
-
-    yagl_host_glGetString(GL_EXTENSIONS, NULL, 0, &size);
-    extensions = yagl_malloc0(size);
-    yagl_host_glGetString(GL_EXTENSIONS, extensions, size, NULL);
-
-    gles2_ctx->texture_half_float = (strstr(extensions, "GL_ARB_half_float_pixel ") != NULL) ||
-                                    (strstr(extensions, "GL_NV_half_float ") != NULL);
-
-    gles2_ctx->vertex_half_float = (strstr(extensions, "GL_ARB_half_float_vertex ") != NULL);
-
-    gles2_ctx->standard_derivatives = (strstr(extensions, "GL_OES_standard_derivatives ") != NULL);
-
-    yagl_free(extensions);
-
-    YAGL_LOG_FUNC_EXIT(NULL);
-}
-
 static void yagl_gles2_context_destroy(struct yagl_client_context *ctx)
 {
     struct yagl_gles2_context *gles2_ctx = (struct yagl_gles2_context*)ctx;
 
     YAGL_LOG_FUNC_ENTER(yagl_gles2_context_destroy, "%p", ctx);
 
-    yagl_gles2_program_release(gles2_ctx->program);
-
-    yagl_gles_context_cleanup(&gles2_ctx->base);
+    yagl_gles2_context_cleanup(gles2_ctx);
 
     yagl_free(gles2_ctx);
 
     YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+static const GLchar
+    *yagl_gles2_context_get_string(struct yagl_gles_context *ctx,
+                                   GLenum name)
+{
+    const char *str = NULL;
+
+    switch (name) {
+    case GL_VERSION:
+        str = "OpenGL ES 2.0";
+        break;
+    case GL_RENDERER:
+        str = "YaGL GLESv2";
+        break;
+    case GL_SHADING_LANGUAGE_VERSION:
+        str = "OpenGL ES GLSL ES 1.4";
+        break;
+    default:
+        str = "";
+    }
+
+    return str;
 }
 
 static GLchar *yagl_gles2_context_get_extensions(struct yagl_gles_context *ctx)
@@ -234,28 +182,6 @@ static GLchar *yagl_gles2_context_get_extensions(struct yagl_gles_context *ctx)
     return str;
 }
 
-static GLenum yagl_gles2_context_compressed_tex_image(struct yagl_gles_context *ctx,
-                                                      GLenum target,
-                                                      GLint level,
-                                                      GLenum internalformat,
-                                                      GLsizei width,
-                                                      GLsizei height,
-                                                      GLint border,
-                                                      GLsizei imageSize,
-                                                      const GLvoid *data)
-{
-    yagl_host_glCompressedTexImage2D(target,
-                                     level,
-                                     internalformat,
-                                     width,
-                                     height,
-                                     border,
-                                     data,
-                                     imageSize);
-
-    return GL_NO_ERROR;
-}
-
 static int yagl_gles2_context_enable(struct yagl_gles_context *ctx,
                                      GLenum cap,
                                      GLboolean enable)
@@ -270,10 +196,121 @@ static int yagl_gles2_context_is_enabled(struct yagl_gles_context *ctx,
     return 0;
 }
 
-static int yagl_gles2_context_get_integerv(struct yagl_gles_context *ctx,
-                                           GLenum pname,
-                                           GLint *params,
-                                           uint32_t *num_params)
+void yagl_gles2_context_init(struct yagl_gles2_context *ctx,
+                             yagl_client_api client_api,
+                             struct yagl_sharegroup *sg)
+{
+    yagl_gles_context_init(&ctx->base, client_api, sg);
+
+    ctx->sg = sg;
+}
+
+void yagl_gles2_context_cleanup(struct yagl_gles2_context *ctx)
+{
+    yagl_gles2_program_release(ctx->program);
+
+    yagl_gles_context_cleanup(&ctx->base);
+}
+
+void yagl_gles2_context_prepare(struct yagl_client_context *ctx)
+{
+    struct yagl_gles2_context *gles2_ctx = (struct yagl_gles2_context*)ctx;
+    GLint i, num_arrays = 0, num_texture_units = 0;
+    struct yagl_gles_array *arrays;
+    int32_t size = 0;
+    char *extensions, *conformant;
+
+    YAGL_LOG_FUNC_ENTER(yagl_gles2_context_prepare, "%p", ctx);
+
+    yagl_host_glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &num_arrays, 1, NULL);
+
+    arrays = yagl_malloc(num_arrays * sizeof(*arrays));
+
+    for (i = 0; i < num_arrays; ++i) {
+        yagl_gles_array_init(&arrays[i],
+                             i,
+                             &yagl_gles2_array_apply,
+                             gles2_ctx);
+    }
+
+    yagl_host_glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS,
+                            &num_texture_units, 1, NULL);
+
+    /*
+     * We limit this by 32 for conformance.
+     */
+    if (num_texture_units > 32) {
+        num_texture_units = 32;
+    }
+
+    yagl_gles_context_prepare(&gles2_ctx->base, arrays, num_arrays,
+                              num_texture_units);
+
+    conformant = getenv("YAGL_CONFORMANT");
+
+    if (conformant && atoi(conformant)) {
+        /*
+         * Generating variable locations on target is faster, but
+         * it's not conformant (will not pass some khronos tests)
+         * since we can't know if variable with a given name exists or not,
+         * so we just assume it exists.
+         */
+        gles2_ctx->gen_locations = 0;
+    } else {
+        gles2_ctx->gen_locations = 1;
+    }
+
+    yagl_host_glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS,
+                            &gles2_ctx->num_compressed_texture_formats,
+                            1, NULL);
+
+    /*
+     * We don't support it for now...
+     */
+    gles2_ctx->num_shader_binary_formats = 0;
+
+    yagl_host_glGetString(GL_EXTENSIONS, NULL, 0, &size);
+    extensions = yagl_malloc0(size);
+    yagl_host_glGetString(GL_EXTENSIONS, extensions, size, NULL);
+
+    gles2_ctx->texture_half_float = (strstr(extensions, "GL_ARB_half_float_pixel ") != NULL) ||
+                                    (strstr(extensions, "GL_NV_half_float ") != NULL);
+
+    gles2_ctx->vertex_half_float = (strstr(extensions, "GL_ARB_half_float_vertex ") != NULL);
+
+    gles2_ctx->standard_derivatives = (strstr(extensions, "GL_OES_standard_derivatives ") != NULL);
+
+    yagl_free(extensions);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+GLenum yagl_gles2_context_compressed_tex_image(struct yagl_gles_context *ctx,
+                                               GLenum target,
+                                               GLint level,
+                                               GLenum internalformat,
+                                               GLsizei width,
+                                               GLsizei height,
+                                               GLint border,
+                                               GLsizei imageSize,
+                                               const GLvoid *data)
+{
+    yagl_host_glCompressedTexImage2D(target,
+                                     level,
+                                     internalformat,
+                                     width,
+                                     height,
+                                     border,
+                                     data,
+                                     imageSize);
+
+    return GL_NO_ERROR;
+}
+
+int yagl_gles2_context_get_integerv(struct yagl_gles_context *ctx,
+                                    GLenum pname,
+                                    GLint *params,
+                                    uint32_t *num_params)
 {
     int processed = 1;
     struct yagl_gles2_context *gles2_ctx = (struct yagl_gles2_context*)ctx;
@@ -384,11 +421,11 @@ static int yagl_gles2_context_get_integerv(struct yagl_gles_context *ctx,
     return 1;
 }
 
-static int yagl_gles2_context_get_floatv(struct yagl_gles_context *ctx,
-                                         GLenum pname,
-                                         GLfloat *params,
-                                         uint32_t *num_params,
-                                         int *needs_map)
+int yagl_gles2_context_get_floatv(struct yagl_gles_context *ctx,
+                                  GLenum pname,
+                                  GLfloat *params,
+                                  uint32_t *num_params,
+                                  int *needs_map)
 {
     struct yagl_gles2_context *gles2_ctx = (struct yagl_gles2_context*)ctx;
 
@@ -408,10 +445,10 @@ static int yagl_gles2_context_get_floatv(struct yagl_gles_context *ctx,
     return 1;
 }
 
-static void yagl_gles2_context_draw_arrays(struct yagl_gles_context *ctx,
-                                           GLenum mode,
-                                           GLint first,
-                                           GLsizei count)
+void yagl_gles2_context_draw_arrays(struct yagl_gles_context *ctx,
+                                    GLenum mode,
+                                    GLint first,
+                                    GLsizei count)
 {
     yagl_gles2_context_pre_draw(ctx, mode);
 
@@ -420,12 +457,12 @@ static void yagl_gles2_context_draw_arrays(struct yagl_gles_context *ctx,
     yagl_gles2_context_post_draw(ctx, mode);
 }
 
-static void yagl_gles2_context_draw_elements(struct yagl_gles_context *ctx,
-                                             GLenum mode,
-                                             GLsizei count,
-                                             GLenum type,
-                                             const GLvoid *indices,
-                                             int32_t indices_count)
+void yagl_gles2_context_draw_elements(struct yagl_gles_context *ctx,
+                                      GLenum mode,
+                                      GLsizei count,
+                                      GLenum type,
+                                      const GLvoid *indices,
+                                      int32_t indices_count)
 {
     yagl_gles2_context_pre_draw(ctx, mode);
 
@@ -442,12 +479,11 @@ struct yagl_client_context *yagl_gles2_context_create(struct yagl_sharegroup *sg
 
     gles2_ctx = yagl_malloc0(sizeof(*gles2_ctx));
 
-    yagl_gles_context_init(&gles2_ctx->base, yagl_client_api_gles2, sg);
-
-    gles2_ctx->sg = sg;
+    yagl_gles2_context_init(gles2_ctx, yagl_client_api_gles2, sg);
 
     gles2_ctx->base.base.prepare = &yagl_gles2_context_prepare;
     gles2_ctx->base.base.destroy = &yagl_gles2_context_destroy;
+    gles2_ctx->base.get_string = &yagl_gles2_context_get_string;
     gles2_ctx->base.get_extensions = &yagl_gles2_context_get_extensions;
     gles2_ctx->base.compressed_tex_image = &yagl_gles2_context_compressed_tex_image;
     gles2_ctx->base.enable = &yagl_gles2_context_enable;

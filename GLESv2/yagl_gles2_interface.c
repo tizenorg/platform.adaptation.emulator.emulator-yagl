@@ -2,13 +2,22 @@
 #include "yagl_export.h"
 #include "yagl_client_interface.h"
 #include "yagl_gles2_context.h"
+#include "yagl_gles3_context.h"
 #include "yagl_gles_image.h"
 #include "yagl_gles_texture.h"
 
 static struct yagl_client_context *yagl_gles2_create_ctx(struct yagl_client_interface *iface,
+                                                         yagl_client_api client_api,
                                                          struct yagl_sharegroup *sg)
 {
-    return yagl_gles2_context_create(sg);
+    switch (client_api) {
+    case yagl_client_api_gles2:
+        return yagl_gles2_context_create(sg);
+    case yagl_client_api_gles3:
+        return yagl_gles3_context_create(sg);
+    default:
+        return NULL;
+    }
 }
 
 static struct yagl_client_image

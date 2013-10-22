@@ -3,6 +3,7 @@
 #include "yagl_display.h"
 #include "yagl_log.h"
 #include "yagl_egl_state.h"
+#include "yagl_state.h"
 #include "yagl_malloc.h"
 #include "yagl_surface.h"
 #include "yagl_context.h"
@@ -49,6 +50,8 @@ static int yagl_get_client_api(const EGLint *attrib_list, yagl_client_api *clien
                         *client_api = yagl_client_api_gles1;
                     } else if (attrib_list[i + 1] == 2) {
                         *client_api = yagl_client_api_gles2;
+                    } else if (attrib_list[i + 1] == 3) {
+                        *client_api = yagl_client_api_gles3;
                     } else {
                         return 0;
                     }
@@ -879,10 +882,7 @@ YAGL_API EGLBoolean eglBindTexImage(EGLDisplay dpy_,
                         surface_,
                         buffer);
 
-    iface = yagl_get_client_interface(yagl_client_api_gles2);
-    if (!iface) {
-        iface = yagl_get_client_interface(yagl_client_api_gles1);
-    }
+    iface = yagl_get_any_client_interface();
 
     if (!iface) {
         YAGL_SET_ERR(EGL_BAD_ALLOC);
@@ -1060,6 +1060,12 @@ YAGL_API EGLContext eglCreateContext(EGLDisplay dpy_,
         goto out;
     }
 
+    if ((client_api == yagl_client_api_gles3) &&
+        (yagl_get_host_gl_version() <= yagl_gl_2)) {
+        YAGL_SET_ERR(EGL_BAD_ATTRIBUTE);
+        goto out;
+    }
+
     iface = yagl_get_client_interface(client_api);
 
     if (!iface) {
@@ -1080,7 +1086,7 @@ YAGL_API EGLContext eglCreateContext(EGLDisplay dpy_,
         goto out;
     }
 
-    client_ctx = iface->create_ctx(iface, sg);
+    client_ctx = iface->create_ctx(iface, client_api, sg);
 
     ctx = yagl_context_create(host_context, dpy, client_ctx);
     assert(ctx);
@@ -1355,6 +1361,7 @@ YAGL_API EGLBoolean eglQueryContext(EGLDisplay dpy_,
         switch (ctx->client_ctx->client_api) {
         case yagl_client_api_gles1:
         case yagl_client_api_gles2:
+        case yagl_client_api_gles3:
             if (value) {
                 *value = EGL_OPENGL_ES_API;
             }
@@ -1386,6 +1393,11 @@ YAGL_API EGLBoolean eglQueryContext(EGLDisplay dpy_,
         case yagl_client_api_gles2:
             if (value) {
                 *value = 2;
+            }
+            break;
+        case yagl_client_api_gles3:
+            if (value) {
+                *value = 3;
             }
             break;
         case yagl_client_api_ogl:
@@ -1567,10 +1579,7 @@ YAGL_API EGLImageKHR eglCreateImageKHR(EGLDisplay dpy_,
                         target,
                         buffer);
 
-    iface = yagl_get_client_interface(yagl_client_api_gles2);
-    if (!iface) {
-        iface = yagl_get_client_interface(yagl_client_api_gles1);
-    }
+    iface = yagl_get_any_client_interface();
 
     if (!iface) {
         YAGL_SET_ERR(EGL_BAD_ALLOC);
@@ -1936,6 +1945,7 @@ YAGL_API __eglMustCastToProperFunctionPointerType eglGetProcAddress(const char* 
                     ret = yagl_get_gles1_sym(procname);
                     break;
                 case yagl_client_api_gles2:
+                case yagl_client_api_gles3:
                     ret = yagl_get_gles2_sym(procname);
                     break;
                 default:

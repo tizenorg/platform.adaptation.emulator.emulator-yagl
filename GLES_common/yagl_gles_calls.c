@@ -320,6 +320,39 @@ out:
  * @}
  */
 
+YAGL_API const GLubyte *glGetString(GLenum name)
+{
+    struct yagl_gles_context *ctx;
+    const char *str = NULL;
+
+    YAGL_LOG_FUNC_ENTER(glGetString, "name = 0x%X", name);
+
+    ctx = (struct yagl_gles_context*)yagl_get_client_context();
+
+    switch (name) {
+    case GL_VENDOR:
+        str = "Samsung";
+        break;
+    case GL_EXTENSIONS:
+        if (ctx) {
+            str = yagl_gles_context_get_extensions(ctx);
+        } else {
+            str = "";
+        }
+        break;
+    default:
+        if (ctx) {
+            str = ctx->get_string(ctx, name);
+        } else {
+            str = "";
+        }
+    }
+
+    YAGL_LOG_FUNC_EXIT("%s", str);
+
+    return (const GLubyte*)str;
+}
+
 YAGL_API void glActiveTexture(GLenum texture)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT1(glActiveTexture, GLenum, texture);

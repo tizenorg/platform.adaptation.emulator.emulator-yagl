@@ -38,11 +38,22 @@ typedef enum
 
 typedef enum
 {
-    yagl_client_api_ogl = 0,
-    yagl_client_api_gles1 = 1,
-    yagl_client_api_gles2 = 2,
-    yagl_client_api_ovg = 3
+    yagl_client_api_ogl = (1 << 0),
+    yagl_client_api_gles1 = (1 << 1),
+    yagl_client_api_gles2 = (1 << 2),
+    yagl_client_api_gles3 = (1 << 3),
+    yagl_client_api_ovg = (1 << 4)
 } yagl_client_api;
+
+typedef enum
+{
+    /* OpenGL 2.1 or OpenGL >= 3.1 compatibility. */
+    yagl_gl_2 = 0,
+    /* OpenGL >= 3.2 core, no GL_ARB_ES3_compatibility support. */
+    yagl_gl_3 = 1,
+    /* OpenGL >= 3.1 core, GL_ARB_ES3_compatibility support. */
+    yagl_gl_3_es3 = 2
+} yagl_gl_version;
 
 typedef uint32_t yagl_host_handle;
 typedef uint32_t yagl_winsys_id;

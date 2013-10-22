@@ -6,6 +6,7 @@
 #include "yagl_gles_texture.h"
 
 static struct yagl_client_context *yagl_gles1_create_ctx(struct yagl_client_interface *iface,
+                                                         yagl_client_api client_api,
                                                          struct yagl_sharegroup *sg)
 {
     return yagl_gles1_context_create(sg);

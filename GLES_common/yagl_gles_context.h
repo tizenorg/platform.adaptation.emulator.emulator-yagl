@@ -15,6 +15,9 @@ struct yagl_gles_context
 {
     struct yagl_client_context base;
 
+    const GLchar *(*get_string)(struct yagl_gles_context */*ctx*/,
+                                GLenum /*name*/);
+
     GLchar *(*get_extensions)(struct yagl_gles_context */*ctx*/);
 
     GLenum (*compressed_tex_image)(struct yagl_gles_context */*ctx*/,

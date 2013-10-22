@@ -24,7 +24,7 @@
 #define YAGL_GET_CTX_IMPL(ret_expr) \
     struct yagl_gles2_context *ctx = \
         (struct yagl_gles2_context*)yagl_get_client_context(); \
-    if (!ctx || (ctx->base.base.client_api != yagl_client_api_gles2)) { \
+    if (!ctx || ((ctx->base.base.client_api & (yagl_client_api_gles2|yagl_client_api_gles3)) == 0)) { \
         YAGL_LOG_WARN("no current context"); \
         YAGL_LOG_FUNC_EXIT(NULL); \
         ret_expr; \
@@ -846,48 +846,6 @@ out:
     yagl_gles2_shader_release(shader_obj);
 
     YAGL_LOG_FUNC_EXIT(NULL);
-}
-
-YAGL_API const GLubyte *glGetString(GLenum name)
-{
-    struct yagl_gles2_context *ctx;
-    const char *str = NULL;
-
-    YAGL_LOG_FUNC_ENTER(glGetString, "name = 0x%X", name);
-
-    ctx = (struct yagl_gles2_context*)yagl_get_client_context();
-
-    if (!ctx || (ctx->base.base.client_api != yagl_client_api_gles2)) {
-        ctx = NULL;
-    }
-
-    switch (name) {
-    case GL_VENDOR:
-        str = "Samsung";
-        break;
-    case GL_VERSION:
-        str = "OpenGL ES 2.0";
-        break;
-    case GL_RENDERER:
-        str = "YaGL GLESv2";
-        break;
-    case GL_SHADING_LANGUAGE_VERSION:
-        str = "OpenGL ES GLSL ES 1.4";
-        break;
-    case GL_EXTENSIONS:
-        if (ctx) {
-            str = yagl_gles_context_get_extensions(&ctx->base);
-        } else {
-            str = "";
-        }
-        break;
-    default:
-        str = "";
-    }
-
-    YAGL_LOG_FUNC_EXIT("%s", str);
-
-    return (const GLubyte*)str;
 }
 
 YAGL_API void glGetUniformfv(GLuint program, GLint location, GLfloat *params)

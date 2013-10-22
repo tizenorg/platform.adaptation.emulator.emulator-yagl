@@ -42,6 +42,8 @@ struct yagl_state
 
     struct yagl_backend *backend;
 
+    yagl_gl_version gl_version;
+
     uint8_t *tmp_buff;
     uint32_t tmp_buff_size;
 };
@@ -235,6 +237,17 @@ static struct yagl_state *yagl_get_state()
         exit(1);
     }
 
+    switch (user_info.gl_version) {
+    case yagl_gl_2:
+    case yagl_gl_3:
+    case yagl_gl_3_es3:
+        break;
+    default:
+        fprintf(stderr, "Critical error! Bad host OpenGL version reported by kernel: %d!\n",
+                user_info.gl_version);
+        exit(1);
+    }
+
     state->regs = mmap(NULL,
                        sysconf(_SC_PAGE_SIZE),
                        PROT_READ|PROT_WRITE,
@@ -282,6 +295,8 @@ static struct yagl_state *yagl_get_state()
     default:
         break;
     }
+
+    state->gl_version = user_info.gl_version;
 
     pthread_setspecific(g_state_key, state);
 
@@ -334,6 +349,11 @@ yagl_object_name yagl_get_global_name()
     pthread_mutex_unlock(&g_name_gen_mutex);
 
     return ret;
+}
+
+yagl_gl_version yagl_get_host_gl_version()
+{
+    return yagl_get_state()->gl_version;
 }
 
 struct yagl_backend *yagl_get_backend()
