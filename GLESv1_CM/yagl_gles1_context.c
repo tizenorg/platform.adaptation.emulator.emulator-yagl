@@ -1,6 +1,7 @@
 #include "GLES/gl.h"
 #include "GLES/glext.h"
 #include "yagl_gles1_context.h"
+#include "yagl_gles_vertex_array.h"
 #include "yagl_gles_array.h"
 #include "yagl_gles_buffer.h"
 #include "yagl_gles_texture.h"
@@ -174,11 +175,9 @@ static unsigned yagl_gles1_array_idx_from_pname(struct yagl_gles1_context *ctx,
 static void yagl_gles1_context_prepare(struct yagl_client_context *ctx)
 {
     struct yagl_gles1_context *gles1_ctx = (struct yagl_gles1_context*)ctx;
-    GLint i, num_texture_units = 0;
-    struct yagl_gles_array *arrays;
+    GLint num_texture_units = 0;
     int32_t size = 0;
     char *extensions;
-    int num_arrays;
 
     YAGL_LOG_FUNC_ENTER(yagl_gles1_context_prepare, "%p", ctx);
 
@@ -192,40 +191,10 @@ static void yagl_gles1_context_prepare(struct yagl_client_context *ctx)
         num_texture_units = 32;
     }
 
-    /* Each texture unit has its own client-side array state */
-    num_arrays = yagl_gles1_array_texcoord + num_texture_units;
-
-    arrays = yagl_malloc(num_arrays * sizeof(*arrays));
-
-    yagl_gles_array_init(&arrays[yagl_gles1_array_vertex],
-                         yagl_gles1_array_vertex,
-                         &yagl_gles1_vertex_array_apply,
-                         gles1_ctx);
-
-    yagl_gles_array_init(&arrays[yagl_gles1_array_color],
-                         yagl_gles1_array_color,
-                         &yagl_gles1_color_array_apply,
-                         gles1_ctx);
-
-    yagl_gles_array_init(&arrays[yagl_gles1_array_normal],
-                         yagl_gles1_array_normal,
-                         &yagl_gles1_normal_array_apply,
-                         gles1_ctx);
-
-    yagl_gles_array_init(&arrays[yagl_gles1_array_pointsize],
-                         yagl_gles1_array_pointsize,
-                         &yagl_gles1_pointsize_array_apply,
-                         gles1_ctx);
-
-    for (i = yagl_gles1_array_texcoord; i < num_arrays; ++i) {
-        yagl_gles_array_init(&arrays[i],
-                             i,
-                             &yagl_gles1_texcoord_array_apply,
-                             gles1_ctx);
-    }
-
-    yagl_gles_context_prepare(&gles1_ctx->base, arrays, num_arrays,
-                              num_texture_units);
+    yagl_gles_context_prepare(&gles1_ctx->base,
+                              num_texture_units,
+                              /* Each texture unit has its own client-side array state */
+                              yagl_gles1_array_texcoord + num_texture_units);
 
     yagl_host_glGetIntegerv(GL_MAX_CLIP_PLANES,
                             &gles1_ctx->max_clip_planes,
@@ -269,6 +238,44 @@ static void yagl_gles1_context_destroy(struct yagl_client_context *ctx)
     yagl_free(gles1_ctx);
 
     YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+static struct yagl_gles_array
+    *yagl_gles1_context_create_arrays(struct yagl_gles_context *ctx)
+{
+    GLint i;
+    struct yagl_gles_array *arrays;
+
+    arrays = yagl_malloc(ctx->num_arrays * sizeof(*arrays));
+
+    yagl_gles_array_init(&arrays[yagl_gles1_array_vertex],
+                         yagl_gles1_array_vertex,
+                         &yagl_gles1_vertex_array_apply,
+                         ctx);
+
+    yagl_gles_array_init(&arrays[yagl_gles1_array_color],
+                         yagl_gles1_array_color,
+                         &yagl_gles1_color_array_apply,
+                         ctx);
+
+    yagl_gles_array_init(&arrays[yagl_gles1_array_normal],
+                         yagl_gles1_array_normal,
+                         &yagl_gles1_normal_array_apply,
+                         ctx);
+
+    yagl_gles_array_init(&arrays[yagl_gles1_array_pointsize],
+                         yagl_gles1_array_pointsize,
+                         &yagl_gles1_pointsize_array_apply,
+                         ctx);
+
+    for (i = yagl_gles1_array_texcoord; i < ctx->num_arrays; ++i) {
+        yagl_gles_array_init(&arrays[i],
+                             i,
+                             &yagl_gles1_texcoord_array_apply,
+                             ctx);
+    }
+
+    return arrays;
 }
 
 static const GLchar
@@ -703,7 +710,7 @@ static int yagl_gles1_context_is_enabled(struct yagl_gles_context *ctx,
     case GL_COLOR_ARRAY:
     case GL_TEXTURE_COORD_ARRAY:
     case GL_POINT_SIZE_ARRAY_OES:
-        *enabled = ctx->arrays[yagl_gles1_array_idx_from_pname(gles1_ctx, cap)].enabled;
+        *enabled = ctx->vao->arrays[yagl_gles1_array_idx_from_pname(gles1_ctx, cap)].enabled;
         return 1;
     case GL_ALPHA_TEST:
     case GL_COLOR_LOGIC_OP:
@@ -767,7 +774,7 @@ static int yagl_gles1_context_get_integerv(struct yagl_gles_context *ctx,
     case GL_COLOR_ARRAY:
     case GL_TEXTURE_COORD_ARRAY:
     case GL_POINT_SIZE_ARRAY_OES:
-        *params = ctx->arrays[yagl_gles1_array_idx_from_pname(gles1_ctx, pname)].enabled;
+        *params = ctx->vao->arrays[yagl_gles1_array_idx_from_pname(gles1_ctx, pname)].enabled;
         *num_params = 1;
         break;
     case GL_VERTEX_ARRAY_BUFFER_BINDING:
@@ -775,8 +782,8 @@ static int yagl_gles1_context_get_integerv(struct yagl_gles_context *ctx,
     case GL_NORMAL_ARRAY_BUFFER_BINDING:
     case GL_TEXTURE_COORD_ARRAY_BUFFER_BINDING:
     case GL_POINT_SIZE_ARRAY_BUFFER_BINDING_OES:
-        *params = ctx->arrays[yagl_gles1_array_idx_from_pname(gles1_ctx, pname)].vbo ?
-                  ctx->arrays[yagl_gles1_array_idx_from_pname(gles1_ctx, pname)].vbo->base.local_name
+        *params = ctx->vao->arrays[yagl_gles1_array_idx_from_pname(gles1_ctx, pname)].vbo ?
+                  ctx->vao->arrays[yagl_gles1_array_idx_from_pname(gles1_ctx, pname)].vbo->base.local_name
                   : 0;
         *num_params = 1;
         break;
@@ -785,7 +792,7 @@ static int yagl_gles1_context_get_integerv(struct yagl_gles_context *ctx,
     case GL_NORMAL_ARRAY_STRIDE:
     case GL_TEXTURE_COORD_ARRAY_STRIDE:
     case GL_POINT_SIZE_ARRAY_STRIDE_OES:
-        *params = ctx->arrays[yagl_gles1_array_idx_from_pname(gles1_ctx, pname)].stride;
+        *params = ctx->vao->arrays[yagl_gles1_array_idx_from_pname(gles1_ctx, pname)].stride;
         *num_params = 1;
         break;
     case GL_VERTEX_ARRAY_TYPE:
@@ -793,13 +800,13 @@ static int yagl_gles1_context_get_integerv(struct yagl_gles_context *ctx,
     case GL_NORMAL_ARRAY_TYPE:
     case GL_TEXTURE_COORD_ARRAY_TYPE:
     case GL_POINT_SIZE_ARRAY_TYPE_OES:
-        *params = ctx->arrays[yagl_gles1_array_idx_from_pname(gles1_ctx, pname)].type;
+        *params = ctx->vao->arrays[yagl_gles1_array_idx_from_pname(gles1_ctx, pname)].type;
         *num_params = 1;
         break;
     case GL_VERTEX_ARRAY_SIZE:
     case GL_COLOR_ARRAY_SIZE:
     case GL_TEXTURE_COORD_ARRAY_SIZE:
-        *params = ctx->arrays[yagl_gles1_array_idx_from_pname(gles1_ctx, pname)].size;
+        *params = ctx->vao->arrays[yagl_gles1_array_idx_from_pname(gles1_ctx, pname)].size;
         *num_params = 1;
         break;
     default:
@@ -1042,7 +1049,7 @@ static void yagl_gles1_draw_arrays_psize(struct yagl_gles_context *ctx,
                                          GLint first,
                                          GLsizei count)
 {
-    struct yagl_gles_array *parray = &ctx->arrays[yagl_gles1_array_pointsize];
+    struct yagl_gles_array *parray = &ctx->vao->arrays[yagl_gles1_array_pointsize];
     unsigned i = 0;
     unsigned stride = parray->stride;
     GLsizei points_cnt;
@@ -1109,7 +1116,7 @@ static void yagl_gles1_draw_elem_psize(struct yagl_gles_context *ctx,
                                        const GLvoid *indices,
                                        int32_t indices_count)
 {
-    struct yagl_gles_array *parray = &ctx->arrays[yagl_gles1_array_pointsize];
+    struct yagl_gles_array *parray = &ctx->vao->arrays[yagl_gles1_array_pointsize];
     unsigned i = 0, el_size;
     GLsizei points_cnt;
     GLint arr_offset;
@@ -1130,7 +1137,7 @@ static void yagl_gles1_draw_elem_psize(struct yagl_gles_context *ctx,
 
     assert(el_size > 0);
 
-    next_psize_p = yagl_get_next_psize_p(ctx->ebo, parray, type, i, indices, indices_count);
+    next_psize_p = yagl_get_next_psize_p(ctx->vao->ebo, parray, type, i, indices, indices_count);
 
     while (i < count) {
         points_cnt = 0;
@@ -1140,7 +1147,7 @@ static void yagl_gles1_draw_elem_psize(struct yagl_gles_context *ctx,
         do {
             ++points_cnt;
             ++i;
-            next_psize_p = yagl_get_next_psize_p(ctx->ebo,
+            next_psize_p = yagl_get_next_psize_p(ctx->vao->ebo,
                                                  parray,
                                                  type,
                                                  i,
@@ -1150,7 +1157,7 @@ static void yagl_gles1_draw_elem_psize(struct yagl_gles_context *ctx,
 
         yagl_host_glPointSize(cur_psize);
 
-        if (ctx->ebo) {
+        if (ctx->vao->ebo) {
             yagl_host_glDrawElements(GL_POINTS,
                                      points_cnt,
                                      type,
@@ -1171,11 +1178,11 @@ static void yagl_gles1_context_draw_arrays(struct yagl_gles_context *ctx,
                                            GLint first,
                                            GLsizei count)
 {
-    if (!ctx->arrays[yagl_gles1_array_vertex].enabled) {
+    if (!ctx->vao->arrays[yagl_gles1_array_vertex].enabled) {
         return;
     }
 
-    if ((mode == GL_POINTS) && ctx->arrays[yagl_gles1_array_pointsize].enabled) {
+    if ((mode == GL_POINTS) && ctx->vao->arrays[yagl_gles1_array_pointsize].enabled) {
         yagl_gles1_draw_arrays_psize(ctx, first, count);
     } else {
         yagl_host_glDrawArrays(mode, first, count);
@@ -1189,11 +1196,11 @@ static void yagl_gles1_context_draw_elements(struct yagl_gles_context *ctx,
                                              const GLvoid *indices,
                                              int32_t indices_count)
 {
-    if (!ctx->arrays[yagl_gles1_array_vertex].enabled) {
+    if (!ctx->vao->arrays[yagl_gles1_array_vertex].enabled) {
         return;
     }
 
-    if ((mode == GL_POINTS) && ctx->arrays[yagl_gles1_array_pointsize].enabled) {
+    if ((mode == GL_POINTS) && ctx->vao->arrays[yagl_gles1_array_pointsize].enabled) {
         yagl_gles1_draw_elem_psize(ctx, count, type, indices, indices_count);
     } else {
         yagl_host_glDrawElements(mode, count, type, indices, indices_count);
@@ -1214,6 +1221,7 @@ struct yagl_client_context *yagl_gles1_context_create(struct yagl_sharegroup *sg
 
     gles1_ctx->base.base.prepare = &yagl_gles1_context_prepare;
     gles1_ctx->base.base.destroy = &yagl_gles1_context_destroy;
+    gles1_ctx->base.create_arrays = &yagl_gles1_context_create_arrays;
     gles1_ctx->base.get_string = &yagl_gles1_context_get_string;
     gles1_ctx->base.get_extensions = &yagl_gles1_context_get_extensions;
     gles1_ctx->base.compressed_tex_image = &yagl_gles1_context_compressed_tex_image;

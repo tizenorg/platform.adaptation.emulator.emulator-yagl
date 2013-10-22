@@ -4,7 +4,7 @@
 #include "yagl_types.h"
 #include "yagl_object.h"
 
-#define YAGL_NS_RENDERBUFFER 3
+#define YAGL_NS_RENDERBUFFER 2
 
 struct yagl_gles_renderbuffer
 {

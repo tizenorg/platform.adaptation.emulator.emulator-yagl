@@ -1,5 +1,6 @@
 #include "GL/gl.h"
 #include "yagl_gles_context.h"
+#include "yagl_gles_vertex_array.h"
 #include "yagl_gles_array.h"
 #include "yagl_gles_buffer.h"
 #include "yagl_gles_texture.h"
@@ -12,6 +13,7 @@
 #include "yagl_log.h"
 #include "yagl_malloc.h"
 #include "yagl_utils.h"
+#include "yagl_state.h"
 #include "yagl_host_gles_calls.h"
 #include <string.h>
 #include <assert.h>
@@ -47,6 +49,9 @@ void yagl_gles_context_init(struct yagl_gles_context *ctx,
                             struct yagl_sharegroup *sg)
 {
     yagl_sharegroup_acquire(sg);
+
+    yagl_namespace_init(&ctx->framebuffers);
+    yagl_namespace_init(&ctx->vertex_arrays);
 
     ctx->base.bind_tex_image = &yagl_gles_context_bind_tex_image;
 
@@ -89,25 +94,21 @@ void yagl_gles_context_init(struct yagl_gles_context *ctx,
 }
 
 void yagl_gles_context_prepare(struct yagl_gles_context *ctx,
-                               struct yagl_gles_array *arrays,
-                               int num_arrays,
-                               int num_texture_units)
+                               int num_texture_units,
+                               int num_arrays)
 {
     int i;
     int32_t size = 0;
     char *extensions;
+    struct yagl_gles_array *arrays;
 
     if (num_texture_units < 1) {
         num_texture_units = 1;
     }
 
     YAGL_LOG_FUNC_ENTER(yagl_gles_context_prepare,
-                        "num_arrays = %d, num_texture_units = %d",
-                        num_arrays,
+                        "num_texture_units = %d",
                         num_texture_units);
-
-    ctx->arrays = arrays;
-    ctx->num_arrays = num_arrays;
 
     ctx->num_texture_units = num_texture_units;
     ctx->texture_units =
@@ -116,6 +117,8 @@ void yagl_gles_context_prepare(struct yagl_gles_context *ctx,
     for (i = 0; i < ctx->num_texture_units; ++i) {
         yagl_gles_texture_unit_init(&ctx->texture_units[i]);
     }
+
+    ctx->num_arrays = num_arrays;
 
     yagl_host_glGetString(GL_EXTENSIONS, NULL, 0, &size);
     extensions = yagl_malloc0(size);
@@ -134,6 +137,24 @@ void yagl_gles_context_prepare(struct yagl_gles_context *ctx,
 
     yagl_free(extensions);
 
+    arrays = ctx->create_arrays(ctx);
+
+    ctx->vertex_arrays_supported = (yagl_get_host_gl_version() > yagl_gl_2);
+
+    if (ctx->vertex_arrays_supported) {
+        ctx->va_zero = yagl_gles_vertex_array_create(0, arrays, num_arrays);
+
+        yagl_gles_context_bind_vertex_array(ctx, NULL);
+    } else {
+        ctx->va_zero = yagl_gles_vertex_array_create(1, arrays, num_arrays);
+
+        /*
+         * Don't bind, VAOs are not supported, just reference.
+         */
+        yagl_gles_vertex_array_acquire(ctx->va_zero);
+        ctx->vao = ctx->va_zero;
+    }
+
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
@@ -143,24 +164,21 @@ void yagl_gles_context_cleanup(struct yagl_gles_context *ctx)
 
     yagl_gles_renderbuffer_release(ctx->rbo);
     yagl_gles_framebuffer_release(ctx->fbo);
-    yagl_gles_buffer_release(ctx->ebo);
     yagl_gles_buffer_release(ctx->vbo);
+    yagl_gles_vertex_array_release(ctx->vao);
 
     for (i = 0; i < ctx->num_texture_units; ++i) {
         yagl_gles_texture_unit_cleanup(&ctx->texture_units[i]);
     }
 
-    for (i = 0; i < ctx->num_arrays; ++i) {
-        yagl_gles_array_cleanup(&ctx->arrays[i]);
-    }
-
     yagl_free(ctx->texture_units);
-    ctx->texture_units = NULL;
 
-    yagl_free(ctx->arrays);
-    ctx->arrays = NULL;
+    yagl_gles_vertex_array_release(ctx->va_zero);
 
     yagl_free(ctx->extensions);
+
+    yagl_namespace_cleanup(&ctx->vertex_arrays);
+    yagl_namespace_cleanup(&ctx->framebuffers);
 
     yagl_sharegroup_release(ctx->base.sg);
 }
@@ -179,6 +197,20 @@ GLenum yagl_gles_context_get_error(struct yagl_gles_context *ctx)
     ctx->error = GL_NO_ERROR;
 
     return error;
+}
+
+void yagl_gles_context_bind_vertex_array(struct yagl_gles_context *ctx,
+                                         struct yagl_gles_vertex_array *va)
+{
+    if (!va) {
+        va = ctx->va_zero;
+    }
+
+    yagl_gles_vertex_array_acquire(va);
+    yagl_gles_vertex_array_release(ctx->vao);
+    ctx->vao = va;
+
+    yagl_gles_vertex_array_bind(va);
 }
 
 void yagl_gles_context_set_active_texture(struct yagl_gles_context *ctx,
@@ -278,8 +310,8 @@ void yagl_gles_context_bind_buffer(struct yagl_gles_context *ctx,
         break;
     case GL_ELEMENT_ARRAY_BUFFER:
         yagl_gles_buffer_acquire(buffer);
-        yagl_gles_buffer_release(ctx->ebo);
-        ctx->ebo = buffer;
+        yagl_gles_buffer_release(ctx->vao->ebo);
+        ctx->vao->ebo = buffer;
         break;
     default:
         YAGL_SET_ERR(GL_INVALID_ENUM);
@@ -297,9 +329,9 @@ void yagl_gles_context_unbind_buffer(struct yagl_gles_context *ctx,
     if (ctx->vbo && (ctx->vbo->base.local_name == buffer_local_name)) {
         yagl_gles_buffer_release(ctx->vbo);
         ctx->vbo = NULL;
-    } else if (ctx->ebo && (ctx->ebo->base.local_name == buffer_local_name)) {
-        yagl_gles_buffer_release(ctx->ebo);
-        ctx->ebo = NULL;
+    } else if (ctx->vao->ebo && (ctx->vao->ebo->base.local_name == buffer_local_name)) {
+        yagl_gles_buffer_release(ctx->vao->ebo);
+        ctx->vao->ebo = NULL;
     }
 }
 
@@ -370,8 +402,8 @@ struct yagl_gles_buffer
         yagl_gles_buffer_acquire(ctx->vbo);
         return ctx->vbo;
     case GL_ELEMENT_ARRAY_BUFFER:
-        yagl_gles_buffer_acquire(ctx->ebo);
-        return ctx->ebo;
+        yagl_gles_buffer_acquire(ctx->vao->ebo);
+        return ctx->vao->ebo;
     default:
         return NULL;
     }
@@ -509,7 +541,7 @@ int yagl_gles_context_get_integerv(struct yagl_gles_context *ctx,
         *num_params = 1;
         break;
     case GL_ELEMENT_ARRAY_BUFFER_BINDING:
-        *params = ctx->ebo ? ctx->ebo->base.local_name : 0;
+        *params = ctx->vao->ebo ? ctx->vao->ebo->base.local_name : 0;
         *num_params = 1;
         break;
     case GL_FRAMEBUFFER_BINDING:

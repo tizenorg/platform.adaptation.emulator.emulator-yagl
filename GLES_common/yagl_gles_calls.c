@@ -8,6 +8,7 @@
 #include "yagl_utils.h"
 #include "yagl_sharegroup.h"
 #include "yagl_gles_context.h"
+#include "yagl_gles_vertex_array.h"
 #include "yagl_gles_buffer.h"
 #include "yagl_gles_texture.h"
 #include "yagl_gles_texture_unit.h"
@@ -405,8 +406,8 @@ void glBindFramebuffer(GLenum target, GLuint framebuffer)
     YAGL_GET_CTX();
 
     if (framebuffer != 0) {
-        framebuffer_obj = (struct yagl_gles_framebuffer*)yagl_sharegroup_acquire_object(ctx->base.sg,
-            YAGL_NS_FRAMEBUFFER, framebuffer);
+        framebuffer_obj = (struct yagl_gles_framebuffer*)yagl_namespace_acquire(&ctx->framebuffers,
+            framebuffer);
 
         if (!framebuffer_obj) {
             framebuffer_obj = yagl_gles_framebuffer_create();
@@ -415,8 +416,8 @@ void glBindFramebuffer(GLenum target, GLuint framebuffer)
                 goto out;
             }
 
-            framebuffer_obj = (struct yagl_gles_framebuffer*)yagl_sharegroup_add_named(ctx->base.sg,
-               YAGL_NS_FRAMEBUFFER, framebuffer, &framebuffer_obj->base);
+            framebuffer_obj = (struct yagl_gles_framebuffer*)yagl_namespace_add_named(&ctx->framebuffers,
+               framebuffer, &framebuffer_obj->base);
         }
     }
 
@@ -994,9 +995,8 @@ void glDeleteFramebuffers(GLsizei n, const GLuint *framebuffers)
         for (i = 0; i < n; ++i) {
             yagl_gles_context_unbind_framebuffer(ctx, framebuffers[i]);
 
-            yagl_sharegroup_remove(ctx->base.sg,
-                                   YAGL_NS_FRAMEBUFFER,
-                                   framebuffers[i]);
+            yagl_namespace_remove(&ctx->framebuffers,
+                                  framebuffers[i]);
         }
     }
 
@@ -1130,8 +1130,8 @@ YAGL_API void glDrawArrays(GLenum mode, GLint first, GLsizei count)
 
     yagl_render_invalidate();
 
-    for (i = 0; i < ctx->num_arrays; ++i) {
-        yagl_gles_array_transfer(&ctx->arrays[i],
+    for (i = 0; i < ctx->vao->num_arrays; ++i) {
+        yagl_gles_array_transfer(&ctx->vao->arrays[i],
                                  first,
                                  count);
     }
@@ -1163,7 +1163,7 @@ YAGL_API void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvo
         goto out;
     }
 
-    if (!ctx->ebo && !indices) {
+    if (!ctx->vao->ebo && !indices) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
         goto out;
     }
@@ -1174,14 +1174,14 @@ YAGL_API void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvo
 
     yagl_render_invalidate();
 
-    for (i = 0; i < ctx->num_arrays; ++i) {
-        if (!ctx->arrays[i].enabled) {
+    for (i = 0; i < ctx->vao->num_arrays; ++i) {
+        if (!ctx->vao->arrays[i].enabled) {
             continue;
         }
 
         if (!have_range) {
-            if (ctx->ebo) {
-                if (!yagl_gles_buffer_get_minmax_index(ctx->ebo,
+            if (ctx->vao->ebo) {
+                if (!yagl_gles_buffer_get_minmax_index(ctx->vao->ebo,
                                                        type,
                                                        (GLint)indices,
                                                        count,
@@ -1197,7 +1197,7 @@ YAGL_API void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvo
             have_range = 1;
         }
 
-        yagl_gles_array_transfer(&ctx->arrays[i],
+        yagl_gles_array_transfer(&ctx->vao->arrays[i],
                                  min_idx,
                                  max_idx + 1 - min_idx);
     }
@@ -1206,12 +1206,12 @@ YAGL_API void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvo
         goto out;
     }
 
-    if (ctx->ebo) {
-        yagl_gles_buffer_bind(ctx->ebo,
+    if (ctx->vao->ebo) {
+        yagl_gles_buffer_bind(ctx->vao->ebo,
                               type,
                               0,
                               GL_ELEMENT_ARRAY_BUFFER);
-        yagl_gles_buffer_transfer(ctx->ebo,
+        yagl_gles_buffer_transfer(ctx->vao->ebo,
                                   type,
                                   GL_ELEMENT_ARRAY_BUFFER,
                                   0);
@@ -1435,9 +1435,8 @@ void glGenFramebuffers(GLsizei n, GLuint *framebuffer_names)
     }
 
     for (i = 0; i < n; ++i) {
-        yagl_sharegroup_add(ctx->base.sg,
-                            YAGL_NS_FRAMEBUFFER,
-                            &framebuffers[i]->base);
+        yagl_namespace_add(&ctx->framebuffers,
+                           &framebuffers[i]->base);
 
         if (framebuffer_names) {
             framebuffer_names[i] = framebuffers[i]->base.local_name;
@@ -1785,8 +1784,8 @@ GLboolean glIsFramebuffer(GLuint framebuffer)
 
     YAGL_GET_CTX_RET(GL_FALSE);
 
-    framebuffer_obj = (struct yagl_gles_framebuffer*)yagl_sharegroup_acquire_object(ctx->base.sg,
-        YAGL_NS_FRAMEBUFFER, framebuffer);
+    framebuffer_obj = (struct yagl_gles_framebuffer*)yagl_namespace_acquire(&ctx->framebuffers,
+        framebuffer);
 
     if (framebuffer_obj && yagl_gles_framebuffer_was_bound(framebuffer_obj)) {
         res = GL_TRUE;

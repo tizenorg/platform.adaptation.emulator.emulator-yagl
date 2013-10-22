@@ -4,8 +4,6 @@
 #include "yagl_gles_types.h"
 #include "yagl_object.h"
 
-#define YAGL_NS_FRAMEBUFFER 2
-
 struct yagl_gles_texture;
 struct yagl_gles_renderbuffer;
 

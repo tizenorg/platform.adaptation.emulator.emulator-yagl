@@ -215,23 +215,14 @@ void yagl_gles2_context_cleanup(struct yagl_gles2_context *ctx)
 void yagl_gles2_context_prepare(struct yagl_client_context *ctx)
 {
     struct yagl_gles2_context *gles2_ctx = (struct yagl_gles2_context*)ctx;
-    GLint i, num_arrays = 0, num_texture_units = 0;
-    struct yagl_gles_array *arrays;
+    GLint num_texture_units = 0;
     int32_t size = 0;
     char *extensions, *conformant;
+    int num_arrays = 1;
 
     YAGL_LOG_FUNC_ENTER(yagl_gles2_context_prepare, "%p", ctx);
 
     yagl_host_glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &num_arrays, 1, NULL);
-
-    arrays = yagl_malloc(num_arrays * sizeof(*arrays));
-
-    for (i = 0; i < num_arrays; ++i) {
-        yagl_gles_array_init(&arrays[i],
-                             i,
-                             &yagl_gles2_array_apply,
-                             gles2_ctx);
-    }
 
     yagl_host_glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS,
                             &num_texture_units, 1, NULL);
@@ -243,8 +234,9 @@ void yagl_gles2_context_prepare(struct yagl_client_context *ctx)
         num_texture_units = 32;
     }
 
-    yagl_gles_context_prepare(&gles2_ctx->base, arrays, num_arrays,
-                              num_texture_units);
+    yagl_gles_context_prepare(&gles2_ctx->base,
+                              num_texture_units,
+                              num_arrays);
 
     conformant = getenv("YAGL_CONFORMANT");
 
@@ -283,6 +275,24 @@ void yagl_gles2_context_prepare(struct yagl_client_context *ctx)
     yagl_free(extensions);
 
     YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+struct yagl_gles_array
+    *yagl_gles2_context_create_arrays(struct yagl_gles_context *ctx)
+{
+    GLint i;
+    struct yagl_gles_array *arrays;
+
+    arrays = yagl_malloc(ctx->num_arrays * sizeof(*arrays));
+
+    for (i = 0; i < ctx->num_arrays; ++i) {
+        yagl_gles_array_init(&arrays[i],
+                             i,
+                             &yagl_gles2_array_apply,
+                             ctx);
+    }
+
+    return arrays;
 }
 
 GLenum yagl_gles2_context_compressed_tex_image(struct yagl_gles_context *ctx,
@@ -483,6 +493,7 @@ struct yagl_client_context *yagl_gles2_context_create(struct yagl_sharegroup *sg
 
     gles2_ctx->base.base.prepare = &yagl_gles2_context_prepare;
     gles2_ctx->base.base.destroy = &yagl_gles2_context_destroy;
+    gles2_ctx->base.create_arrays = &yagl_gles2_context_create_arrays;
     gles2_ctx->base.get_string = &yagl_gles2_context_get_string;
     gles2_ctx->base.get_extensions = &yagl_gles2_context_get_extensions;
     gles2_ctx->base.compressed_tex_image = &yagl_gles2_context_compressed_tex_image;

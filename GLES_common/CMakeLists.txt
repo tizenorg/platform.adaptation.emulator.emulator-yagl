@@ -1,4 +1,5 @@
 set(SOURCES
+    yagl_gles_vertex_array.c
     yagl_gles_array.c
     yagl_gles_buffer.c
     yagl_gles_texture.c

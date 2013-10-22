@@ -8,7 +8,7 @@
  * Programs and shaders share the same namespace,
  * pretty clumsy!
  */
-#define YAGL_NS_SHADER_PROGRAM 4
+#define YAGL_NS_SHADER_PROGRAM 3
 
 struct yagl_gles2_shader
 {

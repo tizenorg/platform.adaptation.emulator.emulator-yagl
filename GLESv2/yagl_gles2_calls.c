@@ -4,6 +4,7 @@
 #include "yagl_gles2_shader.h"
 #include "yagl_gles2_validate.h"
 #include "yagl_gles2_context.h"
+#include "yagl_gles_vertex_array.h"
 #include "yagl_gles_array.h"
 #include "yagl_gles_buffer.h"
 #include "yagl_impl.h"
@@ -398,7 +399,7 @@ YAGL_API void glEnableVertexAttribArray(GLuint index)
     YAGL_GET_CTX();
 
     if (index < ctx->base.num_arrays) {
-        ctx->base.arrays[index].enabled = 1;
+        yagl_gles_array_enable(&ctx->base.vao->arrays[index], 1);
     }
 
     yagl_host_glEnableVertexAttribArray(index);
@@ -413,7 +414,7 @@ YAGL_API void glDisableVertexAttribArray(GLuint index)
     YAGL_GET_CTX();
 
     if (index < ctx->base.num_arrays) {
-        ctx->base.arrays[index].enabled = 0;
+        yagl_gles_array_enable(&ctx->base.vao->arrays[index], 0);
     }
 
     yagl_host_glDisableVertexAttribArray(index);
@@ -989,7 +990,7 @@ YAGL_API void glGetVertexAttribfv(GLuint index, GLenum pname, GLfloat *params)
         goto out;
     }
 
-    array = &ctx->base.arrays[index];
+    array = &ctx->base.vao->arrays[index];
 
     if (!yagl_gles2_is_array_param_valid(pname)) {
         YAGL_SET_ERR(GL_INVALID_ENUM);
@@ -1026,7 +1027,7 @@ YAGL_API void glGetVertexAttribiv(GLuint index, GLenum pname, GLint *params)
         goto out;
     }
 
-    array = &ctx->base.arrays[index];
+    array = &ctx->base.vao->arrays[index];
 
     if (!yagl_gles2_is_array_param_valid(pname)) {
         YAGL_SET_ERR(GL_INVALID_ENUM);
@@ -1057,7 +1058,7 @@ YAGL_API void glGetVertexAttribPointerv(GLuint index, GLenum pname, GLvoid **poi
         goto out;
     }
 
-    array = &ctx->base.arrays[index];
+    array = &ctx->base.vao->arrays[index];
 
     if (pointer) {
         if (array->vbo) {
@@ -1961,7 +1962,7 @@ YAGL_API void glVertexAttribPointer(GLuint indx, GLint size, GLenum type, GLbool
         goto out;
     }
 
-    array = &ctx->base.arrays[indx];
+    array = &ctx->base.vao->arrays[indx];
 
     if (ctx->base.vbo) {
         if (!yagl_gles_array_update_vbo(array,

@@ -3,7 +3,9 @@
 
 #include "yagl_gles_types.h"
 #include "yagl_client_context.h"
+#include "yagl_namespace.h"
 
+struct yagl_gles_vertex_array;
 struct yagl_gles_array;
 struct yagl_gles_buffer;
 struct yagl_gles_texture;
@@ -14,6 +16,8 @@ struct yagl_gles_renderbuffer;
 struct yagl_gles_context
 {
     struct yagl_client_context base;
+
+    struct yagl_gles_array *(*create_arrays)(struct yagl_gles_context */*ctx*/);
 
     const GLchar *(*get_string)(struct yagl_gles_context */*ctx*/,
                                 GLenum /*name*/);
@@ -61,16 +65,15 @@ struct yagl_gles_context
                           const GLvoid */*indices*/,
                           int32_t /*indices_count*/);
 
+    struct yagl_namespace framebuffers;
+
+    struct yagl_namespace vertex_arrays;
+
     GLchar *extensions;
 
     GLenum error;
 
-    /*
-     * GLES arrays, the number of arrays is different depending on
-     * GLES version, 'num_arrays' holds that number.
-     */
-    struct yagl_gles_array *arrays;
-    int num_arrays;
+    struct yagl_gles_vertex_array *va_zero;
 
     /*
      * GLES texture units, the number of texture units is determined
@@ -78,6 +81,10 @@ struct yagl_gles_context
      */
     struct yagl_gles_texture_unit *texture_units;
     int num_texture_units;
+
+    int num_arrays;
+
+    int vertex_arrays_supported;
 
     int packed_depth_stencil;
 
@@ -89,9 +96,9 @@ struct yagl_gles_context
 
     int active_texture_unit;
 
-    struct yagl_gles_buffer *vbo;
+    struct yagl_gles_vertex_array *vao;
 
-    struct yagl_gles_buffer *ebo;
+    struct yagl_gles_buffer *vbo;
 
     struct yagl_gles_framebuffer *fbo;
 
@@ -143,19 +150,18 @@ void yagl_gles_context_init(struct yagl_gles_context *ctx,
                             yagl_client_api client_api,
                             struct yagl_sharegroup *sg);
 
-/*
- * Takes ownership of 'arrays'.
- */
 void yagl_gles_context_prepare(struct yagl_gles_context *ctx,
-                               struct yagl_gles_array *arrays,
-                               int num_arrays,
-                               int num_texture_units);
+                               int num_texture_units,
+                               int num_arrays);
 
 void yagl_gles_context_cleanup(struct yagl_gles_context *ctx);
 
 void yagl_gles_context_set_error(struct yagl_gles_context *ctx, GLenum error);
 
 GLenum yagl_gles_context_get_error(struct yagl_gles_context *ctx);
+
+void yagl_gles_context_bind_vertex_array(struct yagl_gles_context *ctx,
+                                         struct yagl_gles_vertex_array *va);
 
 void yagl_gles_context_set_active_texture(struct yagl_gles_context *ctx,
                                           GLenum texture);

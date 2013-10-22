@@ -48,6 +48,9 @@ void yagl_gles2_context_cleanup(struct yagl_gles2_context *ctx);
 
 void yagl_gles2_context_prepare(struct yagl_client_context *ctx);
 
+struct yagl_gles_array
+    *yagl_gles2_context_create_arrays(struct yagl_gles_context *ctx);
+
 GLenum yagl_gles2_context_compressed_tex_image(struct yagl_gles_context *ctx,
                                                GLenum target,
                                                GLint level,

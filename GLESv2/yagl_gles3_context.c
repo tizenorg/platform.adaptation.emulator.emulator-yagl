@@ -150,6 +150,7 @@ struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg
 
     gles3_ctx->base.base.prepare = &yagl_gles2_context_prepare;
     gles3_ctx->base.base.destroy = &yagl_gles3_context_destroy;
+    gles3_ctx->base.create_arrays = &yagl_gles2_context_create_arrays;
     gles3_ctx->base.get_string = &yagl_gles3_context_get_string;
     gles3_ctx->base.get_extensions = &yagl_gles3_context_get_extensions;
     gles3_ctx->base.compressed_tex_image = &yagl_gles2_context_compressed_tex_image;
