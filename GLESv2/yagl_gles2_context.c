@@ -7,6 +7,7 @@
 #include "yagl_gles_texture_unit.h"
 #include "yagl_log.h"
 #include "yagl_malloc.h"
+#include "yagl_state.h"
 #include "yagl_host_gles_calls.h"
 #include <string.h>
 #include <stdlib.h>
@@ -26,7 +27,9 @@ static inline void yagl_gles2_context_pre_draw(struct yagl_gles_context *ctx, GL
      */
 
     if (mode == GL_POINTS) {
-        yagl_host_glEnable(GL_POINT_SPRITE);
+        if (yagl_get_host_gl_version() <= yagl_gl_2) {
+            yagl_host_glEnable(GL_POINT_SPRITE);
+        }
         yagl_host_glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
     }
 }
@@ -35,7 +38,9 @@ static inline void yagl_gles2_context_post_draw(struct yagl_gles_context *ctx, G
 {
     if (mode == GL_POINTS) {
         yagl_host_glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
-        yagl_host_glDisable(GL_POINT_SPRITE);
+        if (yagl_get_host_gl_version() <= yagl_gl_2) {
+            yagl_host_glDisable(GL_POINT_SPRITE);
+        }
     }
 }
 
