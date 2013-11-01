@@ -1259,6 +1259,18 @@ YAGL_API void glCopyTexImage2D(GLenum target,
         goto out;
     }
 
+    /*
+     * TODO: Passing internalformat here is not correct since
+     * it may be unsupported in OpenGL 3.1 core profile
+     * (such as GL_ALPHA). Simply changing it to GL_RGBA
+     * is no good either since in that case the texture will
+     * contain more information than it actually supposed to,
+     * thus, leading to incorrect rendering. Perhaps we need to
+     * glReadPixels here, convert unsupported formats and then
+     * glTexImage2D. m.b. do it on host since it won't incur
+     * extra vmexit.
+     */
+
     yagl_host_glCopyTexImage2D(target,
                                level,
                                internalformat,
