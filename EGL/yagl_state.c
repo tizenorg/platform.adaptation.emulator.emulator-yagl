@@ -239,8 +239,9 @@ static struct yagl_state *yagl_get_state()
 
     switch (user_info.gl_version) {
     case yagl_gl_2:
-    case yagl_gl_3:
-    case yagl_gl_3_es3:
+    case yagl_gl_3_1:
+    case yagl_gl_3_1_es3:
+    case yagl_gl_3_2:
         break;
     default:
         fprintf(stderr, "Critical error! Bad host OpenGL version reported by kernel: %d!\n",

@@ -1061,7 +1061,7 @@ YAGL_API EGLContext eglCreateContext(EGLDisplay dpy_,
     }
 
     if ((client_api == yagl_client_api_gles3) &&
-        (yagl_get_host_gl_version() <= yagl_gl_2)) {
+        (yagl_get_host_gl_version() < yagl_gl_3_1_es3)) {
         YAGL_SET_ERR(EGL_BAD_ATTRIBUTE);
         goto out;
     }
