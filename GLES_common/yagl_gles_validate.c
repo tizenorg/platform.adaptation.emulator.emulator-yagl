@@ -172,12 +172,10 @@ int yagl_gles_validate_texture_target(GLenum target,
 }
 
 int yagl_gles_validate_framebuffer_attachment(GLenum attachment,
+    int num_color_attachments,
     yagl_gles_framebuffer_attachment *framebuffer_attachment)
 {
     switch (attachment) {
-    case GL_COLOR_ATTACHMENT0:
-        *framebuffer_attachment = yagl_gles_framebuffer_attachment_color0;
-        break;
     case GL_DEPTH_ATTACHMENT:
         *framebuffer_attachment = yagl_gles_framebuffer_attachment_depth;
         break;
@@ -185,6 +183,12 @@ int yagl_gles_validate_framebuffer_attachment(GLenum attachment,
         *framebuffer_attachment = yagl_gles_framebuffer_attachment_stencil;
         break;
     default:
+        if ((attachment >= GL_COLOR_ATTACHMENT0) &&
+            (attachment <= (GL_COLOR_ATTACHMENT0 + num_color_attachments - 1))) {
+            *framebuffer_attachment = yagl_gles_framebuffer_attachment_color0 +
+                                      (attachment - GL_COLOR_ATTACHMENT0);
+            break;
+        }
         return 0;
     }
 

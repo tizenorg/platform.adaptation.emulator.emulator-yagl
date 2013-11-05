@@ -1057,7 +1057,8 @@ GLenum glCheckFramebufferStatus(GLenum target)
         goto out;
     }
 
-    for (i = 0; i < YAGL_NUM_GLES_FRAMEBUFFER_ATTACHMENTS; ++i) {
+    for (i = 0; i < (yagl_gles_framebuffer_attachment_color0 +
+                     ctx->max_color_attachments); ++i) {
         if (framebuffer_obj->attachment_states[i].type != GL_NONE) {
             missing = 0;
             break;
@@ -1069,7 +1070,8 @@ GLenum glCheckFramebufferStatus(GLenum target)
         goto out;
     }
 
-    for (i = 0; i < YAGL_NUM_GLES_FRAMEBUFFER_ATTACHMENTS; ++i) {
+    for (i = 0; i < (yagl_gles_framebuffer_attachment_color0 +
+                     ctx->max_color_attachments); ++i) {
         switch (framebuffer_obj->attachment_states[i].type) {
         case GL_TEXTURE:
             texture_obj = (struct yagl_gles_texture*)yagl_sharegroup_acquire_object(ctx->base.sg,
@@ -1636,6 +1638,7 @@ void glFramebufferRenderbuffer(GLenum target,
 {
     struct yagl_gles_framebuffer *framebuffer_obj = NULL;
     struct yagl_gles_renderbuffer *renderbuffer_obj = NULL;
+    yagl_gles_framebuffer_attachment framebuffer_attachment;
 
     YAGL_LOG_FUNC_ENTER_SPLIT4(glFramebufferRenderbuffer, GLenum, GLenum, GLenum, GLuint, target, attachment, renderbuffertarget, renderbuffer);
 
@@ -1658,13 +1661,36 @@ void glFramebufferRenderbuffer(GLenum target,
         }
     }
 
-    if (!yagl_gles_framebuffer_renderbuffer(framebuffer_obj,
-                                            target,
-                                            attachment,
-                                            renderbuffertarget,
-                                            renderbuffer_obj)) {
+    if (renderbuffer_obj && (renderbuffertarget != GL_RENDERBUFFER)) {
         YAGL_SET_ERR(GL_INVALID_ENUM);
         goto out;
+    }
+
+    if ((ctx->base.client_api == yagl_client_api_gles3) &&
+        (attachment == GL_DEPTH_STENCIL_ATTACHMENT)) {
+        yagl_gles_framebuffer_renderbuffer(framebuffer_obj,
+                                           target, GL_DEPTH_ATTACHMENT,
+                                           yagl_gles_framebuffer_attachment_depth,
+                                           renderbuffertarget,
+                                           renderbuffer_obj);
+        yagl_gles_framebuffer_renderbuffer(framebuffer_obj,
+                                           target, GL_STENCIL_ATTACHMENT,
+                                           yagl_gles_framebuffer_attachment_stencil,
+                                           renderbuffertarget,
+                                           renderbuffer_obj);
+    } else {
+        if (!yagl_gles_validate_framebuffer_attachment(attachment,
+                                                       ctx->max_color_attachments,
+                                                       &framebuffer_attachment)) {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
+            goto out;
+        }
+
+        yagl_gles_framebuffer_renderbuffer(framebuffer_obj,
+                                           target, attachment,
+                                           framebuffer_attachment,
+                                           renderbuffertarget,
+                                           renderbuffer_obj);
     }
 
 out:
@@ -1682,6 +1708,8 @@ void glFramebufferTexture2D(GLenum target,
 {
     struct yagl_gles_framebuffer *framebuffer_obj = NULL;
     struct yagl_gles_texture *texture_obj = NULL;
+    yagl_gles_framebuffer_attachment framebuffer_attachment;
+    GLenum squashed_textarget;
 
     YAGL_LOG_FUNC_ENTER_SPLIT5(glFramebufferTexture2D, GLenum, GLenum, GLenum, GLuint, GLint, target, attachment, textarget, texture, level);
 
@@ -1704,14 +1732,50 @@ void glFramebufferTexture2D(GLenum target,
         }
     }
 
-    if (!yagl_gles_framebuffer_texture2d(framebuffer_obj,
-                                         target,
-                                         attachment,
-                                         textarget,
-                                         level,
-                                         texture_obj)) {
+    if (texture_obj && (level != 0)) {
         YAGL_SET_ERR(GL_INVALID_ENUM);
         goto out;
+    }
+
+    if (!yagl_gles_validate_texture_target_squash(textarget,
+                                                  &squashed_textarget)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if (texture_obj && (yagl_gles_texture_get_target(texture_obj) != squashed_textarget)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if ((ctx->base.client_api == yagl_client_api_gles3) &&
+        (attachment == GL_DEPTH_STENCIL_ATTACHMENT)) {
+        yagl_gles_framebuffer_texture2d(framebuffer_obj,
+                                        target, GL_DEPTH_ATTACHMENT,
+                                        yagl_gles_framebuffer_attachment_depth,
+                                        textarget,
+                                        level,
+                                        texture_obj);
+        yagl_gles_framebuffer_texture2d(framebuffer_obj,
+                                        target, GL_STENCIL_ATTACHMENT,
+                                        yagl_gles_framebuffer_attachment_stencil,
+                                        textarget,
+                                        level,
+                                        texture_obj);
+    } else {
+        if (!yagl_gles_validate_framebuffer_attachment(attachment,
+                                                       ctx->max_color_attachments,
+                                                       &framebuffer_attachment)) {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
+            goto out;
+        }
+
+        yagl_gles_framebuffer_texture2d(framebuffer_obj,
+                                        target, attachment,
+                                        framebuffer_attachment,
+                                        textarget,
+                                        level,
+                                        texture_obj);
     }
 
 out:
@@ -2022,6 +2086,7 @@ YAGL_API void glGetFloatv(GLenum pname, GLfloat *params)
 void glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint *params)
 {
     struct yagl_gles_framebuffer *framebuffer_obj = NULL;
+    yagl_gles_framebuffer_attachment framebuffer_attachment;
 
     YAGL_LOG_FUNC_ENTER_SPLIT4(glGetFramebufferAttachmentParameteriv, GLenum, GLenum, GLenum, GLint*, target, attachment, pname, params);
 
@@ -2034,10 +2099,48 @@ void glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLe
         goto out;
     }
 
-    if (!yagl_gles_framebuffer_get_attachment_parameter(framebuffer_obj,
-                                                        attachment,
-                                                        pname,
-                                                        params)) {
+    if ((ctx->base.client_api == yagl_client_api_gles3) &&
+        (attachment == GL_DEPTH_STENCIL_ATTACHMENT)) {
+        if (memcmp(&framebuffer_obj->attachment_states[yagl_gles_framebuffer_attachment_depth],
+                   &framebuffer_obj->attachment_states[yagl_gles_framebuffer_attachment_stencil],
+                   sizeof(struct yagl_gles_framebuffer_attachment_state)) == 0) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            goto out;
+        }
+        framebuffer_attachment = yagl_gles_framebuffer_attachment_depth;
+    } else if (!yagl_gles_validate_framebuffer_attachment(attachment,
+                                                          ctx->max_color_attachments,
+                                                          &framebuffer_attachment)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    switch (pname) {
+    case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
+        *params = framebuffer_obj->attachment_states[framebuffer_attachment].type;
+        break;
+    case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
+        *params = framebuffer_obj->attachment_states[framebuffer_attachment].local_name;
+        break;
+    case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL:
+        if (framebuffer_obj->attachment_states[framebuffer_attachment].type == GL_TEXTURE) {
+            *params = 0;
+        } else {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
+            goto out;
+        }
+        break;
+    case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE:
+        if (framebuffer_obj->attachment_states[framebuffer_attachment].type == GL_TEXTURE) {
+            *params =
+                (framebuffer_obj->attachment_states[framebuffer_attachment].textarget == GL_TEXTURE_2D)
+                ? 0 : framebuffer_obj->attachment_states[framebuffer_attachment].textarget;
+        } else {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
+            goto out;
+        }
+        break;
+    default:
         YAGL_SET_ERR(GL_INVALID_ENUM);
         goto out;
     }
@@ -2465,6 +2568,8 @@ YAGL_API void glBlitFramebuffer(GLint srcX0, GLint srcY0,
 
     YAGL_GET_CTX();
 
+    yagl_render_invalidate();
+
     yagl_host_glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
 
     YAGL_LOG_FUNC_EXIT(NULL);
@@ -2633,6 +2738,49 @@ YAGL_API YAGL_ALIAS(glIsVertexArray, glIsVertexArrayOES);
 
 YAGL_API void glDrawBuffers(GLsizei n, const GLenum *bufs)
 {
+    GLsizei i;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glDrawBuffers, GLsizei, const GLenum*, n, bufs);
+
+    YAGL_GET_CTX();
+
+    if ((n < 0) || (n > ctx->max_draw_buffers)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (ctx->fbo_draw) {
+        for (i = 0; i < n; ++i) {
+            if (bufs[i] == GL_NONE) {
+                continue;
+            }
+
+            if ((bufs[i] < GL_COLOR_ATTACHMENT0) ||
+                (bufs[i] >= (GL_COLOR_ATTACHMENT0 + ctx->max_color_attachments))) {
+                YAGL_SET_ERR(GL_INVALID_OPERATION);
+                goto out;
+            }
+
+            if ((bufs[i] - GL_COLOR_ATTACHMENT0) != i) {
+                YAGL_SET_ERR(GL_INVALID_OPERATION);
+                goto out;
+            }
+        }
+    } else if ((n != 1) || ((bufs[0] != GL_NONE) && (bufs[0] != GL_BACK))) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    memcpy(&ctx->draw_buffers[0], bufs, n * sizeof(bufs[0]));
+
+    for (i = n; i < ctx->max_draw_buffers; ++i) {
+        ctx->draw_buffers[i] = GL_NONE;
+    }
+
+    yagl_host_glDrawBuffers(bufs, n);
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
 }
 YAGL_API YAGL_ALIAS(glDrawBuffers, glDrawBuffersEXT);
 

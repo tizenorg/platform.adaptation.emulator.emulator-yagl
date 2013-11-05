@@ -48,6 +48,8 @@ void yagl_gles_context_init(struct yagl_gles_context *ctx,
                             yagl_client_api client_api,
                             struct yagl_sharegroup *sg)
 {
+    int i;
+
     yagl_sharegroup_acquire(sg);
 
     yagl_namespace_init(&ctx->framebuffers);
@@ -89,6 +91,11 @@ void yagl_gles_context_init(struct yagl_gles_context *ctx,
 
     ctx->pack_alignment = 4;
     ctx->unpack_alignment = 4;
+
+    ctx->draw_buffers[0] = GL_BACK;
+    for (i = 1; i < YAGL_MAX_GLES_DRAW_BUFFERS; ++i) {
+        ctx->draw_buffers[i] = GL_NONE;
+    }
 
     ctx->dither_enabled = GL_TRUE;
 }
@@ -136,6 +143,28 @@ void yagl_gles_context_prepare(struct yagl_gles_context *ctx,
     ctx->texture_filter_anisotropic = (strstr(extensions, "GL_EXT_texture_filter_anisotropic ") != NULL);
 
     yagl_free(extensions);
+
+    yagl_host_glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS,
+                            &ctx->max_color_attachments, 1, NULL);
+
+    if (ctx->max_color_attachments <= 0) {
+        ctx->max_color_attachments = 1;
+    }
+
+    if (ctx->max_color_attachments > YAGL_MAX_GLES_FRAMEBUFFER_COLOR_ATTACHMENTS) {
+        ctx->max_color_attachments = YAGL_MAX_GLES_FRAMEBUFFER_COLOR_ATTACHMENTS;
+    }
+
+    yagl_host_glGetIntegerv(GL_MAX_DRAW_BUFFERS,
+                            &ctx->max_draw_buffers, 1, NULL);
+
+    if (ctx->max_draw_buffers <= 0) {
+        ctx->max_draw_buffers = 1;
+    }
+
+    if (ctx->max_draw_buffers > YAGL_MAX_GLES_DRAW_BUFFERS) {
+        ctx->max_draw_buffers = YAGL_MAX_GLES_DRAW_BUFFERS;
+    }
 
     arrays = ctx->create_arrays(ctx);
 
@@ -663,7 +692,22 @@ int yagl_gles_context_get_integerv(struct yagl_gles_context *ctx,
             return 0;
         }
         break;
+    case GL_MAX_COLOR_ATTACHMENTS:
+        *params = ctx->max_color_attachments;
+        *num_params = 1;
+        break;
+    case GL_MAX_DRAW_BUFFERS:
+        *params = ctx->max_draw_buffers;
+        *num_params = 1;
+        break;
     default:
+        if ((pname >= GL_DRAW_BUFFER0) &&
+            (pname <= (GL_DRAW_BUFFER0 + ctx->max_draw_buffers - 1))) {
+            *params = ctx->draw_buffers[pname - GL_DRAW_BUFFER0];
+            *num_params = 1;
+            break;
+        }
+
         processed = 0;
         break;
     }

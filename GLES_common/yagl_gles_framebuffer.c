@@ -29,7 +29,9 @@ struct yagl_gles_framebuffer *yagl_gles_framebuffer_create(void)
 
     fb->global_name = yagl_get_global_name();
 
-    for (i = 0; i < YAGL_NUM_GLES_FRAMEBUFFER_ATTACHMENTS; ++i) {
+    for (i = 0;
+         i < (yagl_gles_framebuffer_attachment_color0 + YAGL_MAX_GLES_FRAMEBUFFER_COLOR_ATTACHMENTS);
+         ++i) {
         fb->attachment_states[i].type = GL_NONE;
     }
 
@@ -52,22 +54,14 @@ void yagl_gles_framebuffer_release(struct yagl_gles_framebuffer *fb)
     }
 }
 
-int yagl_gles_framebuffer_renderbuffer(struct yagl_gles_framebuffer *fb,
-                                       GLenum target,
-                                       GLenum attachment,
-                                       GLenum renderbuffer_target,
-                                       struct yagl_gles_renderbuffer *rb)
+void yagl_gles_framebuffer_renderbuffer(struct yagl_gles_framebuffer *fb,
+                                        GLenum target,
+                                        GLenum attachment,
+                                        yagl_gles_framebuffer_attachment framebuffer_attachment,
+                                        GLenum renderbuffer_target,
+                                        struct yagl_gles_renderbuffer *rb)
 {
-    yagl_gles_framebuffer_attachment framebuffer_attachment;
-
-    if (!yagl_gles_validate_framebuffer_attachment(attachment,
-                                                   &framebuffer_attachment)) {
-        return 0;
-    }
-
-    if (rb && (renderbuffer_target != GL_RENDERBUFFER)) {
-        return 0;
-    }
+    fb->attachment_states[framebuffer_attachment].textarget = 0;
 
     if (rb) {
         fb->attachment_states[framebuffer_attachment].type = GL_RENDERBUFFER;
@@ -81,37 +75,17 @@ int yagl_gles_framebuffer_renderbuffer(struct yagl_gles_framebuffer *fb,
                                         attachment,
                                         renderbuffer_target,
                                         (rb ? rb->global_name : 0));
-
-    return 1;
 }
 
-int yagl_gles_framebuffer_texture2d(struct yagl_gles_framebuffer *fb,
-                                    GLenum target,
-                                    GLenum attachment,
-                                    GLenum textarget,
-                                    GLint level,
-                                    struct yagl_gles_texture *texture)
+void yagl_gles_framebuffer_texture2d(struct yagl_gles_framebuffer *fb,
+                                     GLenum target,
+                                     GLenum attachment,
+                                     yagl_gles_framebuffer_attachment framebuffer_attachment,
+                                     GLenum textarget,
+                                     GLint level,
+                                     struct yagl_gles_texture *texture)
 {
-    yagl_gles_framebuffer_attachment framebuffer_attachment;
-    GLenum squashed_textarget;
-
-    if (!yagl_gles_validate_framebuffer_attachment(attachment,
-                                                   &framebuffer_attachment)) {
-        return 0;
-    }
-
-    if (texture && (level != 0)) {
-        return 0;
-    }
-
-    if (!yagl_gles_validate_texture_target_squash(textarget,
-                                                  &squashed_textarget)) {
-        return 0;
-    }
-
-    if (texture && (yagl_gles_texture_get_target(texture) != squashed_textarget)) {
-        return 0;
-    }
+    fb->attachment_states[framebuffer_attachment].textarget = 0;
 
     if (texture) {
         fb->attachment_states[framebuffer_attachment].type = GL_TEXTURE;
@@ -127,50 +101,6 @@ int yagl_gles_framebuffer_texture2d(struct yagl_gles_framebuffer *fb,
                                      textarget,
                                      (texture ? texture->global_name : 0),
                                      level);
-
-    return 1;
-}
-
-int yagl_gles_framebuffer_get_attachment_parameter(struct yagl_gles_framebuffer *fb,
-                                                   GLenum attachment,
-                                                   GLenum pname,
-                                                   GLint *value)
-{
-    yagl_gles_framebuffer_attachment framebuffer_attachment;
-
-    if (!yagl_gles_validate_framebuffer_attachment(attachment,
-                                                   &framebuffer_attachment)) {
-        return 0;
-    }
-
-    switch (pname) {
-    case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
-        *value = fb->attachment_states[framebuffer_attachment].type;
-        break;
-    case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
-        *value = fb->attachment_states[framebuffer_attachment].local_name;
-        break;
-    case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL:
-        if (fb->attachment_states[framebuffer_attachment].type == GL_TEXTURE) {
-            *value = 0;
-        } else {
-            return 0;
-        }
-        break;
-    case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE:
-        if (fb->attachment_states[framebuffer_attachment].type == GL_TEXTURE) {
-            *value =
-                (fb->attachment_states[framebuffer_attachment].textarget == GL_TEXTURE_2D)
-                ? 0 : fb->attachment_states[framebuffer_attachment].textarget;
-        } else {
-            return 0;
-        }
-        break;
-    default:
-        return 0;
-    }
-
-    return 1;
 }
 
 void yagl_gles_framebuffer_bind(struct yagl_gles_framebuffer *fb,

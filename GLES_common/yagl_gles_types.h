@@ -13,11 +13,13 @@ typedef enum
 
 typedef enum
 {
-    yagl_gles_framebuffer_attachment_color0 = 0,
-    yagl_gles_framebuffer_attachment_depth = 1,
-    yagl_gles_framebuffer_attachment_stencil = 2
+    yagl_gles_framebuffer_attachment_depth = 0,
+    yagl_gles_framebuffer_attachment_stencil = 1,
+    yagl_gles_framebuffer_attachment_color0 = 2
 } yagl_gles_framebuffer_attachment;
 
-#define YAGL_NUM_GLES_FRAMEBUFFER_ATTACHMENTS 3
+#define YAGL_MAX_GLES_FRAMEBUFFER_COLOR_ATTACHMENTS 16
+
+#define YAGL_MAX_GLES_DRAW_BUFFERS 16
 
 #endif

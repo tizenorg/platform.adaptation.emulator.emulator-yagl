@@ -22,7 +22,9 @@ struct yagl_gles_framebuffer
 
     yagl_object_name global_name;
 
-    struct yagl_gles_framebuffer_attachment_state attachment_states[YAGL_NUM_GLES_FRAMEBUFFER_ATTACHMENTS];
+    struct yagl_gles_framebuffer_attachment_state
+        attachment_states[yagl_gles_framebuffer_attachment_color0 +
+                          YAGL_MAX_GLES_FRAMEBUFFER_COLOR_ATTACHMENTS];
 
     int was_bound;
 };
@@ -39,23 +41,20 @@ void yagl_gles_framebuffer_acquire(struct yagl_gles_framebuffer *fb);
  */
 void yagl_gles_framebuffer_release(struct yagl_gles_framebuffer *fb);
 
-int yagl_gles_framebuffer_renderbuffer(struct yagl_gles_framebuffer *fb,
-                                       GLenum target,
-                                       GLenum attachment,
-                                       GLenum renderbuffer_target,
-                                       struct yagl_gles_renderbuffer *rb);
+void yagl_gles_framebuffer_renderbuffer(struct yagl_gles_framebuffer *fb,
+                                        GLenum target,
+                                        GLenum attachment,
+                                        yagl_gles_framebuffer_attachment framebuffer_attachment,
+                                        GLenum renderbuffer_target,
+                                        struct yagl_gles_renderbuffer *rb);
 
-int yagl_gles_framebuffer_texture2d(struct yagl_gles_framebuffer *fb,
-                                    GLenum target,
-                                    GLenum attachment,
-                                    GLenum textarget,
-                                    GLint level,
-                                    struct yagl_gles_texture *texture);
-
-int yagl_gles_framebuffer_get_attachment_parameter(struct yagl_gles_framebuffer *fb,
-                                                   GLenum attachment,
-                                                   GLenum pname,
-                                                   GLint *value);
+void yagl_gles_framebuffer_texture2d(struct yagl_gles_framebuffer *fb,
+                                     GLenum target,
+                                     GLenum attachment,
+                                     yagl_gles_framebuffer_attachment framebuffer_attachment,
+                                     GLenum textarget,
+                                     GLint level,
+                                     struct yagl_gles_texture *texture);
 
 /*
  * Assumes that 'target' is valid.

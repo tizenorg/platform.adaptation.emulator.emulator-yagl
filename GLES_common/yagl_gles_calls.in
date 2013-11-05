@@ -55,6 +55,7 @@ void glBindFramebuffer(GLenum target, GLuint framebuffer)
 void glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
 void glFramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer)
 void glBlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter)
+void glDrawBuffers(const GLenum *bufs)
 # Renderbuffers
 void glGenRenderbuffers(const GLuint *renderbuffers)
 void glBindRenderbuffer(GLenum target, GLuint renderbuffer)

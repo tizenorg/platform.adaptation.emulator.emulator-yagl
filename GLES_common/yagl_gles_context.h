@@ -94,6 +94,10 @@ struct yagl_gles_context
 
     int texture_filter_anisotropic;
 
+    int max_color_attachments;
+
+    int max_draw_buffers;
+
     int active_texture_unit;
 
     struct yagl_gles_vertex_array *vao;
@@ -135,6 +139,8 @@ struct yagl_gles_context
 
     int have_viewport;
     GLint viewport[4];
+
+    GLenum draw_buffers[YAGL_MAX_GLES_DRAW_BUFFERS];
 
     GLboolean blend_enabled;
     GLboolean cull_face_enabled;
