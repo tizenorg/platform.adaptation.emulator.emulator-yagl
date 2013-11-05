@@ -163,7 +163,8 @@ void yagl_gles_context_cleanup(struct yagl_gles_context *ctx)
     int i;
 
     yagl_gles_renderbuffer_release(ctx->rbo);
-    yagl_gles_framebuffer_release(ctx->fbo);
+    yagl_gles_framebuffer_release(ctx->fbo_read);
+    yagl_gles_framebuffer_release(ctx->fbo_draw);
     yagl_gles_buffer_release(ctx->vbo);
     yagl_gles_vertex_array_release(ctx->vao);
 
@@ -355,8 +356,20 @@ void yagl_gles_context_bind_framebuffer(struct yagl_gles_context *ctx,
     switch (target) {
     case GL_FRAMEBUFFER:
         yagl_gles_framebuffer_acquire(fbo);
-        yagl_gles_framebuffer_release(ctx->fbo);
-        ctx->fbo = fbo;
+        yagl_gles_framebuffer_acquire(fbo);
+        yagl_gles_framebuffer_release(ctx->fbo_draw);
+        yagl_gles_framebuffer_release(ctx->fbo_read);
+        ctx->fbo_draw = ctx->fbo_read = fbo;
+        break;
+    case GL_DRAW_FRAMEBUFFER:
+        yagl_gles_framebuffer_acquire(fbo);
+        yagl_gles_framebuffer_release(ctx->fbo_draw);
+        ctx->fbo_draw = fbo;
+        break;
+    case GL_READ_FRAMEBUFFER:
+        yagl_gles_framebuffer_acquire(fbo);
+        yagl_gles_framebuffer_release(ctx->fbo_read);
+        ctx->fbo_read = fbo;
         break;
     default:
         YAGL_SET_ERR(GL_INVALID_ENUM);
@@ -369,9 +382,14 @@ void yagl_gles_context_bind_framebuffer(struct yagl_gles_context *ctx,
 void yagl_gles_context_unbind_framebuffer(struct yagl_gles_context *ctx,
                                           yagl_object_name fbo_local_name)
 {
-    if (ctx->fbo && (ctx->fbo->base.local_name == fbo_local_name)) {
-        yagl_gles_framebuffer_release(ctx->fbo);
-        ctx->fbo = NULL;
+    if (ctx->fbo_draw && (ctx->fbo_draw->base.local_name == fbo_local_name)) {
+        yagl_gles_framebuffer_release(ctx->fbo_draw);
+        ctx->fbo_draw = NULL;
+    }
+
+    if (ctx->fbo_read && (ctx->fbo_read->base.local_name == fbo_local_name)) {
+        yagl_gles_framebuffer_release(ctx->fbo_read);
+        ctx->fbo_read = NULL;
     }
 }
 
@@ -426,8 +444,12 @@ struct yagl_gles_framebuffer
 {
     switch (target) {
     case GL_FRAMEBUFFER:
-        yagl_gles_framebuffer_acquire(ctx->fbo);
-        return ctx->fbo;
+    case GL_DRAW_FRAMEBUFFER:
+        yagl_gles_framebuffer_acquire(ctx->fbo_draw);
+        return ctx->fbo_draw;
+    case GL_READ_FRAMEBUFFER:
+        yagl_gles_framebuffer_acquire(ctx->fbo_read);
+        return ctx->fbo_read;
     default:
         return NULL;
     }
@@ -556,7 +578,11 @@ int yagl_gles_context_get_integerv(struct yagl_gles_context *ctx,
         *num_params = 1;
         break;
     case GL_FRAMEBUFFER_BINDING:
-        *params = ctx->fbo ? ctx->fbo->base.local_name : 0;
+        *params = ctx->fbo_draw ? ctx->fbo_draw->base.local_name : 0;
+        *num_params = 1;
+        break;
+    case GL_READ_FRAMEBUFFER_BINDING:
+        *params = ctx->fbo_read ? ctx->fbo_read->base.local_name : 0;
         *num_params = 1;
         break;
     case GL_RENDERBUFFER_BINDING:

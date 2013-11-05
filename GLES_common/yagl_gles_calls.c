@@ -2451,6 +2451,31 @@ YAGL_API void glEGLImageTargetRenderbufferStorageOES(GLenum target, GLeglImageOE
 }
 
 /*
+ *  GL_ANGLE_framebuffer_blit.
+ * @{
+ */
+
+YAGL_API void glBlitFramebuffer(GLint srcX0, GLint srcY0,
+                                GLint srcX1, GLint srcY1,
+                                GLint dstX0, GLint dstY0,
+                                GLint dstX1, GLint dstY1,
+                                GLbitfield mask, GLenum filter)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT10(glBlitFramebuffer, GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLbitfield, GLenum, srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
+
+    YAGL_GET_CTX();
+
+    yagl_host_glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+YAGL_API YAGL_ALIAS(glBlitFramebuffer, glBlitFramebufferANGLE);
+
+/*
+ * @}
+ */
+
+/*
  * GL_OES_vertex_array_object.
  * @{
  */

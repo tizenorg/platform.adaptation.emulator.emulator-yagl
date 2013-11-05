@@ -16,6 +16,8 @@ int yagl_gles_is_framebuffer_target_valid(GLenum target)
 {
     switch (target) {
     case GL_FRAMEBUFFER:
+    case GL_DRAW_FRAMEBUFFER:
+    case GL_READ_FRAMEBUFFER:
         return 1;
     default:
         return 0;

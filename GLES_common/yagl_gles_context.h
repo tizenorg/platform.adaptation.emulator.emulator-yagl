@@ -100,7 +100,8 @@ struct yagl_gles_context
 
     struct yagl_gles_buffer *vbo;
 
-    struct yagl_gles_framebuffer *fbo;
+    struct yagl_gles_framebuffer *fbo_draw;
+    struct yagl_gles_framebuffer *fbo_read;
 
     struct yagl_gles_renderbuffer *rbo;
 
