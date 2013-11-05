@@ -163,6 +163,9 @@ GLenum yagl_gles_context_get_error(struct yagl_gles_context *ctx);
 void yagl_gles_context_bind_vertex_array(struct yagl_gles_context *ctx,
                                          struct yagl_gles_vertex_array *va);
 
+void yagl_gles_context_unbind_vertex_array(struct yagl_gles_context *ctx,
+                                           yagl_object_name va_local_name);
+
 void yagl_gles_context_set_active_texture(struct yagl_gles_context *ctx,
                                           GLenum texture);
 

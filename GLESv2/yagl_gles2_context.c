@@ -117,6 +117,7 @@ static GLchar *yagl_gles2_context_get_extensions(struct yagl_gles_context *ctx)
     const GLchar *texture_npot = "GL_OES_texture_npot ";
     const GLchar *texture_rectangle = "GL_ARB_texture_rectangle ";
     const GLchar *texture_filter_anisotropic = "GL_EXT_texture_filter_anisotropic ";
+    const GLchar *vertex_array_object = "GL_OES_vertex_array_object ";
     const GLchar *texture_half_float = "GL_OES_texture_half_float GL_OES_texture_half_float_linear ";
     const GLchar *vertex_half_float = "GL_OES_vertex_half_float ";
     const GLchar *standard_derivatives = "GL_OES_standard_derivatives ";
@@ -138,6 +139,10 @@ static GLchar *yagl_gles2_context_get_extensions(struct yagl_gles_context *ctx)
 
     if (gles2_ctx->base.texture_filter_anisotropic) {
         len += strlen(texture_filter_anisotropic);
+    }
+
+    if (gles2_ctx->base.vertex_arrays_supported) {
+        len += strlen(vertex_array_object);
     }
 
     if (gles2_ctx->texture_half_float) {
@@ -170,6 +175,10 @@ static GLchar *yagl_gles2_context_get_extensions(struct yagl_gles_context *ctx)
 
     if (gles2_ctx->base.texture_filter_anisotropic) {
         strcat(str, texture_filter_anisotropic);
+    }
+
+    if (gles2_ctx->base.vertex_arrays_supported) {
+        strcat(str, vertex_array_object);
     }
 
     if (gles2_ctx->texture_half_float) {

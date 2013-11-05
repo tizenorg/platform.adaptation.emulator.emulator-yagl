@@ -2457,22 +2457,143 @@ YAGL_API void glEGLImageTargetRenderbufferStorageOES(GLenum target, GLeglImageOE
 
 YAGL_API void glBindVertexArray(GLuint array)
 {
+    struct yagl_gles_vertex_array *va_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT1(glBindVertexArray, GLuint, array);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->vertex_arrays_supported) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (array != 0) {
+        va_obj = (struct yagl_gles_vertex_array*)yagl_namespace_acquire(&ctx->vertex_arrays,
+            array);
+
+        if (!va_obj) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            goto out;
+        }
+    }
+
+    yagl_gles_context_bind_vertex_array(ctx, va_obj);
+
+out:
+    yagl_gles_vertex_array_release(va_obj);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
 }
 YAGL_API YAGL_ALIAS(glBindVertexArray, glBindVertexArrayOES);
 
 YAGL_API void glDeleteVertexArrays(GLsizei n, const GLuint *arrays)
 {
+    GLsizei i;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glDeleteVertexArrays, GLsizei, const GLuint*, n, arrays);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->vertex_arrays_supported) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (n < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (arrays) {
+        for (i = 0; i < n; ++i) {
+            yagl_gles_context_unbind_vertex_array(ctx, arrays[i]);
+            yagl_namespace_remove(&ctx->vertex_arrays, arrays[i]);
+        }
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
 }
 YAGL_API YAGL_ALIAS(glDeleteVertexArrays, glDeleteVertexArraysOES);
 
-YAGL_API void glGenVertexArrays(GLsizei n, GLuint *arrays)
+YAGL_API void glGenVertexArrays(GLsizei n, GLuint *array_names)
 {
+    struct yagl_gles_vertex_array **arrays = NULL;
+    GLsizei i;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glGenVertexArrays, GLsizei, GLuint*, n, array_names);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->vertex_arrays_supported) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (n < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    arrays = yagl_malloc0(n * sizeof(*arrays));
+
+    for (i = 0; i < n; ++i) {
+        arrays[i] = yagl_gles_vertex_array_create(0,
+                                                  ctx->create_arrays(ctx),
+                                                  ctx->num_arrays);
+
+        if (!arrays[i]) {
+            goto out;
+        }
+    }
+
+    for (i = 0; i < n; ++i) {
+        yagl_namespace_add(&ctx->vertex_arrays,
+                           &arrays[i]->base);
+
+        if (array_names) {
+            array_names[i] = arrays[i]->base.local_name;
+        }
+    }
+
+out:
+    for (i = 0; i < n; ++i) {
+        yagl_gles_vertex_array_release(arrays[i]);
+    }
+    yagl_free(arrays);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
 }
 YAGL_API YAGL_ALIAS(glGenVertexArrays, glGenVertexArraysOES);
 
 YAGL_API GLboolean glIsVertexArray(GLuint array)
 {
-    return GL_FALSE;
+    GLboolean res = GL_FALSE;
+    struct yagl_gles_vertex_array *va_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT1(glIsVertexArray, GLuint, array);
+
+    YAGL_GET_CTX_RET(GL_FALSE);
+
+    if (!ctx->vertex_arrays_supported) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    va_obj = (struct yagl_gles_vertex_array*)yagl_namespace_acquire(&ctx->vertex_arrays,
+        array);
+
+    if (va_obj && yagl_gles_vertex_array_was_bound(va_obj)) {
+        res = GL_TRUE;
+    }
+
+    yagl_gles_vertex_array_release(va_obj);
+
+out:
+    YAGL_LOG_FUNC_EXIT_SPLIT(GLboolean, res);
+
+    return res;
 }
 YAGL_API YAGL_ALIAS(glIsVertexArray, glIsVertexArrayOES);
 

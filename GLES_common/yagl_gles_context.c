@@ -213,6 +213,17 @@ void yagl_gles_context_bind_vertex_array(struct yagl_gles_context *ctx,
     yagl_gles_vertex_array_bind(va);
 }
 
+void yagl_gles_context_unbind_vertex_array(struct yagl_gles_context *ctx,
+                                           yagl_object_name va_local_name)
+{
+    if ((ctx->vao != ctx->va_zero) &&
+        (ctx->vao->base.local_name == va_local_name)) {
+        yagl_gles_vertex_array_acquire(ctx->va_zero);
+        yagl_gles_vertex_array_release(ctx->vao);
+        ctx->vao = ctx->va_zero;
+    }
+}
+
 void yagl_gles_context_set_active_texture(struct yagl_gles_context *ctx,
                                           GLenum texture)
 {
@@ -616,6 +627,14 @@ int yagl_gles_context_get_integerv(struct yagl_gles_context *ctx,
             *num_params = 4;
         } else {
             processed = 0;
+        }
+        break;
+    case GL_VERTEX_ARRAY_BINDING:
+        if (ctx->vertex_arrays_supported) {
+            *params = (ctx->vao != ctx->va_zero) ? ctx->vao->base.local_name : 0;
+            *num_params = 1;
+        } else {
+            return 0;
         }
         break;
     default:

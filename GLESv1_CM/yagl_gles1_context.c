@@ -316,6 +316,7 @@ static GLchar *yagl_gles1_context_get_extensions(struct yagl_gles_context *ctx)
     const GLchar *packed_depth_stencil = "GL_OES_packed_depth_stencil ";
     const GLchar *texture_npot = "GL_OES_texture_npot ";
     const GLchar *texture_filter_anisotropic = "GL_EXT_texture_filter_anisotropic ";
+    const GLchar *vertex_array_object = "GL_OES_vertex_array_object ";
     const GLchar *matrix_palette = "GL_OES_matrix_palette ";
 
     size_t len = strlen(default_ext);
@@ -331,6 +332,10 @@ static GLchar *yagl_gles1_context_get_extensions(struct yagl_gles_context *ctx)
 
     if (gles1_ctx->base.packed_depth_stencil) {
         len += strlen(packed_depth_stencil);
+    }
+
+    if (gles1_ctx->base.vertex_arrays_supported) {
+        len += strlen(vertex_array_object);
     }
 
     if (gles1_ctx->matrix_palette) {
@@ -351,6 +356,10 @@ static GLchar *yagl_gles1_context_get_extensions(struct yagl_gles_context *ctx)
 
     if (gles1_ctx->base.packed_depth_stencil) {
         strcat(str, packed_depth_stencil);
+    }
+
+    if (gles1_ctx->base.vertex_arrays_supported) {
+        strcat(str, vertex_array_object);
     }
 
     if (gles1_ctx->matrix_palette) {

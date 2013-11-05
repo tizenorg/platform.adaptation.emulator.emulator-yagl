@@ -1976,6 +1976,19 @@ YAGL_API void glVertexAttribPointer(GLuint indx, GLint size, GLenum type, GLbool
             YAGL_SET_ERR(GL_INVALID_VALUE);
         }
     } else {
+        /*
+         * GL_OES_vertex_array_object:
+         * "Binding a zero-named vertex array buffer:
+         * this can be detected by *Pointer(ES1) or VertexAttribPointer(ES2);
+         * if the pointer argument is not NULL:
+         * this means to bind a client vertex array;
+         * an INVALID_OPERATION error will be returned."
+         */
+        if ((ctx->base.vao != ctx->base.va_zero) && ptr) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            goto out;
+        }
+
         if (!yagl_gles_array_update(array,
                                     size,
                                     type,
