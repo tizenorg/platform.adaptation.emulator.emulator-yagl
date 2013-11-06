@@ -9,6 +9,11 @@ struct yagl_gles2_context
 {
     struct yagl_gles_context base;
 
+    char *(*shader_patch)(struct yagl_gles2_context */*ctx*/,
+                          const char */*source*/,
+                          int /*len*/,
+                          int */*patched_len*/);
+
     /*
      * From 'base.base.sg'.
      */
@@ -83,6 +88,11 @@ void yagl_gles2_context_draw_elements(struct yagl_gles_context *ctx,
                                       GLenum type,
                                       const GLvoid *indices,
                                       int32_t indices_count);
+
+char *yagl_gles2_context_shader_patch(struct yagl_gles2_context *ctx,
+                                      const char *source,
+                                      int len,
+                                      int *patched_len);
 
 /*
  * @}

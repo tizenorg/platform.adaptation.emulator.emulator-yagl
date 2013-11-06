@@ -667,6 +667,7 @@ YAGL_API void glGetProgramInfoLog(GLuint program, GLsizei bufsize, GLsizei *leng
         if (length) {
             *length = (tmp > 0) ? (tmp - 1) : 0;
         }
+        YAGL_LOG_TRACE("infolog = %s", infolog);
     }
 
 out:
@@ -750,6 +751,7 @@ YAGL_API void glGetShaderInfoLog(GLuint shader, GLsizei bufsize, GLsizei *length
         if (length) {
             *length = (tmp > 0) ? (tmp - 1) : 0;
         }
+        YAGL_LOG_TRACE("infolog = %s", infolog);
     }
 
 out:
@@ -1218,10 +1220,10 @@ YAGL_API void glShaderSource(GLuint shader, GLsizei count, const GLchar * const 
 
     if (have_strings) {
         uint8_t *tmp_buff;
+        int patched_len = 0;
+        char *patched_source;
 
-        ++total_length;
-
-        tmp_buff = yagl_malloc(total_length);
+        tmp_buff = yagl_malloc(total_length + 1);
         tmp_buff[0] = '\0';
 
         for (i = 0; i < count; ++i) {
@@ -1234,11 +1236,30 @@ YAGL_API void glShaderSource(GLuint shader, GLsizei count, const GLchar * const 
             }
         }
 
-        tmp_buff[total_length - 1] = '\0';
+        tmp_buff[total_length] = '\0';
 
-        YAGL_LOG_TRACE("string = %s", tmp_buff);
+        YAGL_LOG_TRACE("orig source = %s", tmp_buff);
 
-        yagl_gles2_shader_source(shader_obj, (GLchar*)tmp_buff);
+        patched_source = ctx->shader_patch(ctx,
+                                           (char*)tmp_buff,
+                                           total_length,
+                                           &patched_len);
+
+        if (patched_source) {
+            YAGL_LOG_TRACE("patched source = %s", patched_source);
+
+            yagl_gles2_shader_source(shader_obj,
+                                     (GLchar*)tmp_buff,
+                                     patched_source,
+                                     patched_len);
+
+            yagl_free(patched_source);
+        } else {
+            yagl_gles2_shader_source(shader_obj,
+                                     (GLchar*)tmp_buff,
+                                     (GLchar*)tmp_buff,
+                                     total_length);
+        }
     }
 
 out:

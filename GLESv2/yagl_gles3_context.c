@@ -1,7 +1,9 @@
 #include "GLES3/gl3.h"
 #include "yagl_gles3_context.h"
+#include "yagl_gles2_utils.h"
 #include "yagl_log.h"
 #include "yagl_malloc.h"
+#include "yagl_state.h"
 #include "yagl_host_gles_calls.h"
 #include <string.h>
 #include <stdlib.h>
@@ -138,6 +140,42 @@ static int yagl_gles3_context_is_enabled(struct yagl_gles_context *ctx,
     return 0;
 }
 
+static char *yagl_gles3_context_shader_patch(struct yagl_gles2_context *ctx,
+                                             const char *source,
+                                             int len,
+                                             int *patched_len)
+{
+    int is_es3 = 0;
+    yagl_gl_version gl_version;
+
+    if (!yagl_gles2_shader_has_version(source, &is_es3) || !is_es3) {
+        /*
+         * It's not a ES3 shader, process as GLESv2 shader.
+         */
+        return yagl_gles2_context_shader_patch(ctx,
+                                               source,
+                                               len,
+                                               patched_len);
+    }
+
+    gl_version = yagl_get_host_gl_version();
+
+    switch (gl_version) {
+    case yagl_gl_3_1_es3:
+        /*
+         * GL_ARB_ES3_compatibility includes full ES 3.00 shader
+         * support, no patching is required.
+         */
+        return NULL;
+    case yagl_gl_3_2:
+    default:
+        /*
+         * TODO: Patch shader to run with GLSL 1.50
+         */
+        return NULL;
+    }
+}
+
 struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg)
 {
     struct yagl_gles2_context *gles3_ctx;
@@ -160,6 +198,7 @@ struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg
     gles3_ctx->base.get_floatv = &yagl_gles2_context_get_floatv;
     gles3_ctx->base.draw_arrays = &yagl_gles2_context_draw_arrays;
     gles3_ctx->base.draw_elements = &yagl_gles2_context_draw_elements;
+    gles3_ctx->shader_patch = &yagl_gles3_context_shader_patch;
 
     YAGL_LOG_FUNC_EXIT("%p", gles3_ctx);
 

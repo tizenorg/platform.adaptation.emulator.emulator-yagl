@@ -33,10 +33,12 @@ struct yagl_gles2_shader
 struct yagl_gles2_shader *yagl_gles2_shader_create(GLenum type);
 
 /*
- * Takes ownership of 'string'.
+ * Takes ownership of 'source'.
  */
 void yagl_gles2_shader_source(struct yagl_gles2_shader *shader,
-                              GLchar *string);
+                              GLchar *source,
+                              const GLchar *patched_source,
+                              int patched_len);
 
 /*
  * Passing NULL won't hurt, this is for convenience.

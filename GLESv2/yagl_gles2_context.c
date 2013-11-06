@@ -2,6 +2,7 @@
 #include "GLES2/gl2ext.h"
 #include "yagl_gles2_context.h"
 #include "yagl_gles2_program.h"
+#include "yagl_gles2_utils.h"
 #include "yagl_gles_array.h"
 #include "yagl_gles_texture.h"
 #include "yagl_gles_texture_unit.h"
@@ -495,6 +496,37 @@ void yagl_gles2_context_draw_elements(struct yagl_gles_context *ctx,
     yagl_gles2_context_post_draw(ctx, mode);
 }
 
+char *yagl_gles2_context_shader_patch(struct yagl_gles2_context *ctx,
+                                      const char *source,
+                                      int len,
+                                      int *patched_len)
+{
+    char *patched_string = yagl_gles2_shader_patch(source,
+                                                   len,
+                                                   patched_len);
+
+    /*
+     * On some GPUs (like Ivybridge Desktop) it's necessary to add
+     * "#version" directive as the first line of the shader, otherwise
+     * some of the features might not be available to the shader.
+     *
+     * For example, on Ivybridge Desktop, if we don't add the "#version"
+     * line to the fragment shader then "gl_PointCoord"
+     * won't be available.
+     */
+
+    if (!yagl_gles2_shader_has_version(patched_string, NULL)) {
+        *patched_len += sizeof("#version 120\n\n") - 1;
+        char *tmp = yagl_malloc(*patched_len + 1);
+        strcpy(tmp, "#version 120\n\n");
+        strcat(tmp, patched_string);
+        yagl_free(patched_string);
+        patched_string = tmp;
+    }
+
+    return patched_string;
+}
+
 struct yagl_client_context *yagl_gles2_context_create(struct yagl_sharegroup *sg)
 {
     struct yagl_gles2_context *gles2_ctx;
@@ -517,6 +549,7 @@ struct yagl_client_context *yagl_gles2_context_create(struct yagl_sharegroup *sg
     gles2_ctx->base.get_floatv = &yagl_gles2_context_get_floatv;
     gles2_ctx->base.draw_arrays = &yagl_gles2_context_draw_arrays;
     gles2_ctx->base.draw_elements = &yagl_gles2_context_draw_elements;
+    gles2_ctx->shader_patch = &yagl_gles2_context_shader_patch;
 
     YAGL_LOG_FUNC_EXIT("%p", gles2_ctx);
 

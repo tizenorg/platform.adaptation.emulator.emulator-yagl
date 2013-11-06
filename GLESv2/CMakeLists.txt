@@ -5,6 +5,7 @@ set(SOURCES
     yagl_gles2_shader.c
     yagl_gles2_validate.c
     yagl_gles2_calls.c
+    yagl_gles2_utils.c
     yagl_gles3_context.c
     yagl_gles3_calls.c
 )
