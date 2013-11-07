@@ -355,8 +355,10 @@ void yagl_gles_context_bind_buffer(struct yagl_gles_context *ctx,
         ctx->vao->ebo = buffer;
         break;
     default:
-        YAGL_SET_ERR(GL_INVALID_ENUM);
-        return;
+        if (!ctx->bind_buffer(ctx, target, buffer)) {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
+            return;
+        }
     }
 
     if (buffer) {
@@ -374,6 +376,8 @@ void yagl_gles_context_unbind_buffer(struct yagl_gles_context *ctx,
         yagl_gles_buffer_release(ctx->vao->ebo);
         ctx->vao->ebo = NULL;
     }
+
+    ctx->unbind_buffer(ctx, buffer_local_name);
 }
 
 void yagl_gles_context_bind_framebuffer(struct yagl_gles_context *ctx,
@@ -451,37 +455,45 @@ void yagl_gles_context_unbind_renderbuffer(struct yagl_gles_context *ctx,
     }
 }
 
-struct yagl_gles_buffer
-    *yagl_gles_context_acquire_binded_buffer(struct yagl_gles_context *ctx,
-                                             GLenum target)
+int yagl_gles_context_acquire_binded_buffer(struct yagl_gles_context *ctx,
+                                            GLenum target,
+                                            struct yagl_gles_buffer **buffer)
 {
     switch (target) {
     case GL_ARRAY_BUFFER:
         yagl_gles_buffer_acquire(ctx->vbo);
-        return ctx->vbo;
+        *buffer = ctx->vbo;
+        break;
     case GL_ELEMENT_ARRAY_BUFFER:
         yagl_gles_buffer_acquire(ctx->vao->ebo);
-        return ctx->vao->ebo;
+        *buffer = ctx->vao->ebo;
+        break;
     default:
-        return NULL;
+        return ctx->acquire_binded_buffer(ctx, target, buffer);
     }
+
+    return 1;
 }
 
-struct yagl_gles_framebuffer
-    *yagl_gles_context_acquire_binded_framebuffer(struct yagl_gles_context *ctx,
-                                                  GLenum target)
+int yagl_gles_context_acquire_binded_framebuffer(struct yagl_gles_context *ctx,
+                                                 GLenum target,
+                                                 struct yagl_gles_framebuffer **fb)
 {
     switch (target) {
     case GL_FRAMEBUFFER:
     case GL_DRAW_FRAMEBUFFER:
         yagl_gles_framebuffer_acquire(ctx->fbo_draw);
-        return ctx->fbo_draw;
+        *fb = ctx->fbo_draw;
+        break;
     case GL_READ_FRAMEBUFFER:
         yagl_gles_framebuffer_acquire(ctx->fbo_read);
-        return ctx->fbo_read;
+        *fb = ctx->fbo_read;
+        break;
     default:
-        return NULL;
+        return 0;
     }
+
+    return 1;
 }
 
 void yagl_gles_context_enable(struct yagl_gles_context *ctx,

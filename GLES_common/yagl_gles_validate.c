@@ -1,29 +1,6 @@
 #include "GL/gl.h"
 #include "yagl_gles_validate.h"
 
-int yagl_gles_is_buffer_target_valid(GLenum target)
-{
-    switch (target) {
-    case GL_ARRAY_BUFFER:
-    case GL_ELEMENT_ARRAY_BUFFER:
-        return 1;
-    default:
-        return 0;
-    }
-}
-
-int yagl_gles_is_framebuffer_target_valid(GLenum target)
-{
-    switch (target) {
-    case GL_FRAMEBUFFER:
-    case GL_DRAW_FRAMEBUFFER:
-    case GL_READ_FRAMEBUFFER:
-        return 1;
-    default:
-        return 0;
-    }
-}
-
 int yagl_gles_is_buffer_usage_valid(GLenum usage)
 {
     switch (usage) {
@@ -138,20 +115,6 @@ int yagl_gles_get_index_size(GLenum type, int *index_size)
         return 0;
     }
     return 1;
-}
-
-int yagl_gles_buffer_target_to_binding(GLenum target, GLenum *binding)
-{
-    switch (target) {
-    case GL_ARRAY_BUFFER:
-        *binding = GL_ARRAY_BUFFER_BINDING;
-        return 1;
-    case GL_ELEMENT_ARRAY_BUFFER:
-        *binding = GL_ELEMENT_ARRAY_BUFFER_BINDING;
-        return 1;
-    default:
-        return 0;
-    }
 }
 
 int yagl_gles_validate_texture_target(GLenum target,

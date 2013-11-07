@@ -8,6 +8,7 @@ set(SOURCES
     yagl_gles2_utils.c
     yagl_gles3_context.c
     yagl_gles3_calls.c
+    yagl_gles3_buffer_binding.c
 )
 
 include_directories(${YAGL_SOURCE_DIR}/GLES_common)

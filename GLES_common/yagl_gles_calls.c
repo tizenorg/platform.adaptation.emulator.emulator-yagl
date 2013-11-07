@@ -963,11 +963,6 @@ YAGL_API void glBufferData(GLenum target, GLsizeiptr size, const GLvoid *data, G
 
     YAGL_GET_CTX();
 
-    if (!yagl_gles_is_buffer_target_valid(target)) {
-        YAGL_SET_ERR(GL_INVALID_ENUM);
-        goto out;
-    }
-
     if (size < 0) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
         goto out;
@@ -978,7 +973,10 @@ YAGL_API void glBufferData(GLenum target, GLsizeiptr size, const GLvoid *data, G
         goto out;
     }
 
-    buffer_obj = yagl_gles_context_acquire_binded_buffer(ctx, target);
+    if (!yagl_gles_context_acquire_binded_buffer(ctx, target, &buffer_obj)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
 
     if (!buffer_obj) {
         YAGL_SET_ERR(GL_INVALID_OPERATION);
@@ -1001,17 +999,15 @@ YAGL_API void glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, c
 
     YAGL_GET_CTX();
 
-    if (!yagl_gles_is_buffer_target_valid(target)) {
-        YAGL_SET_ERR(GL_INVALID_ENUM);
-        goto out;
-    }
-
     if ((offset < 0) || (size < 0)) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
         goto out;
     }
 
-    buffer_obj = yagl_gles_context_acquire_binded_buffer(ctx, target);
+    if (!yagl_gles_context_acquire_binded_buffer(ctx, target, &buffer_obj)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
 
     if (!buffer_obj) {
         YAGL_SET_ERR(GL_INVALID_OPERATION);
@@ -1045,12 +1041,10 @@ GLenum glCheckFramebufferStatus(GLenum target)
 
     YAGL_GET_CTX_RET(0);
 
-    if (!yagl_gles_is_framebuffer_target_valid(target)) {
+    if (!yagl_gles_context_acquire_binded_framebuffer(ctx, target, &framebuffer_obj)) {
         YAGL_SET_ERR(GL_INVALID_ENUM);
         goto out;
     }
-
-    framebuffer_obj = yagl_gles_context_acquire_binded_framebuffer(ctx, target);
 
     if (!framebuffer_obj) {
         res = GL_FRAMEBUFFER_COMPLETE;
@@ -1644,7 +1638,10 @@ void glFramebufferRenderbuffer(GLenum target,
 
     YAGL_GET_CTX();
 
-    framebuffer_obj = yagl_gles_context_acquire_binded_framebuffer(ctx, target);
+    if (!yagl_gles_context_acquire_binded_framebuffer(ctx, target, &framebuffer_obj)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
 
     if (!framebuffer_obj) {
         YAGL_SET_ERR(GL_INVALID_OPERATION);
@@ -1715,7 +1712,10 @@ void glFramebufferTexture2D(GLenum target,
 
     YAGL_GET_CTX();
 
-    framebuffer_obj = yagl_gles_context_acquire_binded_framebuffer(ctx, target);
+    if (!yagl_gles_context_acquire_binded_framebuffer(ctx, target, &framebuffer_obj)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
 
     if (!framebuffer_obj) {
         YAGL_SET_ERR(GL_INVALID_OPERATION);
@@ -2020,12 +2020,10 @@ YAGL_API void glGetBufferParameteriv(GLenum target, GLenum pname, GLint *params)
 
     YAGL_GET_CTX();
 
-    if (!yagl_gles_is_buffer_target_valid(target)) {
+    if (!yagl_gles_context_acquire_binded_buffer(ctx, target, &buffer_obj)) {
         YAGL_SET_ERR(GL_INVALID_ENUM);
         goto out;
     }
-
-    buffer_obj = yagl_gles_context_acquire_binded_buffer(ctx, target);
 
     if (!buffer_obj) {
         YAGL_SET_ERR(GL_INVALID_OPERATION);
@@ -2092,10 +2090,13 @@ void glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLe
 
     YAGL_GET_CTX();
 
-    framebuffer_obj = yagl_gles_context_acquire_binded_framebuffer(ctx, target);
+    if (!yagl_gles_context_acquire_binded_framebuffer(ctx, target, &framebuffer_obj)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
 
     if (!framebuffer_obj) {
-        YAGL_SET_ERR(GL_INVALID_ENUM);
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
         goto out;
     }
 
@@ -2807,9 +2808,13 @@ YAGL_API void *glMapBuffer(GLenum target, GLenum access)
         goto out;
     }
 
-    buffer_obj = yagl_gles_context_acquire_binded_buffer(ctx, target);
+    if (!yagl_gles_context_acquire_binded_buffer(ctx, target, &buffer_obj)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
 
     if (!buffer_obj) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
         goto out;
     }
 
@@ -2843,9 +2848,13 @@ YAGL_API GLboolean glUnmapBuffer(GLenum target)
 
     YAGL_GET_CTX_RET(GL_FALSE);
 
-    buffer_obj = yagl_gles_context_acquire_binded_buffer(ctx, target);
+    if (!yagl_gles_context_acquire_binded_buffer(ctx, target, &buffer_obj)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
 
     if (!buffer_obj) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
         goto out;
     }
 
@@ -2882,9 +2891,13 @@ YAGL_API void glGetBufferPointerv(GLenum target,
         goto out;
     }
 
-    buffer_obj = yagl_gles_context_acquire_binded_buffer(ctx, target);
+    if (!yagl_gles_context_acquire_binded_buffer(ctx, target, &buffer_obj)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
 
     if (!buffer_obj) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
         goto out;
     }
 
@@ -2955,9 +2968,13 @@ YAGL_API void *glMapBufferRange(GLenum target, GLintptr offset,
         goto out;
     }
 
-    buffer_obj = yagl_gles_context_acquire_binded_buffer(ctx, target);
+    if (!yagl_gles_context_acquire_binded_buffer(ctx, target, &buffer_obj)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
 
     if (!buffer_obj) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
         goto out;
     }
 
@@ -2996,9 +3013,13 @@ YAGL_API void glFlushMappedBufferRange(GLenum target, GLintptr offset,
         goto out;
     }
 
-    buffer_obj = yagl_gles_context_acquire_binded_buffer(ctx, target);
+    if (!yagl_gles_context_acquire_binded_buffer(ctx, target, &buffer_obj)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
 
     if (!buffer_obj) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
         goto out;
     }
 

@@ -65,6 +65,17 @@ struct yagl_gles_context
                           const GLvoid */*indices*/,
                           int32_t /*indices_count*/);
 
+    int (*bind_buffer)(struct yagl_gles_context */*ctx*/,
+                       GLenum /*target*/,
+                       struct yagl_gles_buffer */*buffer*/);
+
+    void (*unbind_buffer)(struct yagl_gles_context */*ctx*/,
+                          yagl_object_name /*buffer_local_name*/);
+
+    int (*acquire_binded_buffer)(struct yagl_gles_context */*ctx*/,
+                                 GLenum /*target*/,
+                                 struct yagl_gles_buffer **/*buffer*/);
+
     struct yagl_namespace framebuffers;
 
     struct yagl_namespace vertex_arrays;
@@ -214,13 +225,13 @@ void yagl_gles_context_bind_renderbuffer(struct yagl_gles_context *ctx,
 void yagl_gles_context_unbind_renderbuffer(struct yagl_gles_context *ctx,
                                            yagl_object_name rbo_local_name);
 
-struct yagl_gles_buffer
-    *yagl_gles_context_acquire_binded_buffer(struct yagl_gles_context *ctx,
-                                             GLenum target);
+int yagl_gles_context_acquire_binded_buffer(struct yagl_gles_context *ctx,
+                                             GLenum target,
+                                             struct yagl_gles_buffer **buffer);
 
-struct yagl_gles_framebuffer
-    *yagl_gles_context_acquire_binded_framebuffer(struct yagl_gles_context *ctx,
-                                                  GLenum target);
+int yagl_gles_context_acquire_binded_framebuffer(struct yagl_gles_context *ctx,
+                                                 GLenum target,
+                                                 struct yagl_gles_framebuffer **fb);
 
 void yagl_gles_context_enable(struct yagl_gles_context *ctx,
                               GLenum cap,

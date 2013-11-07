@@ -1,6 +1,8 @@
 #include "GLES3/gl3.h"
 #include "yagl_gles3_context.h"
+#include "yagl_gles3_buffer_binding.h"
 #include "yagl_gles2_utils.h"
+#include "yagl_gles_buffer.h"
 #include "yagl_log.h"
 #include "yagl_malloc.h"
 #include "yagl_state.h"
@@ -8,13 +10,57 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define YAGL_SET_ERR(err) \
+    yagl_gles_context_set_error(&ctx->base.base, err); \
+    YAGL_LOG_ERROR("error = 0x%X", err)
+
+/*
+ * We can't include GL/glext.h here
+ */
+#define GL_PACK_IMAGE_HEIGHT 0x806C
+#define GL_PACK_SKIP_IMAGES 0x806B
+
+static void yagl_gles3_context_prepare(struct yagl_client_context *ctx)
+{
+    struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
+
+    yagl_gles2_context_prepare(ctx);
+
+    /*
+     * We don't support it for now...
+     */
+    gles3_ctx->num_program_binary_formats = 0;
+
+    yagl_host_glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS,
+                            &gles3_ctx->num_uniform_buffer_bindings,
+                            1,
+                            NULL);
+
+    gles3_ctx->uniform_buffer_bindings =
+        yagl_malloc0(sizeof(gles3_ctx->uniform_buffer_bindings[0]) * gles3_ctx->num_uniform_buffer_bindings);
+
+    yagl_host_glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT,
+                            &gles3_ctx->uniform_buffer_offset_alignment,
+                            1,
+                            NULL);
+}
+
 static void yagl_gles3_context_destroy(struct yagl_client_context *ctx)
 {
-    struct yagl_gles2_context *gles3_ctx = (struct yagl_gles2_context*)ctx;
+    struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
+    int i;
 
     YAGL_LOG_FUNC_ENTER(yagl_gles3_context_destroy, "%p", ctx);
 
-    yagl_gles2_context_cleanup(gles3_ctx);
+    yagl_gles_buffer_release(gles3_ctx->ubo);
+
+    for (i = 0; i < gles3_ctx->num_uniform_buffer_bindings; ++i) {
+        yagl_gles3_buffer_binding_reset(&gles3_ctx->uniform_buffer_bindings[i]);
+    }
+
+    yagl_free(gles3_ctx->uniform_buffer_bindings);
+
+    yagl_gles2_context_cleanup(&gles3_ctx->base);
 
     yagl_free(gles3_ctx);
 
@@ -46,7 +92,7 @@ static const GLchar
 
 static GLchar *yagl_gles3_context_get_extensions(struct yagl_gles_context *ctx)
 {
-    struct yagl_gles2_context *gles3_ctx = (struct yagl_gles2_context*)ctx;
+    struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
 
     const GLchar *mandatory_extensions =
         "GL_OES_EGL_image GL_OES_depth24 GL_OES_depth32 "
@@ -63,31 +109,31 @@ static GLchar *yagl_gles3_context_get_extensions(struct yagl_gles_context *ctx)
     GLuint len = strlen(mandatory_extensions);
     GLchar *str;
 
-    if (gles3_ctx->base.packed_depth_stencil) {
+    if (gles3_ctx->base.base.packed_depth_stencil) {
         len += strlen(packed_depth_stencil);
     }
 
-    if (gles3_ctx->base.texture_npot) {
+    if (gles3_ctx->base.base.texture_npot) {
         len += strlen(texture_npot);
     }
 
-    if (gles3_ctx->base.texture_rectangle) {
+    if (gles3_ctx->base.base.texture_rectangle) {
         len += strlen(texture_rectangle);
     }
 
-    if (gles3_ctx->base.texture_filter_anisotropic) {
+    if (gles3_ctx->base.base.texture_filter_anisotropic) {
         len += strlen(texture_filter_anisotropic);
     }
 
-    if (gles3_ctx->texture_half_float) {
+    if (gles3_ctx->base.texture_half_float) {
         len += strlen(texture_half_float);
     }
 
-    if (gles3_ctx->vertex_half_float) {
+    if (gles3_ctx->base.vertex_half_float) {
         len += strlen(vertex_half_float);
     }
 
-    if (gles3_ctx->standard_derivatives) {
+    if (gles3_ctx->base.standard_derivatives) {
         len += strlen(standard_derivatives);
     }
 
@@ -95,31 +141,31 @@ static GLchar *yagl_gles3_context_get_extensions(struct yagl_gles_context *ctx)
 
     strcpy(str, mandatory_extensions);
 
-    if (gles3_ctx->base.packed_depth_stencil) {
+    if (gles3_ctx->base.base.packed_depth_stencil) {
         strcat(str, packed_depth_stencil);
     }
 
-    if (gles3_ctx->base.texture_npot) {
+    if (gles3_ctx->base.base.texture_npot) {
         strcat(str, texture_npot);
     }
 
-    if (gles3_ctx->base.texture_rectangle) {
+    if (gles3_ctx->base.base.texture_rectangle) {
         strcat(str, texture_rectangle);
     }
 
-    if (gles3_ctx->base.texture_filter_anisotropic) {
+    if (gles3_ctx->base.base.texture_filter_anisotropic) {
         strcat(str, texture_filter_anisotropic);
     }
 
-    if (gles3_ctx->texture_half_float) {
+    if (gles3_ctx->base.texture_half_float) {
         strcat(str, texture_half_float);
     }
 
-    if (gles3_ctx->vertex_half_float) {
+    if (gles3_ctx->base.vertex_half_float) {
         strcat(str, vertex_half_float);
     }
 
-    if (gles3_ctx->standard_derivatives) {
+    if (gles3_ctx->base.standard_derivatives) {
         strcat(str, standard_derivatives);
     }
 
@@ -138,6 +184,167 @@ static int yagl_gles3_context_is_enabled(struct yagl_gles_context *ctx,
                                          GLboolean *enabled)
 {
     return 0;
+}
+
+static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
+                                           GLenum pname,
+                                           GLint *params,
+                                           uint32_t *num_params)
+{
+    int processed = 1;
+    struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
+
+    switch (pname) {
+    case GL_MAX_UNIFORM_BUFFER_BINDINGS:
+        *params = gles3_ctx->num_uniform_buffer_bindings;
+        *num_params = 1;
+        break;
+    case GL_NUM_PROGRAM_BINARY_FORMATS:
+        *params = gles3_ctx->num_program_binary_formats;
+        *num_params = 1;
+        break;
+    case GL_UNIFORM_BUFFER_BINDING:
+        *params = gles3_ctx->ubo ? gles3_ctx->ubo->base.local_name : 0;
+        *num_params = 1;
+        break;
+    case GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT:
+        *params = gles3_ctx->uniform_buffer_offset_alignment;
+        *num_params = 1;
+        break;
+    default:
+        processed = 0;
+        break;
+    }
+
+    if (processed) {
+        return 1;
+    }
+
+    switch (pname) {
+    case GL_COPY_READ_BUFFER_BINDING:
+    case GL_COPY_WRITE_BUFFER_BINDING:
+    case GL_FRAGMENT_SHADER_DERIVATIVE_HINT:
+    case GL_MAJOR_VERSION:
+    case GL_MAX_3D_TEXTURE_SIZE:
+    case GL_MAX_ARRAY_TEXTURE_LAYERS:
+    case GL_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS:
+    case GL_MAX_COMBINED_UNIFORM_BLOCKS:
+    case GL_MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS:
+    case GL_MAX_ELEMENT_INDEX:
+    case GL_MAX_ELEMENTS_INDICES:
+    case GL_MAX_ELEMENTS_VERTICES:
+    case GL_MAX_FRAGMENT_INPUT_COMPONENTS:
+    case GL_MAX_FRAGMENT_UNIFORM_BLOCKS:
+    case GL_MAX_FRAGMENT_UNIFORM_COMPONENTS:
+    case GL_MAX_PROGRAM_TEXEL_OFFSET:
+    case GL_MAX_SAMPLES:
+    case GL_MAX_SERVER_WAIT_TIMEOUT:
+    case GL_MAX_TEXTURE_LOD_BIAS:
+    case GL_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS:
+    case GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS:
+    case GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS:
+    case GL_MAX_UNIFORM_BLOCK_SIZE:
+    case GL_MAX_VARYING_COMPONENTS:
+    case GL_MAX_VERTEX_OUTPUT_COMPONENTS:
+    case GL_MAX_VERTEX_UNIFORM_BLOCKS:
+    case GL_MAX_VERTEX_UNIFORM_COMPONENTS:
+    case GL_MINOR_VERSION:
+    case GL_MIN_PROGRAM_TEXEL_OFFSET:
+    case GL_NUM_EXTENSIONS:
+    case GL_PACK_IMAGE_HEIGHT:
+    case GL_PACK_ROW_LENGTH:
+    case GL_PACK_SKIP_IMAGES:
+    case GL_PACK_SKIP_PIXELS:
+    case GL_PACK_SKIP_ROWS:
+    case GL_PIXEL_PACK_BUFFER_BINDING:
+    case GL_PIXEL_UNPACK_BUFFER_BINDING:
+    case GL_PRIMITIVE_RESTART_FIXED_INDEX:
+    case GL_READ_BUFFER:
+    case GL_SAMPLER_BINDING:
+    case GL_TEXTURE_BINDING_2D_ARRAY:
+    case GL_TEXTURE_BINDING_3D:
+    case GL_TRANSFORM_FEEDBACK_ACTIVE:
+    case GL_TRANSFORM_FEEDBACK_BINDING:
+    case GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
+    case GL_TRANSFORM_FEEDBACK_BUFFER_SIZE:
+    case GL_TRANSFORM_FEEDBACK_BUFFER_START:
+    case GL_TRANSFORM_FEEDBACK_PAUSED:
+    case GL_UNIFORM_BUFFER_SIZE:
+    case GL_UNIFORM_BUFFER_START:
+    case GL_UNPACK_IMAGE_HEIGHT:
+    case GL_UNPACK_ROW_LENGTH:
+    case GL_UNPACK_SKIP_IMAGES:
+    case GL_UNPACK_SKIP_PIXELS:
+    case GL_UNPACK_SKIP_ROWS:
+        *num_params = 1;
+        break;
+    case GL_PROGRAM_BINARY_FORMATS:
+        *num_params = gles3_ctx->num_program_binary_formats;
+        break;
+    default:
+        return yagl_gles2_context_get_integerv(ctx, pname, params, num_params);
+    }
+
+    yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+
+    return 1;
+}
+
+static int yagl_gles3_context_bind_buffer(struct yagl_gles_context *ctx,
+                                          GLenum target,
+                                          struct yagl_gles_buffer *buffer)
+{
+    struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
+
+    switch (target) {
+    case GL_UNIFORM_BUFFER:
+        yagl_gles_buffer_acquire(buffer);
+        yagl_gles_buffer_release(gles3_ctx->ubo);
+        gles3_ctx->ubo = buffer;
+        break;
+    default:
+        return 0;
+    }
+
+    return 1;
+}
+
+static void yagl_gles3_context_unbind_buffer(struct yagl_gles_context *ctx,
+                                             yagl_object_name buffer_local_name)
+{
+    struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
+    int i;
+
+    if (gles3_ctx->ubo && (gles3_ctx->ubo->base.local_name == buffer_local_name)) {
+        yagl_gles_buffer_release(gles3_ctx->ubo);
+        gles3_ctx->ubo = NULL;
+    }
+
+    for (i = 0; i < gles3_ctx->num_uniform_buffer_bindings; ++i) {
+        struct yagl_gles_buffer *buffer = gles3_ctx->uniform_buffer_bindings[i].buffer;
+
+        if (buffer && (buffer->base.local_name == buffer_local_name)) {
+            yagl_gles3_buffer_binding_reset(&gles3_ctx->uniform_buffer_bindings[i]);
+        }
+    }
+}
+
+static int yagl_gles3_context_acquire_binded_buffer(struct yagl_gles_context *ctx,
+                                                    GLenum target,
+                                                    struct yagl_gles_buffer **buffer)
+{
+    struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
+
+    switch (target) {
+    case GL_UNIFORM_BUFFER:
+        yagl_gles_buffer_acquire(gles3_ctx->ubo);
+        *buffer = gles3_ctx->ubo;
+        break;
+    default:
+        return 0;
+    }
+
+    return 1;
 }
 
 static char *yagl_gles3_context_shader_patch(struct yagl_gles2_context *ctx,
@@ -178,29 +385,126 @@ static char *yagl_gles3_context_shader_patch(struct yagl_gles2_context *ctx,
 
 struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg)
 {
-    struct yagl_gles2_context *gles3_ctx;
+    struct yagl_gles3_context *gles3_ctx;
 
     YAGL_LOG_FUNC_ENTER(yagl_gles3_context_create, NULL);
 
     gles3_ctx = yagl_malloc0(sizeof(*gles3_ctx));
 
-    yagl_gles2_context_init(gles3_ctx, yagl_client_api_gles3, sg);
+    yagl_gles2_context_init(&gles3_ctx->base, yagl_client_api_gles3, sg);
 
-    gles3_ctx->base.base.prepare = &yagl_gles2_context_prepare;
-    gles3_ctx->base.base.destroy = &yagl_gles3_context_destroy;
-    gles3_ctx->base.create_arrays = &yagl_gles2_context_create_arrays;
-    gles3_ctx->base.get_string = &yagl_gles3_context_get_string;
-    gles3_ctx->base.get_extensions = &yagl_gles3_context_get_extensions;
-    gles3_ctx->base.compressed_tex_image = &yagl_gles2_context_compressed_tex_image;
-    gles3_ctx->base.enable = &yagl_gles3_context_enable;
-    gles3_ctx->base.is_enabled = &yagl_gles3_context_is_enabled;
-    gles3_ctx->base.get_integerv = &yagl_gles2_context_get_integerv;
-    gles3_ctx->base.get_floatv = &yagl_gles2_context_get_floatv;
-    gles3_ctx->base.draw_arrays = &yagl_gles2_context_draw_arrays;
-    gles3_ctx->base.draw_elements = &yagl_gles2_context_draw_elements;
-    gles3_ctx->shader_patch = &yagl_gles3_context_shader_patch;
+    gles3_ctx->base.base.base.prepare = &yagl_gles3_context_prepare;
+    gles3_ctx->base.base.base.destroy = &yagl_gles3_context_destroy;
+    gles3_ctx->base.base.create_arrays = &yagl_gles2_context_create_arrays;
+    gles3_ctx->base.base.get_string = &yagl_gles3_context_get_string;
+    gles3_ctx->base.base.get_extensions = &yagl_gles3_context_get_extensions;
+    gles3_ctx->base.base.compressed_tex_image = &yagl_gles2_context_compressed_tex_image;
+    gles3_ctx->base.base.enable = &yagl_gles3_context_enable;
+    gles3_ctx->base.base.is_enabled = &yagl_gles3_context_is_enabled;
+    gles3_ctx->base.base.get_integerv = &yagl_gles3_context_get_integerv;
+    gles3_ctx->base.base.get_floatv = &yagl_gles2_context_get_floatv;
+    gles3_ctx->base.base.draw_arrays = &yagl_gles2_context_draw_arrays;
+    gles3_ctx->base.base.draw_elements = &yagl_gles2_context_draw_elements;
+    gles3_ctx->base.base.bind_buffer = &yagl_gles3_context_bind_buffer;
+    gles3_ctx->base.base.unbind_buffer = &yagl_gles3_context_unbind_buffer;
+    gles3_ctx->base.base.acquire_binded_buffer = &yagl_gles3_context_acquire_binded_buffer;
+    gles3_ctx->base.shader_patch = &yagl_gles3_context_shader_patch;
 
     YAGL_LOG_FUNC_EXIT("%p", gles3_ctx);
 
-    return &gles3_ctx->base.base;
+    return &gles3_ctx->base.base.base;
+}
+
+void yagl_gles3_context_bind_buffer_base(struct yagl_gles3_context *ctx,
+                                         GLenum target,
+                                         GLuint index,
+                                         struct yagl_gles_buffer *buffer)
+{
+    YAGL_LOG_FUNC_SET(glBindBufferBase);
+
+    switch (target) {
+    case GL_UNIFORM_BUFFER:
+        if (index >= ctx->num_uniform_buffer_bindings) {
+            YAGL_SET_ERR(GL_INVALID_VALUE);
+            return;
+        }
+
+        /*
+         * Set indexed binding point.
+         */
+
+        yagl_gles3_buffer_binding_set_base(&ctx->uniform_buffer_bindings[index],
+                                           buffer);
+
+        /*
+         * Set generic binding point.
+         */
+
+        yagl_gles_buffer_acquire(buffer);
+        yagl_gles_buffer_release(ctx->ubo);
+        ctx->ubo = buffer;
+
+        break;
+    default:
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        return;
+    }
+
+    if (buffer) {
+        yagl_gles_buffer_set_bound(buffer);
+    }
+}
+
+void yagl_gles3_context_bind_buffer_range(struct yagl_gles3_context *ctx,
+                                          GLenum target,
+                                          GLuint index,
+                                          GLintptr offset,
+                                          GLsizeiptr size,
+                                          struct yagl_gles_buffer *buffer)
+{
+    YAGL_LOG_FUNC_SET(glBindBufferRange);
+
+    switch (target) {
+    case GL_UNIFORM_BUFFER:
+        if (index >= ctx->num_uniform_buffer_bindings) {
+            YAGL_SET_ERR(GL_INVALID_VALUE);
+            return;
+        }
+
+        if (buffer) {
+            if (size <= 0) {
+                YAGL_SET_ERR(GL_INVALID_VALUE);
+                return;
+            }
+
+            if ((offset % ctx->uniform_buffer_offset_alignment) != 0) {
+                YAGL_SET_ERR(GL_INVALID_VALUE);
+                return;
+            }
+        }
+
+        /*
+         * Set indexed binding point.
+         */
+
+        yagl_gles3_buffer_binding_set_range(&ctx->uniform_buffer_bindings[index],
+                                            buffer, offset, size);
+
+        /*
+         * Set generic binding point.
+         */
+
+        yagl_gles_buffer_acquire(buffer);
+        yagl_gles_buffer_release(ctx->ubo);
+        ctx->ubo = buffer;
+
+        break;
+    default:
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        return;
+    }
+
+    if (buffer) {
+        yagl_gles_buffer_set_bound(buffer);
+    }
 }

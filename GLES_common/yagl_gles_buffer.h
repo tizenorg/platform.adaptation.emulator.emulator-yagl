@@ -86,10 +86,10 @@ int yagl_gles_buffer_get_minmax_index(struct yagl_gles_buffer *buffer,
                                       uint32_t *min_idx,
                                       uint32_t *max_idx);
 
-int yagl_gles_buffer_bind(struct yagl_gles_buffer *buffer,
-                          GLenum type,
-                          int need_convert,
-                          GLenum target);
+void yagl_gles_buffer_bind(struct yagl_gles_buffer *buffer,
+                           GLenum type,
+                           int need_convert,
+                           GLenum target);
 
 void yagl_gles_buffer_transfer(struct yagl_gles_buffer *buffer,
                                GLenum type,

@@ -1217,6 +1217,25 @@ static void yagl_gles1_context_draw_elements(struct yagl_gles_context *ctx,
     }
 }
 
+static int yagl_gles1_context_bind_buffer(struct yagl_gles_context *ctx,
+                                          GLenum target,
+                                          struct yagl_gles_buffer *buffer)
+{
+    return 0;
+}
+
+static void yagl_gles1_context_unbind_buffer(struct yagl_gles_context *ctx,
+                                             yagl_object_name buffer_local_name)
+{
+}
+
+static int yagl_gles1_context_acquire_binded_buffer(struct yagl_gles_context *ctx,
+                                                    GLenum target,
+                                                    struct yagl_gles_buffer **buffer)
+{
+    return 0;
+}
+
 struct yagl_client_context *yagl_gles1_context_create(struct yagl_sharegroup *sg)
 {
     struct yagl_gles1_context *gles1_ctx;
@@ -1241,6 +1260,9 @@ struct yagl_client_context *yagl_gles1_context_create(struct yagl_sharegroup *sg
     gles1_ctx->base.get_floatv = &yagl_gles1_context_get_floatv;
     gles1_ctx->base.draw_arrays = &yagl_gles1_context_draw_arrays;
     gles1_ctx->base.draw_elements = &yagl_gles1_context_draw_elements;
+    gles1_ctx->base.bind_buffer = &yagl_gles1_context_bind_buffer;
+    gles1_ctx->base.unbind_buffer = &yagl_gles1_context_unbind_buffer;
+    gles1_ctx->base.acquire_binded_buffer = &yagl_gles1_context_acquire_binded_buffer;
 
     YAGL_LOG_FUNC_EXIT("%p", gles1_ctx);
 

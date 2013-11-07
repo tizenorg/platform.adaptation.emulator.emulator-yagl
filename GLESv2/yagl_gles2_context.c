@@ -212,6 +212,25 @@ static int yagl_gles2_context_is_enabled(struct yagl_gles_context *ctx,
     return 0;
 }
 
+static int yagl_gles2_context_bind_buffer(struct yagl_gles_context *ctx,
+                                          GLenum target,
+                                          struct yagl_gles_buffer *buffer)
+{
+    return 0;
+}
+
+static void yagl_gles2_context_unbind_buffer(struct yagl_gles_context *ctx,
+                                             yagl_object_name buffer_local_name)
+{
+}
+
+static int yagl_gles2_context_acquire_binded_buffer(struct yagl_gles_context *ctx,
+                                                    GLenum target,
+                                                    struct yagl_gles_buffer **buffer)
+{
+    return 0;
+}
+
 void yagl_gles2_context_init(struct yagl_gles2_context *ctx,
                              yagl_client_api client_api,
                              struct yagl_sharegroup *sg)
@@ -343,6 +362,10 @@ int yagl_gles2_context_get_integerv(struct yagl_gles_context *ctx,
     struct yagl_gles_texture_target_state *tts;
 
     switch (pname) {
+    case GL_NUM_SHADER_BINARY_FORMATS:
+        *params = gles2_ctx->num_shader_binary_formats;
+        *num_params = 1;
+        break;
     case GL_NUM_COMPRESSED_TEXTURE_FORMATS:
         *params = gles2_ctx->num_compressed_texture_formats;
         *num_params = 1;
@@ -406,9 +429,6 @@ int yagl_gles2_context_get_integerv(struct yagl_gles_context *ctx,
         *num_params = 1;
         break;
     case GL_MAX_VERTEX_UNIFORM_VECTORS:
-        *num_params = 1;
-        break;
-    case GL_NUM_SHADER_BINARY_FORMATS:
         *num_params = 1;
         break;
     case GL_SHADER_BINARY_FORMATS:
@@ -550,6 +570,9 @@ struct yagl_client_context *yagl_gles2_context_create(struct yagl_sharegroup *sg
     gles2_ctx->base.get_floatv = &yagl_gles2_context_get_floatv;
     gles2_ctx->base.draw_arrays = &yagl_gles2_context_draw_arrays;
     gles2_ctx->base.draw_elements = &yagl_gles2_context_draw_elements;
+    gles2_ctx->base.bind_buffer = &yagl_gles2_context_bind_buffer;
+    gles2_ctx->base.unbind_buffer = &yagl_gles2_context_unbind_buffer;
+    gles2_ctx->base.acquire_binded_buffer = &yagl_gles2_context_acquire_binded_buffer;
     gles2_ctx->shader_patch = &yagl_gles2_context_shader_patch;
 
     YAGL_LOG_FUNC_EXIT("%p", gles2_ctx);

@@ -331,17 +331,12 @@ int yagl_gles_buffer_get_minmax_index(struct yagl_gles_buffer *buffer,
     return 1;
 }
 
-int yagl_gles_buffer_bind(struct yagl_gles_buffer *buffer,
-                          GLenum type,
-                          int need_convert,
-                          GLenum target)
+void yagl_gles_buffer_bind(struct yagl_gles_buffer *buffer,
+                           GLenum type,
+                           int need_convert,
+                           GLenum target)
 {
-    GLenum binding;
     struct yagl_gles_buffer_part *bufpart = &buffer->default_part;
-
-    if (!yagl_gles_buffer_target_to_binding(target, &binding)) {
-        return 0;
-    }
 
     if (need_convert) {
         switch (type) {
@@ -355,8 +350,6 @@ int yagl_gles_buffer_bind(struct yagl_gles_buffer *buffer,
     }
 
     yagl_host_glBindBuffer(target, bufpart->global_name);
-
-    return 1;
 }
 
 void yagl_gles_buffer_transfer(struct yagl_gles_buffer *buffer,
