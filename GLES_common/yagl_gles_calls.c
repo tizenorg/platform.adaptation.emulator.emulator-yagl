@@ -2787,3 +2787,243 @@ YAGL_API YAGL_ALIAS(glDrawBuffers, glDrawBuffersEXT);
 /*
  * @}
  */
+
+/*
+ * GL_OES_mapbuffer.
+ * @{
+ */
+
+YAGL_API void *glMapBuffer(GLenum target, GLenum access)
+{
+    void *ptr = NULL;
+    struct yagl_gles_buffer *buffer_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glMapBuffer, GLenum, GLenum, target, access);
+
+    YAGL_GET_CTX_RET(NULL);
+
+    if (access != GL_WRITE_ONLY) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    buffer_obj = yagl_gles_context_acquire_binded_buffer(ctx, target);
+
+    if (!buffer_obj) {
+        goto out;
+    }
+
+    if (yagl_gles_buffer_mapped(buffer_obj)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!yagl_gles_buffer_map(buffer_obj, 0, buffer_obj->size, GL_MAP_WRITE_BIT)) {
+        YAGL_SET_ERR(GL_OUT_OF_MEMORY);
+        goto out;
+    }
+
+    ptr = buffer_obj->map_pointer;
+
+out:
+    yagl_gles_buffer_release(buffer_obj);
+
+    YAGL_LOG_FUNC_EXIT("%p", ptr);
+
+    return ptr;
+}
+YAGL_API YAGL_ALIAS(glMapBuffer, glMapBufferOES);
+
+YAGL_API GLboolean glUnmapBuffer(GLenum target)
+{
+    GLboolean ret = GL_FALSE;
+    struct yagl_gles_buffer *buffer_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT1(glUnmapBuffer, GLenum, target);
+
+    YAGL_GET_CTX_RET(GL_FALSE);
+
+    buffer_obj = yagl_gles_context_acquire_binded_buffer(ctx, target);
+
+    if (!buffer_obj) {
+        goto out;
+    }
+
+    if (!yagl_gles_buffer_mapped(buffer_obj)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    yagl_gles_buffer_unmap(buffer_obj);
+
+    ret = GL_TRUE;
+
+out:
+    yagl_gles_buffer_release(buffer_obj);
+
+    YAGL_LOG_FUNC_EXIT("%u", ret);
+
+    return ret;
+}
+YAGL_API YAGL_ALIAS(glUnmapBuffer, glUnmapBufferOES);
+
+YAGL_API void glGetBufferPointerv(GLenum target,
+                                  GLenum pname,
+                                  GLvoid **params)
+{
+    struct yagl_gles_buffer *buffer_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glGetBufferPointerv, GLenum, GLenum, GLvoid**, target, pname, params);
+
+    YAGL_GET_CTX();
+
+    if (pname != GL_BUFFER_MAP_POINTER) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    buffer_obj = yagl_gles_context_acquire_binded_buffer(ctx, target);
+
+    if (!buffer_obj) {
+        goto out;
+    }
+
+    *params = buffer_obj->map_pointer;
+
+out:
+    yagl_gles_buffer_release(buffer_obj);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+YAGL_API YAGL_ALIAS(glGetBufferPointerv, glGetBufferPointervOES);
+
+/*
+ * @}
+ */
+
+/*
+ * GL_EXT_map_buffer_range.
+ * @{
+ */
+
+YAGL_API void *glMapBufferRange(GLenum target, GLintptr offset,
+                                GLsizeiptr length, GLbitfield access)
+{
+    void *ptr = NULL;
+    struct yagl_gles_buffer *buffer_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT4(glMapBufferRange, GLenum, GLintptr, GLsizeiptr, GLbitfield, target, offset, length, access);
+
+    YAGL_GET_CTX_RET(NULL);
+
+    if ((offset < 0) || (length < 0)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (length == 0) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (access & ~(GL_MAP_READ_BIT |
+                   GL_MAP_WRITE_BIT |
+                   GL_MAP_INVALIDATE_RANGE_BIT |
+                   GL_MAP_INVALIDATE_BUFFER_BIT |
+                   GL_MAP_FLUSH_EXPLICIT_BIT |
+                   GL_MAP_UNSYNCHRONIZED_BIT)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if ((access & (GL_MAP_READ_BIT | GL_MAP_WRITE_BIT)) == 0) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if ((access & GL_MAP_READ_BIT) &&
+        (access & (GL_MAP_INVALIDATE_RANGE_BIT |
+                   GL_MAP_INVALIDATE_BUFFER_BIT |
+                   GL_MAP_UNSYNCHRONIZED_BIT))) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if ((access & GL_MAP_FLUSH_EXPLICIT_BIT) &&
+        ((access & GL_MAP_WRITE_BIT) == 0)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    buffer_obj = yagl_gles_context_acquire_binded_buffer(ctx, target);
+
+    if (!buffer_obj) {
+        goto out;
+    }
+
+    if (yagl_gles_buffer_mapped(buffer_obj)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!yagl_gles_buffer_map(buffer_obj, offset, length, access)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    ptr = buffer_obj->map_pointer;
+
+out:
+    yagl_gles_buffer_release(buffer_obj);
+
+    YAGL_LOG_FUNC_EXIT("%p", ptr);
+
+    return ptr;
+}
+YAGL_API YAGL_ALIAS(glMapBufferRange, glMapBufferRangeEXT);
+
+YAGL_API void glFlushMappedBufferRange(GLenum target, GLintptr offset,
+                                       GLsizeiptr length)
+{
+    struct yagl_gles_buffer *buffer_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glFlushMappedBufferRange, GLenum, GLintptr, GLsizeiptr, target, offset, length);
+
+    YAGL_GET_CTX();
+
+    if ((offset < 0) || (length < 0)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    buffer_obj = yagl_gles_context_acquire_binded_buffer(ctx, target);
+
+    if (!buffer_obj) {
+        goto out;
+    }
+
+    if (!yagl_gles_buffer_mapped(buffer_obj)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if ((buffer_obj->map_access & GL_MAP_FLUSH_EXPLICIT_BIT) == 0) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!yagl_gles_buffer_flush_mapped_range(buffer_obj, offset, length)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+out:
+    yagl_gles_buffer_release(buffer_obj);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+YAGL_API YAGL_ALIAS(glFlushMappedBufferRange, glFlushMappedBufferRangeEXT);
+
+/*
+ * @}
+ */

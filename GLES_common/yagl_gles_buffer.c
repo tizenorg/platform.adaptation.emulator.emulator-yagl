@@ -1,4 +1,5 @@
 #include "GLES/gl.h"
+#include "GLES/glext.h"
 #include "yagl_state.h"
 #include "yagl_utils.h"
 #include "yagl_malloc.h"
@@ -7,6 +8,13 @@
 #include "yagl_host_gles_calls.h"
 #include <string.h>
 #include <assert.h>
+
+/*
+ * We can't include GL/glext.h here
+ */
+#define GL_BUFFER_ACCESS_FLAGS 0x911F
+#define GL_BUFFER_MAP_OFFSET 0x9121
+#define GL_BUFFER_MAP_LENGTH 0x9120
 
 typedef void (*yagl_gles_buffer_transfer_func)(struct yagl_gles_buffer */*buffer*/,
                                                GLenum /*target*/,
@@ -223,6 +231,11 @@ void yagl_gles_buffer_set_data(struct yagl_gles_buffer *buffer,
 
     buffer->usage = usage;
 
+    buffer->map_pointer = NULL;
+    buffer->map_access = 0;
+    buffer->map_offset = 0;
+    buffer->map_length = 0;
+
     yagl_range_list_clear(&buffer->default_part.range_list);
     yagl_range_list_clear(&buffer->fixed_part.range_list);
     yagl_range_list_clear(&buffer->byte_part.range_list);
@@ -385,11 +398,111 @@ int yagl_gles_buffer_get_parameter(struct yagl_gles_buffer *buffer,
     case GL_BUFFER_USAGE:
         *param = buffer->usage;
         break;
+    case GL_BUFFER_ACCESS_OES:
+        *param = GL_WRITE_ONLY_OES;
+        break;
+    case GL_BUFFER_MAPPED_OES:
+        *param = buffer->map_pointer != NULL;
+        break;
+    case GL_BUFFER_ACCESS_FLAGS:
+        *param = buffer->map_access;
+        break;
+    case GL_BUFFER_MAP_OFFSET:
+        *param = buffer->map_offset;
+        break;
+    case GL_BUFFER_MAP_LENGTH:
+        *param = buffer->map_length;
+        break;
     default:
         return 0;
     }
 
     return 1;
+}
+
+int yagl_gles_buffer_map(struct yagl_gles_buffer *buffer,
+                         GLintptr offset,
+                         GLsizeiptr length,
+                         GLbitfield access)
+{
+    if (buffer->map_pointer) {
+        return 0;
+    }
+
+    if ((offset < 0) || (length <= 0) || ((offset + length) > buffer->size)) {
+        return 0;
+    }
+
+    if (((access & GL_MAP_INVALIDATE_BUFFER_BIT_EXT) != 0) ||
+        (((access & GL_MAP_INVALIDATE_RANGE_BIT_EXT) != 0) &&
+         (offset == 0) &&
+         (length == buffer->size))) {
+        yagl_range_list_clear(&buffer->default_part.range_list);
+        yagl_range_list_clear(&buffer->fixed_part.range_list);
+        yagl_range_list_clear(&buffer->byte_part.range_list);
+    }
+
+    buffer->map_pointer = buffer->data + offset;
+    buffer->map_access = access;
+    buffer->map_offset = offset;
+    buffer->map_length = length;
+
+    return 1;
+}
+
+int yagl_gles_buffer_mapped(struct yagl_gles_buffer *buffer)
+{
+    return buffer->map_pointer != NULL;
+}
+
+int yagl_gles_buffer_flush_mapped_range(struct yagl_gles_buffer *buffer,
+                                        GLintptr offset,
+                                        GLsizeiptr length)
+{
+    if (!buffer->map_pointer) {
+        return 0;
+    }
+
+    if ((offset < 0) || (length < 0) || ((offset + length) > buffer->map_length)) {
+        return 0;
+    }
+
+    if ((buffer->map_access & GL_MAP_FLUSH_EXPLICIT_BIT_EXT) == 0) {
+        return 0;
+    }
+
+    if (length == 0) {
+        return 1;
+    }
+
+    yagl_range_list_add(&buffer->default_part.range_list, buffer->map_offset + offset, length);
+    yagl_range_list_add(&buffer->fixed_part.range_list, buffer->map_offset + offset, length);
+    yagl_range_list_add(&buffer->byte_part.range_list, buffer->map_offset + offset, length);
+
+    buffer->cached_minmax_idx = 0;
+
+    return 1;
+}
+
+void yagl_gles_buffer_unmap(struct yagl_gles_buffer *buffer)
+{
+    if (!buffer->map_pointer) {
+        return;
+    }
+
+    if (((buffer->map_access & GL_MAP_WRITE_BIT_EXT) != 0) &&
+        ((buffer->map_access & GL_MAP_FLUSH_EXPLICIT_BIT_EXT) == 0)) {
+        yagl_range_list_add(&buffer->default_part.range_list, buffer->map_offset, buffer->map_length);
+        yagl_range_list_add(&buffer->fixed_part.range_list, buffer->map_offset, buffer->map_length);
+        yagl_range_list_add(&buffer->byte_part.range_list, buffer->map_offset, buffer->map_length);
+
+        buffer->cached_minmax_idx = 0;
+    }
+
+    buffer->map_pointer = NULL;
+    buffer->map_access = 0;
+    buffer->map_offset = 0;
+    buffer->map_length = 0;
 }
 
 void yagl_gles_buffer_set_bound(struct yagl_gles_buffer *buffer)

@@ -42,6 +42,11 @@ struct yagl_gles_buffer
     void *data;
     GLenum usage;
 
+    void *map_pointer;
+    GLbitfield map_access;
+    GLintptr map_offset;
+    GLsizeiptr map_length;
+
     int was_bound;
 
     int cached_minmax_idx;
@@ -94,6 +99,22 @@ void yagl_gles_buffer_transfer(struct yagl_gles_buffer *buffer,
 int yagl_gles_buffer_get_parameter(struct yagl_gles_buffer *buffer,
                                    GLenum pname,
                                    GLint *param);
+
+/*
+ * Assumes that 'access' has already been validated.
+ */
+int yagl_gles_buffer_map(struct yagl_gles_buffer *buffer,
+                         GLintptr offset,
+                         GLsizeiptr length,
+                         GLbitfield access);
+
+int yagl_gles_buffer_mapped(struct yagl_gles_buffer *buffer);
+
+int yagl_gles_buffer_flush_mapped_range(struct yagl_gles_buffer *buffer,
+                                        GLintptr offset,
+                                        GLsizeiptr length);
+
+void yagl_gles_buffer_unmap(struct yagl_gles_buffer *buffer);
 
 void yagl_gles_buffer_set_bound(struct yagl_gles_buffer *buffer);
 

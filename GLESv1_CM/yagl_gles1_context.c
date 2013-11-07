@@ -312,7 +312,8 @@ static GLchar *yagl_gles1_context_get_extensions(struct yagl_gles_context *ctx)
         "GL_OES_depth_texture "
         "GL_OES_framebuffer_object GL_OES_depth24 GL_OES_depth32 "
         "GL_OES_rgb8_rgba8 GL_OES_stencil1 GL_OES_stencil4 "
-        "GL_OES_stencil8 GL_OES_EGL_image GL_ANGLE_framebuffer_blit GL_EXT_draw_buffers ";
+        "GL_OES_stencil8 GL_OES_EGL_image GL_ANGLE_framebuffer_blit GL_EXT_draw_buffers "
+        "GL_OES_mapbuffer GL_EXT_map_buffer_range ";
     const GLchar *packed_depth_stencil = "GL_OES_packed_depth_stencil ";
     const GLchar *texture_npot = "GL_OES_texture_npot ";
     const GLchar *texture_filter_anisotropic = "GL_EXT_texture_filter_anisotropic ";
