@@ -7,6 +7,8 @@
 #include "yagl_vector.h"
 
 struct yagl_gles2_shader;
+struct yagl_gles2_attrib_variable;
+struct yagl_gles2_uniform_variable;
 
 struct yagl_gles2_program
 {
@@ -41,10 +43,18 @@ struct yagl_gles2_program
 
     struct yagl_list attrib_locations;
 
-    struct yagl_vector active_uniforms;
-    struct yagl_vector active_attribs;
+    struct yagl_gles2_attrib_variable *active_attribs;
+    GLuint num_active_attribs;
+    GLint max_active_attrib_bufsize;
+
+    struct yagl_gles2_uniform_variable *active_uniforms;
+    GLuint num_active_uniforms;
+    GLint max_active_uniform_bufsize;
 
     int linked;
+
+    GLint link_status;
+    GLint info_log_length;
 };
 
 struct yagl_gles2_program *yagl_gles2_program_create(int gen_locations);
@@ -63,21 +73,21 @@ int yagl_gles2_program_get_uniform_location(struct yagl_gles2_program *program,
 int yagl_gles2_program_get_attrib_location(struct yagl_gles2_program *program,
                                            const GLchar *name);
 
-int yagl_gles2_program_get_active_uniform(struct yagl_gles2_program *program,
+void yagl_gles2_program_get_active_uniform(struct yagl_gles2_program *program,
+                                           GLuint index,
+                                           GLsizei bufsize,
+                                           GLsizei *length,
+                                           GLint *size,
+                                           GLenum *type,
+                                           GLchar *name);
+
+void yagl_gles2_program_get_active_attrib(struct yagl_gles2_program *program,
                                           GLuint index,
                                           GLsizei bufsize,
                                           GLsizei *length,
                                           GLint *size,
                                           GLenum *type,
                                           GLchar *name);
-
-int yagl_gles2_program_get_active_attrib(struct yagl_gles2_program *program,
-                                         GLuint index,
-                                         GLsizei bufsize,
-                                         GLsizei *length,
-                                         GLint *size,
-                                         GLenum *type,
-                                         GLchar *name);
 
 int yagl_gles2_program_get_uniformfv(struct yagl_gles2_program *program,
                                      GLint location,

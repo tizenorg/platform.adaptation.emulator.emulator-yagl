@@ -1083,18 +1083,16 @@ void yagl_host_glBindAttribLocation(GLuint program, GLuint index, const GLchar *
 /*
  * glGetActiveAttrib wrapper. id = 64
  */
-GLboolean yagl_host_glGetActiveAttrib(GLuint program, GLuint index, GLint *size, GLenum *type, GLchar *name, int32_t name_maxcount, int32_t *name_count)
+void yagl_host_glGetActiveAttrib(GLuint program, GLuint index, GLint *size, GLenum *type, GLchar *name, int32_t name_maxcount, int32_t *name_count)
 {
     struct yagl_transport *t = yagl_get_transport();
-    GLboolean retval;
 
-    yagl_transport_begin(t, yagl_api_id_gles, 64, 10 * 8, 8 * 8 + yagl_transport_array_size(name, name_maxcount, sizeof(GLchar)));
+    yagl_transport_begin(t, yagl_api_id_gles, 64, 8 * 8, 6 * 8 + yagl_transport_array_size(name, name_maxcount, sizeof(GLchar)));
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_put_out_GLuint(t, index);
     yagl_transport_put_in_GLint(t, size);
     yagl_transport_put_in_GLenum(t, type);
     yagl_transport_put_in_array(t, name, name_maxcount, name_count, sizeof(GLchar));
-    yagl_transport_put_in_GLboolean(t, &retval);
     if (yagl_transport_direct(t)) {
         do {
             yagl_transport_probe_write(name, name_maxcount * sizeof(GLchar));
@@ -1102,25 +1100,21 @@ GLboolean yagl_host_glGetActiveAttrib(GLuint program, GLuint index, GLint *size,
     } else {
         yagl_transport_end(t);
     }
-
-    return retval;
 }
 
 /*
  * glGetActiveUniform wrapper. id = 65
  */
-GLboolean yagl_host_glGetActiveUniform(GLuint program, GLuint index, GLint *size, GLenum *type, GLchar *name, int32_t name_maxcount, int32_t *name_count)
+void yagl_host_glGetActiveUniform(GLuint program, GLuint index, GLint *size, GLenum *type, GLchar *name, int32_t name_maxcount, int32_t *name_count)
 {
     struct yagl_transport *t = yagl_get_transport();
-    GLboolean retval;
 
-    yagl_transport_begin(t, yagl_api_id_gles, 65, 10 * 8, 8 * 8 + yagl_transport_array_size(name, name_maxcount, sizeof(GLchar)));
+    yagl_transport_begin(t, yagl_api_id_gles, 65, 8 * 8, 6 * 8 + yagl_transport_array_size(name, name_maxcount, sizeof(GLchar)));
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_put_out_GLuint(t, index);
     yagl_transport_put_in_GLint(t, size);
     yagl_transport_put_in_GLenum(t, type);
     yagl_transport_put_in_array(t, name, name_maxcount, name_count, sizeof(GLchar));
-    yagl_transport_put_in_GLboolean(t, &retval);
     if (yagl_transport_direct(t)) {
         do {
             yagl_transport_probe_write(name, name_maxcount * sizeof(GLchar));
@@ -1128,8 +1122,6 @@ GLboolean yagl_host_glGetActiveUniform(GLuint program, GLuint index, GLint *size
     } else {
         yagl_transport_end(t);
     }
-
-    return retval;
 }
 
 /*
@@ -1337,13 +1329,20 @@ void yagl_host_glGetVertexAttribiv(GLuint index, GLenum pname, GLint *params, in
 /*
  * glLinkProgram wrapper. id = 76
  */
-void yagl_host_glLinkProgram(GLuint program)
+void yagl_host_glLinkProgram(GLuint program, GLint *params, int32_t params_maxcount, int32_t *params_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 76, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 76, 3 * 8, 1 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLint)));
     yagl_transport_put_out_GLuint(t, program);
-    yagl_transport_end(t);
+    yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLint));
+    if (yagl_transport_direct(t)) {
+        do {
+            yagl_transport_probe_write(params, params_maxcount * sizeof(GLint));
+        } while (!yagl_transport_end(t));
+    } else {
+        yagl_transport_end(t);
+    }
 }
 
 /*

@@ -27,12 +27,56 @@ struct yagl_gles2_location_v
     uint32_t global_location;
 };
 
-struct yagl_gles2_variable
+struct yagl_gles2_attrib_variable
 {
-    int enabled;
+    int fetched;
+
     GLchar *name;
+
+    GLint name_size;
+
     GLenum type;
     GLint size;
+};
+
+struct yagl_gles2_uniform_variable
+{
+    int generic_fetched;
+    int extended_fetched;
+
+    /*
+     * Common parameters, present when
+     * 'generic_fetched' or 'extended_fetched' is true.
+     * @{
+     */
+    GLint name_size;
+    GLenum type;
+    GLint size;
+    /*
+     * @}
+     */
+
+    /*
+     * Generic-only parameters.
+     * @{
+     */
+    GLchar *name;
+    /*
+     * @}
+     */
+
+    /*
+     * Extended-only parameters.
+     * @{
+     */
+    GLint block_index;
+    GLint block_offset;
+    GLint array_stride;
+    GLint matrix_stride;
+    GLint is_row_major;
+    /*
+     * @}
+     */
 };
 
 static pthread_once_t g_gen_locations_init = PTHREAD_ONCE_INIT;
@@ -63,20 +107,19 @@ static uint32_t yagl_gen_location()
 static void yagl_gles2_program_reset_cached(struct yagl_gles2_program *program)
 {
     int i;
-    struct yagl_gles2_variable *vars;
     struct yagl_gles2_location_l *location_l, *tmp_l;
 
-    vars = yagl_vector_data(&program->active_attribs);
-    for (i = 0; i < yagl_vector_size(&program->active_attribs); ++i) {
-        yagl_free(vars[i].name);
+    for (i = 0; i < (int)program->num_active_attribs; ++i) {
+        yagl_free(program->active_attribs[i].name);
     }
-    yagl_vector_resize(&program->active_attribs, 0);
+    yagl_free(program->active_attribs);
+    program->active_attribs = NULL;
 
-    vars = yagl_vector_data(&program->active_uniforms);
-    for (i = 0; i < yagl_vector_size(&program->active_uniforms); ++i) {
-        yagl_free(vars[i].name);
+    for (i = 0; i < (int)program->num_active_uniforms; ++i) {
+        yagl_free(program->active_uniforms[i].name);
     }
-    yagl_vector_resize(&program->active_uniforms, 0);
+    yagl_free(program->active_uniforms);
+    program->active_uniforms = NULL;
 
     yagl_list_for_each_safe(struct yagl_gles2_location_l,
                             location_l,
@@ -136,164 +179,11 @@ static __inline int yagl_gles2_program_translate_location(struct yagl_gles2_prog
     return 1;
 }
 
-typedef GLboolean (*get_active_variable_func)(GLuint /*program*/,
-                                              GLuint /*index*/,
-                                              GLint */*size*/,
-                                              GLenum */*type*/,
-                                              GLchar */*name*/,
-                                              int32_t /*name_maxcount*/,
-                                              int32_t */*name_count*/);
-
-static int yagl_gles2_program_get_active_variable(GLuint program,
-                                                  get_active_variable_func func,
-                                                  struct yagl_vector *active_variables,
-                                                  GLuint index,
-                                                  GLsizei bufsize,
-                                                  GLsizei *length,
-                                                  GLint *size,
-                                                  GLenum *type,
-                                                  GLchar *name)
-{
-    struct yagl_gles2_variable *var = NULL;
-    GLsizei tmp_length = 0;
-    GLint tmp_size;
-    GLenum tmp_type;
-    GLuint num_active_variables = (GLuint)yagl_vector_size(active_variables);
-
-    YAGL_LOG_FUNC_SET(yagl_gles2_program_get_active_variable);
-
-    if (index < num_active_variables) {
-        var = yagl_vector_data(active_variables);
-        var += index;
-    }
-
-    if (var && var->enabled) {
-        tmp_length = strlen(var->name) + 1;
-        tmp_length = (bufsize <= tmp_length) ? bufsize : tmp_length;
-
-        if (tmp_length > 0) {
-            strncpy(name, var->name, tmp_length);
-            name[tmp_length - 1] = '\0';
-            --tmp_length;
-        }
-
-        tmp_size = var->size;
-        tmp_type = var->type;
-    } else {
-        /*
-         * We allocate a new buffer here which is 1 byte
-         * bigger than the one provided by 'name'.
-         * This is in order to detect if we've actually got
-         * the whole name (which is almost always the case)
-         */
-
-        GLchar *tmp_name = yagl_malloc(bufsize + 1);
-
-        if (!func(program,
-                  index,
-                  &tmp_size,
-                  &tmp_type,
-                  tmp_name,
-                  bufsize + 1,
-                  &tmp_length)) {
-            /*
-             * Error, do nothing.
-             */
-            yagl_free(tmp_name);
-            YAGL_LOG_ERROR("Cannot get variable at index %u", index);
-            return 0;
-        }
-
-        if (tmp_length <= bufsize) {
-            /*
-             * Number of bytes returned can fit into 'bufsize', this
-             * means that we've also fetched whole variable name, we
-             * can cache it.
-             */
-
-            GLuint new_size;
-
-            assert(tmp_length > 0);
-
-            strncpy(name, tmp_name, tmp_length);
-
-            new_size = num_active_variables;
-
-            if (index >= num_active_variables) {
-                new_size = index + 1;
-            }
-
-            yagl_vector_resize(active_variables, new_size);
-
-            var = yagl_vector_data(active_variables);
-
-            memset(var + num_active_variables, 0,
-                   (new_size - num_active_variables) * sizeof(*var));
-
-            var += index;
-
-            var->enabled = 1;
-            var->name = tmp_name;
-            var->type = tmp_type;
-            var->size = tmp_size;
-        } else {
-            YAGL_LOG_WARN("Cannot cache variable, whole name not fetched");
-
-            /*
-             * Number of bytes returned is bufsize + 1, it's
-             * not guaranteed that we've got whole variable name,
-             * don't cache.
-             */
-            if (bufsize > 0) {
-                assert(tmp_length > 1);
-
-                strncpy(name, tmp_name, bufsize);
-                name[bufsize - 1] = '\0';
-
-                /*
-                 * Don't count that extra byte.
-                 */
-                --tmp_length;
-            }
-
-            yagl_free(tmp_name);
-        }
-
-        /*
-         * 'tmp_length' is currently in bytes, but we need chars.
-         */
-        --tmp_length;
-    }
-
-    if (length) {
-        *length = tmp_length;
-    }
-
-    if (size) {
-        *size = tmp_size;
-    }
-
-    if (type) {
-        *type = tmp_type;
-    }
-
-    YAGL_LOG_DEBUG("Got variable at index %u: name = %s, size = %d, type = 0x%X",
-                   index,
-                   ((bufsize > 0) ? name : NULL),
-                   tmp_size,
-                   tmp_type);
-
-    return 1;
-}
-
 static void yagl_gles2_program_destroy(struct yagl_ref *ref)
 {
     struct yagl_gles2_program *program = (struct yagl_gles2_program*)ref;
 
     yagl_gles2_program_reset_cached(program);
-
-    yagl_vector_cleanup(&program->active_attribs);
-    yagl_vector_cleanup(&program->active_uniforms);
 
     if (program->gen_locations) {
         yagl_vector_cleanup(&program->uniform_locations_v);
@@ -330,13 +220,6 @@ struct yagl_gles2_program *yagl_gles2_program_create(int gen_locations)
     }
 
     yagl_list_init(&program->attrib_locations);
-
-    yagl_vector_init(&program->active_uniforms,
-                     sizeof(struct yagl_gles2_variable),
-                     0);
-    yagl_vector_init(&program->active_attribs,
-                     sizeof(struct yagl_gles2_variable),
-                     0);
 
     yagl_host_glCreateProgram(program->global_name);
 
@@ -392,11 +275,28 @@ int yagl_gles2_program_detach_shader(struct yagl_gles2_program *program,
 
 void yagl_gles2_program_link(struct yagl_gles2_program *program)
 {
+    GLint params[6];
+
     yagl_gles2_program_reset_cached(program);
 
-    yagl_host_glLinkProgram(program->global_name);
+    yagl_host_glLinkProgram(program->global_name,
+                            params,
+                            sizeof(params)/sizeof(params[0]),
+                            NULL);
 
     program->linked = 1;
+
+    program->link_status = params[0];
+    program->info_log_length = params[1];
+    program->num_active_attribs = params[2];
+    program->max_active_attrib_bufsize = params[3];
+    program->num_active_uniforms = params[4];
+    program->max_active_uniform_bufsize = params[5];
+
+    program->active_attribs = yagl_malloc0(program->num_active_attribs *
+                                           sizeof(program->active_attribs[0]));
+    program->active_uniforms = yagl_malloc0(program->num_active_uniforms *
+                                            sizeof(program->active_uniforms[0]));
 }
 
 int yagl_gles2_program_get_uniform_location(struct yagl_gles2_program *program,
@@ -483,7 +383,69 @@ int yagl_gles2_program_get_attrib_location(struct yagl_gles2_program *program,
     return ret;
 }
 
-int yagl_gles2_program_get_active_uniform(struct yagl_gles2_program *program,
+void yagl_gles2_program_get_active_uniform(struct yagl_gles2_program *program,
+                                           GLuint index,
+                                           GLsizei bufsize,
+                                           GLsizei *length,
+                                           GLint *size,
+                                           GLenum *type,
+                                           GLchar *name)
+{
+    struct yagl_gles2_uniform_variable *var;
+    GLsizei tmp_length;
+
+    YAGL_LOG_FUNC_SET(yagl_gles2_program_get_active_uniform);
+
+    if (index >= program->num_active_uniforms) {
+        assert(0);
+        return;
+    }
+
+    var = &program->active_uniforms[index];
+
+    if (!var->generic_fetched) {
+        var->name = yagl_malloc(program->max_active_uniform_bufsize);
+        var->name[0] = '\0';
+
+        yagl_host_glGetActiveUniform(program->global_name,
+                                     index,
+                                     &var->size,
+                                     &var->type,
+                                     var->name,
+                                     program->max_active_uniform_bufsize,
+                                     &var->name_size);
+
+        var->generic_fetched = 1;
+    }
+
+    tmp_length = (bufsize <= var->name_size) ? bufsize : var->name_size;
+
+    if (tmp_length > 0) {
+        strncpy(name, var->name, tmp_length);
+        name[tmp_length - 1] = '\0';
+        --tmp_length;
+    }
+
+    if (length) {
+        *length = tmp_length;
+    }
+
+    if (size) {
+        *size = var->size;
+    }
+
+    if (type) {
+        *type = var->type;
+    }
+
+    YAGL_LOG_DEBUG("Got uniform variable at index %u: name = %s, size = %d, type = 0x%X",
+                   index,
+                   ((bufsize > 0) ? name : NULL),
+                   var->size,
+                   var->type);
+}
+
+void yagl_gles2_program_get_active_attrib(struct yagl_gles2_program *program,
                                           GLuint index,
                                           GLsizei bufsize,
                                           GLsizei *length,
@@ -491,34 +453,58 @@ int yagl_gles2_program_get_active_uniform(struct yagl_gles2_program *program,
                                           GLenum *type,
                                           GLchar *name)
 {
-    return yagl_gles2_program_get_active_variable(program->global_name,
-                                                  &yagl_host_glGetActiveUniform,
-                                                  &program->active_uniforms,
-                                                  index,
-                                                  bufsize,
-                                                  length,
-                                                  size,
-                                                  type,
-                                                  name);
-}
+    struct yagl_gles2_attrib_variable *var;
+    GLsizei tmp_length;
 
-int yagl_gles2_program_get_active_attrib(struct yagl_gles2_program *program,
-                                         GLuint index,
-                                         GLsizei bufsize,
-                                         GLsizei *length,
-                                         GLint *size,
-                                         GLenum *type,
-                                         GLchar *name)
-{
-    return yagl_gles2_program_get_active_variable(program->global_name,
-                                                  &yagl_host_glGetActiveAttrib,
-                                                  &program->active_attribs,
-                                                  index,
-                                                  bufsize,
-                                                  length,
-                                                  size,
-                                                  type,
-                                                  name);
+    YAGL_LOG_FUNC_SET(yagl_gles2_program_get_active_attrib);
+
+    if (index >= program->num_active_attribs) {
+        assert(0);
+        return;
+    }
+
+    var = &program->active_attribs[index];
+
+    if (!var->fetched) {
+        var->name = yagl_malloc(program->max_active_attrib_bufsize);
+        var->name[0] = '\0';
+
+        yagl_host_glGetActiveAttrib(program->global_name,
+                                    index,
+                                    &var->size,
+                                    &var->type,
+                                    var->name,
+                                    program->max_active_attrib_bufsize,
+                                    &var->name_size);
+
+        var->fetched = 1;
+    }
+
+    tmp_length = (bufsize <= var->name_size) ? bufsize : var->name_size;
+
+    if (tmp_length > 0) {
+        strncpy(name, var->name, tmp_length);
+        name[tmp_length - 1] = '\0';
+        --tmp_length;
+    }
+
+    if (length) {
+        *length = tmp_length;
+    }
+
+    if (size) {
+        *size = var->size;
+    }
+
+    if (type) {
+        *type = var->type;
+    }
+
+    YAGL_LOG_DEBUG("Got attrib variable at index %u: name = %s, size = %d, type = 0x%X",
+                   index,
+                   ((bufsize > 0) ? name : NULL),
+                   var->size,
+                   var->type);
 }
 
 int yagl_gles2_program_get_uniformfv(struct yagl_gles2_program *program,

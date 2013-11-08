@@ -111,7 +111,7 @@ YAGL_API GLuint glGetUniformBlockIndex(GLuint program,
 }
 
 YAGL_API void glGetUniformIndices(GLuint program, GLsizei uniformCount,
-                                  const GLchar * const *uniformNames,
+                                  const GLchar *const *uniformNames,
                                   GLuint *uniformIndices)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT4(glGetUniformIndices, GLuint, GLsizei, const GLchar* const*, GLuint*, program, uniformCount, uniformNames, uniformIndices);

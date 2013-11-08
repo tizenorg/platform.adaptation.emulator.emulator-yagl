@@ -448,10 +448,12 @@ YAGL_API void glGetActiveAttrib(GLuint program, GLuint index, GLsizei bufsize, G
         goto out;
     }
 
-    if (!yagl_gles2_program_get_active_attrib(program_obj, index, bufsize, length, size, type, name)) {
+    if (index >= program_obj->num_active_attribs) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
         goto out;
     }
+
+    yagl_gles2_program_get_active_attrib(program_obj, index, bufsize, length, size, type, name);
 
 out:
     yagl_gles2_program_release(program_obj);
@@ -485,10 +487,12 @@ YAGL_API void glGetActiveUniform(GLuint program, GLuint index, GLsizei bufsize, 
         goto out;
     }
 
-    if (!yagl_gles2_program_get_active_uniform(program_obj, index, bufsize, length, size, type, name)) {
+    if (index >= program_obj->num_active_uniforms) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
         goto out;
     }
+
+    yagl_gles2_program_get_active_uniform(program_obj, index, bufsize, length, size, type, name);
 
 out:
     yagl_gles2_program_release(program_obj);
@@ -617,12 +621,26 @@ YAGL_API void glGetProgramiv(GLuint program, GLenum pname, GLint *params)
         *params += (program_obj->vertex_shader != NULL) ? 1 : 0;
         break;
     case GL_INFO_LOG_LENGTH:
+        *params = program_obj->info_log_length;
+        break;
     case GL_ACTIVE_ATTRIBUTES:
+        *params = program_obj->num_active_attribs;
+        break;
     case GL_ACTIVE_ATTRIBUTE_MAX_LENGTH:
+        *params = program_obj->max_active_attrib_bufsize;
+        break;
     case GL_ACTIVE_UNIFORMS:
+        *params = program_obj->num_active_uniforms;
+        break;
     case GL_ACTIVE_UNIFORM_MAX_LENGTH:
+        *params = program_obj->max_active_uniform_bufsize;
+        break;
     case GL_DELETE_STATUS:
+        *params = GL_FALSE;
+        break;
     case GL_LINK_STATUS:
+        *params = program_obj->link_status;
+        break;
     case GL_VALIDATE_STATUS:
         yagl_host_glGetProgramiv(program_obj->global_name, pname, params);
         break;

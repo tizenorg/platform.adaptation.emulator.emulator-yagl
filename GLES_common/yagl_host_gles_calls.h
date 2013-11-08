@@ -325,12 +325,12 @@ void yagl_host_glBindAttribLocation(GLuint program, GLuint index, const GLchar *
 /*
  * glGetActiveAttrib wrapper. id = 64
  */
-GLboolean yagl_host_glGetActiveAttrib(GLuint program, GLuint index, GLint *size, GLenum *type, GLchar *name, int32_t name_maxcount, int32_t *name_count);
+void yagl_host_glGetActiveAttrib(GLuint program, GLuint index, GLint *size, GLenum *type, GLchar *name, int32_t name_maxcount, int32_t *name_count);
 
 /*
  * glGetActiveUniform wrapper. id = 65
  */
-GLboolean yagl_host_glGetActiveUniform(GLuint program, GLuint index, GLint *size, GLenum *type, GLchar *name, int32_t name_maxcount, int32_t *name_count);
+void yagl_host_glGetActiveUniform(GLuint program, GLuint index, GLint *size, GLenum *type, GLchar *name, int32_t name_maxcount, int32_t *name_count);
 
 /*
  * glGetAttribLocation wrapper. id = 66
@@ -385,7 +385,7 @@ void yagl_host_glGetVertexAttribiv(GLuint index, GLenum pname, GLint *params, in
 /*
  * glLinkProgram wrapper. id = 76
  */
-void yagl_host_glLinkProgram(GLuint program);
+void yagl_host_glLinkProgram(GLuint program, GLint *params, int32_t params_maxcount, int32_t *params_count);
 
 /*
  * glUniform1f wrapper. id = 77
