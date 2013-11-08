@@ -112,6 +112,7 @@ void glVertexAttrib3fv(GLuint indx, const GLfloat *values)
 void glVertexAttrib4f(GLuint indx, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 void glVertexAttrib4fv(GLuint indx, const GLfloat *values)
 void glGetActiveUniformsiv(GLuint program, const GLuint *uniformIndices, GLint *params)
+void glGetUniformIndices(GLuint program, const GLchar *uniformNames, GLuint *uniformIndices)
 # State queries
 void glGetIntegerv(GLenum pname, GLint *params)
 void glGetFloatv(GLenum pname, GLfloat *params)

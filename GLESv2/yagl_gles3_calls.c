@@ -117,9 +117,32 @@ YAGL_API void glGetUniformIndices(GLuint program, GLsizei uniformCount,
                                   const GLchar *const *uniformNames,
                                   GLuint *uniformIndices)
 {
+    struct yagl_gles2_program *program_obj = NULL;
+
     YAGL_LOG_FUNC_ENTER_SPLIT4(glGetUniformIndices, GLuint, GLsizei, const GLchar* const*, GLuint*, program, uniformCount, uniformNames, uniformIndices);
 
     YAGL_GET_CTX();
+
+    program_obj = (struct yagl_gles2_program*)yagl_sharegroup_acquire_object(ctx->base.sg,
+        YAGL_NS_SHADER_PROGRAM, program);
+
+    if (!program_obj) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (program_obj->is_shader) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    yagl_gles3_program_get_uniform_indices(program_obj,
+                                           uniformNames,
+                                           uniformCount,
+                                           uniformIndices);
+
+out:
+    yagl_gles2_program_release(program_obj);
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }

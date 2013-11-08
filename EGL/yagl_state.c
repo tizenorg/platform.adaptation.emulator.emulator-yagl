@@ -49,6 +49,9 @@ struct yagl_state
 
     uint8_t *tmp_buff2;
     uint32_t tmp_buff2_size;
+
+    uint8_t *tmp_buff3;
+    uint32_t tmp_buff3_size;
 };
 
 static pthread_key_t g_state_key;
@@ -119,6 +122,7 @@ static void yagl_state_free(void *ptr)
 
     yagl_free(state->tmp_buff);
     yagl_free(state->tmp_buff2);
+    yagl_free(state->tmp_buff3);
 
     yagl_free(state);
 
@@ -164,6 +168,7 @@ static void yagl_state_atfork()
 
         yagl_free(state->tmp_buff);
         yagl_free(state->tmp_buff2);
+        yagl_free(state->tmp_buff3);
 
         yagl_free(state);
     } else {
@@ -348,6 +353,22 @@ uint8_t *yagl_get_tmp_buffer2(uint32_t size)
     state->tmp_buff2 = yagl_malloc(state->tmp_buff2_size);
 
     return state->tmp_buff2;
+}
+
+uint8_t *yagl_get_tmp_buffer3(uint32_t size)
+{
+    struct yagl_state *state = yagl_get_state();
+
+    if (size <= state->tmp_buff3_size) {
+        return state->tmp_buff3;
+    }
+
+    yagl_free(state->tmp_buff3);
+
+    state->tmp_buff3_size = size;
+    state->tmp_buff3 = yagl_malloc(state->tmp_buff3_size);
+
+    return state->tmp_buff3;
 }
 
 yagl_object_name yagl_get_global_name()

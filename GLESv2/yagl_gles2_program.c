@@ -373,6 +373,7 @@ void yagl_gles2_program_get_active_uniform(struct yagl_gles2_program *program,
     var = &program->active_uniforms[index];
 
     if (!var->generic_fetched) {
+        yagl_free(var->name);
         var->name = yagl_malloc(program->max_active_uniform_bufsize);
         var->name[0] = '\0';
 
@@ -436,6 +437,7 @@ void yagl_gles2_program_get_active_attrib(struct yagl_gles2_program *program,
     var = &program->active_attribs[index];
 
     if (!var->fetched) {
+        yagl_free(var->name);
         var->name = yagl_malloc(program->max_active_attrib_bufsize);
         var->name[0] = '\0';
 

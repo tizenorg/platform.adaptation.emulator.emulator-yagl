@@ -16,6 +16,7 @@ static void yagl_gles_vertex_array_destroy(struct yagl_ref *ref)
     for (i = 0; i < va->num_arrays; ++i) {
         yagl_gles_array_cleanup(&va->arrays[i]);
     }
+    yagl_free(va->arrays);
 
     if (va->global_name) {
         yagl_host_glDeleteObjects(&va->global_name, 1);

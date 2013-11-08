@@ -4,6 +4,7 @@
 #include "yagl_state.h"
 #include "yagl_log.h"
 #include "yagl_host_gles_calls.h"
+#include <string.h>
 
 static int yagl_gles3_get_uniform_param(struct yagl_gles2_uniform_variable *var,
                                         GLenum pname,
@@ -99,7 +100,7 @@ int yagl_gles3_program_get_active_uniformsiv(struct yagl_gles2_program *program,
         }
     }
 
-    if (num_fetch_indices > 0) {
+    if (num_fetch_indices == 0) {
         /*
          * Everything read from cache, return.
          */
@@ -142,4 +143,95 @@ int yagl_gles3_program_get_active_uniformsiv(struct yagl_gles2_program *program,
                    pname, num_indices, (num_indices - num_fetch_indices));
 
     return 1;
+}
+
+void yagl_gles3_program_get_uniform_indices(struct yagl_gles2_program *program,
+                                            const GLchar *const *names,
+                                            int num_names,
+                                            GLuint *indices)
+{
+    struct yagl_gles2_uniform_variable *var;
+    GLchar *fetch_names;
+    int num_fetch_names = 0;
+    int *fetch_positions;
+    GLuint *fetch_indices;
+    int i, j;
+
+    YAGL_LOG_FUNC_SET(yagl_gles3_program_get_uniform_indices);
+
+    fetch_names = (GLchar*)yagl_get_tmp_buffer(
+        program->max_active_uniform_bufsize * num_names);
+
+    fetch_positions = (int*)yagl_get_tmp_buffer2(
+        num_names * sizeof(fetch_positions[0]));
+
+    for (i = 0; i < num_names; ++i) {
+        int found = 0;
+
+        if ((strlen(names[i]) + 1) > program->max_active_uniform_bufsize) {
+            indices[i] = GL_INVALID_INDEX;
+            continue;
+        }
+
+        for (j = 0; j < program->num_active_uniforms; ++j) {
+            var = &program->active_uniforms[j];
+
+            if (var->name_fetched && (strcmp(var->name, names[i]) == 0)) {
+                indices[i] = j;
+                found = 1;
+                break;
+            }
+        }
+
+        if (!found) {
+            strcpy(fetch_names +
+                   (program->max_active_uniform_bufsize * num_fetch_names),
+                   names[i]);
+            fetch_positions[num_fetch_names] = i;
+            ++num_fetch_names;
+        }
+    }
+
+    if (num_fetch_names == 0) {
+        /*
+         * Everything read from cache, return.
+         */
+
+        YAGL_LOG_DEBUG("Got uniform indices for %d names from cache",
+                       num_names);
+
+        return;
+    }
+
+    fetch_indices = (GLuint*)yagl_get_tmp_buffer3(
+        num_fetch_names * sizeof(fetch_indices[0]));
+
+    yagl_host_glGetUniformIndices(program->global_name,
+        fetch_names,
+        program->max_active_uniform_bufsize * num_fetch_names,
+        fetch_indices,
+        num_fetch_names,
+        NULL);
+
+    for (i = 0; i < num_fetch_names; ++i) {
+        indices[fetch_positions[i]] = fetch_indices[i];
+
+        if ((fetch_indices[i] == GL_INVALID_INDEX) ||
+            (fetch_indices[i] >= program->num_active_uniforms)) {
+            continue;
+        }
+
+        var = &program->active_uniforms[fetch_indices[i]];
+
+        var->name_size = strlen(names[fetch_positions[i]]) + 1;
+        yagl_free(var->name);
+        var->name = yagl_malloc(var->name_size);
+
+        strcpy(var->name, names[fetch_positions[i]]);
+
+        var->name_fetched = 1;
+    }
+
+    YAGL_LOG_DEBUG("Got uniform indices for %d names, %d from cache",
+                   num_names, (num_names - num_fetch_names));
 }
