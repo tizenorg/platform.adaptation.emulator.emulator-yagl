@@ -1,6 +1,9 @@
 #include "GLES3/gl3.h"
 #include "yagl_host_gles_calls.h"
 #include "yagl_gles3_context.h"
+#include "yagl_gles3_program.h"
+#include "yagl_gles3_validate.h"
+#include "yagl_gles2_shader.h"
 #include "yagl_sharegroup.h"
 #include "yagl_gles_buffer.h"
 #include "yagl_log.h"
@@ -125,9 +128,42 @@ YAGL_API void glGetActiveUniformsiv(GLuint program, GLsizei uniformCount,
                                     const GLuint *uniformIndices,
                                     GLenum pname, GLint *params)
 {
+    struct yagl_gles2_program *program_obj = NULL;
+
     YAGL_LOG_FUNC_ENTER_SPLIT5(glGetActiveUniformsiv, GLuint, GLsizei, const GLuint*, GLenum, GLint*, program, uniformCount, uniformIndices, pname, params);
 
     YAGL_GET_CTX();
+
+    program_obj = (struct yagl_gles2_program*)yagl_sharegroup_acquire_object(ctx->base.sg,
+        YAGL_NS_SHADER_PROGRAM, program);
+
+    if (!program_obj) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (program_obj->is_shader) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!yagl_gles3_is_uniform_param_valid(pname)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if (uniformCount >= program_obj->num_active_uniforms) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (!yagl_gles3_program_get_active_uniformsiv(program_obj, uniformIndices, uniformCount, pname, params)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+out:
+    yagl_gles2_program_release(program_obj);
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }

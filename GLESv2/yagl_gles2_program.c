@@ -27,58 +27,6 @@ struct yagl_gles2_location_v
     uint32_t global_location;
 };
 
-struct yagl_gles2_attrib_variable
-{
-    int fetched;
-
-    GLchar *name;
-
-    GLint name_size;
-
-    GLenum type;
-    GLint size;
-};
-
-struct yagl_gles2_uniform_variable
-{
-    int generic_fetched;
-    int extended_fetched;
-
-    /*
-     * Common parameters, present when
-     * 'generic_fetched' or 'extended_fetched' is true.
-     * @{
-     */
-    GLint name_size;
-    GLenum type;
-    GLint size;
-    /*
-     * @}
-     */
-
-    /*
-     * Generic-only parameters.
-     * @{
-     */
-    GLchar *name;
-    /*
-     * @}
-     */
-
-    /*
-     * Extended-only parameters.
-     * @{
-     */
-    GLint block_index;
-    GLint block_offset;
-    GLint array_stride;
-    GLint matrix_stride;
-    GLint is_row_major;
-    /*
-     * @}
-     */
-};
-
 static pthread_once_t g_gen_locations_init = PTHREAD_ONCE_INIT;
 
 static pthread_mutex_t g_gen_locations_mutex;
@@ -120,6 +68,13 @@ static void yagl_gles2_program_reset_cached(struct yagl_gles2_program *program)
     }
     yagl_free(program->active_uniforms);
     program->active_uniforms = NULL;
+
+    for (i = 0; i < (int)program->num_active_uniform_blocks; ++i) {
+        yagl_free(program->active_uniform_blocks[i].name);
+        yagl_free(program->active_uniform_blocks[i].active_uniform_indices);
+    }
+    yagl_free(program->active_uniform_blocks);
+    program->active_uniform_blocks = NULL;
 
     yagl_list_for_each_safe(struct yagl_gles2_location_l,
                             location_l,
@@ -275,7 +230,9 @@ int yagl_gles2_program_detach_shader(struct yagl_gles2_program *program,
 
 void yagl_gles2_program_link(struct yagl_gles2_program *program)
 {
-    GLint params[6];
+    GLint params[8];
+
+    memset(&params[0], 0, sizeof(params));
 
     yagl_gles2_program_reset_cached(program);
 
@@ -292,11 +249,23 @@ void yagl_gles2_program_link(struct yagl_gles2_program *program)
     program->max_active_attrib_bufsize = params[3];
     program->num_active_uniforms = params[4];
     program->max_active_uniform_bufsize = params[5];
+    program->num_active_uniform_blocks = params[6];
+    program->max_active_uniform_block_bufsize = params[7];
 
-    program->active_attribs = yagl_malloc0(program->num_active_attribs *
-                                           sizeof(program->active_attribs[0]));
-    program->active_uniforms = yagl_malloc0(program->num_active_uniforms *
-                                            sizeof(program->active_uniforms[0]));
+    if (program->num_active_attribs > 0) {
+        program->active_attribs = yagl_malloc0(program->num_active_attribs *
+                                               sizeof(program->active_attribs[0]));
+    }
+
+    if (program->num_active_uniforms) {
+        program->active_uniforms = yagl_malloc0(program->num_active_uniforms *
+                                                sizeof(program->active_uniforms[0]));
+    }
+
+    if (program->num_active_uniform_blocks) {
+        program->active_uniform_blocks = yagl_malloc0(program->num_active_uniform_blocks *
+                                                      sizeof(program->active_uniform_blocks[0]));
+    }
 }
 
 int yagl_gles2_program_get_uniform_location(struct yagl_gles2_program *program,
@@ -415,6 +384,7 @@ void yagl_gles2_program_get_active_uniform(struct yagl_gles2_program *program,
                                      program->max_active_uniform_bufsize,
                                      &var->name_size);
 
+        var->name_fetched = 1;
         var->generic_fetched = 1;
     }
 

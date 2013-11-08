@@ -7,8 +7,108 @@
 #include "yagl_vector.h"
 
 struct yagl_gles2_shader;
-struct yagl_gles2_attrib_variable;
-struct yagl_gles2_uniform_variable;
+
+struct yagl_gles2_attrib_variable
+{
+    int fetched;
+
+    GLchar *name;
+
+    GLint name_size;
+
+    GLenum type;
+    GLint size;
+};
+
+struct yagl_gles2_uniform_variable
+{
+    int name_fetched;
+    int generic_fetched;
+    int extended_fetched;
+
+    /*
+     * Common parameters, present when
+     * 'name_fetched', 'generic_fetched' or 'extended_fetched' is true.
+     * @{
+     */
+    GLint name_size;
+    /*
+     * @}
+     */
+
+    /*
+     * Common parameters, present when
+     * 'generic_fetched' or 'extended_fetched' is true.
+     * @{
+     */
+    GLenum type;
+    GLint size;
+    /*
+     * @}
+     */
+
+    /*
+     * 'name_fetched' or 'generic_fetched'.
+     * @{
+     */
+    GLchar *name;
+    /*
+     * @}
+     */
+
+    /*
+     * 'extended_fetched'.
+     * @{
+     */
+    GLint block_index;
+    GLint block_offset;
+    GLint array_stride;
+    GLint matrix_stride;
+    GLint is_row_major;
+    /*
+     * @}
+     */
+};
+
+struct yagl_gles2_uniform_block
+{
+    int name_fetched;
+    int params_fetched;
+
+    GLuint binding;
+
+    /*
+     * Present when 'name_fetched' or 'params_fetched' is true.
+     * @{
+     */
+    GLint name_size;
+    /*
+     * @}
+     */
+
+    /*
+     * 'name_fetched'.
+     * @{
+     */
+    GLchar *name;
+    /*
+     * @}
+     */
+
+    /*
+     * 'params_fetched'.
+     * @{
+     */
+    GLuint num_active_uniform_indices;
+    GLint data_size;
+    GLint referenced_by_vertex_shader;
+    GLint referenced_by_fragment_shader;
+    /*
+     * @}
+     */
+
+    GLuint *active_uniform_indices;
+};
 
 struct yagl_gles2_program
 {
@@ -50,6 +150,10 @@ struct yagl_gles2_program
     struct yagl_gles2_uniform_variable *active_uniforms;
     GLuint num_active_uniforms;
     GLint max_active_uniform_bufsize;
+
+    struct yagl_gles2_uniform_block *active_uniform_blocks;
+    GLuint num_active_uniform_blocks;
+    GLint max_active_uniform_block_bufsize;
 
     int linked;
 
