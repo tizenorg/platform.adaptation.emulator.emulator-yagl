@@ -14,4 +14,11 @@ void yagl_gles3_program_get_uniform_indices(struct yagl_gles2_program *program,
                                             int num_names,
                                             GLuint *indices);
 
+GLuint yagl_gles3_program_get_uniform_block_index(struct yagl_gles2_program *program,
+                                                  const GLchar *block_name);
+
+void yagl_gles3_program_set_uniform_block_binding(struct yagl_gles2_program *program,
+                                                  GLuint block_index,
+                                                  GLuint block_binding);
+
 #endif

@@ -105,8 +105,8 @@ int yagl_gles3_program_get_active_uniformsiv(struct yagl_gles2_program *program,
          * Everything read from cache, return.
          */
 
-        YAGL_LOG_DEBUG("Got uniform parameters 0x%X for %d indices from cache",
-                       pname, num_indices);
+        YAGL_LOG_DEBUG("Program %u, got uniform parameters 0x%X for %d indices from cache",
+                       program->global_name, pname, num_indices);
 
         return 1;
     }
@@ -139,8 +139,9 @@ int yagl_gles3_program_get_active_uniformsiv(struct yagl_gles2_program *program,
              &params[fetch_indices_positions[num_indices + i]]);
     }
 
-    YAGL_LOG_DEBUG("Got uniform parameters 0x%X for %d indices, %d from cache",
-                   pname, num_indices, (num_indices - num_fetch_indices));
+    YAGL_LOG_DEBUG("Program %u, got uniform parameters 0x%X for %d indices, %d from cache",
+                   program->global_name, pname, num_indices,
+                   (num_indices - num_fetch_indices));
 
     return 1;
 }
@@ -197,8 +198,8 @@ void yagl_gles3_program_get_uniform_indices(struct yagl_gles2_program *program,
          * Everything read from cache, return.
          */
 
-        YAGL_LOG_DEBUG("Got uniform indices for %d names from cache",
-                       num_names);
+        YAGL_LOG_DEBUG("Program %u, got uniform indices for %d names from cache",
+                       program->global_name, num_names);
 
         return;
     }
@@ -232,6 +233,73 @@ void yagl_gles3_program_get_uniform_indices(struct yagl_gles2_program *program,
         var->name_fetched = 1;
     }
 
-    YAGL_LOG_DEBUG("Got uniform indices for %d names, %d from cache",
-                   num_names, (num_names - num_fetch_names));
+    YAGL_LOG_DEBUG("Program %u, got uniform indices for %d names, %d from cache",
+                   program->global_name, num_names,
+                   (num_names - num_fetch_names));
+}
+
+GLuint yagl_gles3_program_get_uniform_block_index(struct yagl_gles2_program *program,
+                                                  const GLchar *block_name)
+{
+    int32_t block_name_size = strlen(block_name) + 1;
+    GLuint i;
+    struct yagl_gles2_uniform_block *block;
+
+    YAGL_LOG_FUNC_SET(yagl_gles3_program_get_uniform_block_index);
+
+    if (block_name_size > program->max_active_uniform_block_bufsize) {
+        return GL_INVALID_INDEX;
+    }
+
+    for (i = 0; i < program->num_active_uniform_blocks; ++i) {
+        block = &program->active_uniform_blocks[i];
+
+        if (block->name_fetched && (strcmp(block->name, block_name) == 0)) {
+            YAGL_LOG_DEBUG("Program %u, got uniform block index for %s = %u from cache",
+                           program->global_name, block_name, i);
+
+            return i;
+        }
+    }
+
+    i = yagl_host_glGetUniformBlockIndex(program->global_name,
+                                         block_name,
+                                         block_name_size);
+
+    if ((i != GL_INVALID_INDEX) && (i < program->num_active_uniform_blocks)) {
+        block = &program->active_uniform_blocks[i];
+
+        block->name_size = block_name_size;
+        yagl_free(block->name);
+        block->name = yagl_malloc(block_name_size);
+
+        strcpy(block->name, block_name);
+
+        block->name_fetched = 1;
+    }
+
+    YAGL_LOG_DEBUG("Program %u, got uniform block index for %s = %u",
+                   program->global_name, block_name, i);
+
+    return i;
+}
+
+void yagl_gles3_program_set_uniform_block_binding(struct yagl_gles2_program *program,
+                                                  GLuint block_index,
+                                                  GLuint block_binding)
+{
+    YAGL_LOG_FUNC_SET(yagl_gles3_program_set_uniform_block_binding);
+
+    if (block_index >= program->num_active_uniform_blocks) {
+        return;
+    }
+
+    yagl_host_glUniformBlockBinding(program->global_name,
+                                    block_index,
+                                    block_binding);
+
+    program->active_uniform_blocks[block_index].binding = block_binding;
+
+    YAGL_LOG_DEBUG("Program %u, setting uniform block binding %u to %u",
+                   program->global_name, block_index, block_binding);
 }

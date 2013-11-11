@@ -9,6 +9,7 @@
 #include "yagl_host_gles_calls.h"
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #define YAGL_SET_ERR(err) \
     yagl_gles_context_set_error(&ctx->base.base, err); \
@@ -20,9 +21,74 @@
 #define GL_PACK_IMAGE_HEIGHT 0x806C
 #define GL_PACK_SKIP_IMAGES 0x806B
 
+static inline void yagl_gles3_context_pre_draw(struct yagl_gles3_context *ctx)
+{
+    struct yagl_gles3_buffer_binding *buffer_binding;
+    GLint offset;
+    GLsizei size;
+
+    yagl_list_for_each(struct yagl_gles3_buffer_binding,
+                       buffer_binding,
+                       &ctx->active_buffer_bindings, list) {
+        assert(buffer_binding->buffer);
+
+        if (buffer_binding->buffer->size <= 0) {
+            continue;
+        }
+
+        if (yagl_gles_buffer_is_dirty(buffer_binding->buffer, 0, 0)) {
+            yagl_gles_buffer_bind(buffer_binding->buffer, 0, 0,
+                                  buffer_binding->target);
+            yagl_gles_buffer_transfer(buffer_binding->buffer, 0,
+                                      buffer_binding->target, 0);
+        }
+
+        if (buffer_binding->entire) {
+            yagl_host_glBindBufferBase(buffer_binding->target,
+                                       buffer_binding->index,
+                                       buffer_binding->buffer->default_part.global_name);
+        } else {
+            offset = buffer_binding->offset;
+            size = buffer_binding->size;
+
+            if (offset < 0) {
+                size += offset;
+                offset = 0;
+            }
+
+            if ((offset >= buffer_binding->buffer->size) || (size <= 0)) {
+                continue;
+            }
+
+            if ((offset + size) > buffer_binding->buffer->size) {
+                size = buffer_binding->buffer->size - offset;
+            }
+
+            yagl_host_glBindBufferRange(buffer_binding->target,
+                                        buffer_binding->index,
+                                        buffer_binding->buffer->default_part.global_name,
+                                        offset, size);
+        }
+    }
+}
+
+static inline void yagl_gles3_context_post_draw(struct yagl_gles3_context *ctx)
+{
+    struct yagl_gles3_buffer_binding *buffer_binding;
+
+    yagl_list_for_each(struct yagl_gles3_buffer_binding,
+                       buffer_binding,
+                       &ctx->active_buffer_bindings, list) {
+        yagl_host_glBindBufferBase(buffer_binding->target,
+                                   buffer_binding->index,
+                                   0);
+    }
+}
+
 static void yagl_gles3_context_prepare(struct yagl_client_context *ctx)
 {
     struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
+    GLuint i;
 
     yagl_gles2_context_prepare(ctx);
 
@@ -32,12 +98,16 @@ static void yagl_gles3_context_prepare(struct yagl_client_context *ctx)
     gles3_ctx->num_program_binary_formats = 0;
 
     yagl_host_glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS,
-                            &gles3_ctx->num_uniform_buffer_bindings,
+                            (GLint*)&gles3_ctx->num_uniform_buffer_bindings,
                             1,
                             NULL);
 
     gles3_ctx->uniform_buffer_bindings =
         yagl_malloc0(sizeof(gles3_ctx->uniform_buffer_bindings[0]) * gles3_ctx->num_uniform_buffer_bindings);
+
+    for (i = 0; i < gles3_ctx->num_uniform_buffer_bindings; ++i) {
+        yagl_gles3_buffer_binding_init(&gles3_ctx->uniform_buffer_bindings[i], i);
+    }
 
     yagl_host_glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT,
                             &gles3_ctx->uniform_buffer_offset_alignment,
@@ -48,7 +118,7 @@ static void yagl_gles3_context_prepare(struct yagl_client_context *ctx)
 static void yagl_gles3_context_destroy(struct yagl_client_context *ctx)
 {
     struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
-    int i;
+    GLuint i;
 
     YAGL_LOG_FUNC_ENTER(yagl_gles3_context_destroy, "%p", ctx);
 
@@ -290,6 +360,41 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
     return 1;
 }
 
+static void yagl_gles3_context_draw_arrays(struct yagl_gles_context *ctx,
+                                           GLenum mode,
+                                           GLint first,
+                                           GLsizei count)
+{
+    struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
+
+    yagl_gles3_context_pre_draw(gles3_ctx);
+
+    yagl_gles2_context_draw_arrays(ctx, mode, first, count);
+
+    yagl_gles3_context_post_draw(gles3_ctx);
+}
+
+static void yagl_gles3_context_draw_elements(struct yagl_gles_context *ctx,
+                                             GLenum mode,
+                                             GLsizei count,
+                                             GLenum type,
+                                             const GLvoid *indices,
+                                             int32_t indices_count)
+{
+    struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
+
+    yagl_gles3_context_pre_draw(gles3_ctx);
+
+    yagl_gles2_context_draw_elements(ctx,
+                                     mode,
+                                     count,
+                                     type,
+                                     indices,
+                                     indices_count);
+
+    yagl_gles3_context_post_draw(gles3_ctx);
+}
+
 static int yagl_gles3_context_bind_buffer(struct yagl_gles_context *ctx,
                                           GLenum target,
                                           struct yagl_gles_buffer *buffer)
@@ -313,7 +418,7 @@ static void yagl_gles3_context_unbind_buffer(struct yagl_gles_context *ctx,
                                              yagl_object_name buffer_local_name)
 {
     struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
-    int i;
+    GLuint i;
 
     if (gles3_ctx->ubo && (gles3_ctx->ubo->base.local_name == buffer_local_name)) {
         yagl_gles_buffer_release(gles3_ctx->ubo);
@@ -393,6 +498,8 @@ struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg
 
     yagl_gles2_context_init(&gles3_ctx->base, yagl_client_api_gles3, sg);
 
+    yagl_list_init(&gles3_ctx->active_buffer_bindings);
+
     gles3_ctx->base.base.base.prepare = &yagl_gles3_context_prepare;
     gles3_ctx->base.base.base.destroy = &yagl_gles3_context_destroy;
     gles3_ctx->base.base.create_arrays = &yagl_gles2_context_create_arrays;
@@ -403,8 +510,8 @@ struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg
     gles3_ctx->base.base.is_enabled = &yagl_gles3_context_is_enabled;
     gles3_ctx->base.base.get_integerv = &yagl_gles3_context_get_integerv;
     gles3_ctx->base.base.get_floatv = &yagl_gles2_context_get_floatv;
-    gles3_ctx->base.base.draw_arrays = &yagl_gles2_context_draw_arrays;
-    gles3_ctx->base.base.draw_elements = &yagl_gles2_context_draw_elements;
+    gles3_ctx->base.base.draw_arrays = &yagl_gles3_context_draw_arrays;
+    gles3_ctx->base.base.draw_elements = &yagl_gles3_context_draw_elements;
     gles3_ctx->base.base.bind_buffer = &yagl_gles3_context_bind_buffer;
     gles3_ctx->base.base.unbind_buffer = &yagl_gles3_context_unbind_buffer;
     gles3_ctx->base.base.acquire_binded_buffer = &yagl_gles3_context_acquire_binded_buffer;
@@ -434,7 +541,13 @@ void yagl_gles3_context_bind_buffer_base(struct yagl_gles3_context *ctx,
          */
 
         yagl_gles3_buffer_binding_set_base(&ctx->uniform_buffer_bindings[index],
-                                           buffer);
+                                           buffer,
+                                           target);
+
+        if (buffer) {
+            yagl_list_add_tail(&ctx->active_buffer_bindings,
+                               &ctx->uniform_buffer_bindings[index].list);
+        }
 
         /*
          * Set generic binding point.
@@ -488,7 +601,12 @@ void yagl_gles3_context_bind_buffer_range(struct yagl_gles3_context *ctx,
          */
 
         yagl_gles3_buffer_binding_set_range(&ctx->uniform_buffer_bindings[index],
-                                            buffer, offset, size);
+                                            buffer, target, offset, size);
+
+        if (buffer) {
+            yagl_list_add_tail(&ctx->active_buffer_bindings,
+                               &ctx->uniform_buffer_bindings[index].list);
+        }
 
         /*
          * Set generic binding point.

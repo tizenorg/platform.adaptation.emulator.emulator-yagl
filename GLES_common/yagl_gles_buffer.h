@@ -120,4 +120,8 @@ void yagl_gles_buffer_set_bound(struct yagl_gles_buffer *buffer);
 
 int yagl_gles_buffer_was_bound(struct yagl_gles_buffer *buffer);
 
+int yagl_gles_buffer_is_dirty(struct yagl_gles_buffer *buffer,
+                              GLenum type,
+                              int need_convert);
+
 #endif

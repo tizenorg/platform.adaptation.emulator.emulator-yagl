@@ -2,6 +2,7 @@
 #define _YAGL_GLES3_CONTEXT_H_
 
 #include "yagl_gles2_context.h"
+#include "yagl_list.h"
 
 struct yagl_gles_buffer;
 struct yagl_gles3_buffer_binding;
@@ -15,7 +16,9 @@ struct yagl_gles3_context
     struct yagl_gles_buffer *ubo;
 
     struct yagl_gles3_buffer_binding *uniform_buffer_bindings;
-    int num_uniform_buffer_bindings;
+    GLuint num_uniform_buffer_bindings;
+
+    struct yagl_list active_buffer_bindings;
 
     GLint uniform_buffer_offset_alignment;
 };

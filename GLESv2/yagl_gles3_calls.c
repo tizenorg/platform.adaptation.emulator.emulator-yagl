@@ -104,13 +104,40 @@ out:
 YAGL_API GLuint glGetUniformBlockIndex(GLuint program,
                                        const GLchar *uniformBlockName)
 {
+    struct yagl_gles2_program *program_obj = NULL;
+    GLuint index = GL_INVALID_INDEX;
+
     YAGL_LOG_FUNC_ENTER_SPLIT2(glGetUniformBlockIndex, GLuint, const GLchar*, program, uniformBlockName);
 
-    YAGL_GET_CTX_RET(0);
+    YAGL_GET_CTX_RET(GL_INVALID_INDEX);
 
-    YAGL_LOG_FUNC_EXIT(NULL);
+    program_obj = (struct yagl_gles2_program*)yagl_sharegroup_acquire_object(ctx->base.sg,
+        YAGL_NS_SHADER_PROGRAM, program);
 
-    return 0;
+    if (!program_obj) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (program_obj->is_shader) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!program_obj->linked) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    index = yagl_gles3_program_get_uniform_block_index(program_obj,
+                                                       uniformBlockName);
+
+out:
+    yagl_gles2_program_release(program_obj);
+
+    YAGL_LOG_FUNC_EXIT("%u", index);
+
+    return index;
 }
 
 YAGL_API void glGetUniformIndices(GLuint program, GLsizei uniformCount,
@@ -194,9 +221,41 @@ out:
 YAGL_API void glUniformBlockBinding(GLuint program, GLuint uniformBlockIndex,
                                     GLuint uniformBlockBinding)
 {
+    struct yagl_gles2_program *program_obj = NULL;
+
     YAGL_LOG_FUNC_ENTER_SPLIT3(glUniformBlockBinding, GLuint, GLuint, GLuint, program, uniformBlockIndex, uniformBlockBinding);
 
     YAGL_GET_CTX();
+
+    program_obj = (struct yagl_gles2_program*)yagl_sharegroup_acquire_object(ctx->base.sg,
+        YAGL_NS_SHADER_PROGRAM, program);
+
+    if (!program_obj) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (program_obj->is_shader) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (uniformBlockIndex >= program_obj->num_active_uniform_blocks) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (uniformBlockBinding >= ctx->num_uniform_buffer_bindings) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    yagl_gles3_program_set_uniform_block_binding(program_obj,
+                                                 uniformBlockIndex,
+                                                 uniformBlockBinding);
+
+out:
+    yagl_gles2_program_release(program_obj);
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }

@@ -507,3 +507,23 @@ int yagl_gles_buffer_was_bound(struct yagl_gles_buffer *buffer)
 {
     return buffer->was_bound;
 }
+
+int yagl_gles_buffer_is_dirty(struct yagl_gles_buffer *buffer,
+                              GLenum type,
+                              int need_convert)
+{
+    struct yagl_gles_buffer_part *bufpart = &buffer->default_part;
+
+    if (need_convert) {
+        switch (type) {
+        case GL_BYTE:
+            bufpart = &buffer->byte_part;
+            break;
+        case GL_FIXED:
+            bufpart = &buffer->fixed_part;
+            break;
+        }
+    }
+
+    return yagl_range_list_size(&bufpart->range_list) > 0;
+}
