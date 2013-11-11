@@ -69,6 +69,59 @@ static int yagl_gles3_get_uniform_param(struct yagl_gles2_uniform_variable *var,
     return 0;
 }
 
+static int yagl_gles3_get_uniform_block_params(struct yagl_gles2_uniform_block *block,
+                                               GLenum pname,
+                                               GLint *params)
+{
+    switch (pname) {
+    case GL_UNIFORM_BLOCK_BINDING:
+        *params = block->binding;
+        return 1;
+    case GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES:
+        if (block->active_uniform_indices) {
+            memcpy(params,
+                   block->active_uniform_indices,
+                   block->num_active_uniform_indices *
+                   sizeof(block->active_uniform_indices[0]));
+            return 1;
+        }
+        break;
+    case GL_UNIFORM_BLOCK_DATA_SIZE:
+        if (block->params_fetched) {
+            *params = block->data_size;
+            return 1;
+        }
+        break;
+    case GL_UNIFORM_BLOCK_NAME_LENGTH:
+        if (block->name_fetched || block->params_fetched) {
+            *params = block->name_size;
+            return 1;
+        }
+        break;
+    case GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS:
+        if (block->params_fetched) {
+            *params = block->num_active_uniform_indices;
+            return 1;
+        }
+        break;
+    case GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER:
+        if (block->params_fetched) {
+            *params = block->referenced_by_vertex_shader;
+            return 1;
+        }
+        break;
+    case GL_UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER:
+        if (block->params_fetched) {
+            *params = block->referenced_by_fragment_shader;
+            return 1;
+        }
+        break;
+    default:
+        return 0;
+    }
+    return -1;
+}
+
 int yagl_gles3_program_get_active_uniformsiv(struct yagl_gles2_program *program,
                                              const GLuint *indices,
                                              int num_indices,
@@ -302,4 +355,130 @@ void yagl_gles3_program_set_uniform_block_binding(struct yagl_gles2_program *pro
 
     YAGL_LOG_DEBUG("Program %u, setting uniform block binding %u to %u",
                    program->global_name, block_index, block_binding);
+}
+
+void yagl_gles3_program_get_active_uniform_block_name(struct yagl_gles2_program *program,
+                                                      GLuint block_index,
+                                                      GLsizei bufsize,
+                                                      GLsizei *length,
+                                                      GLchar *block_name)
+{
+    struct yagl_gles2_uniform_block *block;
+    GLsizei tmp_length;
+
+    YAGL_LOG_FUNC_SET(yagl_gles3_program_get_active_uniform_block_name);
+
+    if (block_index >= program->num_active_uniform_blocks) {
+        return;
+    }
+
+    block = &program->active_uniform_blocks[block_index];
+
+    if (!block->name_fetched) {
+        yagl_free(block->name);
+        block->name = yagl_malloc(program->max_active_uniform_block_bufsize);
+        block->name[0] = '\0';
+
+        yagl_host_glGetActiveUniformBlockName(program->global_name,
+                                              block_index,
+                                              block->name,
+                                              program->max_active_uniform_block_bufsize,
+                                              &block->name_size);
+
+        block->name_fetched = 1;
+    }
+
+    tmp_length = (bufsize <= block->name_size) ? bufsize : block->name_size;
+
+    if (tmp_length > 0) {
+        strncpy(block_name, block->name, tmp_length);
+        block_name[tmp_length - 1] = '\0';
+        --tmp_length;
+    }
+
+    if (length) {
+        *length = tmp_length;
+    }
+
+    YAGL_LOG_DEBUG("Program %u, got active uniform block name at index %u = %s",
+                   program->global_name,
+                   block_index,
+                   ((bufsize > 0) ? block_name : NULL));
+}
+
+int yagl_gles3_program_get_active_uniform_blockiv(struct yagl_gles2_program *program,
+                                                  GLuint block_index,
+                                                  GLenum pname,
+                                                  GLint *params)
+{
+    struct yagl_gles2_uniform_block *block;
+    int res;
+    GLint *fetch_params;
+
+    YAGL_LOG_FUNC_SET(yagl_gles3_program_get_active_uniform_blockiv);
+
+    if (block_index >= program->num_active_uniform_blocks) {
+        return 0;
+    }
+
+    block = &program->active_uniform_blocks[block_index];
+
+    res = yagl_gles3_get_uniform_block_params(block,
+                                              pname,
+                                              params);
+
+    if (res >= 0) {
+        if (res > 0) {
+            YAGL_LOG_DEBUG("Program %u, got active uniform block %u pname 0x%X from cache",
+                           program->global_name,
+                           block_index,
+                           pname);
+        }
+
+        return res;
+    }
+
+    if (!block->params_fetched) {
+        fetch_params = (GLint*)yagl_get_tmp_buffer(
+            sizeof(fetch_params[0]) * 5);
+
+        yagl_host_glGetActiveUniformBlockiv(program->global_name,
+                                            block_index,
+                                            0,
+                                            fetch_params,
+                                            5,
+                                            NULL);
+
+        block->data_size = fetch_params[0];
+        block->name_size = fetch_params[1];
+        block->num_active_uniform_indices = fetch_params[2];
+        block->referenced_by_vertex_shader = fetch_params[3];
+        block->referenced_by_fragment_shader = fetch_params[4];
+
+        block->params_fetched = 1;
+    }
+
+    if (pname == GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES) {
+        yagl_free(block->active_uniform_indices);
+
+        block->active_uniform_indices = (GLuint*)yagl_get_tmp_buffer(
+            block->num_active_uniform_indices *
+            sizeof(block->active_uniform_indices[0]));
+
+        yagl_host_glGetActiveUniformBlockiv(program->global_name,
+                                            block_index,
+                                            pname,
+                                            (GLint*)block->active_uniform_indices,
+                                            block->num_active_uniform_indices,
+                                            NULL);
+    }
+
+    yagl_gles3_get_uniform_block_params(block, pname, params);
+
+    YAGL_LOG_DEBUG("Program %u, got active uniform block %u pname 0x%X",
+                   program->global_name,
+                   block_index,
+                   pname);
+
+    return 1;
 }

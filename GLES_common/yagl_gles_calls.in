@@ -117,6 +117,8 @@ void glGetActiveUniformsiv(GLuint program, const GLuint *uniformIndices, GLint *
 void glGetUniformIndices(GLuint program, const GLchar *uniformNames, GLuint *uniformIndices)
 GLuint glGetUniformBlockIndex(GLuint program, const GLchar *uniformBlockName)
 void glUniformBlockBinding(GLuint program, GLuint uniformBlockIndex, GLuint uniformBlockBinding)
+void glGetActiveUniformBlockName(GLuint program, GLuint uniformBlockIndex, GLchar *uniformBlockName)
+void glGetActiveUniformBlockiv(GLuint program, GLuint uniformBlockIndex, GLenum pname, GLint *params)
 # State queries
 void glGetIntegerv(GLenum pname, GLint *params)
 void glGetFloatv(GLenum pname, GLfloat *params)

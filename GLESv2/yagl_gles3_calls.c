@@ -259,3 +259,87 @@ out:
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
+
+YAGL_API void glGetActiveUniformBlockName(GLuint program,
+                                          GLuint uniformBlockIndex,
+                                          GLsizei bufSize,
+                                          GLsizei *length,
+                                          GLchar *uniformBlockName)
+{
+    struct yagl_gles2_program *program_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT5(glGetActiveUniformBlockName, GLuint, GLuint, GLsizei, GLsizei*, GLchar*, program, uniformBlockIndex, bufSize, length, uniformBlockName);
+
+    YAGL_GET_CTX();
+
+    program_obj = (struct yagl_gles2_program*)yagl_sharegroup_acquire_object(ctx->base.sg,
+        YAGL_NS_SHADER_PROGRAM, program);
+
+    if (!program_obj) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (program_obj->is_shader) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (uniformBlockIndex >= program_obj->num_active_uniform_blocks) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    yagl_gles3_program_get_active_uniform_block_name(program_obj,
+                                                     uniformBlockIndex,
+                                                     bufSize,
+                                                     length,
+                                                     uniformBlockName);
+
+out:
+    yagl_gles2_program_release(program_obj);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glGetActiveUniformBlockiv(GLuint program,
+                                        GLuint uniformBlockIndex,
+                                        GLenum pname, GLint *params)
+{
+    struct yagl_gles2_program *program_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT4(glGetActiveUniformBlockiv, GLuint, GLuint, GLenum, GLint*, program, uniformBlockIndex, pname, params);
+
+    YAGL_GET_CTX();
+
+    program_obj = (struct yagl_gles2_program*)yagl_sharegroup_acquire_object(ctx->base.sg,
+        YAGL_NS_SHADER_PROGRAM, program);
+
+    if (!program_obj) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (program_obj->is_shader) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (uniformBlockIndex >= program_obj->num_active_uniform_blocks) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (!yagl_gles3_program_get_active_uniform_blockiv(program_obj,
+                                                       uniformBlockIndex,
+                                                       pname,
+                                                       params)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+out:
+    yagl_gles2_program_release(program_obj);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}

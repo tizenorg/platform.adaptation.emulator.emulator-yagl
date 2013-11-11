@@ -21,4 +21,15 @@ void yagl_gles3_program_set_uniform_block_binding(struct yagl_gles2_program *pro
                                                   GLuint block_index,
                                                   GLuint block_binding);
 
+void yagl_gles3_program_get_active_uniform_block_name(struct yagl_gles2_program *program,
+                                                      GLuint block_index,
+                                                      GLsizei bufsize,
+                                                      GLsizei *length,
+                                                      GLchar *block_name);
+
+int yagl_gles3_program_get_active_uniform_blockiv(struct yagl_gles2_program *program,
+                                                  GLuint block_index,
+                                                  GLenum pname,
+                                                  GLint *params);
+
 #endif
