@@ -305,6 +305,10 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
         *params = gles3_ctx->tfo->paused;
         *num_params = 1;
         break;
+    case GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
+        *params = gles3_ctx->tfbo ? gles3_ctx->tfbo->base.local_name : 0;
+        *num_params = 1;
+        break;
     default:
         processed = 0;
         break;
@@ -356,7 +360,6 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
     case GL_SAMPLER_BINDING:
     case GL_TEXTURE_BINDING_2D_ARRAY:
     case GL_TEXTURE_BINDING_3D:
-    case GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
     case GL_TRANSFORM_FEEDBACK_BUFFER_SIZE:
     case GL_TRANSFORM_FEEDBACK_BUFFER_START:
     case GL_UNIFORM_BUFFER_SIZE:
