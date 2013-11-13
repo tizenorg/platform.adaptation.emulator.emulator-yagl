@@ -133,6 +133,11 @@ void glPauseTransformFeedback()
 void glResumeTransformFeedback()
 void glTransformFeedbackVaryings(GLuint program, const GLchar *varyings, GLenum bufferMode)
 void glGetTransformFeedbackVaryings(GLuint program, GLsizei *sizes, GLenum *types)
+# Queries
+void glGenQueries(const GLuint *ids)
+void glBeginQuery(GLenum target, GLuint id)
+void glEndQuery(GLenum target)
+GLboolean glGetQueryObjectuiv(GLuint id, GLuint &result)
 # Misc
 void glDeleteObjects(const GLuint *objects)
 void glBlendEquation(GLenum mode)

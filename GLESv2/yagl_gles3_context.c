@@ -2,6 +2,7 @@
 #include "yagl_gles3_context.h"
 #include "yagl_gles3_buffer_binding.h"
 #include "yagl_gles3_transform_feedback.h"
+#include "yagl_gles3_query.h"
 #include "yagl_gles2_utils.h"
 #include "yagl_gles_buffer.h"
 #include "yagl_log.h"
@@ -95,6 +96,8 @@ static void yagl_gles3_context_destroy(struct yagl_client_context *ctx)
 
     YAGL_LOG_FUNC_ENTER(yagl_gles3_context_destroy, "%p", ctx);
 
+    yagl_gles3_query_release(gles3_ctx->tf_primitives_written_query);
+
     yagl_gles3_transform_feedback_release(gles3_ctx->tfo);
     yagl_gles3_transform_feedback_release(gles3_ctx->tf_zero);
     yagl_gles_buffer_release(gles3_ctx->tfbo);
@@ -107,6 +110,7 @@ static void yagl_gles3_context_destroy(struct yagl_client_context *ctx)
 
     yagl_free(gles3_ctx->uniform_buffer_bindings);
 
+    yagl_namespace_cleanup(&gles3_ctx->queries);
     yagl_namespace_cleanup(&gles3_ctx->transform_feedbacks);
 
     yagl_gles2_context_cleanup(&gles3_ctx->base);
@@ -225,14 +229,38 @@ static int yagl_gles3_context_enable(struct yagl_gles_context *ctx,
                                      GLenum cap,
                                      GLboolean enable)
 {
-    return 0;
+    switch (cap) {
+    case GL_PRIMITIVE_RESTART_FIXED_INDEX:
+    case GL_RASTERIZER_DISCARD:
+        break;
+    default:
+        return 0;
+    }
+
+    if (enable) {
+        yagl_host_glEnable(cap);
+    } else {
+        yagl_host_glDisable(cap);
+    }
+
+    return 1;
 }
 
 static int yagl_gles3_context_is_enabled(struct yagl_gles_context *ctx,
                                          GLenum cap,
                                          GLboolean *enabled)
 {
-    return 0;
+    switch (cap) {
+    case GL_PRIMITIVE_RESTART_FIXED_INDEX:
+    case GL_RASTERIZER_DISCARD:
+        break;
+    default:
+        return 0;
+    }
+
+    *enabled = yagl_host_glIsEnabled(cap);
+
+    return 1;
 }
 
 static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
@@ -507,6 +535,7 @@ struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg
     yagl_gles2_context_init(&gles3_ctx->base, yagl_client_api_gles3, sg);
 
     yagl_namespace_init(&gles3_ctx->transform_feedbacks);
+    yagl_namespace_init(&gles3_ctx->queries);
 
     yagl_list_init(&gles3_ctx->active_uniform_buffer_bindings);
 
@@ -729,4 +758,76 @@ void yagl_gles3_context_bind_transform_feedback(struct yagl_gles3_context *ctx,
     }
 
     yagl_gles3_transform_feedback_bind(tfo, target);
+}
+
+void yagl_gles3_context_begin_query(struct yagl_gles3_context *ctx,
+                                    GLenum target,
+                                    struct yagl_gles3_query *query)
+{
+    YAGL_LOG_FUNC_SET(glBeginQuery);
+
+    if (query->active) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        return;
+    }
+
+    switch (target) {
+    case GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
+        if (ctx->tf_primitives_written_query) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            return;
+        }
+
+        yagl_gles3_query_acquire(query);
+        yagl_gles3_query_release(ctx->tf_primitives_written_query);
+        ctx->tf_primitives_written_query = query;
+        break;
+    default:
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        return;
+    }
+
+    yagl_gles3_query_begin(query, target);
+}
+
+void yagl_gles3_context_end_query(struct yagl_gles3_context *ctx,
+                                  GLenum target)
+{
+    struct yagl_gles3_query *query = NULL;
+
+    YAGL_LOG_FUNC_SET(glEndQuery);
+
+    switch (target) {
+    case GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
+        if (!ctx->tf_primitives_written_query) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            return;
+        }
+
+        query = ctx->tf_primitives_written_query;
+        ctx->tf_primitives_written_query = NULL;
+        break;
+    default:
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        return;
+    }
+
+    yagl_gles3_query_end(query, target);
+    yagl_gles3_query_release(query);
+}
+
+int yagl_gles3_context_acquire_active_query(struct yagl_gles3_context *ctx,
+                                            GLenum target,
+                                            struct yagl_gles3_query **query)
+{
+    switch (target) {
+    case GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
+        yagl_gles3_query_acquire(ctx->tf_primitives_written_query);
+        *query = ctx->tf_primitives_written_query;
+        break;
+    default:
+        return 0;
+    }
+
+    return 1;
 }

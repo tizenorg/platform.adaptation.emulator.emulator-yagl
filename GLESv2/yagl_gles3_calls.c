@@ -4,6 +4,7 @@
 #include "yagl_gles3_program.h"
 #include "yagl_gles3_transform_feedback.h"
 #include "yagl_gles3_buffer_binding.h"
+#include "yagl_gles3_query.h"
 #include "yagl_gles3_validate.h"
 #include "yagl_gles2_shader.h"
 #include "yagl_sharegroup.h"
@@ -670,4 +671,190 @@ out:
     yagl_gles2_program_release(program_obj);
 
     YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glGenQueries(GLsizei n, GLuint *ids)
+{
+    struct yagl_gles3_query **queries = NULL;
+    GLsizei i;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glGenQueries, GLsizei, GLuint*, n, ids);
+
+    YAGL_GET_CTX();
+
+    if (n < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    queries = yagl_malloc0(n * sizeof(*queries));
+
+    for (i = 0; i < n; ++i) {
+        queries[i] = yagl_gles3_query_create();
+
+        if (!queries[i]) {
+            goto out;
+        }
+    }
+
+    for (i = 0; i < n; ++i) {
+        yagl_namespace_add(&ctx->queries, &queries[i]->base);
+
+        if (ids) {
+            ids[i] = queries[i]->base.local_name;
+        }
+    }
+
+out:
+    for (i = 0; i < n; ++i) {
+        yagl_gles3_query_release(queries[i]);
+    }
+    yagl_free(queries);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glDeleteQueries(GLsizei n, const GLuint *ids)
+{
+    GLsizei i;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glDeleteQueries, GLsizei, const GLuint*, n, ids);
+
+    YAGL_GET_CTX();
+
+    if (n < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (ids) {
+        for (i = 0; i < n; ++i) {
+            yagl_namespace_remove(&ctx->queries, ids[i]);
+        }
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glBeginQuery(GLenum target, GLuint id)
+{
+    struct yagl_gles3_query *query = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glBeginQuery, GLenum, GLuint, target, id);
+
+    YAGL_GET_CTX();
+
+    query = (struct yagl_gles3_query*)yagl_namespace_acquire(&ctx->queries, id);
+
+    if (!query) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    yagl_gles3_context_begin_query(ctx, target, query);
+
+out:
+    yagl_gles3_query_release(query);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glEndQuery(GLenum target)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT1(glEndQuery, GLenum, target);
+
+    YAGL_GET_CTX();
+
+    yagl_gles3_context_end_query(ctx, target);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glGetQueryiv(GLenum target, GLenum pname, GLint *params)
+{
+    struct yagl_gles3_query *query = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glGetQueryiv, GLenum, GLenum, GLint*, target, pname, params);
+
+    YAGL_GET_CTX();
+
+    if (!yagl_gles3_context_acquire_active_query(ctx, target, &query)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    switch (pname) {
+    case GL_CURRENT_QUERY:
+        *params = query ? query->base.local_name : 0;
+        break;
+    default:
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+out:
+    yagl_gles3_query_release(query);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glGetQueryObjectuiv(GLuint id, GLenum pname, GLuint *params)
+{
+    struct yagl_gles3_query *query = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glGetQueryObjectuiv, GLuint, GLenum, GLuint*, id, pname, params);
+
+    YAGL_GET_CTX();
+
+    query = (struct yagl_gles3_query*)yagl_namespace_acquire(&ctx->queries, id);
+
+    if (!query) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (query->active) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    switch (pname) {
+    case GL_QUERY_RESULT_AVAILABLE:
+        *params = yagl_gles3_query_is_result_available(query);
+        break;
+    case GL_QUERY_RESULT:
+        *params = yagl_gles3_query_get_result(query);
+        break;
+    default:
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+out:
+    yagl_gles3_query_release(query);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API GLboolean glIsQuery(GLuint id)
+{
+    GLboolean res = GL_FALSE;
+    struct yagl_gles3_query *query = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT1(glIsQuery, GLuint, id);
+
+    YAGL_GET_CTX_RET(GL_FALSE);
+
+    query = (struct yagl_gles3_query*)yagl_namespace_acquire(&ctx->queries, id);
+
+    if (query && yagl_gles3_query_was_active(query)) {
+        res = GL_TRUE;
+    }
+
+    yagl_gles3_query_release(query);
+
+    YAGL_LOG_FUNC_EXIT_SPLIT(GLboolean, res);
+
+    return res;
 }

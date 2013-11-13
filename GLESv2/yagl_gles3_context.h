@@ -8,12 +8,14 @@
 struct yagl_gles_buffer;
 struct yagl_gles3_buffer_binding;
 struct yagl_gles3_transform_feedback;
+struct yagl_gles3_query;
 
 struct yagl_gles3_context
 {
     struct yagl_gles2_context base;
 
     struct yagl_namespace transform_feedbacks;
+    struct yagl_namespace queries;
 
     int num_program_binary_formats;
 
@@ -50,6 +52,17 @@ struct yagl_gles3_context
     /*
      * @}
      */
+
+    /*
+     * Queries.
+     * @{
+     */
+
+    struct yagl_gles3_query *tf_primitives_written_query;
+
+    /*
+     * @}
+     */
 };
 
 struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg);
@@ -69,5 +82,16 @@ void yagl_gles3_context_bind_buffer_range(struct yagl_gles3_context *ctx,
 void yagl_gles3_context_bind_transform_feedback(struct yagl_gles3_context *ctx,
                                                 GLenum target,
                                                 struct yagl_gles3_transform_feedback *tfo);
+
+void yagl_gles3_context_begin_query(struct yagl_gles3_context *ctx,
+                                    GLenum target,
+                                    struct yagl_gles3_query *query);
+
+void yagl_gles3_context_end_query(struct yagl_gles3_context *ctx,
+                                  GLenum target);
+
+int yagl_gles3_context_acquire_active_query(struct yagl_gles3_context *ctx,
+                                            GLenum target,
+                                            struct yagl_gles3_query **query);
 
 #endif

@@ -509,9 +509,8 @@ void yagl_gles3_program_set_transform_feedback_varyings(struct yagl_gles2_progra
         varyings_str = tmp = (GLchar*)yagl_get_tmp_buffer(varyings_size);
 
         for (i = 0; i < num_varyings; ++i) {
-            GLint name_size = strlen(varyings[i]) + 1;
-            memcpy(tmp, varyings[i], name_size);
-            tmp += name_size;
+            memcpy(tmp, varyings[i], tfi->varyings[i].name_size);
+            tmp += tfi->varyings[i].name_size;
         }
     }
 
