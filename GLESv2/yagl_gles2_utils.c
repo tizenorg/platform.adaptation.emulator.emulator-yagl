@@ -1,3 +1,4 @@
+#include "GLES2/gl2.h"
 #include "yagl_gles2_utils.h"
 #include "yagl_malloc.h"
 #include <string.h>
@@ -245,4 +246,30 @@ int yagl_gles2_shader_has_version(const char *source,
     }
 
     return 1;
+}
+
+void yagl_gles2_set_name(const GLchar *from, GLint from_size,
+                         GLint bufsize,
+                         GLint *length,
+                         GLchar *name)
+{
+    GLint tmp_length;
+
+    if (bufsize < 0) {
+        bufsize = 0;
+    }
+
+    tmp_length = (bufsize <= from_size) ? bufsize : from_size;
+
+    if (tmp_length > 0) {
+        strncpy(name, from, tmp_length);
+        name[tmp_length - 1] = '\0';
+        --tmp_length;
+    } else if (bufsize > 0) {
+        name[0] = '\0';
+    }
+
+    if (length) {
+        *length = tmp_length;
+    }
 }

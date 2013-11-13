@@ -2,12 +2,15 @@
 #include "yagl_host_gles_calls.h"
 #include "yagl_gles3_context.h"
 #include "yagl_gles3_program.h"
+#include "yagl_gles3_transform_feedback.h"
+#include "yagl_gles3_buffer_binding.h"
 #include "yagl_gles3_validate.h"
 #include "yagl_gles2_shader.h"
 #include "yagl_sharegroup.h"
 #include "yagl_gles_buffer.h"
 #include "yagl_log.h"
 #include "yagl_impl.h"
+#include "yagl_malloc.h"
 
 #define YAGL_SET_ERR(err) \
     yagl_gles_context_set_error(&ctx->base.base, err); \
@@ -337,6 +340,331 @@ YAGL_API void glGetActiveUniformBlockiv(GLuint program,
         YAGL_SET_ERR(GL_INVALID_ENUM);
         goto out;
     }
+
+out:
+    yagl_gles2_program_release(program_obj);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glGenTransformFeedbacks(GLsizei n, GLuint *ids)
+{
+    struct yagl_gles3_transform_feedback **transform_feedbacks = NULL;
+    GLsizei i;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glGenTransformFeedbacks, GLsizei, GLuint*, n, ids);
+
+    YAGL_GET_CTX();
+
+    if (n < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    transform_feedbacks = yagl_malloc0(n * sizeof(*transform_feedbacks));
+
+    for (i = 0; i < n; ++i) {
+        transform_feedbacks[i] =
+            yagl_gles3_transform_feedback_create(0,
+                                                 ctx->max_transform_feedback_separate_attribs);
+
+        if (!transform_feedbacks[i]) {
+            goto out;
+        }
+    }
+
+    for (i = 0; i < n; ++i) {
+        yagl_namespace_add(&ctx->transform_feedbacks,
+                           &transform_feedbacks[i]->base);
+
+        if (ids) {
+            ids[i] = transform_feedbacks[i]->base.local_name;
+        }
+    }
+
+out:
+    for (i = 0; i < n; ++i) {
+        yagl_gles3_transform_feedback_release(transform_feedbacks[i]);
+    }
+    yagl_free(transform_feedbacks);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glBindTransformFeedback(GLenum target, GLuint id)
+{
+    struct yagl_gles3_transform_feedback *tf = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glBindTransformFeedback, GLenum, GLuint, target, id);
+
+    YAGL_GET_CTX();
+
+    if (id != 0) {
+        tf = (struct yagl_gles3_transform_feedback*)yagl_namespace_acquire(&ctx->transform_feedbacks,
+            id);
+
+        if (!tf) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            goto out;
+        }
+    }
+
+    yagl_gles3_context_bind_transform_feedback(ctx, target, tf);
+
+out:
+    yagl_gles3_transform_feedback_release(tf);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glBeginTransformFeedback(GLenum primitiveMode)
+{
+    GLuint i, num_active_buffer_bindings;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT1(glBeginTransformFeedback, GLenum, primitiveMode);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->base.program) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    num_active_buffer_bindings = ctx->base.program->linked_transform_feedback_info.num_varyings;
+
+    if (num_active_buffer_bindings == 0) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!yagl_gles3_is_primitive_mode_valid(primitiveMode)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if (ctx->tfo->active) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (ctx->base.program->linked_transform_feedback_info.buffer_mode == GL_INTERLEAVED_ATTRIBS) {
+        /*
+         * "In interleaved mode, only the first buffer object binding point is ever written to."
+         */
+        num_active_buffer_bindings = 1;
+    }
+
+    for (i = 0; i < num_active_buffer_bindings; ++i) {
+        if (!ctx->tfo->buffer_bindings[i].buffer) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            goto out;
+        }
+    }
+
+    yagl_gles3_transform_feedback_begin(ctx->tfo,
+                                        primitiveMode,
+                                        num_active_buffer_bindings);
+
+    ctx->tf_primitive_mode = primitiveMode;
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glEndTransformFeedback(void)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT0(glEndTransformFeedback);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->tfo->active) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    yagl_gles3_transform_feedback_end(ctx->tfo);
+
+    ctx->tf_primitive_mode = 0;
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glPauseTransformFeedback(void)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT0(glPauseTransformFeedback);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->tfo->active || ctx->tfo->paused) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    yagl_gles3_transform_feedback_pause(ctx->tfo);
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glResumeTransformFeedback(void)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT0(glResumeTransformFeedback);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->tfo->active || !ctx->tfo->paused) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    yagl_gles3_transform_feedback_resume(ctx->tfo);
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glDeleteTransformFeedbacks(GLsizei n, const GLuint *ids)
+{
+    GLsizei i;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glDeleteTransformFeedbacks, GLsizei, const GLuint*, n, ids);
+
+    YAGL_GET_CTX();
+
+    if (n < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (ids) {
+        for (i = 0; i < n; ++i) {
+            yagl_namespace_remove(&ctx->transform_feedbacks, ids[i]);
+        }
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API GLboolean glIsTransformFeedback(GLuint id)
+{
+    GLboolean res = GL_FALSE;
+    struct yagl_gles3_transform_feedback *tf = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT1(glIsTransformFeedback, GLuint, id);
+
+    YAGL_GET_CTX_RET(GL_FALSE);
+
+    tf = (struct yagl_gles3_transform_feedback*)yagl_namespace_acquire(&ctx->transform_feedbacks,
+        id);
+
+    if (tf && yagl_gles3_transform_feedback_was_bound(tf)) {
+        res = GL_TRUE;
+    }
+
+    yagl_gles3_transform_feedback_release(tf);
+
+    YAGL_LOG_FUNC_EXIT_SPLIT(GLboolean, res);
+
+    return res;
+}
+
+YAGL_API void glTransformFeedbackVaryings(GLuint program,
+                                          GLsizei count,
+                                          const GLchar *const *varyings,
+                                          GLenum bufferMode)
+{
+    struct yagl_gles2_program *program_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT4(glTransformFeedbackVaryings, GLuint, GLsizei, const GLchar* const*, GLenum, program, count, varyings, bufferMode);
+
+    YAGL_GET_CTX();
+
+    if (!yagl_gles3_is_transform_feedback_buffer_mode_valid(bufferMode)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    program_obj = (struct yagl_gles2_program*)yagl_sharegroup_acquire_object(ctx->base.sg,
+        YAGL_NS_SHADER_PROGRAM, program);
+
+    if (!program_obj) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (program_obj->is_shader) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (count < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if ((bufferMode == GL_SEPARATE_ATTRIBS) &&
+        (count > ctx->max_transform_feedback_separate_attribs)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    yagl_gles3_program_set_transform_feedback_varyings(program_obj,
+                                                       varyings,
+                                                       count,
+                                                       bufferMode);
+
+out:
+    yagl_gles2_program_release(program_obj);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glGetTransformFeedbackVarying(GLuint program,
+                                            GLuint index,
+                                            GLsizei bufSize,
+                                            GLsizei *length,
+                                            GLsizei *size,
+                                            GLenum *type,
+                                            GLchar *name)
+{
+    struct yagl_gles2_program *program_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT7(glGetTransformFeedbackVarying, GLuint, GLuint, GLsizei, GLsizei*, GLsizei*, GLenum*, GLchar*, program, index, bufSize, length, size, type, name);
+
+    YAGL_GET_CTX();
+
+    program_obj = (struct yagl_gles2_program*)yagl_sharegroup_acquire_object(ctx->base.sg,
+        YAGL_NS_SHADER_PROGRAM, program);
+
+    if (!program_obj) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (program_obj->is_shader) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!program_obj->linked) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (index >= program_obj->linked_transform_feedback_info.num_varyings) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    yagl_gles3_program_get_transform_feedback_varying(program_obj,
+                                                      index,
+                                                      bufSize,
+                                                      length,
+                                                      size,
+                                                      type,
+                                                      name);
 
 out:
     yagl_gles2_program_release(program_obj);

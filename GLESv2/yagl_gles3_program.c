@@ -1,5 +1,6 @@
 #include "GLES3/gl3.h"
 #include "yagl_gles3_program.h"
+#include "yagl_gles2_utils.h"
 #include "yagl_malloc.h"
 #include "yagl_state.h"
 #include "yagl_log.h"
@@ -364,7 +365,6 @@ void yagl_gles3_program_get_active_uniform_block_name(struct yagl_gles2_program 
                                                       GLchar *block_name)
 {
     struct yagl_gles2_uniform_block *block;
-    GLsizei tmp_length;
 
     YAGL_LOG_FUNC_SET(yagl_gles3_program_get_active_uniform_block_name);
 
@@ -388,17 +388,10 @@ void yagl_gles3_program_get_active_uniform_block_name(struct yagl_gles2_program 
         block->name_fetched = 1;
     }
 
-    tmp_length = (bufsize <= block->name_size) ? bufsize : block->name_size;
-
-    if (tmp_length > 0) {
-        strncpy(block_name, block->name, tmp_length);
-        block_name[tmp_length - 1] = '\0';
-        --tmp_length;
-    }
-
-    if (length) {
-        *length = tmp_length;
-    }
+    yagl_gles2_set_name(block->name, block->name_size,
+                        bufsize,
+                        length,
+                        block_name);
 
     YAGL_LOG_DEBUG("Program %u, got active uniform block name at index %u = %s",
                    program->global_name,
@@ -481,4 +474,115 @@ int yagl_gles3_program_get_active_uniform_blockiv(struct yagl_gles2_program *pro
                    pname);
 
     return 1;
+}
+
+void yagl_gles3_program_set_transform_feedback_varyings(struct yagl_gles2_program *program,
+                                                        const GLchar *const *varyings,
+                                                        GLuint num_varyings,
+                                                        GLenum buffer_mode)
+{
+    GLchar *varyings_str = NULL;
+    GLint varyings_size = 0;
+
+    struct yagl_gles2_transform_feedback_info *tfi = &program->transform_feedback_info;
+
+    yagl_gles2_transform_feedback_info_reset(tfi);
+
+    if (num_varyings > 0) {
+        GLuint i;
+        GLchar *tmp;
+
+        tfi->varyings = yagl_malloc0(num_varyings * sizeof(*tfi->varyings));
+
+        for (i = 0; i < num_varyings; ++i) {
+            tfi->varyings[i].name_size = strlen(varyings[i]) + 1;
+            tfi->varyings[i].name = yagl_malloc(tfi->varyings[i].name_size);
+            memcpy(tfi->varyings[i].name, varyings[i], tfi->varyings[i].name_size);
+
+            if (tfi->varyings[i].name_size > tfi->max_varying_bufsize) {
+                tfi->max_varying_bufsize = tfi->varyings[i].name_size;
+            }
+
+            varyings_size += tfi->varyings[i].name_size;
+        }
+
+        varyings_str = tmp = (GLchar*)yagl_get_tmp_buffer(varyings_size);
+
+        for (i = 0; i < num_varyings; ++i) {
+            GLint name_size = strlen(varyings[i]) + 1;
+            memcpy(tmp, varyings[i], name_size);
+            tmp += name_size;
+        }
+    }
+
+    tfi->num_varyings = num_varyings;
+    tfi->buffer_mode = buffer_mode;
+
+    yagl_host_glTransformFeedbackVaryings(program->global_name,
+                                          varyings_str,
+                                          varyings_size,
+                                          buffer_mode);
+}
+
+void yagl_gles3_program_get_transform_feedback_varying(struct yagl_gles2_program *program,
+                                                       GLuint index,
+                                                       GLsizei bufsize,
+                                                       GLsizei *length,
+                                                       GLsizei *size,
+                                                       GLenum *type,
+                                                       GLchar *name)
+{
+    struct yagl_gles2_transform_feedback_info *tfi = &program->linked_transform_feedback_info;
+    struct yagl_gles2_transform_feedback_varying *varying;
+
+    if (index >= tfi->num_varyings) {
+        return;
+    }
+
+    varying = &tfi->varyings[index];
+
+    if (!tfi->fetched) {
+        GLuint i;
+        GLsizei *sizes;
+        GLenum *types;
+
+        sizes = (GLsizei*)yagl_get_tmp_buffer(tfi->num_varyings *
+                                              sizeof(sizes[0]));
+        types = (GLenum*)yagl_get_tmp_buffer2(tfi->num_varyings *
+                                              sizeof(types[0]));
+
+        yagl_host_glGetTransformFeedbackVaryings(program->global_name,
+                                                 sizes,
+                                                 tfi->num_varyings,
+                                                 NULL,
+                                                 types,
+                                                 tfi->num_varyings,
+                                                 NULL);
+
+        for (i = 0; i < tfi->num_varyings; ++i) {
+            tfi->varyings[i].size = sizes[i];
+            tfi->varyings[i].type = types[i];
+
+            if ((sizes[i] == 0) && (types[i] == 0)) {
+                yagl_free(tfi->varyings[i].name);
+                tfi->varyings[i].name = NULL;
+                tfi->varyings[i].name_size = 0;
+            }
+        }
+
+        tfi->fetched = 1;
+    }
+
+    yagl_gles2_set_name(varying->name, varying->name_size,
+                        bufsize,
+                        length,
+                        name);
+
+    if (size) {
+        *size = varying->size;
+    }
+
+    if (type) {
+        *type = varying->type;
+    }
 }

@@ -1,6 +1,7 @@
 #include "GLES2/gl2.h"
 #include "yagl_gles2_program.h"
 #include "yagl_gles2_shader.h"
+#include "yagl_gles2_utils.h"
 #include "yagl_malloc.h"
 #include "yagl_state.h"
 #include "yagl_transport.h"
@@ -50,6 +51,34 @@ static uint32_t yagl_gen_location()
     pthread_mutex_unlock(&g_gen_locations_mutex);
 
     return ret;
+}
+
+static void yagl_gles2_transform_feedback_info_copy(
+    struct yagl_gles2_transform_feedback_info *from,
+    struct yagl_gles2_transform_feedback_info *to)
+{
+    GLuint i;
+
+    yagl_gles2_transform_feedback_info_reset(to);
+
+    memcpy(to, from, sizeof(*from));
+
+    if (from->num_varyings > 0) {
+        to->varyings = yagl_malloc(to->num_varyings * sizeof(*to->varyings));
+
+        for (i = 0; i < from->num_varyings; ++i) {
+            memcpy(&to->varyings[i],
+                   &from->varyings[i],
+                   sizeof(from->varyings[0]));
+
+            if (from->varyings[i].name) {
+                to->varyings[i].name = yagl_malloc(from->varyings[i].name_size);
+                memcpy(to->varyings[i].name,
+                       from->varyings[i].name,
+                       from->varyings[i].name_size);
+            }
+        }
+    }
 }
 
 static void yagl_gles2_program_reset_cached(struct yagl_gles2_program *program)
@@ -140,6 +169,9 @@ static void yagl_gles2_program_destroy(struct yagl_ref *ref)
 
     yagl_gles2_program_reset_cached(program);
 
+    yagl_gles2_transform_feedback_info_reset(&program->linked_transform_feedback_info);
+    yagl_gles2_transform_feedback_info_reset(&program->transform_feedback_info);
+
     if (program->gen_locations) {
         yagl_vector_cleanup(&program->uniform_locations_v);
     }
@@ -152,6 +184,19 @@ static void yagl_gles2_program_destroy(struct yagl_ref *ref)
     yagl_object_cleanup(&program->base);
 
     yagl_free(program);
+}
+
+void yagl_gles2_transform_feedback_info_reset(
+    struct yagl_gles2_transform_feedback_info *transform_feedback_info)
+{
+    GLuint i;
+
+    for (i = 0; i < transform_feedback_info->num_varyings; ++i) {
+        yagl_free(transform_feedback_info->varyings[i].name);
+    }
+    yagl_free(transform_feedback_info->varyings);
+
+    memset(transform_feedback_info, 0, sizeof(*transform_feedback_info));
 }
 
 struct yagl_gles2_program *yagl_gles2_program_create(int gen_locations)
@@ -266,6 +311,10 @@ void yagl_gles2_program_link(struct yagl_gles2_program *program)
         program->active_uniform_blocks = yagl_malloc0(program->num_active_uniform_blocks *
                                                       sizeof(program->active_uniform_blocks[0]));
     }
+
+    yagl_gles2_transform_feedback_info_copy(
+        &program->transform_feedback_info,
+        &program->linked_transform_feedback_info);
 }
 
 int yagl_gles2_program_get_uniform_location(struct yagl_gles2_program *program,
@@ -361,7 +410,6 @@ void yagl_gles2_program_get_active_uniform(struct yagl_gles2_program *program,
                                            GLchar *name)
 {
     struct yagl_gles2_uniform_variable *var;
-    GLsizei tmp_length;
 
     YAGL_LOG_FUNC_SET(yagl_gles2_program_get_active_uniform);
 
@@ -389,17 +437,10 @@ void yagl_gles2_program_get_active_uniform(struct yagl_gles2_program *program,
         var->generic_fetched = 1;
     }
 
-    tmp_length = (bufsize <= var->name_size) ? bufsize : var->name_size;
-
-    if (tmp_length > 0) {
-        strncpy(name, var->name, tmp_length);
-        name[tmp_length - 1] = '\0';
-        --tmp_length;
-    }
-
-    if (length) {
-        *length = tmp_length;
-    }
+    yagl_gles2_set_name(var->name, var->name_size,
+                        bufsize,
+                        length,
+                        name);
 
     if (size) {
         *size = var->size;
@@ -425,7 +466,6 @@ void yagl_gles2_program_get_active_attrib(struct yagl_gles2_program *program,
                                           GLchar *name)
 {
     struct yagl_gles2_attrib_variable *var;
-    GLsizei tmp_length;
 
     YAGL_LOG_FUNC_SET(yagl_gles2_program_get_active_attrib);
 
@@ -452,17 +492,10 @@ void yagl_gles2_program_get_active_attrib(struct yagl_gles2_program *program,
         var->fetched = 1;
     }
 
-    tmp_length = (bufsize <= var->name_size) ? bufsize : var->name_size;
-
-    if (tmp_length > 0) {
-        strncpy(name, var->name, tmp_length);
-        name[tmp_length - 1] = '\0';
-        --tmp_length;
-    }
-
-    if (length) {
-        *length = tmp_length;
-    }
+    yagl_gles2_set_name(var->name, var->name_size,
+                        bufsize,
+                        length,
+                        name);
 
     if (size) {
         *size = var->size;

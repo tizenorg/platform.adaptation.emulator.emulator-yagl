@@ -32,4 +32,17 @@ int yagl_gles3_program_get_active_uniform_blockiv(struct yagl_gles2_program *pro
                                                   GLenum pname,
                                                   GLint *params);
 
+void yagl_gles3_program_set_transform_feedback_varyings(struct yagl_gles2_program *program,
+                                                        const GLchar *const *varyings,
+                                                        GLuint num_varyings,
+                                                        GLenum buffer_mode);
+
+void yagl_gles3_program_get_transform_feedback_varying(struct yagl_gles2_program *program,
+                                                       GLuint index,
+                                                       GLsizei bufsize,
+                                                       GLsizei *length,
+                                                       GLsizei *size,
+                                                       GLenum *type,
+                                                       GLchar *name);
+
 #endif

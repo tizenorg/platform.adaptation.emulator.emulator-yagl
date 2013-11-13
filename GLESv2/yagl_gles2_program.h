@@ -110,6 +110,42 @@ struct yagl_gles2_uniform_block
     GLuint *active_uniform_indices;
 };
 
+struct yagl_gles2_transform_feedback_varying
+{
+    /*
+     * Valid when struct yagl_gles2_transform_feedback_info::fetched is true.
+     * @{
+     */
+
+    /*
+     * These will be set on link and
+     * updated on fetch.
+     * @{
+     */
+    GLchar *name;
+    GLint name_size;
+    /*
+     * @}
+     */
+
+    GLenum type;
+    GLint size;
+
+    /*
+     * @}
+     */
+};
+
+struct yagl_gles2_transform_feedback_info
+{
+    int fetched;
+
+    struct yagl_gles2_transform_feedback_varying *varyings;
+    GLuint num_varyings;
+    GLenum buffer_mode;
+    GLint max_varying_bufsize;
+};
+
 struct yagl_gles2_program
 {
     /*
@@ -155,11 +191,24 @@ struct yagl_gles2_program
     GLuint num_active_uniform_blocks;
     GLint max_active_uniform_block_bufsize;
 
+    /*
+     * Transform feedback info specified via glTransformFeedbackVaryings.
+     */
+    struct yagl_gles2_transform_feedback_info transform_feedback_info;
+
+    /*
+     * Actual transform feedback info after program link.
+     */
+    struct yagl_gles2_transform_feedback_info linked_transform_feedback_info;
+
     int linked;
 
     GLint link_status;
     GLint info_log_length;
 };
+
+void yagl_gles2_transform_feedback_info_reset(
+    struct yagl_gles2_transform_feedback_info *transform_feedback_info);
 
 struct yagl_gles2_program *yagl_gles2_program_create(int gen_locations);
 

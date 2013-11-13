@@ -1,6 +1,7 @@
 #include "GLES3/gl3.h"
 #include "yagl_gles3_context.h"
 #include "yagl_gles3_buffer_binding.h"
+#include "yagl_gles3_transform_feedback.h"
 #include "yagl_gles2_utils.h"
 #include "yagl_gles_buffer.h"
 #include "yagl_log.h"
@@ -24,51 +25,11 @@
 static inline void yagl_gles3_context_pre_draw(struct yagl_gles3_context *ctx)
 {
     struct yagl_gles3_buffer_binding *buffer_binding;
-    GLint offset;
-    GLsizei size;
 
     yagl_list_for_each(struct yagl_gles3_buffer_binding,
                        buffer_binding,
-                       &ctx->active_buffer_bindings, list) {
-        assert(buffer_binding->buffer);
-
-        if (buffer_binding->buffer->size <= 0) {
-            continue;
-        }
-
-        if (yagl_gles_buffer_is_dirty(buffer_binding->buffer, 0, 0)) {
-            yagl_gles_buffer_bind(buffer_binding->buffer, 0, 0,
-                                  buffer_binding->target);
-            yagl_gles_buffer_transfer(buffer_binding->buffer, 0,
-                                      buffer_binding->target, 0);
-        }
-
-        if (buffer_binding->entire) {
-            yagl_host_glBindBufferBase(buffer_binding->target,
-                                       buffer_binding->index,
-                                       buffer_binding->buffer->default_part.global_name);
-        } else {
-            offset = buffer_binding->offset;
-            size = buffer_binding->size;
-
-            if (offset < 0) {
-                size += offset;
-                offset = 0;
-            }
-
-            if ((offset >= buffer_binding->buffer->size) || (size <= 0)) {
-                continue;
-            }
-
-            if ((offset + size) > buffer_binding->buffer->size) {
-                size = buffer_binding->buffer->size - offset;
-            }
-
-            yagl_host_glBindBufferRange(buffer_binding->target,
-                                        buffer_binding->index,
-                                        buffer_binding->buffer->default_part.global_name,
-                                        offset, size);
-        }
+                       &ctx->active_uniform_buffer_bindings, list) {
+        yagl_gles3_buffer_binding_transfer_begin(buffer_binding);
     }
 }
 
@@ -78,10 +39,8 @@ static inline void yagl_gles3_context_post_draw(struct yagl_gles3_context *ctx)
 
     yagl_list_for_each(struct yagl_gles3_buffer_binding,
                        buffer_binding,
-                       &ctx->active_buffer_bindings, list) {
-        yagl_host_glBindBufferBase(buffer_binding->target,
-                                   buffer_binding->index,
-                                   0);
+                       &ctx->active_uniform_buffer_bindings, list) {
+        yagl_gles3_buffer_binding_transfer_end(buffer_binding);
     }
 }
 
@@ -106,13 +65,27 @@ static void yagl_gles3_context_prepare(struct yagl_client_context *ctx)
         yagl_malloc0(sizeof(gles3_ctx->uniform_buffer_bindings[0]) * gles3_ctx->num_uniform_buffer_bindings);
 
     for (i = 0; i < gles3_ctx->num_uniform_buffer_bindings; ++i) {
-        yagl_gles3_buffer_binding_init(&gles3_ctx->uniform_buffer_bindings[i], i);
+        yagl_gles3_buffer_binding_init(&gles3_ctx->uniform_buffer_bindings[i],
+                                       GL_UNIFORM_BUFFER,
+                                       i);
     }
 
     yagl_host_glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT,
                             &gles3_ctx->uniform_buffer_offset_alignment,
                             1,
                             NULL);
+
+    yagl_host_glGetIntegerv(GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS,
+                            &gles3_ctx->max_transform_feedback_separate_attribs,
+                            1,
+                            NULL);
+
+    gles3_ctx->tf_zero =
+        yagl_gles3_transform_feedback_create(1,
+                                             gles3_ctx->max_transform_feedback_separate_attribs);
+
+    yagl_gles3_transform_feedback_acquire(gles3_ctx->tf_zero);
+    gles3_ctx->tfo = gles3_ctx->tf_zero;
 }
 
 static void yagl_gles3_context_destroy(struct yagl_client_context *ctx)
@@ -122,6 +95,10 @@ static void yagl_gles3_context_destroy(struct yagl_client_context *ctx)
 
     YAGL_LOG_FUNC_ENTER(yagl_gles3_context_destroy, "%p", ctx);
 
+    yagl_gles3_transform_feedback_release(gles3_ctx->tfo);
+    yagl_gles3_transform_feedback_release(gles3_ctx->tf_zero);
+    yagl_gles_buffer_release(gles3_ctx->tfbo);
+
     yagl_gles_buffer_release(gles3_ctx->ubo);
 
     for (i = 0; i < gles3_ctx->num_uniform_buffer_bindings; ++i) {
@@ -129,6 +106,8 @@ static void yagl_gles3_context_destroy(struct yagl_client_context *ctx)
     }
 
     yagl_free(gles3_ctx->uniform_buffer_bindings);
+
+    yagl_namespace_cleanup(&gles3_ctx->transform_feedbacks);
 
     yagl_gles2_context_cleanup(&gles3_ctx->base);
 
@@ -281,6 +260,22 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
         *params = gles3_ctx->uniform_buffer_offset_alignment;
         *num_params = 1;
         break;
+    case GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS:
+        *params = gles3_ctx->max_transform_feedback_separate_attribs;
+        *num_params = 1;
+        break;
+    case GL_TRANSFORM_FEEDBACK_BINDING:
+        *params = gles3_ctx->tfo->base.local_name;
+        *num_params = 1;
+        break;
+    case GL_TRANSFORM_FEEDBACK_ACTIVE:
+        *params = gles3_ctx->tfo->active;
+        *num_params = 1;
+        break;
+    case GL_TRANSFORM_FEEDBACK_PAUSED:
+        *params = gles3_ctx->tfo->paused;
+        *num_params = 1;
+        break;
     default:
         processed = 0;
         break;
@@ -311,7 +306,6 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
     case GL_MAX_SERVER_WAIT_TIMEOUT:
     case GL_MAX_TEXTURE_LOD_BIAS:
     case GL_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS:
-    case GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS:
     case GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS:
     case GL_MAX_UNIFORM_BLOCK_SIZE:
     case GL_MAX_VARYING_COMPONENTS:
@@ -333,12 +327,9 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
     case GL_SAMPLER_BINDING:
     case GL_TEXTURE_BINDING_2D_ARRAY:
     case GL_TEXTURE_BINDING_3D:
-    case GL_TRANSFORM_FEEDBACK_ACTIVE:
-    case GL_TRANSFORM_FEEDBACK_BINDING:
     case GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
     case GL_TRANSFORM_FEEDBACK_BUFFER_SIZE:
     case GL_TRANSFORM_FEEDBACK_BUFFER_START:
-    case GL_TRANSFORM_FEEDBACK_PAUSED:
     case GL_UNIFORM_BUFFER_SIZE:
     case GL_UNIFORM_BUFFER_START:
     case GL_UNPACK_IMAGE_HEIGHT:
@@ -407,6 +398,11 @@ static int yagl_gles3_context_bind_buffer(struct yagl_gles_context *ctx,
         yagl_gles_buffer_release(gles3_ctx->ubo);
         gles3_ctx->ubo = buffer;
         break;
+    case GL_TRANSFORM_FEEDBACK_BUFFER:
+        yagl_gles_buffer_acquire(buffer);
+        yagl_gles_buffer_release(gles3_ctx->tfbo);
+        gles3_ctx->tfbo = buffer;
+        break;
     default:
         return 0;
     }
@@ -425,6 +421,11 @@ static void yagl_gles3_context_unbind_buffer(struct yagl_gles_context *ctx,
         gles3_ctx->ubo = NULL;
     }
 
+    if (gles3_ctx->tfbo && (gles3_ctx->tfbo->base.local_name == buffer_local_name)) {
+        yagl_gles_buffer_release(gles3_ctx->tfbo);
+        gles3_ctx->tfbo = NULL;
+    }
+
     for (i = 0; i < gles3_ctx->num_uniform_buffer_bindings; ++i) {
         struct yagl_gles_buffer *buffer = gles3_ctx->uniform_buffer_bindings[i].buffer;
 
@@ -432,6 +433,9 @@ static void yagl_gles3_context_unbind_buffer(struct yagl_gles_context *ctx,
             yagl_gles3_buffer_binding_reset(&gles3_ctx->uniform_buffer_bindings[i]);
         }
     }
+
+    yagl_gles3_transform_feedback_unbind_buffer(gles3_ctx->tfo,
+                                                buffer_local_name);
 }
 
 static int yagl_gles3_context_acquire_binded_buffer(struct yagl_gles_context *ctx,
@@ -444,6 +448,10 @@ static int yagl_gles3_context_acquire_binded_buffer(struct yagl_gles_context *ct
     case GL_UNIFORM_BUFFER:
         yagl_gles_buffer_acquire(gles3_ctx->ubo);
         *buffer = gles3_ctx->ubo;
+        break;
+    case GL_TRANSFORM_FEEDBACK_BUFFER:
+        yagl_gles_buffer_acquire(gles3_ctx->tfbo);
+        *buffer = gles3_ctx->tfbo;
         break;
     default:
         return 0;
@@ -498,7 +506,9 @@ struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg
 
     yagl_gles2_context_init(&gles3_ctx->base, yagl_client_api_gles3, sg);
 
-    yagl_list_init(&gles3_ctx->active_buffer_bindings);
+    yagl_namespace_init(&gles3_ctx->transform_feedbacks);
+
+    yagl_list_init(&gles3_ctx->active_uniform_buffer_bindings);
 
     gles3_ctx->base.base.base.prepare = &yagl_gles3_context_prepare;
     gles3_ctx->base.base.base.destroy = &yagl_gles3_context_destroy;
@@ -541,11 +551,10 @@ void yagl_gles3_context_bind_buffer_base(struct yagl_gles3_context *ctx,
          */
 
         yagl_gles3_buffer_binding_set_base(&ctx->uniform_buffer_bindings[index],
-                                           buffer,
-                                           target);
+                                           buffer);
 
         if (buffer) {
-            yagl_list_add_tail(&ctx->active_buffer_bindings,
+            yagl_list_add_tail(&ctx->active_uniform_buffer_bindings,
                                &ctx->uniform_buffer_bindings[index].list);
         }
 
@@ -556,6 +565,32 @@ void yagl_gles3_context_bind_buffer_base(struct yagl_gles3_context *ctx,
         yagl_gles_buffer_acquire(buffer);
         yagl_gles_buffer_release(ctx->ubo);
         ctx->ubo = buffer;
+
+        break;
+    case GL_TRANSFORM_FEEDBACK_BUFFER:
+        /*
+         * Set indexed binding point.
+         */
+
+        if (ctx->tfo->active) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            return;
+        }
+
+        if (!yagl_gles3_transform_feedback_bind_buffer_base(ctx->tfo,
+                                                            index,
+                                                            buffer)) {
+            YAGL_SET_ERR(GL_INVALID_VALUE);
+            return;
+        }
+
+        /*
+         * Set generic binding point.
+         */
+
+        yagl_gles_buffer_acquire(buffer);
+        yagl_gles_buffer_release(ctx->tfbo);
+        ctx->tfbo = buffer;
 
         break;
     default:
@@ -601,10 +636,10 @@ void yagl_gles3_context_bind_buffer_range(struct yagl_gles3_context *ctx,
          */
 
         yagl_gles3_buffer_binding_set_range(&ctx->uniform_buffer_bindings[index],
-                                            buffer, target, offset, size);
+                                            buffer, offset, size);
 
         if (buffer) {
-            yagl_list_add_tail(&ctx->active_buffer_bindings,
+            yagl_list_add_tail(&ctx->active_uniform_buffer_bindings,
                                &ctx->uniform_buffer_bindings[index].list);
         }
 
@@ -617,6 +652,46 @@ void yagl_gles3_context_bind_buffer_range(struct yagl_gles3_context *ctx,
         ctx->ubo = buffer;
 
         break;
+    case GL_TRANSFORM_FEEDBACK_BUFFER:
+        /*
+         * Set indexed binding point.
+         */
+
+        if (ctx->tfo->active) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            return;
+        }
+
+        if (buffer) {
+            if (size <= 0) {
+                YAGL_SET_ERR(GL_INVALID_VALUE);
+                return;
+            }
+
+            if (((offset % 4) != 0) || ((size % 4) != 0)) {
+                YAGL_SET_ERR(GL_INVALID_VALUE);
+                return;
+            }
+        }
+
+        if (!yagl_gles3_transform_feedback_bind_buffer_range(ctx->tfo,
+                                                             index,
+                                                             offset,
+                                                             size,
+                                                             buffer)) {
+            YAGL_SET_ERR(GL_INVALID_VALUE);
+            return;
+        }
+
+        /*
+         * Set generic binding point.
+         */
+
+        yagl_gles_buffer_acquire(buffer);
+        yagl_gles_buffer_release(ctx->tfbo);
+        ctx->tfbo = buffer;
+
+        break;
     default:
         YAGL_SET_ERR(GL_INVALID_ENUM);
         return;
@@ -625,4 +700,33 @@ void yagl_gles3_context_bind_buffer_range(struct yagl_gles3_context *ctx,
     if (buffer) {
         yagl_gles_buffer_set_bound(buffer);
     }
+}
+
+void yagl_gles3_context_bind_transform_feedback(struct yagl_gles3_context *ctx,
+                                                GLenum target,
+                                                struct yagl_gles3_transform_feedback *tfo)
+{
+    YAGL_LOG_FUNC_SET(glBindTransformFeedback);
+
+    if (!tfo) {
+        tfo = ctx->tf_zero;
+    }
+
+    switch (target) {
+    case GL_TRANSFORM_FEEDBACK:
+        if (ctx->tfo->active && !ctx->tfo->paused) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            return;
+        }
+
+        yagl_gles3_transform_feedback_acquire(tfo);
+        yagl_gles3_transform_feedback_release(ctx->tfo);
+        ctx->tfo = tfo;
+        break;
+    default:
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        return;
+    }
+
+    yagl_gles3_transform_feedback_bind(tfo, target);
 }

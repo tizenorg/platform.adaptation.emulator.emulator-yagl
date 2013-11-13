@@ -10,4 +10,9 @@ char *yagl_gles2_shader_patch(const char *source,
 int yagl_gles2_shader_has_version(const char *source,
                                   int *is_es3);
 
+void yagl_gles2_set_name(const GLchar *from, GLint from_size,
+                         GLint bufsize,
+                         GLint *length,
+                         GLchar *name);
+
 #endif

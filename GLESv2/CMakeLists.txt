@@ -11,6 +11,7 @@ set(SOURCES
     yagl_gles3_buffer_binding.c
     yagl_gles3_program.c
     yagl_gles3_validate.c
+    yagl_gles3_transform_feedback.c
 )
 
 include_directories(${YAGL_SOURCE_DIR}/GLES_common)
