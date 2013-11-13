@@ -96,6 +96,7 @@ static void yagl_gles3_context_destroy(struct yagl_client_context *ctx)
 
     YAGL_LOG_FUNC_ENTER(yagl_gles3_context_destroy, "%p", ctx);
 
+    yagl_gles3_query_release(gles3_ctx->occlusion_query);
     yagl_gles3_query_release(gles3_ctx->tf_primitives_written_query);
 
     yagl_gles3_transform_feedback_release(gles3_ctx->tfo);
@@ -782,6 +783,17 @@ void yagl_gles3_context_begin_query(struct yagl_gles3_context *ctx,
         yagl_gles3_query_release(ctx->tf_primitives_written_query);
         ctx->tf_primitives_written_query = query;
         break;
+    case GL_ANY_SAMPLES_PASSED:
+    case GL_ANY_SAMPLES_PASSED_CONSERVATIVE:
+        if (ctx->occlusion_query) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            return;
+        }
+
+        yagl_gles3_query_acquire(query);
+        yagl_gles3_query_release(ctx->occlusion_query);
+        ctx->occlusion_query = query;
+        break;
     default:
         YAGL_SET_ERR(GL_INVALID_ENUM);
         return;
@@ -807,6 +819,16 @@ void yagl_gles3_context_end_query(struct yagl_gles3_context *ctx,
         query = ctx->tf_primitives_written_query;
         ctx->tf_primitives_written_query = NULL;
         break;
+    case GL_ANY_SAMPLES_PASSED:
+    case GL_ANY_SAMPLES_PASSED_CONSERVATIVE:
+        if (!ctx->occlusion_query) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            return;
+        }
+
+        query = ctx->occlusion_query;
+        ctx->occlusion_query = NULL;
+        break;
     default:
         YAGL_SET_ERR(GL_INVALID_ENUM);
         return;
@@ -824,6 +846,11 @@ int yagl_gles3_context_acquire_active_query(struct yagl_gles3_context *ctx,
     case GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
         yagl_gles3_query_acquire(ctx->tf_primitives_written_query);
         *query = ctx->tf_primitives_written_query;
+        break;
+    case GL_ANY_SAMPLES_PASSED:
+    case GL_ANY_SAMPLES_PASSED_CONSERVATIVE:
+        yagl_gles3_query_acquire(ctx->occlusion_query);
+        *query = ctx->occlusion_query;
         break;
     default:
         return 0;

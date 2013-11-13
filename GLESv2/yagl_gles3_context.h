@@ -59,6 +59,7 @@ struct yagl_gles3_context
      */
 
     struct yagl_gles3_query *tf_primitives_written_query;
+    struct yagl_gles3_query *occlusion_query;
 
     /*
      * @}
