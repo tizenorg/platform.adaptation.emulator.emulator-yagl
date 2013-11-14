@@ -13,6 +13,7 @@ set(SOURCES
     yagl_gles3_validate.c
     yagl_gles3_transform_feedback.c
     yagl_gles3_query.c
+    dummy.c
 )
 
 include_directories(${YAGL_SOURCE_DIR}/GLES_common)
