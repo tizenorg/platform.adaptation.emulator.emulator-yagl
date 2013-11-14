@@ -111,6 +111,9 @@ int yagl_gles_get_index_size(GLenum type, int *index_size)
     case GL_UNSIGNED_SHORT:
         *index_size = 2;
         break;
+    case GL_UNSIGNED_INT:
+        *index_size = 4;
+        break;
     default:
         return 0;
     }

@@ -85,6 +85,17 @@ static void yagl_get_minmax_index(const GLvoid *indices,
             }
         }
         break;
+    case GL_UNSIGNED_INT:
+        for (i = 0; i < count; ++i) {
+            uint32_t idx = ((uint32_t*)indices)[i];
+            if (idx < *min_idx) {
+                *min_idx = idx;
+            }
+            if (idx > *max_idx) {
+                *max_idx = idx;
+            }
+        }
+        break;
     default:
         break;
     }

@@ -279,6 +279,7 @@ int yagl_gles_buffer_get_minmax_index(struct yagl_gles_buffer *buffer,
                                       uint32_t *max_idx)
 {
     int index_size, i;
+    uint32_t idx = 0;
 
     *min_idx = UINT32_MAX;
     *max_idx = 0;
@@ -300,25 +301,43 @@ int yagl_gles_buffer_get_minmax_index(struct yagl_gles_buffer *buffer,
         return 1;
     }
 
-    for (i = 0; i < count; ++i) {
-        uint32_t idx = 0;
-        switch (type) {
-        case GL_UNSIGNED_BYTE:
+    switch (type) {
+    case GL_UNSIGNED_BYTE:
+        for (i = 0; i < count; ++i) {
             idx = *(uint8_t*)(buffer->data + offset + (i * index_size));
-            break;
-        case GL_UNSIGNED_SHORT:
+            if (idx < *min_idx) {
+                *min_idx = idx;
+            }
+            if (idx > *max_idx) {
+                *max_idx = idx;
+            }
+        }
+        break;
+    case GL_UNSIGNED_SHORT:
+        for (i = 0; i < count; ++i) {
             idx = *(uint16_t*)(buffer->data + offset + (i * index_size));
-            break;
-        default:
-            assert(0);
-            break;
+            if (idx < *min_idx) {
+                *min_idx = idx;
+            }
+            if (idx > *max_idx) {
+                *max_idx = idx;
+            }
         }
-        if (idx < *min_idx) {
-            *min_idx = idx;
+        break;
+    case GL_UNSIGNED_INT:
+        for (i = 0; i < count; ++i) {
+            idx = *(uint32_t*)(buffer->data + offset + (i * index_size));
+            if (idx < *min_idx) {
+                *min_idx = idx;
+            }
+            if (idx > *max_idx) {
+                *max_idx = idx;
+            }
         }
-        if (idx > *max_idx) {
-            *max_idx = idx;
-        }
+        break;
+    default:
+        assert(0);
+        break;
     }
 
     buffer->cached_minmax_idx = 1;
