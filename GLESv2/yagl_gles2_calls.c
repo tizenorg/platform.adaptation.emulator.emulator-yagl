@@ -2044,6 +2044,79 @@ out:
 }
 
 /*
+ * GL_EXT_instanced_arrays.
+ * @{
+ */
+
+YAGL_API void glDrawArraysInstanced(GLenum mode, GLint start, GLsizei count,
+                                    GLsizei primcount)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT4(glDrawArraysInstanced, GLenum, GLint, GLsizei, GLsizei, mode, start, count, primcount);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->instanced_arrays) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (primcount < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    yagl_gles_context_draw_arrays(&ctx->base, mode, start, count, primcount);
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+YAGL_API YAGL_ALIAS(glDrawArraysInstanced, glDrawArraysInstancedEXT);
+
+YAGL_API void glDrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
+                                      const void *indices, GLsizei primcount)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT5(glDrawElementsInstanced, GLenum, GLsizei, GLenum, const void*, GLsizei, mode, count, type, indices, primcount);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->instanced_arrays) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (primcount < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    yagl_gles_context_draw_elements(&ctx->base, mode, count, type, indices, primcount);
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+YAGL_API YAGL_ALIAS(glDrawElementsInstanced, glDrawElementsInstancedEXT);
+
+YAGL_API void glVertexAttribDivisor(GLuint index, GLuint divisor)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glVertexAttribDivisor, GLuint, GLuint, index, divisor);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->instanced_arrays) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+YAGL_API YAGL_ALIAS(glVertexAttribDivisor, glVertexAttribDivisorEXT);
+
+/*
+ * @}
+ */
+
+/*
  * GL_OES_texture_3D.
  * @{
  */

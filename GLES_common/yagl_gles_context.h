@@ -53,17 +53,27 @@ struct yagl_gles_context
                       uint32_t */*num_params*/,
                       int */*needs_map*/);
 
+    /*
+     * 'primcount' < 0 - usual draw.
+     * 'primcount' >= 0 - instanced draw.
+     */
     void (*draw_arrays)(struct yagl_gles_context */*ctx*/,
                         GLenum /*mode*/,
                         GLint /*first*/,
-                        GLsizei /*count*/);
+                        GLsizei /*count*/,
+                        GLsizei /*primcount*/);
 
+    /*
+     * 'primcount' < 0 - usual draw.
+     * 'primcount' >= 0 - instanced draw.
+     */
     void (*draw_elements)(struct yagl_gles_context */*ctx*/,
                           GLenum /*mode*/,
                           GLsizei /*count*/,
                           GLenum /*type*/,
                           const GLvoid */*indices*/,
-                          int32_t /*indices_count*/);
+                          int32_t /*indices_count*/,
+                          GLsizei /*primcount*/);
 
     int (*bind_buffer)(struct yagl_gles_context */*ctx*/,
                        GLenum /*target*/,
@@ -250,6 +260,15 @@ int yagl_gles_context_get_floatv(struct yagl_gles_context *ctx,
                                  GLfloat *params,
                                  uint32_t *num_params,
                                  int *needs_map);
+
+void yagl_gles_context_draw_arrays(struct yagl_gles_context *ctx,
+                                   GLenum mode, GLint first, GLsizei count,
+                                   GLsizei primcount);
+
+void yagl_gles_context_draw_elements(struct yagl_gles_context *ctx,
+                                     GLenum mode, GLsizei count,
+                                     GLenum type, const GLvoid *indices,
+                                     GLsizei primcount);
 
 const GLchar *yagl_gles_context_get_extensions(struct yagl_gles_context *ctx);
 

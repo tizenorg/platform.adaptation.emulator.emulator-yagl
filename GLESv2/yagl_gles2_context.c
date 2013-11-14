@@ -123,6 +123,7 @@ static GLchar *yagl_gles2_context_get_extensions(struct yagl_gles_context *ctx)
     const GLchar *texture_half_float = "GL_OES_texture_half_float GL_OES_texture_half_float_linear ";
     const GLchar *vertex_half_float = "GL_OES_vertex_half_float ";
     const GLchar *standard_derivatives = "GL_OES_standard_derivatives ";
+    const GLchar *instanced_arrays = "GL_EXT_instanced_arrays ";
 
     GLuint len = strlen(mandatory_extensions);
     GLchar *str;
@@ -159,6 +160,10 @@ static GLchar *yagl_gles2_context_get_extensions(struct yagl_gles_context *ctx)
         len += strlen(standard_derivatives);
     }
 
+    if (gles2_ctx->instanced_arrays) {
+        len += strlen(instanced_arrays);
+    }
+
     str = yagl_malloc0(len + 1);
 
     strcpy(str, mandatory_extensions);
@@ -193,6 +198,10 @@ static GLchar *yagl_gles2_context_get_extensions(struct yagl_gles_context *ctx)
 
     if (gles2_ctx->standard_derivatives) {
         strcat(str, standard_derivatives);
+    }
+
+    if (gles2_ctx->instanced_arrays) {
+        strcat(str, instanced_arrays);
     }
 
     return str;
@@ -308,6 +317,8 @@ void yagl_gles2_context_prepare(struct yagl_client_context *ctx)
     gles2_ctx->standard_derivatives = (strstr(extensions, "GL_OES_standard_derivatives ") != NULL);
 
     yagl_free(extensions);
+
+    gles2_ctx->instanced_arrays = (yagl_get_host_gl_version() > yagl_gl_2);
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
@@ -494,11 +505,16 @@ int yagl_gles2_context_get_floatv(struct yagl_gles_context *ctx,
 void yagl_gles2_context_draw_arrays(struct yagl_gles_context *ctx,
                                     GLenum mode,
                                     GLint first,
-                                    GLsizei count)
+                                    GLsizei count,
+                                    GLsizei primcount)
 {
     yagl_gles2_context_pre_draw(ctx, mode);
 
-    yagl_host_glDrawArrays(mode, first, count);
+    if (primcount < 0) {
+        yagl_host_glDrawArrays(mode, first, count);
+    } else {
+        yagl_host_glDrawArraysInstanced(mode, first, count, primcount);
+    }
 
     yagl_gles2_context_post_draw(ctx, mode);
 }
@@ -508,11 +524,16 @@ void yagl_gles2_context_draw_elements(struct yagl_gles_context *ctx,
                                       GLsizei count,
                                       GLenum type,
                                       const GLvoid *indices,
-                                      int32_t indices_count)
+                                      int32_t indices_count,
+                                      GLsizei primcount)
 {
     yagl_gles2_context_pre_draw(ctx, mode);
 
-    yagl_host_glDrawElements(mode, count, type, indices, indices_count);
+    if (primcount < 0) {
+        yagl_host_glDrawElements(mode, count, type, indices, indices_count);
+    } else {
+        yagl_host_glDrawElementsInstanced(mode, count, type, indices, indices_count, primcount);
+    }
 
     yagl_gles2_context_post_draw(ctx, mode);
 }

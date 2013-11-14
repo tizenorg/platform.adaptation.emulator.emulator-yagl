@@ -1186,8 +1186,11 @@ static void yagl_gles1_draw_elem_psize(struct yagl_gles_context *ctx,
 static void yagl_gles1_context_draw_arrays(struct yagl_gles_context *ctx,
                                            GLenum mode,
                                            GLint first,
-                                           GLsizei count)
+                                           GLsizei count,
+                                           GLsizei primcount)
 {
+    assert(primcount < 0);
+
     if (!ctx->vao->arrays[yagl_gles1_array_vertex].enabled) {
         return;
     }
@@ -1204,8 +1207,11 @@ static void yagl_gles1_context_draw_elements(struct yagl_gles_context *ctx,
                                              GLsizei count,
                                              GLenum type,
                                              const GLvoid *indices,
-                                             int32_t indices_count)
+                                             int32_t indices_count,
+                                             GLsizei primcount)
 {
+    assert(primcount < 0);
+
     if (!ctx->vao->arrays[yagl_gles1_array_vertex].enabled) {
         return;
     }

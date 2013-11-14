@@ -14,6 +14,7 @@
 #include "yagl_malloc.h"
 #include "yagl_utils.h"
 #include "yagl_state.h"
+#include "yagl_render.h"
 #include "yagl_host_gles_calls.h"
 #include <string.h>
 #include <assert.h>
@@ -21,6 +22,56 @@
 #define YAGL_SET_ERR(err) \
     yagl_gles_context_set_error(ctx, err); \
     YAGL_LOG_ERROR("error = 0x%X", err)
+
+static void yagl_get_minmax_index(const GLvoid *indices,
+                                  GLsizei count,
+                                  GLenum type,
+                                  uint32_t *min_idx,
+                                  uint32_t *max_idx)
+{
+    int i;
+
+    *min_idx = UINT32_MAX;
+    *max_idx = 0;
+
+    switch (type) {
+    case GL_UNSIGNED_BYTE:
+        for (i = 0; i < count; ++i) {
+            uint32_t idx = ((uint8_t*)indices)[i];
+            if (idx < *min_idx) {
+                *min_idx = idx;
+            }
+            if (idx > *max_idx) {
+                *max_idx = idx;
+            }
+        }
+        break;
+    case GL_UNSIGNED_SHORT:
+        for (i = 0; i < count; ++i) {
+            uint32_t idx = ((uint16_t*)indices)[i];
+            if (idx < *min_idx) {
+                *min_idx = idx;
+            }
+            if (idx > *max_idx) {
+                *max_idx = idx;
+            }
+        }
+        break;
+    case GL_UNSIGNED_INT:
+        for (i = 0; i < count; ++i) {
+            uint32_t idx = ((uint32_t*)indices)[i];
+            if (idx < *min_idx) {
+                *min_idx = idx;
+            }
+            if (idx > *max_idx) {
+                *max_idx = idx;
+            }
+        }
+        break;
+    default:
+        break;
+    }
+}
 
 static int yagl_gles_context_bind_tex_image(struct yagl_client_context *ctx,
                                             struct yagl_client_image *image,
@@ -900,6 +951,121 @@ int yagl_gles_context_get_floatv(struct yagl_gles_context *ctx,
     yagl_host_glGetFloatv(pname, params, *num_params, NULL);
 
     return 1;
+}
+
+void yagl_gles_context_draw_arrays(struct yagl_gles_context *ctx,
+                                   GLenum mode, GLint first, GLsizei count,
+                                   GLsizei primcount)
+{
+    GLuint i;
+
+    YAGL_LOG_FUNC_SET(yagl_gles_context_draw_arrays);
+
+    if ((first < 0) || (count < 0)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (count == 0) {
+        goto out;
+    }
+
+    yagl_render_invalidate();
+
+    for (i = 0; i < ctx->vao->num_arrays; ++i) {
+        yagl_gles_array_transfer(&ctx->vao->arrays[i],
+                                 first,
+                                 count);
+    }
+
+    ctx->draw_arrays(ctx, mode, first, count, primcount);
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+void yagl_gles_context_draw_elements(struct yagl_gles_context *ctx,
+                                     GLenum mode, GLsizei count,
+                                     GLenum type, const GLvoid *indices,
+                                     GLsizei primcount)
+{
+    int index_size = 0;
+    int have_range = 0;
+    uint32_t min_idx = 0, max_idx = 0;
+    GLuint i;
+
+    YAGL_LOG_FUNC_SET(yagl_gles_context_draw_elements);
+
+    if (count < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (!yagl_gles_get_index_size(type, &index_size)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (!ctx->vao->ebo && !indices) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (count == 0) {
+        goto out;
+    }
+
+    yagl_render_invalidate();
+
+    for (i = 0; i < ctx->vao->num_arrays; ++i) {
+        if (!ctx->vao->arrays[i].enabled) {
+            continue;
+        }
+
+        if (!have_range) {
+            if (ctx->vao->ebo) {
+                if (!yagl_gles_buffer_get_minmax_index(ctx->vao->ebo,
+                                                       type,
+                                                       (GLint)indices,
+                                                       count,
+                                                       &min_idx,
+                                                       &max_idx)) {
+                    YAGL_LOG_WARN("unable to get min/max index from ebo");
+                    goto out;
+                }
+            } else {
+                yagl_get_minmax_index(indices, count, type,
+                                      &min_idx, &max_idx);
+            }
+            have_range = 1;
+        }
+
+        yagl_gles_array_transfer(&ctx->vao->arrays[i],
+                                 min_idx,
+                                 max_idx + 1 - min_idx);
+    }
+
+    if (!have_range) {
+        goto out;
+    }
+
+    if (ctx->vao->ebo) {
+        yagl_gles_buffer_bind(ctx->vao->ebo,
+                              type,
+                              0,
+                              GL_ELEMENT_ARRAY_BUFFER);
+        yagl_gles_buffer_transfer(ctx->vao->ebo,
+                                  type,
+                                  GL_ELEMENT_ARRAY_BUFFER,
+                                  0);
+        ctx->draw_elements(ctx, mode, count, type, NULL, (int32_t)indices, primcount);
+        yagl_host_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    } else {
+        ctx->draw_elements(ctx, mode, count, type, indices, count * index_size, primcount);
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
 }
 
 const GLchar *yagl_gles_context_get_extensions(struct yagl_gles_context *ctx)

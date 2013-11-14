@@ -264,6 +264,11 @@ int yagl_gles_array_update_vbo(struct yagl_gles_array *array,
     return 1;
 }
 
+void yagl_gles_array_set_divisor(struct yagl_gles_array *array, GLuint divisor)
+{
+    array->divisor = divisor;
+}
+
 void yagl_gles_array_transfer(struct yagl_gles_array *array,
                               uint32_t first,
                               uint32_t count)

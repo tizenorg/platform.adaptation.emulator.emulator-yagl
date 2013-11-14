@@ -51,56 +51,6 @@
 
 #define YAGL_GET_CTX() YAGL_GET_CTX_IMPL(return)
 
-static void yagl_get_minmax_index(const GLvoid *indices,
-                                  GLsizei count,
-                                  GLenum type,
-                                  uint32_t *min_idx,
-                                  uint32_t *max_idx)
-{
-    int i;
-
-    *min_idx = UINT32_MAX;
-    *max_idx = 0;
-
-    switch (type) {
-    case GL_UNSIGNED_BYTE:
-        for (i = 0; i < count; ++i) {
-            uint32_t idx = ((uint8_t*)indices)[i];
-            if (idx < *min_idx) {
-                *min_idx = idx;
-            }
-            if (idx > *max_idx) {
-                *max_idx = idx;
-            }
-        }
-        break;
-    case GL_UNSIGNED_SHORT:
-        for (i = 0; i < count; ++i) {
-            uint32_t idx = ((uint16_t*)indices)[i];
-            if (idx < *min_idx) {
-                *min_idx = idx;
-            }
-            if (idx > *max_idx) {
-                *max_idx = idx;
-            }
-        }
-        break;
-    case GL_UNSIGNED_INT:
-        for (i = 0; i < count; ++i) {
-            uint32_t idx = ((uint32_t*)indices)[i];
-            if (idx < *min_idx) {
-                *min_idx = idx;
-            }
-            if (idx > *max_idx) {
-                *max_idx = idx;
-            }
-        }
-        break;
-    default:
-        break;
-    }
-}
-
 static int yagl_get_stride(GLsizei alignment,
                            GLsizei width,
                            GLenum format,
@@ -1502,115 +1452,23 @@ YAGL_API void glDisable(GLenum cap)
 
 YAGL_API void glDrawArrays(GLenum mode, GLint first, GLsizei count)
 {
-    GLuint i;
-
     YAGL_LOG_FUNC_ENTER_SPLIT3(glDrawArrays, GLenum, GLint, GLsizei, mode, first, count);
 
     YAGL_GET_CTX();
 
-    if ((first < 0) || (count < 0)) {
-        YAGL_SET_ERR(GL_INVALID_VALUE);
-        goto out;
-    }
+    yagl_gles_context_draw_arrays(ctx, mode, first, count, -1);
 
-    if (count == 0) {
-        goto out;
-    }
-
-    yagl_render_invalidate();
-
-    for (i = 0; i < ctx->vao->num_arrays; ++i) {
-        yagl_gles_array_transfer(&ctx->vao->arrays[i],
-                                 first,
-                                 count);
-    }
-
-    ctx->draw_arrays(ctx, mode, first, count);
-
-out:
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
 YAGL_API void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices)
 {
-    int index_size = 0;
-    int have_range = 0;
-    uint32_t min_idx = 0, max_idx = 0;
-    GLuint i;
-
     YAGL_LOG_FUNC_ENTER_SPLIT4(glDrawElements, GLenum, GLsizei, GLenum, const GLvoid*, mode, count, type, indices);
 
     YAGL_GET_CTX();
 
-    if (count < 0) {
-        YAGL_SET_ERR(GL_INVALID_VALUE);
-        goto out;
-    }
+    yagl_gles_context_draw_elements(ctx, mode, count, type, indices, -1);
 
-    if (!yagl_gles_get_index_size(type, &index_size)) {
-        YAGL_SET_ERR(GL_INVALID_VALUE);
-        goto out;
-    }
-
-    if (!ctx->vao->ebo && !indices) {
-        YAGL_SET_ERR(GL_INVALID_VALUE);
-        goto out;
-    }
-
-    if (count == 0) {
-        goto out;
-    }
-
-    yagl_render_invalidate();
-
-    for (i = 0; i < ctx->vao->num_arrays; ++i) {
-        if (!ctx->vao->arrays[i].enabled) {
-            continue;
-        }
-
-        if (!have_range) {
-            if (ctx->vao->ebo) {
-                if (!yagl_gles_buffer_get_minmax_index(ctx->vao->ebo,
-                                                       type,
-                                                       (GLint)indices,
-                                                       count,
-                                                       &min_idx,
-                                                       &max_idx)) {
-                    YAGL_LOG_WARN("unable to get min/max index from ebo");
-                    goto out;
-                }
-            } else {
-                yagl_get_minmax_index(indices, count, type,
-                                      &min_idx, &max_idx);
-            }
-            have_range = 1;
-        }
-
-        yagl_gles_array_transfer(&ctx->vao->arrays[i],
-                                 min_idx,
-                                 max_idx + 1 - min_idx);
-    }
-
-    if (!have_range) {
-        goto out;
-    }
-
-    if (ctx->vao->ebo) {
-        yagl_gles_buffer_bind(ctx->vao->ebo,
-                              type,
-                              0,
-                              GL_ELEMENT_ARRAY_BUFFER);
-        yagl_gles_buffer_transfer(ctx->vao->ebo,
-                                  type,
-                                  GL_ELEMENT_ARRAY_BUFFER,
-                                  0);
-        ctx->draw_elements(ctx, mode, count, type, NULL, (int32_t)indices);
-        yagl_host_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    } else {
-        ctx->draw_elements(ctx, mode, count, type, indices, count * index_size);
-    }
-
-out:
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 

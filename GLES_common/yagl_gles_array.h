@@ -44,6 +44,7 @@ struct yagl_gles_array
     GLboolean normalized;
     GLsizei stride;
     GLsizei actual_stride;
+    GLuint divisor;
 
     /*
      * Specifies if array data needs to be converted before transferring to
@@ -101,6 +102,8 @@ int yagl_gles_array_update_vbo(struct yagl_gles_array *array,
                                GLsizei stride,
                                struct yagl_gles_buffer *vbo,
                                GLint offset);
+
+void yagl_gles_array_set_divisor(struct yagl_gles_array *array, GLuint divisor);
 
 void yagl_gles_array_transfer(struct yagl_gles_array *array,
                               uint32_t first,

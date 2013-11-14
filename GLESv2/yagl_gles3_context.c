@@ -386,13 +386,14 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
 static void yagl_gles3_context_draw_arrays(struct yagl_gles_context *ctx,
                                            GLenum mode,
                                            GLint first,
-                                           GLsizei count)
+                                           GLsizei count,
+                                           GLsizei primcount)
 {
     struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
 
     yagl_gles3_context_pre_draw(gles3_ctx);
 
-    yagl_gles2_context_draw_arrays(ctx, mode, first, count);
+    yagl_gles2_context_draw_arrays(ctx, mode, first, count, primcount);
 
     yagl_gles3_context_post_draw(gles3_ctx);
 }
@@ -402,7 +403,8 @@ static void yagl_gles3_context_draw_elements(struct yagl_gles_context *ctx,
                                              GLsizei count,
                                              GLenum type,
                                              const GLvoid *indices,
-                                             int32_t indices_count)
+                                             int32_t indices_count,
+                                             GLsizei primcount)
 {
     struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
 
@@ -413,7 +415,8 @@ static void yagl_gles3_context_draw_elements(struct yagl_gles_context *ctx,
                                      count,
                                      type,
                                      indices,
-                                     indices_count);
+                                     indices_count,
+                                     primcount);
 
     yagl_gles3_context_post_draw(gles3_ctx);
 }

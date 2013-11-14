@@ -35,6 +35,8 @@ struct yagl_gles2_context
 
     int standard_derivatives;
 
+    int instanced_arrays;
+
     struct yagl_gles2_program *program;
 
     GLclampf blend_color[4];
@@ -80,14 +82,16 @@ int yagl_gles2_context_get_floatv(struct yagl_gles_context *ctx,
 void yagl_gles2_context_draw_arrays(struct yagl_gles_context *ctx,
                                     GLenum mode,
                                     GLint first,
-                                    GLsizei count);
+                                    GLsizei count,
+                                    GLsizei primcount);
 
 void yagl_gles2_context_draw_elements(struct yagl_gles_context *ctx,
                                       GLenum mode,
                                       GLsizei count,
                                       GLenum type,
                                       const GLvoid *indices,
-                                      int32_t indices_count);
+                                      int32_t indices_count,
+                                      GLsizei primcount);
 
 char *yagl_gles2_context_shader_patch(struct yagl_gles2_context *ctx,
                                       const char *source,
