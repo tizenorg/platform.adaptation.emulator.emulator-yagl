@@ -19,6 +19,92 @@
 #define GL_POINT_SPRITE                   0x8861
 #define GL_VERTEX_PROGRAM_POINT_SIZE      0x8642
 
+static const GLchar *egl_image_ext = "GL_OES_EGL_image";
+static const GLchar *depth24_ext = "GL_OES_depth24";
+static const GLchar *depth32_ext = "GL_OES_depth32";
+static const GLchar *texture_float_ext = "GL_OES_texture_float";
+static const GLchar *texture_float_linear_ext = "GL_OES_texture_float_linear";
+static const GLchar *texture_format_bgra8888_ext = "GL_EXT_texture_format_BGRA8888";
+static const GLchar *depth_texture_ext = "GL_OES_depth_texture";
+static const GLchar *framebuffer_blit_ext = "GL_ANGLE_framebuffer_blit";
+static const GLchar *draw_buffers_ext = "GL_EXT_draw_buffers";
+static const GLchar *mapbuffer_ext = "GL_OES_mapbuffer";
+static const GLchar *map_buffer_range_ext = "GL_EXT_map_buffer_range";
+static const GLchar *element_index_uint_ext = "GL_OES_element_index_uint";
+static const GLchar *packed_depth_stencil_ext = "GL_OES_packed_depth_stencil";
+static const GLchar *texture_npot_ext = "GL_OES_texture_npot";
+static const GLchar *texture_rectangle_ext = "GL_ARB_texture_rectangle";
+static const GLchar *texture_filter_anisotropic_ext = "GL_EXT_texture_filter_anisotropic";
+static const GLchar *vertex_array_object_ext = "GL_OES_vertex_array_object";
+static const GLchar *texture_half_float_ext = "GL_OES_texture_half_float";
+static const GLchar *texture_half_float_linear_ext = "GL_OES_texture_half_float_linear";
+static const GLchar *vertex_half_float_ext = "GL_OES_vertex_half_float";
+static const GLchar *standard_derivatives_ext = "GL_OES_standard_derivatives";
+static const GLchar *instanced_arrays_ext = "GL_EXT_instanced_arrays";
+
+static const GLchar **yagl_gles2_context_get_extensions(struct yagl_gles2_context *ctx,
+                                                        int *num_extensions)
+{
+    const GLchar **extensions;
+    int i = 0;
+
+    extensions = yagl_malloc(100 * sizeof(*extensions));
+
+    extensions[i++] = egl_image_ext;
+    extensions[i++] = depth24_ext;
+    extensions[i++] = depth32_ext;
+    extensions[i++] = texture_float_ext;
+    extensions[i++] = texture_float_linear_ext;
+    extensions[i++] = texture_format_bgra8888_ext;
+    extensions[i++] = depth_texture_ext;
+    extensions[i++] = framebuffer_blit_ext;
+    extensions[i++] = draw_buffers_ext;
+    extensions[i++] = mapbuffer_ext;
+    extensions[i++] = map_buffer_range_ext;
+    extensions[i++] = element_index_uint_ext;
+
+    if (ctx->base.packed_depth_stencil) {
+        extensions[i++] = packed_depth_stencil_ext;
+    }
+
+    if (ctx->base.texture_npot) {
+        extensions[i++] = texture_npot_ext;
+    }
+
+    if (ctx->base.texture_rectangle) {
+        extensions[i++] = texture_rectangle_ext;
+    }
+
+    if (ctx->base.texture_filter_anisotropic) {
+        extensions[i++] = texture_filter_anisotropic_ext;
+    }
+
+    if (ctx->base.vertex_arrays_supported) {
+        extensions[i++] = vertex_array_object_ext;
+    }
+
+    if (ctx->texture_half_float) {
+        extensions[i++] = texture_half_float_ext;
+        extensions[i++] = texture_half_float_linear_ext;
+    }
+
+    if (ctx->vertex_half_float) {
+        extensions[i++] = vertex_half_float_ext;
+    }
+
+    if (ctx->standard_derivatives) {
+        extensions[i++] = standard_derivatives_ext;
+    }
+
+    if (ctx->instanced_arrays) {
+        extensions[i++] = instanced_arrays_ext;
+    }
+
+    *num_extensions = i;
+
+    return extensions;
+}
+
 static inline void yagl_gles2_context_pre_draw(struct yagl_gles_context *ctx, GLenum mode)
 {
     /*
@@ -70,6 +156,19 @@ static void yagl_gles2_array_apply(struct yagl_gles_array *array,
     }
 }
 
+static void yagl_gles2_context_prepare_internal(struct yagl_client_context *ctx)
+{
+    struct yagl_gles2_context *gles2_ctx = (struct yagl_gles2_context*)ctx;
+    const GLchar **extensions;
+    int num_extensions;
+
+    yagl_gles2_context_prepare(gles2_ctx);
+
+    extensions = yagl_gles2_context_get_extensions(gles2_ctx, &num_extensions);
+
+    yagl_gles_context_prepare_end(&gles2_ctx->base, extensions, num_extensions);
+}
+
 static void yagl_gles2_context_destroy(struct yagl_client_context *ctx)
 {
     struct yagl_gles2_context *gles2_ctx = (struct yagl_gles2_context*)ctx;
@@ -101,107 +200,6 @@ static const GLchar
         break;
     default:
         str = "";
-    }
-
-    return str;
-}
-
-static GLchar *yagl_gles2_context_get_extensions(struct yagl_gles_context *ctx)
-{
-    struct yagl_gles2_context *gles2_ctx = (struct yagl_gles2_context*)ctx;
-
-    const GLchar *mandatory_extensions =
-        "GL_OES_EGL_image GL_OES_depth24 GL_OES_depth32 "
-        "GL_OES_texture_float GL_OES_texture_float_linear "
-        "GL_EXT_texture_format_BGRA8888 GL_OES_depth_texture GL_ANGLE_framebuffer_blit GL_EXT_draw_buffers "
-        "GL_OES_mapbuffer GL_EXT_map_buffer_range GL_OES_element_index_uint ";
-    const GLchar *packed_depth_stencil = "GL_OES_packed_depth_stencil ";
-    const GLchar *texture_npot = "GL_OES_texture_npot ";
-    const GLchar *texture_rectangle = "GL_ARB_texture_rectangle ";
-    const GLchar *texture_filter_anisotropic = "GL_EXT_texture_filter_anisotropic ";
-    const GLchar *vertex_array_object = "GL_OES_vertex_array_object ";
-    const GLchar *texture_half_float = "GL_OES_texture_half_float GL_OES_texture_half_float_linear ";
-    const GLchar *vertex_half_float = "GL_OES_vertex_half_float ";
-    const GLchar *standard_derivatives = "GL_OES_standard_derivatives ";
-    const GLchar *instanced_arrays = "GL_EXT_instanced_arrays ";
-
-    GLuint len = strlen(mandatory_extensions);
-    GLchar *str;
-
-    if (gles2_ctx->base.packed_depth_stencil) {
-        len += strlen(packed_depth_stencil);
-    }
-
-    if (gles2_ctx->base.texture_npot) {
-        len += strlen(texture_npot);
-    }
-
-    if (gles2_ctx->base.texture_rectangle) {
-        len += strlen(texture_rectangle);
-    }
-
-    if (gles2_ctx->base.texture_filter_anisotropic) {
-        len += strlen(texture_filter_anisotropic);
-    }
-
-    if (gles2_ctx->base.vertex_arrays_supported) {
-        len += strlen(vertex_array_object);
-    }
-
-    if (gles2_ctx->texture_half_float) {
-        len += strlen(texture_half_float);
-    }
-
-    if (gles2_ctx->vertex_half_float) {
-        len += strlen(vertex_half_float);
-    }
-
-    if (gles2_ctx->standard_derivatives) {
-        len += strlen(standard_derivatives);
-    }
-
-    if (gles2_ctx->instanced_arrays) {
-        len += strlen(instanced_arrays);
-    }
-
-    str = yagl_malloc0(len + 1);
-
-    strcpy(str, mandatory_extensions);
-
-    if (gles2_ctx->base.packed_depth_stencil) {
-        strcat(str, packed_depth_stencil);
-    }
-
-    if (gles2_ctx->base.texture_npot) {
-        strcat(str, texture_npot);
-    }
-
-    if (gles2_ctx->base.texture_rectangle) {
-        strcat(str, texture_rectangle);
-    }
-
-    if (gles2_ctx->base.texture_filter_anisotropic) {
-        strcat(str, texture_filter_anisotropic);
-    }
-
-    if (gles2_ctx->base.vertex_arrays_supported) {
-        strcat(str, vertex_array_object);
-    }
-
-    if (gles2_ctx->texture_half_float) {
-        strcat(str, texture_half_float);
-    }
-
-    if (gles2_ctx->vertex_half_float) {
-        strcat(str, vertex_half_float);
-    }
-
-    if (gles2_ctx->standard_derivatives) {
-        strcat(str, standard_derivatives);
-    }
-
-    if (gles2_ctx->instanced_arrays) {
-        strcat(str, instanced_arrays);
     }
 
     return str;
@@ -256,9 +254,8 @@ void yagl_gles2_context_cleanup(struct yagl_gles2_context *ctx)
     yagl_gles_context_cleanup(&ctx->base);
 }
 
-void yagl_gles2_context_prepare(struct yagl_client_context *ctx)
+void yagl_gles2_context_prepare(struct yagl_gles2_context *ctx)
 {
-    struct yagl_gles2_context *gles2_ctx = (struct yagl_gles2_context*)ctx;
     GLint num_texture_units = 0;
     int32_t size = 0;
     char *extensions, *conformant;
@@ -278,7 +275,7 @@ void yagl_gles2_context_prepare(struct yagl_client_context *ctx)
         num_texture_units = 32;
     }
 
-    yagl_gles_context_prepare(&gles2_ctx->base,
+    yagl_gles_context_prepare(&ctx->base,
                               num_texture_units,
                               num_arrays);
 
@@ -291,34 +288,34 @@ void yagl_gles2_context_prepare(struct yagl_client_context *ctx)
          * since we can't know if variable with a given name exists or not,
          * so we just assume it exists.
          */
-        gles2_ctx->gen_locations = 0;
+        ctx->gen_locations = 0;
     } else {
-        gles2_ctx->gen_locations = 1;
+        ctx->gen_locations = 1;
     }
 
     yagl_host_glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS,
-                            &gles2_ctx->num_compressed_texture_formats,
+                            &ctx->num_compressed_texture_formats,
                             1, NULL);
 
     /*
      * We don't support it for now...
      */
-    gles2_ctx->num_shader_binary_formats = 0;
+    ctx->num_shader_binary_formats = 0;
 
     yagl_host_glGetString(GL_EXTENSIONS, NULL, 0, &size);
     extensions = yagl_malloc0(size);
     yagl_host_glGetString(GL_EXTENSIONS, extensions, size, NULL);
 
-    gles2_ctx->texture_half_float = (strstr(extensions, "GL_ARB_half_float_pixel ") != NULL) ||
-                                    (strstr(extensions, "GL_NV_half_float ") != NULL);
+    ctx->texture_half_float = (strstr(extensions, "GL_ARB_half_float_pixel ") != NULL) ||
+                              (strstr(extensions, "GL_NV_half_float ") != NULL);
 
-    gles2_ctx->vertex_half_float = (strstr(extensions, "GL_ARB_half_float_vertex ") != NULL);
+    ctx->vertex_half_float = (strstr(extensions, "GL_ARB_half_float_vertex ") != NULL);
 
-    gles2_ctx->standard_derivatives = (strstr(extensions, "GL_OES_standard_derivatives ") != NULL);
+    ctx->standard_derivatives = (strstr(extensions, "GL_OES_standard_derivatives ") != NULL);
 
     yagl_free(extensions);
 
-    gles2_ctx->instanced_arrays = (yagl_get_host_gl_version() > yagl_gl_2);
+    ctx->instanced_arrays = (yagl_get_host_gl_version() > yagl_gl_2);
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
@@ -543,9 +540,24 @@ char *yagl_gles2_context_shader_patch(struct yagl_gles2_context *ctx,
                                       int len,
                                       int *patched_len)
 {
+    char *tmp;
+    int tmp_len;
+
     char *patched_string = yagl_gles2_shader_patch(source,
                                                    len,
                                                    patched_len);
+
+    tmp = yagl_gles2_shader_fix_extensions(patched_string,
+                                           *patched_len,
+                                           ctx->base.extensions,
+                                           ctx->base.num_extensions,
+                                           &tmp_len);
+
+    if (tmp) {
+        yagl_free(patched_string);
+        patched_string = tmp;
+        *patched_len = tmp_len;
+    }
 
     /*
      * On some GPUs (like Ivybridge Desktop) it's necessary to add
@@ -579,11 +591,10 @@ struct yagl_client_context *yagl_gles2_context_create(struct yagl_sharegroup *sg
 
     yagl_gles2_context_init(gles2_ctx, yagl_client_api_gles2, sg);
 
-    gles2_ctx->base.base.prepare = &yagl_gles2_context_prepare;
+    gles2_ctx->base.base.prepare = &yagl_gles2_context_prepare_internal;
     gles2_ctx->base.base.destroy = &yagl_gles2_context_destroy;
     gles2_ctx->base.create_arrays = &yagl_gles2_context_create_arrays;
     gles2_ctx->base.get_string = &yagl_gles2_context_get_string;
-    gles2_ctx->base.get_extensions = &yagl_gles2_context_get_extensions;
     gles2_ctx->base.compressed_tex_image = &yagl_gles2_context_compressed_tex_image;
     gles2_ctx->base.enable = &yagl_gles2_context_enable;
     gles2_ctx->base.is_enabled = &yagl_gles2_context_is_enabled;

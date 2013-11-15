@@ -158,7 +158,6 @@ void yagl_gles_context_prepare(struct yagl_gles_context *ctx,
     int i;
     int32_t size = 0;
     char *extensions;
-    struct yagl_gles_array *arrays;
 
     if (num_texture_units < 1) {
         num_texture_units = 1;
@@ -217,16 +216,25 @@ void yagl_gles_context_prepare(struct yagl_gles_context *ctx,
         ctx->max_draw_buffers = YAGL_MAX_GLES_DRAW_BUFFERS;
     }
 
-    arrays = ctx->create_arrays(ctx);
-
     ctx->vertex_arrays_supported = (yagl_get_host_gl_version() > yagl_gl_2);
 
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+void yagl_gles_context_prepare_end(struct yagl_gles_context *ctx,
+                                   const GLchar **extensions,
+                                   int num_extensions)
+{
+    int i, str_size = 1;
+    struct yagl_gles_array *arrays = ctx->create_arrays(ctx);
+    GLchar *ptr;
+
     if (ctx->vertex_arrays_supported) {
-        ctx->va_zero = yagl_gles_vertex_array_create(0, arrays, num_arrays);
+        ctx->va_zero = yagl_gles_vertex_array_create(0, arrays, ctx->num_arrays);
 
         yagl_gles_context_bind_vertex_array(ctx, NULL);
     } else {
-        ctx->va_zero = yagl_gles_vertex_array_create(1, arrays, num_arrays);
+        ctx->va_zero = yagl_gles_vertex_array_create(1, arrays, ctx->num_arrays);
 
         /*
          * Don't bind, VAOs are not supported, just reference.
@@ -235,7 +243,27 @@ void yagl_gles_context_prepare(struct yagl_gles_context *ctx,
         ctx->vao = ctx->va_zero;
     }
 
-    YAGL_LOG_FUNC_EXIT(NULL);
+    ctx->extensions = extensions;
+    ctx->num_extensions = num_extensions;
+
+    for (i = 0; i < num_extensions; ++i) {
+        str_size += strlen(extensions[i]) + 1;
+    }
+
+    ctx->extension_string = ptr = yagl_malloc(str_size);
+
+    for (i = 0; i < num_extensions; ++i) {
+        int len = strlen(extensions[i]);
+
+        memcpy(ptr, extensions[i], len);
+
+        ptr += len;
+
+        *ptr = ' ';
+        ++ptr;
+    }
+
+    ctx->extension_string[str_size - 1] = '\0';
 }
 
 void yagl_gles_context_cleanup(struct yagl_gles_context *ctx)
@@ -256,6 +284,7 @@ void yagl_gles_context_cleanup(struct yagl_gles_context *ctx)
 
     yagl_gles_vertex_array_release(ctx->va_zero);
 
+    yagl_free(ctx->extension_string);
     yagl_free(ctx->extensions);
 
     yagl_namespace_cleanup(&ctx->vertex_arrays);
@@ -1066,15 +1095,6 @@ void yagl_gles_context_draw_elements(struct yagl_gles_context *ctx,
 
 out:
     YAGL_LOG_FUNC_EXIT(NULL);
-}
-
-const GLchar *yagl_gles_context_get_extensions(struct yagl_gles_context *ctx)
-{
-    if (!ctx->extensions) {
-        ctx->extensions = ctx->get_extensions(ctx);
-    }
-
-    return ctx->extensions;
 }
 
 void yagl_gles_context_line_width(struct yagl_gles_context *ctx,

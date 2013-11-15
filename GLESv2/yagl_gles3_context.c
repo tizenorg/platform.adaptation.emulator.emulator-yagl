@@ -23,6 +23,72 @@
 #define GL_PACK_IMAGE_HEIGHT 0x806C
 #define GL_PACK_SKIP_IMAGES 0x806B
 
+static const GLchar *egl_image_ext = "GL_OES_EGL_image";
+static const GLchar *depth24_ext = "GL_OES_depth24";
+static const GLchar *depth32_ext = "GL_OES_depth32";
+static const GLchar *texture_float_ext = "GL_OES_texture_float";
+static const GLchar *texture_float_linear_ext = "GL_OES_texture_float_linear";
+static const GLchar *texture_format_bgra8888_ext = "GL_EXT_texture_format_BGRA8888";
+static const GLchar *depth_texture_ext = "GL_OES_depth_texture";
+static const GLchar *packed_depth_stencil_ext = "GL_OES_packed_depth_stencil";
+static const GLchar *texture_npot_ext = "GL_OES_texture_npot";
+static const GLchar *texture_rectangle_ext = "GL_ARB_texture_rectangle";
+static const GLchar *texture_filter_anisotropic_ext = "GL_EXT_texture_filter_anisotropic";
+static const GLchar *texture_half_float_ext = "GL_OES_texture_half_float";
+static const GLchar *texture_half_float_linear_ext = "GL_OES_texture_half_float_linear";
+static const GLchar *vertex_half_float_ext = "GL_OES_vertex_half_float";
+static const GLchar *standard_derivatives_ext = "GL_OES_standard_derivatives";
+
+static const GLchar **yagl_gles3_context_get_extensions(struct yagl_gles3_context *ctx,
+                                                        int *num_extensions)
+{
+    const GLchar **extensions;
+    int i = 0;
+
+    extensions = yagl_malloc(100 * sizeof(*extensions));
+
+    extensions[i++] = egl_image_ext;
+    extensions[i++] = depth24_ext;
+    extensions[i++] = depth32_ext;
+    extensions[i++] = texture_float_ext;
+    extensions[i++] = texture_float_linear_ext;
+    extensions[i++] = texture_format_bgra8888_ext;
+    extensions[i++] = depth_texture_ext;
+
+    if (ctx->base.base.packed_depth_stencil) {
+        extensions[i++] = packed_depth_stencil_ext;
+    }
+
+    if (ctx->base.base.texture_npot) {
+        extensions[i++] = texture_npot_ext;
+    }
+
+    if (ctx->base.base.texture_rectangle) {
+        extensions[i++] = texture_rectangle_ext;
+    }
+
+    if (ctx->base.base.texture_filter_anisotropic) {
+        extensions[i++] = texture_filter_anisotropic_ext;
+    }
+
+    if (ctx->base.texture_half_float) {
+        extensions[i++] = texture_half_float_ext;
+        extensions[i++] = texture_half_float_linear_ext;
+    }
+
+    if (ctx->base.vertex_half_float) {
+        extensions[i++] = vertex_half_float_ext;
+    }
+
+    if (ctx->base.standard_derivatives) {
+        extensions[i++] = standard_derivatives_ext;
+    }
+
+    *num_extensions = i;
+
+    return extensions;
+}
+
 static inline void yagl_gles3_context_pre_draw(struct yagl_gles3_context *ctx)
 {
     struct yagl_gles3_buffer_binding *buffer_binding;
@@ -49,8 +115,10 @@ static void yagl_gles3_context_prepare(struct yagl_client_context *ctx)
 {
     struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
     GLuint i;
+    const GLchar **extensions;
+    int num_extensions;
 
-    yagl_gles2_context_prepare(ctx);
+    yagl_gles2_context_prepare(&gles3_ctx->base);
 
     /*
      * We don't support it for now...
@@ -87,6 +155,11 @@ static void yagl_gles3_context_prepare(struct yagl_client_context *ctx)
 
     yagl_gles3_transform_feedback_acquire(gles3_ctx->tf_zero);
     gles3_ctx->tfo = gles3_ctx->tf_zero;
+
+    extensions = yagl_gles3_context_get_extensions(gles3_ctx, &num_extensions);
+
+    yagl_gles_context_prepare_end(&gles3_ctx->base.base,
+                                  extensions, num_extensions);
 }
 
 static void yagl_gles3_context_destroy(struct yagl_client_context *ctx)
@@ -139,88 +212,6 @@ static const GLchar
         break;
     default:
         str = "";
-    }
-
-    return str;
-}
-
-static GLchar *yagl_gles3_context_get_extensions(struct yagl_gles_context *ctx)
-{
-    struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
-
-    const GLchar *mandatory_extensions =
-        "GL_OES_EGL_image GL_OES_depth24 GL_OES_depth32 "
-        "GL_OES_texture_float GL_OES_texture_float_linear "
-        "GL_EXT_texture_format_BGRA8888 GL_OES_depth_texture ";
-    const GLchar *packed_depth_stencil = "GL_OES_packed_depth_stencil ";
-    const GLchar *texture_npot = "GL_OES_texture_npot ";
-    const GLchar *texture_rectangle = "GL_ARB_texture_rectangle ";
-    const GLchar *texture_filter_anisotropic = "GL_EXT_texture_filter_anisotropic ";
-    const GLchar *texture_half_float = "GL_OES_texture_half_float GL_OES_texture_half_float_linear ";
-    const GLchar *vertex_half_float = "GL_OES_vertex_half_float ";
-    const GLchar *standard_derivatives = "GL_OES_standard_derivatives ";
-
-    GLuint len = strlen(mandatory_extensions);
-    GLchar *str;
-
-    if (gles3_ctx->base.base.packed_depth_stencil) {
-        len += strlen(packed_depth_stencil);
-    }
-
-    if (gles3_ctx->base.base.texture_npot) {
-        len += strlen(texture_npot);
-    }
-
-    if (gles3_ctx->base.base.texture_rectangle) {
-        len += strlen(texture_rectangle);
-    }
-
-    if (gles3_ctx->base.base.texture_filter_anisotropic) {
-        len += strlen(texture_filter_anisotropic);
-    }
-
-    if (gles3_ctx->base.texture_half_float) {
-        len += strlen(texture_half_float);
-    }
-
-    if (gles3_ctx->base.vertex_half_float) {
-        len += strlen(vertex_half_float);
-    }
-
-    if (gles3_ctx->base.standard_derivatives) {
-        len += strlen(standard_derivatives);
-    }
-
-    str = yagl_malloc0(len + 1);
-
-    strcpy(str, mandatory_extensions);
-
-    if (gles3_ctx->base.base.packed_depth_stencil) {
-        strcat(str, packed_depth_stencil);
-    }
-
-    if (gles3_ctx->base.base.texture_npot) {
-        strcat(str, texture_npot);
-    }
-
-    if (gles3_ctx->base.base.texture_rectangle) {
-        strcat(str, texture_rectangle);
-    }
-
-    if (gles3_ctx->base.base.texture_filter_anisotropic) {
-        strcat(str, texture_filter_anisotropic);
-    }
-
-    if (gles3_ctx->base.texture_half_float) {
-        strcat(str, texture_half_float);
-    }
-
-    if (gles3_ctx->base.vertex_half_float) {
-        strcat(str, vertex_half_float);
-    }
-
-    if (gles3_ctx->base.standard_derivatives) {
-        strcat(str, standard_derivatives);
     }
 
     return str;
@@ -500,6 +491,7 @@ static char *yagl_gles3_context_shader_patch(struct yagl_gles2_context *ctx,
                                              int len,
                                              int *patched_len)
 {
+    char *patched;
     int is_es3 = 0;
     yagl_gl_version gl_version;
 
@@ -513,6 +505,12 @@ static char *yagl_gles3_context_shader_patch(struct yagl_gles2_context *ctx,
                                                patched_len);
     }
 
+    patched = yagl_gles2_shader_fix_extensions(source,
+                                               len,
+                                               ctx->base.extensions,
+                                               ctx->base.num_extensions,
+                                               patched_len);
+
     gl_version = yagl_get_host_gl_version();
 
     switch (gl_version) {
@@ -521,13 +519,13 @@ static char *yagl_gles3_context_shader_patch(struct yagl_gles2_context *ctx,
          * GL_ARB_ES3_compatibility includes full ES 3.00 shader
          * support, no patching is required.
          */
-        return NULL;
+        return patched;
     case yagl_gl_3_2:
     default:
         /*
          * TODO: Patch shader to run with GLSL 1.50
          */
-        return NULL;
+        return patched;
     }
 }
 
@@ -550,7 +548,6 @@ struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg
     gles3_ctx->base.base.base.destroy = &yagl_gles3_context_destroy;
     gles3_ctx->base.base.create_arrays = &yagl_gles2_context_create_arrays;
     gles3_ctx->base.base.get_string = &yagl_gles3_context_get_string;
-    gles3_ctx->base.base.get_extensions = &yagl_gles3_context_get_extensions;
     gles3_ctx->base.base.compressed_tex_image = &yagl_gles2_context_compressed_tex_image;
     gles3_ctx->base.base.enable = &yagl_gles3_context_enable;
     gles3_ctx->base.base.is_enabled = &yagl_gles3_context_is_enabled;

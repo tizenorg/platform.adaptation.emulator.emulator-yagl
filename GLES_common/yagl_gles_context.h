@@ -22,8 +22,6 @@ struct yagl_gles_context
     const GLchar *(*get_string)(struct yagl_gles_context */*ctx*/,
                                 GLenum /*name*/);
 
-    GLchar *(*get_extensions)(struct yagl_gles_context */*ctx*/);
-
     GLenum (*compressed_tex_image)(struct yagl_gles_context */*ctx*/,
                                    GLenum /*target*/,
                                    GLint /*level*/,
@@ -90,7 +88,10 @@ struct yagl_gles_context
 
     struct yagl_namespace vertex_arrays;
 
-    GLchar *extensions;
+    const GLchar **extensions;
+    int num_extensions;
+
+    GLchar *extension_string;
 
     GLenum error;
 
@@ -182,6 +183,13 @@ void yagl_gles_context_prepare(struct yagl_gles_context *ctx,
                                int num_texture_units,
                                int num_arrays);
 
+/*
+ * Takes ownership of 'extensions'.
+ */
+void yagl_gles_context_prepare_end(struct yagl_gles_context *ctx,
+                                   const GLchar **extensions,
+                                   int num_extensions);
+
 void yagl_gles_context_cleanup(struct yagl_gles_context *ctx);
 
 void yagl_gles_context_set_error(struct yagl_gles_context *ctx, GLenum error);
@@ -269,8 +277,6 @@ void yagl_gles_context_draw_elements(struct yagl_gles_context *ctx,
                                      GLenum mode, GLsizei count,
                                      GLenum type, const GLvoid *indices,
                                      GLsizei primcount);
-
-const GLchar *yagl_gles_context_get_extensions(struct yagl_gles_context *ctx);
 
 void yagl_gles_context_line_width(struct yagl_gles_context *ctx,
                                   GLfloat width);

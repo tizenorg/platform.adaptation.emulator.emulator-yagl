@@ -17,6 +17,92 @@
 
 #define YAGL_GLES1_NUM_COMP_TEX_FORMATS 10
 
+static const GLchar *blend_subtract_ext = "GL_OES_blend_subtract";
+static const GLchar *blend_equation_separate_ext = "GL_OES_blend_equation_separate";
+static const GLchar *blend_func_separate_ext = "GL_OES_blend_func_separate";
+static const GLchar *element_index_uint_ext = "GL_OES_element_index_uint";
+static const GLchar *texture_mirrored_repeat_ext = "GL_OES_texture_mirrored_repeat";
+static const GLchar *texture_format_bgra8888_ext = "GL_EXT_texture_format_BGRA8888";
+static const GLchar *point_sprite_ext = "GL_OES_point_sprite";
+static const GLchar *point_size_array_ext = "GL_OES_point_size_array";
+static const GLchar *stencil_wrap_ext = "GL_OES_stencil_wrap";
+static const GLchar *compressed_paletted_texture_ext = "GL_OES_compressed_paletted_texture";
+static const GLchar *depth_texture_ext = "GL_OES_depth_texture";
+static const GLchar *framebuffer_object_ext = "GL_OES_framebuffer_object";
+static const GLchar *depth24_ext = "GL_OES_depth24";
+static const GLchar *depth32_ext = "GL_OES_depth32";
+static const GLchar *rgb8_rgba8_ext = "GL_OES_rgb8_rgba8";
+static const GLchar *stencil1_ext = "GL_OES_stencil1";
+static const GLchar *stencil4_ext = "GL_OES_stencil4";
+static const GLchar *stencil8_ext = "GL_OES_stencil8";
+static const GLchar *egl_image_ext = "GL_OES_EGL_image";
+static const GLchar *framebuffer_blit_ext = "GL_ANGLE_framebuffer_blit";
+static const GLchar *draw_buffers_ext = "GL_EXT_draw_buffers";
+static const GLchar *mapbuffer_ext = "GL_OES_mapbuffer";
+static const GLchar *map_buffer_range_ext = "GL_EXT_map_buffer_range";
+static const GLchar *packed_depth_stencil_ext = "GL_OES_packed_depth_stencil";
+static const GLchar *texture_npot_ext = "GL_OES_texture_npot";
+static const GLchar *texture_filter_anisotropic_ext = "GL_EXT_texture_filter_anisotropic";
+static const GLchar *vertex_array_object_ext = "GL_OES_vertex_array_object";
+static const GLchar *matrix_palette_ext = "GL_OES_matrix_palette";
+
+static const GLchar **yagl_gles1_context_get_extensions(struct yagl_gles1_context *ctx,
+                                                        int *num_extensions)
+{
+    const GLchar **extensions;
+    int i = 0;
+
+    extensions = yagl_malloc(100 * sizeof(*extensions));
+
+    extensions[i++] = blend_subtract_ext;
+    extensions[i++] = blend_equation_separate_ext;
+    extensions[i++] = blend_func_separate_ext;
+    extensions[i++] = element_index_uint_ext;
+    extensions[i++] = texture_mirrored_repeat_ext;
+    extensions[i++] = texture_format_bgra8888_ext;
+    extensions[i++] = point_sprite_ext;
+    extensions[i++] = point_size_array_ext;
+    extensions[i++] = stencil_wrap_ext;
+    extensions[i++] = compressed_paletted_texture_ext;
+    extensions[i++] = depth_texture_ext;
+    extensions[i++] = framebuffer_object_ext;
+    extensions[i++] = depth24_ext;
+    extensions[i++] = depth32_ext;
+    extensions[i++] = rgb8_rgba8_ext;
+    extensions[i++] = stencil1_ext;
+    extensions[i++] = stencil4_ext;
+    extensions[i++] = stencil8_ext;
+    extensions[i++] = egl_image_ext;
+    extensions[i++] = framebuffer_blit_ext;
+    extensions[i++] = draw_buffers_ext;
+    extensions[i++] = mapbuffer_ext;
+    extensions[i++] = map_buffer_range_ext;
+
+    if (ctx->base.texture_npot) {
+        extensions[i++] = texture_npot_ext;
+    }
+
+    if (ctx->base.texture_filter_anisotropic) {
+        extensions[i++] = texture_filter_anisotropic_ext;
+    }
+
+    if (ctx->base.packed_depth_stencil) {
+        extensions[i++] = packed_depth_stencil_ext;
+    }
+
+    if (ctx->base.vertex_arrays_supported) {
+        extensions[i++] = vertex_array_object_ext;
+    }
+
+    if (ctx->matrix_palette) {
+        extensions[i++] = matrix_palette_ext;
+    }
+
+    *num_extensions = i;
+
+    return extensions;
+}
+
 static void yagl_gles1_compressed_texture_formats_fill(GLint *params)
 {
     params[0] = GL_PALETTE4_RGB8_OES;
@@ -177,7 +263,9 @@ static void yagl_gles1_context_prepare(struct yagl_client_context *ctx)
     struct yagl_gles1_context *gles1_ctx = (struct yagl_gles1_context*)ctx;
     GLint num_texture_units = 0;
     int32_t size = 0;
-    char *extensions;
+    char *host_extensions;
+    const GLchar **extensions;
+    int num_extensions;
 
     YAGL_LOG_FUNC_ENTER(yagl_gles1_context_prepare, "%p", ctx);
 
@@ -215,14 +303,18 @@ static void yagl_gles1_context_prepare(struct yagl_client_context *ctx)
     yagl_host_glGetIntegerv(GL_MAX_TEXTURE_SIZE, &gles1_ctx->max_tex_size, 1, NULL);
 
     yagl_host_glGetString(GL_EXTENSIONS, NULL, 0, &size);
-    extensions = yagl_malloc0(size);
-    yagl_host_glGetString(GL_EXTENSIONS, extensions, size, NULL);
+    host_extensions = yagl_malloc0(size);
+    yagl_host_glGetString(GL_EXTENSIONS, host_extensions, size, NULL);
 
     gles1_ctx->matrix_palette =
-        (strstr(extensions, "GL_ARB_vertex_blend ") != NULL) &&
-        (strstr(extensions, "GL_ARB_matrix_palette ") != NULL);
+        (strstr(host_extensions, "GL_ARB_vertex_blend ") != NULL) &&
+        (strstr(host_extensions, "GL_ARB_matrix_palette ") != NULL);
 
-    yagl_free(extensions);
+    yagl_free(host_extensions);
+
+    extensions = yagl_gles1_context_get_extensions(gles1_ctx, &num_extensions);
+
+    yagl_gles_context_prepare_end(&gles1_ctx->base, extensions, num_extensions);
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
@@ -293,78 +385,6 @@ static const GLchar
         break;
     default:
         str = "";
-    }
-
-    return str;
-}
-
-static GLchar *yagl_gles1_context_get_extensions(struct yagl_gles_context *ctx)
-{
-    struct yagl_gles1_context *gles1_ctx = (struct yagl_gles1_context*)ctx;
-
-    const GLchar *default_ext =
-        "GL_OES_blend_subtract GL_OES_blend_equation_separate "
-        "GL_OES_blend_func_separate GL_OES_element_index_uint "
-        "GL_OES_texture_mirrored_repeat "
-        "GL_EXT_texture_format_BGRA8888 GL_OES_point_sprite "
-        "GL_OES_point_size_array GL_OES_stencil_wrap "
-        "GL_OES_compressed_paletted_texture "
-        "GL_OES_depth_texture "
-        "GL_OES_framebuffer_object GL_OES_depth24 GL_OES_depth32 "
-        "GL_OES_rgb8_rgba8 GL_OES_stencil1 GL_OES_stencil4 "
-        "GL_OES_stencil8 GL_OES_EGL_image GL_ANGLE_framebuffer_blit GL_EXT_draw_buffers "
-        "GL_OES_mapbuffer GL_EXT_map_buffer_range ";
-    const GLchar *packed_depth_stencil = "GL_OES_packed_depth_stencil ";
-    const GLchar *texture_npot = "GL_OES_texture_npot ";
-    const GLchar *texture_filter_anisotropic = "GL_EXT_texture_filter_anisotropic ";
-    const GLchar *vertex_array_object = "GL_OES_vertex_array_object ";
-    const GLchar *matrix_palette = "GL_OES_matrix_palette ";
-
-    size_t len = strlen(default_ext);
-    GLchar *str;
-
-    if (gles1_ctx->base.texture_npot) {
-        len += strlen(texture_npot);
-    }
-
-    if (gles1_ctx->base.texture_filter_anisotropic) {
-        len += strlen(texture_filter_anisotropic);
-    }
-
-    if (gles1_ctx->base.packed_depth_stencil) {
-        len += strlen(packed_depth_stencil);
-    }
-
-    if (gles1_ctx->base.vertex_arrays_supported) {
-        len += strlen(vertex_array_object);
-    }
-
-    if (gles1_ctx->matrix_palette) {
-        len += strlen(matrix_palette);
-    }
-
-    str = yagl_malloc0(len + 1);
-
-    strcpy(str, default_ext);
-
-    if (gles1_ctx->base.texture_npot) {
-        strcat(str, texture_npot);
-    }
-
-    if (gles1_ctx->base.texture_filter_anisotropic) {
-        strcat(str, texture_filter_anisotropic);
-    }
-
-    if (gles1_ctx->base.packed_depth_stencil) {
-        strcat(str, packed_depth_stencil);
-    }
-
-    if (gles1_ctx->base.vertex_arrays_supported) {
-        strcat(str, vertex_array_object);
-    }
-
-    if (gles1_ctx->matrix_palette) {
-        strcat(str, matrix_palette);
     }
 
     return str;
@@ -1258,7 +1278,6 @@ struct yagl_client_context *yagl_gles1_context_create(struct yagl_sharegroup *sg
     gles1_ctx->base.base.destroy = &yagl_gles1_context_destroy;
     gles1_ctx->base.create_arrays = &yagl_gles1_context_create_arrays;
     gles1_ctx->base.get_string = &yagl_gles1_context_get_string;
-    gles1_ctx->base.get_extensions = &yagl_gles1_context_get_extensions;
     gles1_ctx->base.compressed_tex_image = &yagl_gles1_context_compressed_tex_image;
     gles1_ctx->base.enable = &yagl_gles1_context_enable;
     gles1_ctx->base.is_enabled = &yagl_gles1_context_is_enabled;

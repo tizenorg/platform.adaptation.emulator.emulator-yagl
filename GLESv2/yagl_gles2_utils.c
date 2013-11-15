@@ -273,3 +273,78 @@ void yagl_gles2_set_name(const GLchar *from, GLint from_size,
         *length = tmp_length;
     }
 }
+
+char *yagl_gles2_shader_fix_extensions(const char *source,
+                                       int length,
+                                       const char **extensions,
+                                       int num_extensions,
+                                       int *patched_len)
+{
+    char *ext_first, *ext_last, *patched;
+    int i;
+
+    ext_first = strstr(source, "GL_");
+
+    if (!ext_first) {
+        /*
+         * Fast path.
+         * This should happen most of the time.
+         */
+
+        return NULL;
+    }
+
+    patched = yagl_malloc(length + 1);
+
+    memcpy(patched, source, length + 1);
+
+    ext_first = patched + (ext_first - source);
+
+    while (ext_first) {
+        int num_underscores = 0;
+
+        ext_last = ext_first + 3;
+
+        while (((*ext_last >= '0') && (*ext_last <= '9')) ||
+               ((*ext_last >= 'a') && (*ext_last <= 'z')) ||
+               ((*ext_last >= 'A') && (*ext_last <= 'Z')) ||
+               (*ext_last == '_')) {
+            num_underscores += (*ext_last == '_');
+            ++ext_last;
+        }
+
+        if ((num_underscores > 0) && (*(ext_last - 1) != '_')) {
+            int found = 0;
+
+            /*
+             * GL_xxx_yyy token found, match against extensions.
+             */
+
+            for (i = 0; i < num_extensions; ++i) {
+                if ((strncmp(extensions[i],
+                             ext_first,
+                             (ext_last - ext_first)) == 0) &&
+                    (strlen(extensions[i]) == (ext_last - ext_first))) {
+                    found = 1;
+                    break;
+                }
+            }
+
+            if (!found) {
+                /*
+                 * Replace "GL_" with "ND_" to make
+                 * sure it's not defined in preprocessor.
+                 */
+
+                *ext_first = 'N';
+                *(ext_first + 1) = 'D';
+            }
+        }
+
+        ext_first = strstr(ext_last, "GL_");
+    }
+
+    *patched_len = length;
+
+    return patched;
+}

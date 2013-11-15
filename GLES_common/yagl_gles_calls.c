@@ -667,7 +667,7 @@ YAGL_API const GLubyte *glGetString(GLenum name)
         break;
     case GL_EXTENSIONS:
         if (ctx) {
-            str = yagl_gles_context_get_extensions(ctx);
+            str = ctx->extension_string;
         } else {
             str = "";
         }
