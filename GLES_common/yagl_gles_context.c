@@ -995,7 +995,7 @@ void yagl_gles_context_draw_arrays(struct yagl_gles_context *ctx,
         goto out;
     }
 
-    if (count == 0) {
+    if ((count == 0) || (primcount == 0)) {
         goto out;
     }
 
@@ -1004,7 +1004,8 @@ void yagl_gles_context_draw_arrays(struct yagl_gles_context *ctx,
     for (i = 0; i < ctx->vao->num_arrays; ++i) {
         yagl_gles_array_transfer(&ctx->vao->arrays[i],
                                  first,
-                                 count);
+                                 count,
+                                 primcount);
     }
 
     ctx->draw_arrays(ctx, mode, first, count, primcount);
@@ -1031,7 +1032,7 @@ void yagl_gles_context_draw_elements(struct yagl_gles_context *ctx,
     }
 
     if (!yagl_gles_get_index_size(type, &index_size)) {
-        YAGL_SET_ERR(GL_INVALID_VALUE);
+        YAGL_SET_ERR(GL_INVALID_ENUM);
         goto out;
     }
 
@@ -1040,7 +1041,7 @@ void yagl_gles_context_draw_elements(struct yagl_gles_context *ctx,
         goto out;
     }
 
-    if (count == 0) {
+    if ((count == 0) || (primcount == 0)) {
         goto out;
     }
 
@@ -1071,7 +1072,8 @@ void yagl_gles_context_draw_elements(struct yagl_gles_context *ctx,
 
         yagl_gles_array_transfer(&ctx->vao->arrays[i],
                                  min_idx,
-                                 max_idx + 1 - min_idx);
+                                 max_idx + 1 - min_idx,
+                                 primcount);
     }
 
     if (!have_range) {

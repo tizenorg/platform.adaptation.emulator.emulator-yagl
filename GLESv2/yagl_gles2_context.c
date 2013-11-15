@@ -4,14 +4,20 @@
 #include "yagl_gles2_program.h"
 #include "yagl_gles2_utils.h"
 #include "yagl_gles_array.h"
+#include "yagl_gles_buffer.h"
 #include "yagl_gles_texture.h"
 #include "yagl_gles_texture_unit.h"
+#include "yagl_gles_vertex_array.h"
 #include "yagl_log.h"
 #include "yagl_malloc.h"
 #include "yagl_state.h"
 #include "yagl_host_gles_calls.h"
 #include <string.h>
 #include <stdlib.h>
+
+#define YAGL_SET_ERR(err) \
+    yagl_gles_context_set_error(&ctx->base, err); \
+    YAGL_LOG_ERROR("error = 0x%X", err)
 
 /*
  * We can't include GL/glext.h here
@@ -629,4 +635,56 @@ void yagl_gles2_context_unuse_program(struct yagl_gles2_context *ctx,
         yagl_gles2_program_release(ctx->program);
         ctx->program = NULL;
     }
+}
+
+int yagl_gles2_context_get_array_param(struct yagl_gles2_context *ctx,
+                                       GLuint index,
+                                       GLenum pname,
+                                       GLint *param)
+{
+    struct yagl_gles_array *array;
+
+    YAGL_LOG_FUNC_SET(yagl_gles2_context_get_array_param);
+
+    if (index >= ctx->base.num_arrays) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        return 1;
+    }
+
+    array = &ctx->base.vao->arrays[index];
+
+    switch (pname) {
+    case GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
+        *param = array->vbo ? array->vbo->base.local_name : 0;
+        break;
+    case GL_VERTEX_ATTRIB_ARRAY_ENABLED:
+        *param = array->enabled;
+        break;
+    case GL_VERTEX_ATTRIB_ARRAY_SIZE:
+        *param = array->size;
+        break;
+    case GL_VERTEX_ATTRIB_ARRAY_STRIDE:
+        *param = array->stride;
+        break;
+    case GL_VERTEX_ATTRIB_ARRAY_TYPE:
+        *param = array->type;
+        break;
+    case GL_VERTEX_ATTRIB_ARRAY_NORMALIZED:
+        *param = array->normalized;
+        break;
+    case GL_CURRENT_VERTEX_ATTRIB:
+        return 0;
+    case GL_VERTEX_ATTRIB_ARRAY_DIVISOR_EXT:
+        if (ctx->instanced_arrays) {
+            *param = array->divisor;
+        } else {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
+        }
+        break;
+    default:
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        break;
+    }
+
+    return 1;
 }

@@ -110,4 +110,9 @@ void yagl_gles2_context_use_program(struct yagl_gles2_context *ctx,
 void yagl_gles2_context_unuse_program(struct yagl_gles2_context *ctx,
                                       struct yagl_gles2_program *program);
 
+int yagl_gles2_context_get_array_param(struct yagl_gles2_context *ctx,
+                                       GLuint index,
+                                       GLenum pname,
+                                       GLint *param);
+
 #endif

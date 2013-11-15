@@ -107,6 +107,7 @@ void yagl_gles_array_set_divisor(struct yagl_gles_array *array, GLuint divisor);
 
 void yagl_gles_array_transfer(struct yagl_gles_array *array,
                               uint32_t first,
-                              uint32_t count);
+                              uint32_t count,
+                              GLsizei primcount);
 
 #endif

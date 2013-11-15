@@ -35,36 +35,6 @@
 
 #define YAGL_GET_CTX() YAGL_GET_CTX_IMPL(return)
 
-static int yagl_get_array_param(struct yagl_gles_array *array,
-                                GLenum pname,
-                                GLint *param)
-{
-    switch (pname) {
-    case GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
-        *param = array->vbo ? array->vbo->base.local_name : 0;
-        break;
-    case GL_VERTEX_ATTRIB_ARRAY_ENABLED:
-        *param = array->enabled;
-        break;
-    case GL_VERTEX_ATTRIB_ARRAY_SIZE:
-        *param = array->size;
-        break;
-    case GL_VERTEX_ATTRIB_ARRAY_STRIDE:
-        *param = array->stride;
-        break;
-    case GL_VERTEX_ATTRIB_ARRAY_TYPE:
-        *param = array->type;
-        break;
-    case GL_VERTEX_ATTRIB_ARRAY_NORMALIZED:
-        *param = array->normalized;
-        break;
-    default:
-        return 0;
-    }
-
-    return 1;
-}
-
 /*
  * TODO: Passthrough for now.
  * @{
@@ -996,7 +966,6 @@ out:
 
 YAGL_API void glGetVertexAttribfv(GLuint index, GLenum pname, GLfloat *params)
 {
-    struct yagl_gles_array *array;
     GLint param = 0;
     GLfloat tmp[100]; // This fits all cases.
     int32_t num = 0;
@@ -1005,19 +974,10 @@ YAGL_API void glGetVertexAttribfv(GLuint index, GLenum pname, GLfloat *params)
 
     YAGL_GET_CTX();
 
-    if (index >= ctx->base.num_arrays) {
-        YAGL_SET_ERR(GL_INVALID_VALUE);
-        goto out;
-    }
-
-    array = &ctx->base.vao->arrays[index];
-
-    if (!yagl_gles2_is_array_param_valid(pname)) {
-        YAGL_SET_ERR(GL_INVALID_ENUM);
-        goto out;
-    }
-
-    if (yagl_get_array_param(array, pname, &param)) {
+    if (yagl_gles2_context_get_array_param(ctx,
+                                           index,
+                                           pname,
+                                           &param)) {
         if (params) {
             params[0] = param;
         }
@@ -1028,13 +988,11 @@ YAGL_API void glGetVertexAttribfv(GLuint index, GLenum pname, GLfloat *params)
         }
     }
 
-out:
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
 YAGL_API void glGetVertexAttribiv(GLuint index, GLenum pname, GLint *params)
 {
-    struct yagl_gles_array *array;
     GLint tmp[100]; // This fits all cases.
     int32_t num = 0;
 
@@ -1042,26 +1000,17 @@ YAGL_API void glGetVertexAttribiv(GLuint index, GLenum pname, GLint *params)
 
     YAGL_GET_CTX();
 
-    if (index >= ctx->base.num_arrays) {
-        YAGL_SET_ERR(GL_INVALID_VALUE);
-        goto out;
-    }
-
-    array = &ctx->base.vao->arrays[index];
-
-    if (!yagl_gles2_is_array_param_valid(pname)) {
-        YAGL_SET_ERR(GL_INVALID_ENUM);
-        goto out;
-    }
-
-    if (!yagl_get_array_param(array, pname, params)) {
+    if (yagl_gles2_context_get_array_param(ctx,
+                                           index,
+                                           pname,
+                                           params)) {
+    } else {
         yagl_host_glGetVertexAttribiv(index, pname, tmp, sizeof(tmp)/sizeof(tmp[0]), &num);
         if (params) {
             memcpy(params, tmp, num * sizeof(tmp[0]));
         }
     }
 
-out:
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
@@ -2098,6 +2047,8 @@ YAGL_API YAGL_ALIAS(glDrawElementsInstanced, glDrawElementsInstancedEXT);
 
 YAGL_API void glVertexAttribDivisor(GLuint index, GLuint divisor)
 {
+    struct yagl_gles_array *array;
+
     YAGL_LOG_FUNC_ENTER_SPLIT2(glVertexAttribDivisor, GLuint, GLuint, index, divisor);
 
     YAGL_GET_CTX();
@@ -2106,6 +2057,15 @@ YAGL_API void glVertexAttribDivisor(GLuint index, GLuint divisor)
         YAGL_SET_ERR(GL_INVALID_OPERATION);
         goto out;
     }
+
+    if (index >= ctx->base.num_arrays) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    array = &ctx->base.vao->arrays[index];
+
+    yagl_gles_array_set_divisor(array, divisor);
 
 out:
     YAGL_LOG_FUNC_EXIT(NULL);

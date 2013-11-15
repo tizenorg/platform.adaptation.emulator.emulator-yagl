@@ -267,11 +267,14 @@ int yagl_gles_array_update_vbo(struct yagl_gles_array *array,
 void yagl_gles_array_set_divisor(struct yagl_gles_array *array, GLuint divisor)
 {
     array->divisor = divisor;
+
+    yagl_host_glVertexAttribDivisor(array->index, divisor);
 }
 
 void yagl_gles_array_transfer(struct yagl_gles_array *array,
                               uint32_t first,
-                              uint32_t count)
+                              uint32_t count,
+                              GLsizei primcount)
 {
     if (!array->enabled) {
         return;
@@ -290,6 +293,11 @@ void yagl_gles_array_transfer(struct yagl_gles_array *array,
         yagl_host_glBindBuffer(GL_ARRAY_BUFFER, 0);
     } else if (array->ptr) {
         const GLvoid *ptr = array->ptr;
+
+        if ((array->divisor > 0) && (primcount >= 0)) {
+            first = 0;
+            count = ((primcount - 1) / array->divisor) + 1;
+        }
 
         if (array->need_convert) {
             switch (array->type) {
