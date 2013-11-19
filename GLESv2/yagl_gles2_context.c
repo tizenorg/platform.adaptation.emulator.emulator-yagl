@@ -11,6 +11,7 @@
 #include "yagl_log.h"
 #include "yagl_malloc.h"
 #include "yagl_state.h"
+#include "yagl_texcompress.h"
 #include "yagl_host_gles_calls.h"
 #include <string.h>
 #include <stdlib.h>
@@ -257,6 +258,8 @@ void yagl_gles2_context_cleanup(struct yagl_gles2_context *ctx)
 {
     yagl_gles2_program_release(ctx->program);
 
+    yagl_free(ctx->compressed_texture_formats);
+
     yagl_gles_context_cleanup(&ctx->base);
 }
 
@@ -303,6 +306,15 @@ void yagl_gles2_context_prepare(struct yagl_gles2_context *ctx)
                             &ctx->num_compressed_texture_formats,
                             1, NULL);
 
+    ctx->compressed_texture_formats =
+        yagl_malloc0(ctx->num_compressed_texture_formats *
+                     sizeof(ctx->compressed_texture_formats[0]));
+
+    yagl_host_glGetIntegerv(GL_COMPRESSED_TEXTURE_FORMATS,
+                            (GLint*)ctx->compressed_texture_formats,
+                            ctx->num_compressed_texture_formats,
+                            NULL);
+
     /*
      * We don't support it for now...
      */
@@ -344,26 +356,190 @@ struct yagl_gles_array
     return arrays;
 }
 
-GLenum yagl_gles2_context_compressed_tex_image(struct yagl_gles_context *ctx,
-                                               GLenum target,
-                                               GLint level,
-                                               GLenum internalformat,
-                                               GLsizei width,
-                                               GLsizei height,
-                                               GLint border,
-                                               GLsizei imageSize,
-                                               const GLvoid *data)
+void yagl_gles2_context_compressed_tex_image(struct yagl_gles_context *gles_ctx,
+                                             GLenum target,
+                                             GLint level,
+                                             GLenum internalformat,
+                                             GLsizei width,
+                                             GLsizei height,
+                                             GLint border,
+                                             GLsizei imageSize,
+                                             const GLvoid *data)
 {
-    yagl_host_glCompressedTexImage2D(target,
-                                     level,
-                                     internalformat,
-                                     width,
-                                     height,
-                                     border,
-                                     data,
-                                     imageSize);
+    struct yagl_gles2_context *ctx = (struct yagl_gles2_context*)gles_ctx;
+    struct yagl_texcompress_format *tc_format;
+    GLsizei src_stride;
+    GLsizei dst_stride;
+    GLsizei dst_size;
+    int i;
+    uint8_t *buff;
+    GLint saved_alignment;
 
-    return GL_NO_ERROR;
+    YAGL_LOG_FUNC_SET(glCompressedTexImage2D);
+
+    tc_format = yagl_texcompress_get_format(internalformat);
+
+    if (!tc_format) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        return;
+    }
+
+    if (!yagl_texcompress_get_info(tc_format,
+                                   width,
+                                   height,
+                                   imageSize,
+                                   &src_stride,
+                                   &dst_stride,
+                                   &dst_size)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        return;
+    }
+
+    /*
+     * Check if host hw supports this format.
+     */
+
+    for (i = 0; i < ctx->num_compressed_texture_formats; ++i) {
+        if (ctx->compressed_texture_formats[i] == internalformat) {
+            /*
+             * Let the host do the work.
+             */
+            yagl_host_glCompressedTexImage2D(target,
+                                             level,
+                                             internalformat,
+                                             width,
+                                             height,
+                                             border,
+                                             data,
+                                             imageSize);
+            return;
+        }
+    }
+
+    buff = yagl_get_tmp_buffer(dst_size);
+
+    tc_format->unpack(tc_format,
+                      data,
+                      width,
+                      height,
+                      src_stride,
+                      buff,
+                      dst_stride);
+
+    saved_alignment = gles_ctx->unpack_alignment;
+
+    if (saved_alignment != 1) {
+        yagl_host_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    }
+
+    yagl_host_glTexImage2D(target,
+                           level,
+                           tc_format->dst_internalformat,
+                           width,
+                           height,
+                           border,
+                           tc_format->dst_format,
+                           tc_format->dst_type,
+                           buff,
+                           dst_size);
+
+    if (saved_alignment != 1) {
+        yagl_host_glPixelStorei(GL_UNPACK_ALIGNMENT, saved_alignment);
+    }
+}
+
+void yagl_gles2_context_compressed_tex_sub_image(struct yagl_gles_context *gles_ctx,
+                                                 GLenum target,
+                                                 GLint level,
+                                                 GLint xoffset,
+                                                 GLint yoffset,
+                                                 GLsizei width,
+                                                 GLsizei height,
+                                                 GLenum format,
+                                                 GLsizei imageSize,
+                                                 const GLvoid *data)
+{
+    struct yagl_gles2_context *ctx = (struct yagl_gles2_context*)gles_ctx;
+    struct yagl_texcompress_format *tc_format;
+    GLsizei src_stride;
+    GLsizei dst_stride;
+    GLsizei dst_size;
+    int i;
+    uint8_t *buff;
+    GLint saved_alignment;
+
+    YAGL_LOG_FUNC_SET(glCompressedTexSubImage2D);
+
+    tc_format = yagl_texcompress_get_format(format);
+
+    if (!tc_format) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        return;
+    }
+
+    if (!yagl_texcompress_get_info(tc_format,
+                                   width,
+                                   height,
+                                   imageSize,
+                                   &src_stride,
+                                   &dst_stride,
+                                   &dst_size)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        return;
+    }
+
+    /*
+     * Check if host hw supports this format.
+     */
+
+    for (i = 0; i < ctx->num_compressed_texture_formats; ++i) {
+        if (ctx->compressed_texture_formats[i] == format) {
+            /*
+             * Let the host do the work.
+             */
+            yagl_host_glCompressedTexSubImage2D(target,
+                                                level,
+                                                xoffset,
+                                                yoffset,
+                                                width,
+                                                height,
+                                                format,
+                                                data,
+                                                imageSize);
+            return;
+        }
+    }
+
+    buff = yagl_get_tmp_buffer(dst_size);
+
+    tc_format->unpack(tc_format,
+                      data,
+                      width,
+                      height,
+                      src_stride,
+                      buff,
+                      dst_stride);
+
+    saved_alignment = gles_ctx->unpack_alignment;
+
+    if (saved_alignment != 1) {
+        yagl_host_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    }
+
+    yagl_host_glTexSubImage2D(target,
+                              level,
+                              xoffset,
+                              yoffset,
+                              width,
+                              height,
+                              tc_format->dst_format,
+                              tc_format->dst_type,
+                              buff,
+                              dst_size);
+
+    if (saved_alignment != 1) {
+        yagl_host_glPixelStorei(GL_UNPACK_ALIGNMENT, saved_alignment);
+    }
 }
 
 int yagl_gles2_context_get_integerv(struct yagl_gles_context *ctx,
@@ -381,7 +557,7 @@ int yagl_gles2_context_get_integerv(struct yagl_gles_context *ctx,
         *num_params = 1;
         break;
     case GL_NUM_COMPRESSED_TEXTURE_FORMATS:
-        *params = gles2_ctx->num_compressed_texture_formats;
+        *params = yagl_texcompress_get_format_names(NULL);
         *num_params = 1;
         break;
     case GL_TEXTURE_BINDING_CUBE_MAP:
@@ -402,6 +578,9 @@ int yagl_gles2_context_get_integerv(struct yagl_gles_context *ctx,
         *params = ctx->num_arrays;
         *num_params = 1;
         break;
+    case GL_COMPRESSED_TEXTURE_FORMATS:
+        *num_params = yagl_texcompress_get_format_names((GLenum*)params);
+        break;
     default:
         processed = 0;
         break;
@@ -414,9 +593,6 @@ int yagl_gles2_context_get_integerv(struct yagl_gles_context *ctx,
     switch (pname) {
     case GL_MAX_TEXTURE_SIZE:
         *num_params = 1;
-        break;
-    case GL_COMPRESSED_TEXTURE_FORMATS:
-        *num_params = gles2_ctx->num_compressed_texture_formats;
         break;
     case GL_DITHER:
         *num_params = 1;
@@ -602,6 +778,7 @@ struct yagl_client_context *yagl_gles2_context_create(struct yagl_sharegroup *sg
     gles2_ctx->base.create_arrays = &yagl_gles2_context_create_arrays;
     gles2_ctx->base.get_string = &yagl_gles2_context_get_string;
     gles2_ctx->base.compressed_tex_image = &yagl_gles2_context_compressed_tex_image;
+    gles2_ctx->base.compressed_tex_sub_image = &yagl_gles2_context_compressed_tex_sub_image;
     gles2_ctx->base.enable = &yagl_gles2_context_enable;
     gles2_ctx->base.is_enabled = &yagl_gles2_context_is_enabled;
     gles2_ctx->base.get_integerv = &yagl_gles2_context_get_integerv;

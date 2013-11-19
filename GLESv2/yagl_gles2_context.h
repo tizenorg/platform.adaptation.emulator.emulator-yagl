@@ -25,6 +25,7 @@ struct yagl_gles2_context
      */
     int gen_locations;
 
+    GLenum *compressed_texture_formats;
     int num_compressed_texture_formats;
 
     int num_shader_binary_formats;
@@ -58,15 +59,26 @@ void yagl_gles2_context_prepare(struct yagl_gles2_context *ctx);
 struct yagl_gles_array
     *yagl_gles2_context_create_arrays(struct yagl_gles_context *ctx);
 
-GLenum yagl_gles2_context_compressed_tex_image(struct yagl_gles_context *ctx,
-                                               GLenum target,
-                                               GLint level,
-                                               GLenum internalformat,
-                                               GLsizei width,
-                                               GLsizei height,
-                                               GLint border,
-                                               GLsizei imageSize,
-                                               const GLvoid *data);
+void yagl_gles2_context_compressed_tex_image(struct yagl_gles_context *ctx,
+                                             GLenum target,
+                                             GLint level,
+                                             GLenum internalformat,
+                                             GLsizei width,
+                                             GLsizei height,
+                                             GLint border,
+                                             GLsizei imageSize,
+                                             const GLvoid *data);
+
+void yagl_gles2_context_compressed_tex_sub_image(struct yagl_gles_context *ctx,
+                                                 GLenum target,
+                                                 GLint level,
+                                                 GLint xoffset,
+                                                 GLint yoffset,
+                                                 GLsizei width,
+                                                 GLsizei height,
+                                                 GLenum format,
+                                                 GLsizei imageSize,
+                                                 const GLvoid *data);
 
 int yagl_gles2_context_get_integerv(struct yagl_gles_context *ctx,
                                     GLenum pname,

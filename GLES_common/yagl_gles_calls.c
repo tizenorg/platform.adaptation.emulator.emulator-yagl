@@ -1129,8 +1129,6 @@ YAGL_API void glColorMask(GLboolean red,
 
 YAGL_API void glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid *data)
 {
-    GLenum res;
-
     YAGL_LOG_FUNC_ENTER_SPLIT8(glCompressedTexImage2D, GLenum, GLint, GLenum, GLsizei, GLsizei, GLint, GLsizei, const GLvoid*, target, level, internalformat, width, height, border, imageSize, data);
 
     YAGL_GET_CTX();
@@ -1151,19 +1149,15 @@ YAGL_API void glCompressedTexImage2D(GLenum target, GLint level, GLenum internal
         }
     }
 
-    res = ctx->compressed_tex_image(ctx,
-                                    target,
-                                    level,
-                                    internalformat,
-                                    width,
-                                    height,
-                                    border,
-                                    imageSize,
-                                    data);
-
-    if (res != GL_NO_ERROR) {
-        YAGL_SET_ERR(res);
-    }
+    ctx->compressed_tex_image(ctx,
+                              target,
+                              level,
+                              internalformat,
+                              width,
+                              height,
+                              border,
+                              imageSize,
+                              data);
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
@@ -1174,20 +1168,16 @@ YAGL_API void glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffse
 
     YAGL_GET_CTX();
 
-    if (ctx->base.client_api == yagl_client_api_gles1) {
-        /* No formats are supported by this call in GLES1 API */
-        YAGL_SET_ERR(GL_INVALID_OPERATION);
-    } else {
-        yagl_host_glCompressedTexSubImage2D(target,
-                                            level,
-                                            xoffset,
-                                            yoffset,
-                                            width,
-                                            height,
-                                            format,
-                                            data,
-                                            imageSize);
-    }
+    ctx->compressed_tex_sub_image(ctx,
+                                  target,
+                                  level,
+                                  xoffset,
+                                  yoffset,
+                                  width,
+                                  height,
+                                  format,
+                                  imageSize,
+                                  data);
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }

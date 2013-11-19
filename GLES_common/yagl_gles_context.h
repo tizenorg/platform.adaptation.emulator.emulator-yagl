@@ -22,15 +22,26 @@ struct yagl_gles_context
     const GLchar *(*get_string)(struct yagl_gles_context */*ctx*/,
                                 GLenum /*name*/);
 
-    GLenum (*compressed_tex_image)(struct yagl_gles_context */*ctx*/,
-                                   GLenum /*target*/,
-                                   GLint /*level*/,
-                                   GLenum /*internalformat*/,
-                                   GLsizei /*width*/,
-                                   GLsizei /*height*/,
-                                   GLint /*border*/,
-                                   GLsizei /*imageSize*/,
-                                   const GLvoid */*data*/);
+    void (*compressed_tex_image)(struct yagl_gles_context */*ctx*/,
+                                 GLenum /*target*/,
+                                 GLint /*level*/,
+                                 GLenum /*internalformat*/,
+                                 GLsizei /*width*/,
+                                 GLsizei /*height*/,
+                                 GLint /*border*/,
+                                 GLsizei /*imageSize*/,
+                                 const GLvoid */*data*/);
+
+    void (*compressed_tex_sub_image)(struct yagl_gles_context */*ctx*/,
+                                     GLenum /*target*/,
+                                     GLint /*level*/,
+                                     GLint /*xoffset*/,
+                                     GLint /*yoffset*/,
+                                     GLsizei /*width*/,
+                                     GLsizei /*height*/,
+                                     GLenum /*format*/,
+                                     GLsizei /*imageSize*/,
+                                     const GLvoid */*data*/);
 
     int (*enable)(struct yagl_gles_context */*ctx*/,
                   GLenum /*cap*/,

@@ -15,6 +15,10 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#define YAGL_SET_ERR(err) \
+    yagl_gles_context_set_error(ctx, err); \
+    YAGL_LOG_ERROR("error = 0x%X", err)
+
 #define YAGL_GLES1_NUM_COMP_TEX_FORMATS 10
 
 static const GLchar *blend_subtract_ext = "GL_OES_blend_subtract";
@@ -637,21 +641,24 @@ static void yagl_gles1_cpal_tex_uncomp_and_apply(struct yagl_gles_context *ctx,
     }
 }
 
-static GLenum yagl_gles1_context_compressed_tex_image(struct yagl_gles_context *ctx,
-                                                      GLenum target,
-                                                      GLint level,
-                                                      GLenum internalformat,
-                                                      GLsizei width,
-                                                      GLsizei height,
-                                                      GLint border,
-                                                      GLsizei imageSize,
-                                                      const GLvoid *data)
+static void yagl_gles1_context_compressed_tex_image(struct yagl_gles_context *ctx,
+                                                    GLenum target,
+                                                    GLint level,
+                                                    GLenum internalformat,
+                                                    GLsizei width,
+                                                    GLsizei height,
+                                                    GLint border,
+                                                    GLsizei imageSize,
+                                                    const GLvoid *data)
 {
     const int max_tex_size = ((struct yagl_gles1_context*)ctx)->max_tex_size;
     YaglGles1PalFmtDesc fmt_desc;
 
+    YAGL_LOG_FUNC_SET(glCompressedTexImage2D);
+
     if (target != GL_TEXTURE_2D) {
-        return GL_INVALID_ENUM;
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        return;
     }
 
     switch (internalformat) {
@@ -662,7 +669,8 @@ static GLenum yagl_gles1_context_compressed_tex_image(struct yagl_gles_context *
             !yagl_gles1_tex_dims_valid(width, height, max_tex_size) ||
             border != 0 || (imageSize !=
                 yagl_gles1_cpal_tex_size(&fmt_desc, width, height, -level))) {
-            return GL_INVALID_VALUE;
+            YAGL_SET_ERR(GL_INVALID_VALUE);
+            return;
         }
 
         yagl_gles1_cpal_tex_uncomp_and_apply(ctx,
@@ -673,10 +681,26 @@ static GLenum yagl_gles1_context_compressed_tex_image(struct yagl_gles_context *
                                              data);
         break;
     default:
-        return GL_INVALID_ENUM;
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        return;
     }
+}
 
-    return GL_NO_ERROR;
+static void yagl_gles1_context_compressed_tex_sub_image(struct yagl_gles_context *ctx,
+                                                        GLenum target,
+                                                        GLint level,
+                                                        GLint xoffset,
+                                                        GLint yoffset,
+                                                        GLsizei width,
+                                                        GLsizei height,
+                                                        GLenum format,
+                                                        GLsizei imageSize,
+                                                        const GLvoid *data)
+{
+    YAGL_LOG_FUNC_SET(glCompressedTexSubImage2D);
+
+    /* No formats are supported by this call in GLES1 API */
+    YAGL_SET_ERR(GL_INVALID_OPERATION);
 }
 
 static int yagl_gles1_context_enable(struct yagl_gles_context *ctx,
@@ -1279,6 +1303,7 @@ struct yagl_client_context *yagl_gles1_context_create(struct yagl_sharegroup *sg
     gles1_ctx->base.create_arrays = &yagl_gles1_context_create_arrays;
     gles1_ctx->base.get_string = &yagl_gles1_context_get_string;
     gles1_ctx->base.compressed_tex_image = &yagl_gles1_context_compressed_tex_image;
+    gles1_ctx->base.compressed_tex_sub_image = &yagl_gles1_context_compressed_tex_sub_image;
     gles1_ctx->base.enable = &yagl_gles1_context_enable;
     gles1_ctx->base.is_enabled = &yagl_gles1_context_is_enabled;
     gles1_ctx->base.get_integerv = &yagl_gles1_context_get_integerv;
