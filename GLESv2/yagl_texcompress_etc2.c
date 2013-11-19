@@ -703,7 +703,7 @@ void yagl_texcompress_etc2_unpack_rg11(uint8_t *dst_row,
                 dst += comps * comp_size;
              }
           }
-          /* green component */
+          /* green/blue component */
           etc2_r11_parse_block(&block, src + 8);
 
           for (j = 0; j < bh; j++) {
@@ -711,6 +711,7 @@ void yagl_texcompress_etc2_unpack_rg11(uint8_t *dst_row,
                             x * comps * comp_size;
              for (i = 0; i < bw; i++) {
                 etc2_r11_fetch_texel(&block, i, j, dst + comp_size);
+                *(GLushort*)(dst + comp_size * 2) = 0;
                 dst += comps * comp_size;
              }
           }
@@ -750,7 +751,7 @@ void yagl_texcompress_etc2_unpack_signed_rg11(uint8_t *dst_row,
                 dst += comps * comp_size;
              }
           }
-          /* green component */
+          /* green/blue component */
           etc2_r11_parse_block(&block, src + 8);
 
           for (j = 0; j < bh; j++) {
@@ -758,6 +759,7 @@ void yagl_texcompress_etc2_unpack_signed_rg11(uint8_t *dst_row,
                             x * comps * comp_size;
              for (i = 0; i < bw; i++) {
                 etc2_signed_r11_fetch_texel(&block, i, j, dst + comp_size);
+                *(GLushort*)(dst + comp_size * 2) = 0;
                 dst += comps * comp_size;
              }
           }
