@@ -19,9 +19,6 @@ int yagl_gles_is_alignment_valid(GLint alignment);
 
 int yagl_gles_get_index_size(GLenum type, int *index_size);
 
-int yagl_gles_validate_texture_target(GLenum target,
-    yagl_gles_texture_target *texture_target);
-
 int yagl_gles_validate_framebuffer_attachment(GLenum attachment,
     int num_color_attachments,
     yagl_gles_framebuffer_attachment *framebuffer_attachment);

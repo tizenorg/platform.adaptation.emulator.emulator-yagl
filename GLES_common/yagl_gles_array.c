@@ -38,6 +38,7 @@ static __inline int yagl_get_el_size(GLenum type,
         *el_size = 4;
         break;
     case GL_HALF_FLOAT_OES:
+    case GL_HALF_FLOAT:
         *el_size = 2;
         if (actual_type) {
             *actual_type = GL_HALF_FLOAT;

@@ -10,6 +10,7 @@ set(SOURCES
     yagl_gles_context.c
     yagl_gles_validate.c
     yagl_gles_calls.c
+    yagl_gles_utils.c
     yagl_host_gles_calls.c
 )
 

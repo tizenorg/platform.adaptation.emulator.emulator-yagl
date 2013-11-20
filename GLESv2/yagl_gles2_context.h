@@ -105,6 +105,10 @@ void yagl_gles2_context_draw_elements(struct yagl_gles_context *ctx,
                                       int32_t indices_count,
                                       GLsizei primcount);
 
+int yagl_gles2_context_validate_texture_target(struct yagl_gles_context *ctx,
+                                               GLenum target,
+                                               yagl_gles_texture_target *texture_target);
+
 char *yagl_gles2_context_shader_patch(struct yagl_gles2_context *ctx,
                                       const char *source,
                                       int len,

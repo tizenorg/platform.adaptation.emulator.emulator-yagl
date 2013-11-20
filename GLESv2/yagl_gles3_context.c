@@ -13,6 +13,12 @@
 #include <stdlib.h>
 #include <assert.h>
 
+/*
+ * We can't include GLES2/gl2ext.h here
+ */
+#define GL_HALF_FLOAT_OES 0x8D61
+#define GL_BGRA_EXT 0x80E1
+
 #define YAGL_SET_ERR(err) \
     yagl_gles_context_set_error(&ctx->base.base, err); \
     YAGL_LOG_ERROR("error = 0x%X", err)
@@ -486,6 +492,144 @@ static int yagl_gles3_context_acquire_binded_buffer(struct yagl_gles_context *ct
     return 1;
 }
 
+static int yagl_gles3_context_validate_texture_target(struct yagl_gles_context *ctx,
+                                                      GLenum target,
+                                                      yagl_gles_texture_target *texture_target)
+{
+    return yagl_gles2_context_validate_texture_target(ctx,
+                                                      target,
+                                                      texture_target);
+}
+
+static int yagl_gles3_context_get_stride(struct yagl_gles_context *ctx,
+                                         GLsizei alignment,
+                                         GLsizei width,
+                                         GLenum format,
+                                         GLenum type,
+                                         GLsizei *stride)
+{
+    int num_components = 0;
+    GLsizei bpp = 0;
+
+    switch (format) {
+    case GL_RGB:
+        num_components = 3;
+        break;
+    case GL_RGBA:
+        num_components = 4;
+        break;
+    case GL_BGRA_EXT:
+        num_components = 4;
+        break;
+    case GL_RED:
+        num_components = 1;
+        break;
+    case GL_RED_INTEGER:
+        num_components = 1;
+        break;
+    case GL_RG:
+        num_components = 2;
+        break;
+    case GL_RG_INTEGER:
+        num_components = 2;
+        break;
+    case GL_RGB_INTEGER:
+        num_components = 3;
+        break;
+    case GL_RGBA_INTEGER:
+        num_components = 4;
+        break;
+    case GL_DEPTH_STENCIL:
+        if ((type != GL_FLOAT_32_UNSIGNED_INT_24_8_REV)) {
+            return 0;
+        }
+        num_components = 1;
+        break;
+    case GL_DEPTH_COMPONENT:
+        if (type != GL_FLOAT) {
+            return 0;
+        }
+        num_components = 1;
+        break;
+    default:
+        break;
+    }
+
+    switch (type) {
+    case GL_UNSIGNED_BYTE:
+    case GL_BYTE:
+        bpp = num_components;
+        break;
+    case GL_UNSIGNED_SHORT:
+    case GL_SHORT:
+        if ((format != GL_RED_INTEGER) &&
+            (format != GL_RG_INTEGER) &&
+            (format != GL_RGB_INTEGER) &&
+            (format != GL_RGBA_INTEGER)) {
+            return 0;
+        }
+        bpp = num_components * 2;
+        break;
+    case GL_UNSIGNED_INT:
+    case GL_INT:
+        if ((format != GL_RED_INTEGER) &&
+            (format != GL_RG_INTEGER) &&
+            (format != GL_RGB_INTEGER) &&
+            (format != GL_RGBA_INTEGER)) {
+            return 0;
+        }
+        bpp = num_components * 4;
+        break;
+    case GL_FLOAT:
+        if ((format == GL_RED_INTEGER) ||
+            (format == GL_RG_INTEGER) ||
+            (format == GL_RGB_INTEGER) ||
+            (format == GL_RGBA_INTEGER)) {
+            return 0;
+        }
+        bpp = num_components * 4;
+        break;
+    case GL_HALF_FLOAT_OES:
+    case GL_HALF_FLOAT:
+        if ((format == GL_RED_INTEGER) ||
+            (format == GL_RG_INTEGER) ||
+            (format == GL_RGB_INTEGER) ||
+            (format == GL_RGBA_INTEGER)) {
+            return 0;
+        }
+        bpp = num_components * 2;
+        break;
+    case GL_UNSIGNED_INT_2_10_10_10_REV:
+        if ((format != GL_RGBA) &&
+            (format != GL_RGBA_INTEGER)) {
+            return 0;
+        }
+        bpp = 4;
+        break;
+    case GL_UNSIGNED_INT_10F_11F_11F_REV:
+    case GL_UNSIGNED_INT_5_9_9_9_REV:
+        if (format != GL_RGB) {
+            return 0;
+        }
+        bpp = 4;
+        break;
+    case GL_FLOAT_32_UNSIGNED_INT_24_8_REV:
+        if (format != GL_DEPTH_STENCIL) {
+            return 0;
+        }
+        bpp = 4;
+        break;
+    default:
+        return 0;
+    }
+
+    assert(alignment > 0);
+
+    *stride = ((width * bpp) + alignment - 1) & ~(alignment - 1);
+
+    return 1;
+}
+
 static char *yagl_gles3_context_shader_patch(struct yagl_gles2_context *ctx,
                                              const char *source,
                                              int len,
@@ -559,6 +703,8 @@ struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg
     gles3_ctx->base.base.bind_buffer = &yagl_gles3_context_bind_buffer;
     gles3_ctx->base.base.unbind_buffer = &yagl_gles3_context_unbind_buffer;
     gles3_ctx->base.base.acquire_binded_buffer = &yagl_gles3_context_acquire_binded_buffer;
+    gles3_ctx->base.base.validate_texture_target = &yagl_gles3_context_validate_texture_target;
+    gles3_ctx->base.base.get_stride = &yagl_gles3_context_get_stride;
     gles3_ctx->base.shader_patch = &yagl_gles3_context_shader_patch;
 
     YAGL_LOG_FUNC_EXIT("%p", gles3_ctx);

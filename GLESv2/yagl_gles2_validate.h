@@ -5,4 +5,6 @@
 
 int yagl_gles2_is_shader_type_valid(GLenum type);
 
+int yagl_gles2_is_texture_target_3d(GLenum target);
+
 #endif

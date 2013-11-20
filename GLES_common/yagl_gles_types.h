@@ -6,10 +6,11 @@
 typedef enum
 {
     yagl_gles_texture_target_2d = 0,
-    yagl_gles_texture_target_cubemap = 1
+    yagl_gles_texture_target_3d = 1,
+    yagl_gles_texture_target_cubemap = 2
 } yagl_gles_texture_target;
 
-#define YAGL_NUM_GLES_TEXTURE_TARGETS 2
+#define YAGL_NUM_GLES_TEXTURE_TARGETS 3
 
 typedef enum
 {

@@ -19,6 +19,8 @@ int yagl_gles_is_blend_equation_valid(GLenum mode)
     case GL_FUNC_ADD:
     case GL_FUNC_SUBTRACT:
     case GL_FUNC_REVERSE_SUBTRACT:
+    case GL_MIN:
+    case GL_MAX:
         return 1;
     default:
         return 0;
@@ -117,23 +119,6 @@ int yagl_gles_get_index_size(GLenum type, int *index_size)
     default:
         return 0;
     }
-    return 1;
-}
-
-int yagl_gles_validate_texture_target(GLenum target,
-    yagl_gles_texture_target *texture_target)
-{
-    switch (target) {
-    case GL_TEXTURE_2D:
-        *texture_target = yagl_gles_texture_target_2d;
-        break;
-    case GL_TEXTURE_CUBE_MAP:
-        *texture_target = yagl_gles_texture_target_cubemap;
-        break;
-    default:
-        return 0;
-    }
-
     return 1;
 }
 

@@ -95,6 +95,17 @@ struct yagl_gles_context
                                  GLenum /*target*/,
                                  struct yagl_gles_buffer **/*buffer*/);
 
+    int (*validate_texture_target)(struct yagl_gles_context */*ctx*/,
+                                   GLenum /*target*/,
+                                   yagl_gles_texture_target */*texture_target*/);
+
+    int (*get_stride)(struct yagl_gles_context */*ctx*/,
+                      GLsizei /*alignment*/,
+                      GLsizei /*width*/,
+                      GLenum /*format*/,
+                      GLenum /*type*/,
+                      GLsizei */*stride*/);
+
     struct yagl_namespace framebuffers;
 
     struct yagl_namespace vertex_arrays;
@@ -207,11 +218,22 @@ void yagl_gles_context_set_error(struct yagl_gles_context *ctx, GLenum error);
 
 GLenum yagl_gles_context_get_error(struct yagl_gles_context *ctx);
 
+int yagl_gles_context_get_stride(struct yagl_gles_context *ctx,
+                                 GLsizei alignment,
+                                 GLsizei width,
+                                 GLenum format,
+                                 GLenum type,
+                                 GLsizei *stride);
+
 void yagl_gles_context_bind_vertex_array(struct yagl_gles_context *ctx,
                                          struct yagl_gles_vertex_array *va);
 
 void yagl_gles_context_unbind_vertex_array(struct yagl_gles_context *ctx,
                                            yagl_object_name va_local_name);
+
+int yagl_gles_context_validate_texture_target(struct yagl_gles_context *ctx,
+                                              GLenum target,
+                                              yagl_gles_texture_target *texture_target);
 
 void yagl_gles_context_set_active_texture(struct yagl_gles_context *ctx,
                                           GLenum texture);

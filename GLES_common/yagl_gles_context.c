@@ -19,6 +19,11 @@
 #include <string.h>
 #include <assert.h>
 
+/*
+ * We can't include GLES2/gl2ext.h here
+ */
+#define GL_HALF_FLOAT_OES 0x8D61
+
 #define YAGL_SET_ERR(err) \
     yagl_gles_context_set_error(ctx, err); \
     YAGL_LOG_ERROR("error = 0x%X", err)
@@ -309,6 +314,108 @@ GLenum yagl_gles_context_get_error(struct yagl_gles_context *ctx)
     return error;
 }
 
+int yagl_gles_context_get_stride(struct yagl_gles_context *ctx,
+                                 GLsizei alignment,
+                                 GLsizei width,
+                                 GLenum format,
+                                 GLenum type,
+                                 GLsizei *stride)
+{
+    int num_components = 0;
+    GLsizei bpp = 0;
+
+    switch (format) {
+    case GL_ALPHA:
+        num_components = 4; /* This gets converted to BGRA. */
+        break;
+    case GL_RGB:
+        num_components = 3;
+        break;
+    case GL_RGBA:
+        num_components = 4;
+        break;
+    case GL_BGRA_EXT:
+        num_components = 4;
+        break;
+    case GL_LUMINANCE:
+        num_components = 4; /* This gets converted to BGRA. */
+        break;
+    case GL_LUMINANCE_ALPHA:
+        num_components = 4; /* This gets converted to BGRA. */
+        break;
+    case GL_DEPTH_STENCIL_EXT:
+        if ((type != GL_UNSIGNED_INT_24_8_EXT)) {
+            goto fail;
+        }
+        num_components = 1;
+        break;
+    case GL_DEPTH_COMPONENT:
+        if ((type != GL_UNSIGNED_SHORT) && (type != GL_UNSIGNED_INT)) {
+            goto fail;
+        }
+        num_components = 1;
+        break;
+    default:
+        goto fail;
+    }
+
+    switch (type) {
+    case GL_UNSIGNED_BYTE:
+        bpp = num_components;
+        break;
+    case GL_UNSIGNED_SHORT_5_6_5:
+        if (format != GL_RGB) {
+            goto fail;
+        }
+        bpp = 2;
+        break;
+    case GL_UNSIGNED_SHORT_4_4_4_4:
+    case GL_UNSIGNED_SHORT_5_5_5_1:
+        if (format != GL_RGBA) {
+            goto fail;
+        }
+        bpp = 2;
+        break;
+    case GL_UNSIGNED_INT_24_8_EXT:
+        if (format != GL_DEPTH_STENCIL_EXT) {
+            goto fail;
+        }
+        bpp = num_components * 4;
+        break;
+    case GL_UNSIGNED_SHORT:
+        if (format != GL_DEPTH_COMPONENT) {
+            goto fail;
+        }
+        bpp = num_components * 2;
+        break;
+    case GL_UNSIGNED_INT:
+        if (format != GL_DEPTH_COMPONENT) {
+            goto fail;
+        }
+        bpp = num_components * 4;
+        break;
+    case GL_FLOAT:
+        bpp = num_components * 4;
+        break;
+    case GL_HALF_FLOAT_OES:
+    case GL_HALF_FLOAT:
+        bpp = num_components * 2;
+        break;
+    default:
+        goto fail;
+    }
+
+    assert(alignment > 0);
+
+    *stride = ((width * bpp) + alignment - 1) & ~(alignment - 1);
+
+    return 1;
+
+fail:
+    return ctx->get_stride(ctx, alignment, width,
+                           format, type, stride);
+}
+
 void yagl_gles_context_bind_vertex_array(struct yagl_gles_context *ctx,
                                          struct yagl_gles_vertex_array *va)
 {
@@ -332,6 +439,21 @@ void yagl_gles_context_unbind_vertex_array(struct yagl_gles_context *ctx,
         yagl_gles_vertex_array_release(ctx->vao);
         ctx->vao = ctx->va_zero;
     }
+}
+
+int yagl_gles_context_validate_texture_target(struct yagl_gles_context *ctx,
+                                              GLenum target,
+                                              yagl_gles_texture_target *texture_target)
+{
+    switch (target) {
+    case GL_TEXTURE_2D:
+        *texture_target = yagl_gles_texture_target_2d;
+        break;
+    default:
+        return ctx->validate_texture_target(ctx, target, texture_target);
+    }
+
+    return 1;
 }
 
 void yagl_gles_context_set_active_texture(struct yagl_gles_context *ctx,
@@ -383,7 +505,7 @@ void yagl_gles_context_bind_texture(struct yagl_gles_context *ctx,
 
     YAGL_LOG_FUNC_SET(glBindTexture);
 
-    if (!yagl_gles_validate_texture_target(target, &texture_target)) {
+    if (!yagl_gles_context_validate_texture_target(ctx, target, &texture_target)) {
         YAGL_SET_ERR(GL_INVALID_ENUM);
         return;
     }

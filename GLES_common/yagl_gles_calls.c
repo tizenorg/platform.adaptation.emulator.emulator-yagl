@@ -18,21 +18,11 @@
 #include "yagl_gles_image.h"
 #include "yagl_gles_array.h"
 #include "yagl_gles_validate.h"
+#include "yagl_gles_utils.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
-
-/*
- * We can't include GLES2/gl2ext.h here
- */
-#define GL_HALF_FLOAT_OES 0x8D61
-
-/*
- * 1.0f in half-float.
- */
-#define YAGL_HALF_FLOAT_1_0 0x3C00
 
 #define YAGL_SET_ERR(err) \
     yagl_gles_context_set_error(ctx, err); \
@@ -50,483 +40,6 @@
 #define YAGL_GET_CTX_RET(ret) YAGL_GET_CTX_IMPL(return ret)
 
 #define YAGL_GET_CTX() YAGL_GET_CTX_IMPL(return)
-
-static int yagl_get_stride(GLsizei alignment,
-                           GLsizei width,
-                           GLenum format,
-                           GLenum type,
-                           GLsizei *stride)
-{
-    int num_components = 0;
-    GLsizei bpp = 0;
-
-    switch (format) {
-    case GL_ALPHA:
-        num_components = 4; /* This gets converted to BGRA. */
-        break;
-    case GL_RGB:
-        num_components = 3;
-        break;
-    case GL_RGBA:
-        num_components = 4;
-        break;
-    case GL_BGRA_EXT:
-        num_components = 4;
-        break;
-    case GL_LUMINANCE:
-        num_components = 4; /* This gets converted to BGRA. */
-        break;
-    case GL_LUMINANCE_ALPHA:
-        num_components = 4; /* This gets converted to BGRA. */
-        break;
-    case GL_DEPTH_STENCIL_EXT:
-        if ((type == GL_FLOAT) || (type == GL_HALF_FLOAT_OES)) {
-            return 0;
-        }
-        num_components = 1;
-        break;
-    case GL_DEPTH_COMPONENT:
-        if ((type != GL_UNSIGNED_SHORT) && (type != GL_UNSIGNED_INT)) {
-            return 0;
-        }
-        num_components = 1;
-        break;
-    default:
-        return 0;
-    }
-
-    switch (type) {
-    case GL_UNSIGNED_BYTE:
-        bpp = num_components;
-        break;
-    case GL_UNSIGNED_SHORT_5_6_5:
-        if (format != GL_RGB) {
-            return 0;
-        }
-        bpp = 2;
-        break;
-    case GL_UNSIGNED_SHORT_4_4_4_4:
-    case GL_UNSIGNED_SHORT_5_5_5_1:
-        if (format != GL_RGBA) {
-            return 0;
-        }
-        bpp = 2;
-        break;
-    case GL_UNSIGNED_INT_24_8_EXT:
-        if (format != GL_DEPTH_STENCIL_EXT) {
-            return 0;
-        }
-        bpp = num_components * 4;
-        break;
-    case GL_UNSIGNED_SHORT:
-        if (format != GL_DEPTH_COMPONENT) {
-            return 0;
-        }
-        bpp = num_components * 2;
-        break;
-    case GL_UNSIGNED_INT:
-        if (format != GL_DEPTH_COMPONENT) {
-            return 0;
-        }
-        bpp = num_components * 4;
-        break;
-    case GL_FLOAT:
-        bpp = num_components * 4;
-        break;
-    case GL_HALF_FLOAT_OES:
-        bpp = num_components * 2;
-        break;
-    default:
-        return 0;
-    }
-
-    assert(alignment > 0);
-
-    *stride = ((width * bpp) + alignment - 1) & ~(alignment - 1);
-
-    return 1;
-}
-
-static GLenum yagl_get_actual_type(GLenum type)
-{
-    switch (type) {
-    case GL_HALF_FLOAT_OES:
-        return GL_HALF_FLOAT;
-    default:
-        return type;
-    }
-}
-
-static GLint yagl_get_actual_internalformat(GLint internalformat)
-{
-    switch (internalformat) {
-    case GL_BGRA:
-    case GL_ALPHA:
-    case GL_LUMINANCE:
-    case GL_LUMINANCE_ALPHA:
-        return GL_RGBA;
-    default:
-        return internalformat;
-    }
-}
-
-static GLint yagl_get_actual_format(GLint format)
-{
-    switch (format) {
-    case GL_ALPHA:
-    case GL_LUMINANCE:
-    case GL_LUMINANCE_ALPHA:
-        return GL_BGRA;
-    default:
-        return format;
-    }
-}
-
-static const GLvoid *yagl_convert_to_host(GLsizei alignment,
-                                          GLsizei width,
-                                          GLsizei height,
-                                          GLenum format,
-                                          GLenum type,
-                                          const GLvoid *pixels)
-{
-    GLsizei bpc, i, j, converted_stride;
-    uint8_t *tmp, *iter;
-
-    if ((width <= 0) || (height <= 0) || !pixels) {
-        return pixels;
-    }
-
-    switch (type) {
-    case GL_FLOAT:
-        bpc = 4;
-        break;
-    case GL_HALF_FLOAT_OES:
-        bpc = 2;
-        break;
-    case GL_UNSIGNED_BYTE:
-    default:
-        bpc = 1;
-        break;
-    }
-
-    converted_stride = ((width * bpc * 4) + alignment - 1) & ~(alignment - 1);
-
-    switch (format) {
-    case GL_ALPHA:
-        tmp = iter = yagl_get_tmp_buffer(converted_stride * height);
-        switch (type) {
-        case GL_UNSIGNED_BYTE:
-            for (i = 0; i < height; ++i) {
-                for (j = 0; j < width; ++j) {
-                    *(uint32_t*)(iter + j * 4) = (uint32_t)(*(uint8_t*)(pixels + j)) << 24;
-                }
-                pixels += (width + alignment - 1) & ~(alignment - 1);
-                iter += converted_stride;
-            }
-            break;
-        case GL_FLOAT:
-            for (i = 0; i < height; ++i) {
-                for (j = 0; j < width; ++j) {
-                    *(uint32_t*)(iter + j * 16 + 0) = 0;
-                    *(uint32_t*)(iter + j * 16 + 4) = 0;
-                    *(uint32_t*)(iter + j * 16 + 8) = 0;
-                    *(uint32_t*)(iter + j * 16 + 12) = *(uint32_t*)(pixels + j * 4);
-                }
-                pixels += (width * 4 + alignment - 1) & ~(alignment - 1);
-                iter += converted_stride;
-            }
-            break;
-        case GL_HALF_FLOAT_OES:
-            for (i = 0; i < height; ++i) {
-                for (j = 0; j < width; ++j) {
-                    *(uint16_t*)(iter + j * 8 + 0) = 0;
-                    *(uint16_t*)(iter + j * 8 + 2) = 0;
-                    *(uint16_t*)(iter + j * 8 + 4) = 0;
-                    *(uint16_t*)(iter + j * 8 + 6) = *(uint16_t*)(pixels + j * 2);
-                }
-                pixels += (width * 2 + alignment - 1) & ~(alignment - 1);
-                iter += converted_stride;
-            }
-            break;
-        default:
-            assert(0);
-            break;
-        }
-        break;
-    case GL_LUMINANCE:
-        tmp = iter = yagl_get_tmp_buffer(converted_stride * height);
-        switch (type) {
-        case GL_UNSIGNED_BYTE:
-            for (i = 0; i < height; ++i) {
-                for (j = 0; j < width; ++j) {
-                    uint32_t l = *(uint8_t*)(pixels + j);
-                    *(uint32_t*)(iter + j * 4) = (l << 0) |
-                                                 (l << 8) |
-                                                 (l << 16) |
-                                                 (255U << 24);
-                }
-                pixels += (width + alignment - 1) & ~(alignment - 1);
-                iter += converted_stride;
-            }
-            break;
-        case GL_FLOAT:
-            for (i = 0; i < height; ++i) {
-                for (j = 0; j < width; ++j) {
-                    uint32_t l = *(uint32_t*)(pixels + j * 4);
-                    *(uint32_t*)(iter + j * 16 + 0) = l;
-                    *(uint32_t*)(iter + j * 16 + 4) = l;
-                    *(uint32_t*)(iter + j * 16 + 8) = l;
-                    *(GLfloat*)(iter + j * 16 + 12) = 1.0f;
-                }
-                pixels += (width * 4 + alignment - 1) & ~(alignment - 1);
-                iter += converted_stride;
-            }
-            break;
-        case GL_HALF_FLOAT_OES:
-            for (i = 0; i < height; ++i) {
-                for (j = 0; j < width; ++j) {
-                    uint16_t l = *(uint16_t*)(pixels + j * 2);
-                    *(uint16_t*)(iter + j * 8 + 0) = l;
-                    *(uint16_t*)(iter + j * 8 + 2) = l;
-                    *(uint16_t*)(iter + j * 8 + 4) = l;
-                    *(uint16_t*)(iter + j * 8 + 6) = YAGL_HALF_FLOAT_1_0;
-                }
-                pixels += (width * 2 + alignment - 1) & ~(alignment - 1);
-                iter += converted_stride;
-            }
-            break;
-        default:
-            assert(0);
-            break;
-        }
-        break;
-    case GL_LUMINANCE_ALPHA:
-        tmp = iter = yagl_get_tmp_buffer(converted_stride * height);
-        switch (type) {
-        case GL_UNSIGNED_BYTE:
-            for (i = 0; i < height; ++i) {
-                for (j = 0; j < width; ++j) {
-                    uint32_t l = *(uint8_t*)(pixels + j * 2 + 0);
-                    uint32_t a = *(uint8_t*)(pixels + j * 2 + 1);
-                    *(uint32_t*)(iter + j * 4) = (l << 0) |
-                                                 (l << 8) |
-                                                 (l << 16) |
-                                                 (a << 24);
-                }
-                pixels += (width * 2 + alignment - 1) & ~(alignment - 1);
-                iter += converted_stride;
-            }
-            break;
-        case GL_FLOAT:
-            for (i = 0; i < height; ++i) {
-                for (j = 0; j < width; ++j) {
-                    uint32_t l = *(uint32_t*)(pixels + j * 8 + 0);
-                    uint32_t a = *(uint32_t*)(pixels + j * 8 + 4);
-                    *(uint32_t*)(iter + j * 16 + 0) = l;
-                    *(uint32_t*)(iter + j * 16 + 4) = l;
-                    *(uint32_t*)(iter + j * 16 + 8) = l;
-                    *(uint32_t*)(iter + j * 16 + 12) = a;
-                }
-                pixels += (width * 8 + alignment - 1) & ~(alignment - 1);
-                iter += converted_stride;
-            }
-            break;
-        case GL_HALF_FLOAT_OES:
-            for (i = 0; i < height; ++i) {
-                for (j = 0; j < width; ++j) {
-                    uint16_t l = *(uint16_t*)(pixels + j * 4 + 0);
-                    uint16_t a = *(uint16_t*)(pixels + j * 4 + 2);
-                    *(uint16_t*)(iter + j * 8 + 0) = l;
-                    *(uint16_t*)(iter + j * 8 + 2) = l;
-                    *(uint16_t*)(iter + j * 8 + 4) = l;
-                    *(uint16_t*)(iter + j * 8 + 6) = a;
-                }
-                pixels += (width * 4 + alignment - 1) & ~(alignment - 1);
-                iter += converted_stride;
-            }
-            break;
-        default:
-            assert(0);
-            break;
-        }
-        break;
-    default:
-        return pixels;
-    }
-
-    return tmp;
-}
-
-static GLvoid *yagl_convert_from_host_start(GLsizei alignment,
-                                            GLsizei width,
-                                            GLsizei height,
-                                            GLenum format,
-                                            GLenum type,
-                                            GLvoid *pixels)
-{
-    int num_components;
-    GLsizei bpp;
-
-    if ((width <= 0) || (height <= 0)) {
-        return pixels;
-    }
-
-    switch (format) {
-    case GL_ALPHA:
-        num_components = 1;
-        break;
-    case GL_LUMINANCE:
-        num_components = 1;
-        break;
-    case GL_LUMINANCE_ALPHA:
-        num_components = 2;
-        break;
-    default:
-        return pixels;
-    }
-
-    switch (type) {
-    case GL_FLOAT:
-        bpp = num_components * 4;
-        break;
-    case GL_HALF_FLOAT_OES:
-        bpp = num_components * 2;
-        break;
-    case GL_UNSIGNED_BYTE:
-    default:
-        bpp = num_components;
-        break;
-    }
-
-    return yagl_get_tmp_buffer(
-        (((width * bpp) + alignment - 1) & ~(alignment - 1)) * height);
-}
-
-static void yagl_convert_from_host_end(GLsizei alignment,
-                                       GLsizei width,
-                                       GLsizei height,
-                                       GLenum format,
-                                       GLenum type,
-                                       GLsizei stride,
-                                       const GLvoid *pixels_from,
-                                       GLvoid *pixels_to)
-{
-    GLsizei i, j;
-
-    if ((width <= 0) || (height <= 0)) {
-        return;
-    }
-
-    switch (format) {
-    case GL_ALPHA:
-        switch (type) {
-        case GL_UNSIGNED_BYTE:
-            for (i = 0; i < height; ++i) {
-                for (j = 0; j < width; ++j) {
-                    *(uint8_t*)(pixels_to + j) = *(uint32_t*)(pixels_from + j * 4) >> 24;
-                }
-                pixels_from += stride;
-                pixels_to += (width + alignment - 1) & ~(alignment - 1);
-            }
-            break;
-        case GL_FLOAT:
-            for (i = 0; i < height; ++i) {
-                for (j = 0; j < width; ++j) {
-                    *(uint32_t*)(pixels_to + j * 4) = *(uint32_t*)(pixels_from + j * 16 + 12);
-                }
-                pixels_from += stride;
-                pixels_to += (width * 4 + alignment - 1) & ~(alignment - 1);
-            }
-            break;
-        case GL_HALF_FLOAT_OES:
-            for (i = 0; i < height; ++i) {
-                for (j = 0; j < width; ++j) {
-                    *(uint16_t*)(pixels_to + j * 2) = *(uint16_t*)(pixels_from + j * 8 + 6);
-                }
-                pixels_from += stride;
-                pixels_to += (width * 2 + alignment - 1) & ~(alignment - 1);
-            }
-            break;
-        default:
-            assert(0);
-            break;
-        }
-        break;
-    case GL_LUMINANCE:
-        switch (type) {
-        case GL_UNSIGNED_BYTE:
-            for (i = 0; i < height; ++i) {
-                for (j = 0; j < width; ++j) {
-                    *(uint8_t*)(pixels_to + j) = *(uint32_t*)(pixels_from + j * 4) & 0xFF;
-                }
-                pixels_from += stride;
-                pixels_to += (width + alignment - 1) & ~(alignment - 1);
-            }
-            break;
-        case GL_FLOAT:
-            for (i = 0; i < height; ++i) {
-                for (j = 0; j < width; ++j) {
-                    *(uint32_t*)(pixels_to + j * 4) = *(uint32_t*)(pixels_from + j * 16);
-                }
-                pixels_from += stride;
-                pixels_to += (width * 4 + alignment - 1) & ~(alignment - 1);
-            }
-            break;
-        case GL_HALF_FLOAT_OES:
-            for (i = 0; i < height; ++i) {
-                for (j = 0; j < width; ++j) {
-                    *(uint16_t*)(pixels_to + j * 2) = *(uint16_t*)(pixels_from + j * 8);
-                }
-                pixels_from += stride;
-                pixels_to += (width * 2 + alignment - 1) & ~(alignment - 1);
-            }
-            break;
-        default:
-            assert(0);
-            break;
-        }
-        break;
-    case GL_LUMINANCE_ALPHA:
-        switch (type) {
-        case GL_UNSIGNED_BYTE:
-            for (i = 0; i < height; ++i) {
-                for (j = 0; j < width; ++j) {
-                    *(uint8_t*)(pixels_to + j * 2 + 0) = *(uint32_t*)(pixels_from + j * 4) & 0xFF;
-                    *(uint8_t*)(pixels_to + j * 2 + 1) = *(uint32_t*)(pixels_from + j * 4) >> 24;
-                }
-                pixels_from += stride;
-                pixels_to += (width * 2 + alignment - 1) & ~(alignment - 1);
-            }
-            break;
-        case GL_FLOAT:
-            for (i = 0; i < height; ++i) {
-                for (j = 0; j < width; ++j) {
-                    *(uint32_t*)(pixels_to + j * 8 + 0) = *(uint32_t*)(pixels_from + j * 16);
-                    *(uint32_t*)(pixels_to + j * 8 + 4) = *(uint32_t*)(pixels_from + j * 16 + 12);
-                }
-                pixels_from += stride;
-                pixels_to += (width * 8 + alignment - 1) & ~(alignment - 1);
-            }
-            break;
-        case GL_HALF_FLOAT_OES:
-            for (i = 0; i < height; ++i) {
-                for (j = 0; j < width; ++j) {
-                    *(uint16_t*)(pixels_to + j * 4 + 0) = *(uint16_t*)(pixels_from + j * 8);
-                    *(uint16_t*)(pixels_to + j * 4 + 2) = *(uint16_t*)(pixels_from + j * 8 + 6);
-                }
-                pixels_from += stride;
-                pixels_to += (width * 4 + alignment - 1) & ~(alignment - 1);
-            }
-            break;
-        default:
-            assert(0);
-            break;
-        }
-        break;
-    default:
-        break;
-    }
-}
 
 /*
  * TODO: Passthrough for now.
@@ -801,7 +314,7 @@ YAGL_API void glBindTexture(GLenum target, GLuint texture)
 
     YAGL_GET_CTX();
 
-    if (!yagl_gles_validate_texture_target(target, &texture_target)) {
+    if (!yagl_gles_context_validate_texture_target(ctx, target, &texture_target)) {
         YAGL_SET_ERR(GL_INVALID_ENUM);
         goto out;
     }
@@ -2238,40 +1751,41 @@ YAGL_API void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLen
         goto out;
     }
 
-    if (!yagl_get_stride(ctx->pack_alignment,
-                         width,
-                         format,
-                         type,
-                         &stride)) {
+    if (!yagl_gles_context_get_stride(ctx,
+                                      ctx->pack_alignment,
+                                      width,
+                                      format,
+                                      type,
+                                      &stride)) {
         YAGL_SET_ERR(GL_INVALID_OPERATION);
         goto out;
     }
 
     yagl_render_invalidate(0);
 
-    pixels_from = yagl_convert_from_host_start(ctx->pack_alignment,
-                                               width,
-                                               height,
-                                               format,
-                                               type,
-                                               pixels);
+    pixels_from = yagl_gles_convert_from_host_start(ctx->pack_alignment,
+                                                    width,
+                                                    height,
+                                                    format,
+                                                    type,
+                                                    pixels);
 
     yagl_host_glReadPixels(x, y,
                            width, height,
-                           yagl_get_actual_format(format),
-                           yagl_get_actual_type(type),
+                           yagl_gles_get_actual_format(format),
+                           yagl_gles_get_actual_type(type),
                            pixels_from,
                            stride * height,
                            NULL);
 
-    yagl_convert_from_host_end(ctx->pack_alignment,
-                               width,
-                               height,
-                               format,
-                               type,
-                               stride,
-                               pixels_from,
-                               pixels);
+    yagl_gles_convert_from_host_end(ctx->pack_alignment,
+                                    width,
+                                    height,
+                                    format,
+                                    type,
+                                    stride,
+                                    pixels_from,
+                                    pixels);
 
 out:
     YAGL_LOG_FUNC_EXIT(NULL);
@@ -2286,11 +1800,12 @@ YAGL_API void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLs
     YAGL_GET_CTX();
 
     if (pixels && (width > 0) && (height > 0)) {
-        if (!yagl_get_stride(ctx->unpack_alignment,
-                             width,
-                             format,
-                             type,
-                             &stride)) {
+        if (!yagl_gles_context_get_stride(ctx,
+                                          ctx->unpack_alignment,
+                                          width,
+                                          format,
+                                          type,
+                                          &stride)) {
             YAGL_SET_ERR(GL_INVALID_OPERATION);
             goto out;
         }
@@ -2314,18 +1829,19 @@ YAGL_API void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLs
 
     yagl_host_glTexImage2D(target,
                            level,
-                           yagl_get_actual_internalformat(internalformat),
+                           yagl_gles_get_actual_internalformat(internalformat),
                            width,
                            height,
                            border,
-                           yagl_get_actual_format(format),
-                           yagl_get_actual_type(type),
-                           yagl_convert_to_host(ctx->unpack_alignment,
-                                                width,
-                                                height,
-                                                format,
-                                                type,
-                                                pixels),
+                           yagl_gles_get_actual_format(format),
+                           yagl_gles_get_actual_type(type),
+                           yagl_gles_convert_to_host(ctx->unpack_alignment,
+                                                     width,
+                                                     height,
+                                                     1,
+                                                     format,
+                                                     type,
+                                                     pixels),
                            stride * height);
 
 out:
@@ -2341,11 +1857,12 @@ YAGL_API void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint y
     YAGL_GET_CTX();
 
     if (pixels && (width > 0) && (height > 0)) {
-        if (!yagl_get_stride(ctx->unpack_alignment,
-                             width,
-                             format,
-                             type,
-                             &stride)) {
+        if (!yagl_gles_context_get_stride(ctx,
+                                          ctx->unpack_alignment,
+                                          width,
+                                          format,
+                                          type,
+                                          &stride)) {
             YAGL_SET_ERR(GL_INVALID_OPERATION);
             goto out;
         }
@@ -2357,14 +1874,15 @@ YAGL_API void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint y
                               yoffset,
                               width,
                               height,
-                              yagl_get_actual_format(format),
-                              yagl_get_actual_type(type),
-                              yagl_convert_to_host(ctx->unpack_alignment,
-                                                   width,
-                                                   height,
-                                                   format,
-                                                   type,
-                                                   pixels),
+                              yagl_gles_get_actual_format(format),
+                              yagl_gles_get_actual_type(type),
+                              yagl_gles_convert_to_host(ctx->unpack_alignment,
+                                                        width,
+                                                        height,
+                                                        1,
+                                                        format,
+                                                        type,
+                                                        pixels),
                               stride * height);
 
 out:

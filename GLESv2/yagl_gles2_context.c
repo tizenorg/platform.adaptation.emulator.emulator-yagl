@@ -41,6 +41,8 @@ static const GLchar *draw_buffers_ext = "GL_EXT_draw_buffers";
 static const GLchar *mapbuffer_ext = "GL_OES_mapbuffer";
 static const GLchar *map_buffer_range_ext = "GL_EXT_map_buffer_range";
 static const GLchar *element_index_uint_ext = "GL_OES_element_index_uint";
+static const GLchar *texture_3d_ext = "GL_OES_texture_3D";
+static const GLchar *blend_minmax_ext = "GL_EXT_blend_minmax";
 static const GLchar *packed_depth_stencil_ext = "GL_OES_packed_depth_stencil";
 static const GLchar *texture_npot_ext = "GL_OES_texture_npot";
 static const GLchar *texture_rectangle_ext = "GL_ARB_texture_rectangle";
@@ -72,6 +74,8 @@ static const GLchar **yagl_gles2_context_get_extensions(struct yagl_gles2_contex
     extensions[i++] = mapbuffer_ext;
     extensions[i++] = map_buffer_range_ext;
     extensions[i++] = element_index_uint_ext;
+    extensions[i++] = texture_3d_ext;
+    extensions[i++] = blend_minmax_ext;
 
     if (ctx->base.packed_depth_stencil) {
         extensions[i++] = packed_depth_stencil_ext;
@@ -244,6 +248,16 @@ static void yagl_gles2_context_unbind_buffer(struct yagl_gles_context *ctx,
 static int yagl_gles2_context_acquire_binded_buffer(struct yagl_gles_context *ctx,
                                                     GLenum target,
                                                     struct yagl_gles_buffer **buffer)
+{
+    return 0;
+}
+
+static int yagl_gles2_context_get_stride(struct yagl_gles_context *ctx,
+                                         GLsizei alignment,
+                                         GLsizei width,
+                                         GLenum format,
+                                         GLenum type,
+                                         GLsizei *stride)
 {
     return 0;
 }
@@ -569,6 +583,12 @@ int yagl_gles2_context_get_integerv(struct yagl_gles_context *ctx,
         *params = tts->texture ? tts->texture->base.local_name : 0;
         *num_params = 1;
         break;
+    case GL_TEXTURE_BINDING_3D_OES:
+        tts = yagl_gles_context_get_active_texture_target_state(ctx,
+            yagl_gles_texture_target_3d);
+        *params = tts->texture ? tts->texture->base.local_name : 0;
+        *num_params = 1;
+        break;
     case GL_CURRENT_PROGRAM:
         *params = gles2_ctx->program ? gles2_ctx->program->base.local_name : 0;
         *num_params = 1;
@@ -658,6 +678,9 @@ int yagl_gles2_context_get_integerv(struct yagl_gles_context *ctx,
     case GL_STENCIL_BACK_WRITEMASK:
         *num_params = 1;
         break;
+    case GL_MAX_3D_TEXTURE_SIZE_OES:
+        *num_params = 1;
+        break;
     default:
         return 0;
     }
@@ -725,6 +748,24 @@ void yagl_gles2_context_draw_elements(struct yagl_gles_context *ctx,
     }
 
     yagl_gles2_context_post_draw(ctx, mode);
+}
+
+int yagl_gles2_context_validate_texture_target(struct yagl_gles_context *ctx,
+                                               GLenum target,
+                                               yagl_gles_texture_target *texture_target)
+{
+    switch (target) {
+    case GL_TEXTURE_3D_OES:
+        *texture_target = yagl_gles_texture_target_3d;
+        break;
+    case GL_TEXTURE_CUBE_MAP:
+        *texture_target = yagl_gles_texture_target_cubemap;
+        break;
+    default:
+        return 0;
+    }
+
+    return 1;
 }
 
 char *yagl_gles2_context_shader_patch(struct yagl_gles2_context *ctx,
@@ -798,6 +839,8 @@ struct yagl_client_context *yagl_gles2_context_create(struct yagl_sharegroup *sg
     gles2_ctx->base.bind_buffer = &yagl_gles2_context_bind_buffer;
     gles2_ctx->base.unbind_buffer = &yagl_gles2_context_unbind_buffer;
     gles2_ctx->base.acquire_binded_buffer = &yagl_gles2_context_acquire_binded_buffer;
+    gles2_ctx->base.validate_texture_target = &yagl_gles2_context_validate_texture_target;
+    gles2_ctx->base.get_stride = &yagl_gles2_context_get_stride;
     gles2_ctx->shader_patch = &yagl_gles2_context_shader_patch;
 
     YAGL_LOG_FUNC_EXIT("%p", gles2_ctx);

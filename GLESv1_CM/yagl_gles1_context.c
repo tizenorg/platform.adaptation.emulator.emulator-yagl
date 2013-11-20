@@ -24,6 +24,7 @@
 static const GLchar *blend_subtract_ext = "GL_OES_blend_subtract";
 static const GLchar *blend_equation_separate_ext = "GL_OES_blend_equation_separate";
 static const GLchar *blend_func_separate_ext = "GL_OES_blend_func_separate";
+static const GLchar *blend_minmax_ext = "GL_EXT_blend_minmax";
 static const GLchar *element_index_uint_ext = "GL_OES_element_index_uint";
 static const GLchar *texture_mirrored_repeat_ext = "GL_OES_texture_mirrored_repeat";
 static const GLchar *texture_format_bgra8888_ext = "GL_EXT_texture_format_BGRA8888";
@@ -61,6 +62,7 @@ static const GLchar **yagl_gles1_context_get_extensions(struct yagl_gles1_contex
     extensions[i++] = blend_subtract_ext;
     extensions[i++] = blend_equation_separate_ext;
     extensions[i++] = blend_func_separate_ext;
+    extensions[i++] = blend_minmax_ext;
     extensions[i++] = element_index_uint_ext;
     extensions[i++] = texture_mirrored_repeat_ext;
     extensions[i++] = texture_format_bgra8888_ext;
@@ -1286,6 +1288,23 @@ static int yagl_gles1_context_acquire_binded_buffer(struct yagl_gles_context *ct
     return 0;
 }
 
+static int yagl_gles1_context_validate_texture_target(struct yagl_gles_context *ctx,
+                                                      GLenum target,
+                                                      yagl_gles_texture_target *texture_target)
+{
+    return 0;
+}
+
+static int yagl_gles1_context_get_stride(struct yagl_gles_context *ctx,
+                                         GLsizei alignment,
+                                         GLsizei width,
+                                         GLenum format,
+                                         GLenum type,
+                                         GLsizei *stride)
+{
+    return 0;
+}
+
 struct yagl_client_context *yagl_gles1_context_create(struct yagl_sharegroup *sg)
 {
     struct yagl_gles1_context *gles1_ctx;
@@ -1313,6 +1332,8 @@ struct yagl_client_context *yagl_gles1_context_create(struct yagl_sharegroup *sg
     gles1_ctx->base.bind_buffer = &yagl_gles1_context_bind_buffer;
     gles1_ctx->base.unbind_buffer = &yagl_gles1_context_unbind_buffer;
     gles1_ctx->base.acquire_binded_buffer = &yagl_gles1_context_acquire_binded_buffer;
+    gles1_ctx->base.validate_texture_target = &yagl_gles1_context_validate_texture_target;
+    gles1_ctx->base.get_stride = &yagl_gles1_context_get_stride;
 
     YAGL_LOG_FUNC_EXIT("%p", gles1_ctx);
 
