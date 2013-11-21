@@ -14,8 +14,11 @@
 /*
  * We can't include GL/glext.h here
  */
-#define GL_POINT_SPRITE                   0x8861
-#define GL_VERTEX_PROGRAM_POINT_SIZE      0x8642
+#define GL_POINT_SPRITE                    0x8861
+#define GL_VERTEX_PROGRAM_POINT_SIZE       0x8642
+#define GL_MAX_FRAGMENT_UNIFORM_COMPONENTS 0x8B49
+#define GL_MAX_VERTEX_UNIFORM_COMPONENTS   0x8B4A
+#define GL_MAX_VARYING_FLOATS              0x8B4B
 
 static inline void yagl_gles2_context_pre_draw(struct yagl_gles_context *ctx, GLenum mode)
 {
@@ -302,6 +305,29 @@ static int yagl_gles2_context_get_integerv(struct yagl_gles_context *ctx,
         *params = ctx->num_arrays;
         *num_params = 1;
         break;
+    case GL_MAX_FRAGMENT_UNIFORM_VECTORS:
+        *num_params = 1;
+        yagl_host_glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, params, *num_params, NULL);
+        *params /= 4;
+        break;
+    case GL_MAX_VARYING_VECTORS:
+        *num_params = 1;
+        yagl_host_glGetIntegerv(GL_MAX_VARYING_FLOATS, params, *num_params, NULL);
+        *params /= 4;
+        break;
+    case GL_MAX_VERTEX_UNIFORM_VECTORS:
+        *num_params = 1;
+        yagl_host_glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS, params, *num_params, NULL);
+        *params /= 4;
+        break;
+    case GL_SHADER_COMPILER:
+        *params = GL_TRUE;
+        *num_params = 1;
+        break;
+    case GL_NUM_SHADER_BINARY_FORMATS:
+        *params = gles2_ctx->num_shader_binary_formats;
+        *num_params = 1;
+        break;
     default:
         processed = 0;
         break;
@@ -324,9 +350,6 @@ static int yagl_gles2_context_get_integerv(struct yagl_gles_context *ctx,
     case GL_MAX_CUBE_MAP_TEXTURE_SIZE:
         *num_params = 1;
         break;
-    case GL_MAX_FRAGMENT_UNIFORM_VECTORS:
-        *num_params = 1;
-        break;
     case GL_MAX_SAMPLES_IMG:
         *num_params = 1;
         break;
@@ -336,23 +359,11 @@ static int yagl_gles2_context_get_integerv(struct yagl_gles_context *ctx,
     case GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT:
         *num_params = 1;
         break;
-    case GL_MAX_VARYING_VECTORS:
-        *num_params = 1;
-        break;
     case GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
-        *num_params = 1;
-        break;
-    case GL_MAX_VERTEX_UNIFORM_VECTORS:
-        *num_params = 1;
-        break;
-    case GL_NUM_SHADER_BINARY_FORMATS:
         *num_params = 1;
         break;
     case GL_SHADER_BINARY_FORMATS:
         *num_params = gles2_ctx->num_shader_binary_formats;
-        break;
-    case GL_SHADER_COMPILER:
-        *num_params = 1;
         break;
     case GL_STENCIL_BACK_FAIL:
         *num_params = 1;
