@@ -261,6 +261,13 @@ int yagl_gles_array_update_vbo(struct yagl_gles_array *array,
         assert(type == GL_FIXED || type == GL_BYTE);
     }
 
+    yagl_gles_buffer_bind(array->vbo,
+                          array->type,
+                          array->need_convert,
+                          GL_ARRAY_BUFFER);
+    array->apply(array, 0, 0, NULL, NULL);
+    yagl_host_glBindBuffer(GL_ARRAY_BUFFER, 0);
+
     return 1;
 }
 
@@ -273,16 +280,19 @@ void yagl_gles_array_transfer(struct yagl_gles_array *array,
     }
 
     if (array->vbo) {
-        yagl_gles_buffer_bind(array->vbo,
-                              array->type,
-                              array->need_convert,
-                              GL_ARRAY_BUFFER);
-        yagl_gles_buffer_transfer(array->vbo,
+        if (yagl_gles_buffer_is_dirty(array->vbo,
+                                      array->type,
+                                      array->need_convert)) {
+            yagl_gles_buffer_bind(array->vbo,
                                   array->type,
-                                  GL_ARRAY_BUFFER,
-                                  array->need_convert);
-        array->apply(array, first, count, NULL, array->user_data);
-        yagl_host_glBindBuffer(GL_ARRAY_BUFFER, 0);
+                                  array->need_convert,
+                                  GL_ARRAY_BUFFER);
+            yagl_gles_buffer_transfer(array->vbo,
+                                      array->type,
+                                      GL_ARRAY_BUFFER,
+                                      array->need_convert);
+            yagl_host_glBindBuffer(GL_ARRAY_BUFFER, 0);
+        }
     } else if (array->ptr) {
         const GLvoid *ptr = array->ptr;
 
