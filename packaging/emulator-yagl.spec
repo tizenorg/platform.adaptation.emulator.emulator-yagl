@@ -7,6 +7,7 @@ Release:    18
 License:    MIT
 #URL:        http://www.khronos.org
 Source0:    %{name}-%{version}.tar.gz
+Source1001:     emulator-yagl.manifest
 BuildRequires:  cmake
 BuildRequires:  pkgconfig(xfixes)
 BuildRequires:  pkgconfig(x11)
@@ -37,8 +38,9 @@ YaGL - OpenGLES acceleration module for emulator (devel)
 %setup -q
 
 %build
+cp %{SOURCE1001} .
 %if %{with wayland}
-cmake -DCMAKE_INSTALL_PREFIX=%{buildroot}/usr -DINSTALL_LIB_DIR=lib/yagl -DPLATFORM_GBM=1 -DPLATFORM_WAYLAND=1
+cmake -DCMAKE_INSTALL_PREFIX=%{buildroot}/usr -DPLATFORM_GBM=1 -DPLATFORM_WAYLAND=1
 %else
 cmake -DCMAKE_INSTALL_PREFIX=%{buildroot}/usr -DINSTALL_LIB_DIR=lib/yagl
 %endif
@@ -46,12 +48,19 @@ make
 
 %install
 make install
+%if %{with wayland}
+ln -s libEGL.so.1.0 %{buildroot}/usr/lib/libEGL.so.1.0.0
+ln -s libGLESv2.so.2.0 %{buildroot}/usr/lib/libGLESv2.so.2.0.0
+ln -s libGLESv2.so.2.0.0 %{buildroot}/usr/lib/libGL.so.1.2.0
+%else
 ln -s libGLESv2.so.2.0 %{buildroot}/usr/lib/yagl/libGLESv2.so.1.0
 ln -s libGLESv2.so.1.0 %{buildroot}/usr/lib/yagl/libGLESv2.so.1
 mkdir -p %{buildroot}/usr/lib/systemd/system
 cp packaging/emul-opengl-yagl.service %{buildroot}/usr/lib/systemd/system
 mkdir -p %{buildroot}/etc/emulator
 cp packaging/virtgl.sh %{buildroot}/etc/emulator
+%endif
+
 mkdir -p %{buildroot}/usr/lib/udev/rules.d
 cp packaging/95-tizen-emulator.rules %{buildroot}/usr/lib/udev/rules.d
 
@@ -62,14 +71,24 @@ cp -r include/GLES %{buildroot}/usr/include/
 cp -r include/GLES2 %{buildroot}/usr/include/
 cp -r include/KHR %{buildroot}/usr/include/
 
+%post -p /sbin/ldconfig
+
+%postun -p /sbin/ldconfig
+
 %files
+%manifest %{name}.manifest
 %defattr(-,root,root,-)
+/usr/lib/udev/rules.d/95-tizen-emulator.rules
+%if %{with wayland}
+/usr/lib/*.so*
+%else
 /usr/lib/yagl/*
 /usr/lib/systemd/system/emul-opengl-yagl.service
-/usr/lib/udev/rules.d/95-tizen-emulator.rules
 %attr(777,root,root)/etc/emulator/virtgl.sh
+%endif
 
 %files devel
+%manifest %{name}.manifest
 %defattr(-,root,root,-)
 /usr/include/EGL
 /usr/include/GL
