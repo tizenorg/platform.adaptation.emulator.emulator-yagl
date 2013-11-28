@@ -144,22 +144,16 @@ static void yagl_offscreen_surface_invalidate(struct yagl_surface *sfc)
 
 static int yagl_offscreen_surface_swap_buffers(struct yagl_surface *sfc)
 {
-    EGLint error = 0;
     struct yagl_offscreen_surface *osfc = (struct yagl_offscreen_surface*)sfc;
-
-    YAGL_LOG_FUNC_SET(eglSwapBuffers);
 
     if (!yagl_offscreen_surface_resize(osfc)) {
         return 0;
     }
 
-    if (!yagl_host_eglSwapBuffers(sfc->dpy->host_dpy,
-                                  sfc->res.handle,
-                                  &error)) {
-        yagl_set_error(error);
-        YAGL_LOG_ERROR("eglSwapBuffers failed");
-        return 0;
-    }
+    yagl_host_eglSwapBuffers(sfc->dpy->host_dpy,
+                             sfc->res.handle);
+
+    yagl_transport_wait(yagl_get_transport());
 
     /*
      * Host has updated our image, update the window.
@@ -175,7 +169,6 @@ static int yagl_offscreen_surface_swap_buffers(struct yagl_surface *sfc)
 static int yagl_offscreen_surface_copy_buffers(struct yagl_surface *sfc,
                                                yagl_os_pixmap target)
 {
-    EGLint error = 0;
     struct yagl_offscreen_surface *osfc = (struct yagl_offscreen_surface*)sfc;
 
     YAGL_LOG_FUNC_SET(eglCopyBuffers);
@@ -205,13 +198,10 @@ static int yagl_offscreen_surface_copy_buffers(struct yagl_surface *sfc,
         }
     }
 
-    if (!yagl_host_eglCopyBuffers(sfc->dpy->host_dpy,
-                                  sfc->res.handle,
-                                  &error)) {
-        yagl_set_error(error);
-        YAGL_LOG_ERROR("eglCopyBuffers failed");
-        return 0;
-    }
+    yagl_host_eglCopyBuffers(sfc->dpy->host_dpy,
+                             sfc->res.handle);
+
+    yagl_transport_wait(yagl_get_transport());
 
     /*
      * Host has updated our image, update the target.

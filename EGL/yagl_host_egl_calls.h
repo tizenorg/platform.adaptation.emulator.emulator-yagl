@@ -91,12 +91,12 @@ EGLBoolean yagl_host_eglQueryContext(yagl_host_handle dpy, yagl_host_handle ctx,
 /*
  * eglSwapBuffers wrapper. id = 17
  */
-EGLBoolean yagl_host_eglSwapBuffers(yagl_host_handle dpy, yagl_host_handle surface, EGLint *error);
+void yagl_host_eglSwapBuffers(yagl_host_handle dpy, yagl_host_handle surface);
 
 /*
  * eglCopyBuffers wrapper. id = 18
  */
-EGLBoolean yagl_host_eglCopyBuffers(yagl_host_handle dpy, yagl_host_handle surface, EGLint *error);
+void yagl_host_eglCopyBuffers(yagl_host_handle dpy, yagl_host_handle surface);
 
 /*
  * eglCreateWindowSurfaceOffscreenYAGL wrapper. id = 19

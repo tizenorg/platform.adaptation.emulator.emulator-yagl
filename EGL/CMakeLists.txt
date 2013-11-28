@@ -21,12 +21,14 @@ set(SOURCES
     yagl_onscreen.c
     yagl_onscreen_image_pixmap.c
     yagl_onscreen_surface.c
+    yagl_onscreen_fence.c
     yagl_onscreen_utils.c
     yagl_ref.c
     yagl_render.c
     yagl_resource.c
     yagl_state.c
     yagl_surface.c
+    yagl_fence.c
     yagl_utils.c
     yagl_native_platform.c
     yagl_native_display.c

@@ -32,7 +32,7 @@
  * This function is intended to be called "immediately before the very first
  * piece of rendering after swapbuffers".
  */
-YAGL_API void yagl_render_invalidate();
+YAGL_API void yagl_render_invalidate(int throttle);
 
 
 /*

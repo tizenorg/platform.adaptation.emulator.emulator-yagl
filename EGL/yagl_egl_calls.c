@@ -156,9 +156,7 @@ YAGL_API EGLint eglGetError()
 
 YAGL_API EGLDisplay eglGetDisplay(EGLNativeDisplayType display_id)
 {
-    EGLint error = 0;
     struct yagl_native_platform *platform;
-    yagl_host_handle host_dpy;
     struct yagl_display *dpy;
     EGLDisplay ret = EGL_NO_DISPLAY;
 
@@ -170,21 +168,12 @@ YAGL_API EGLDisplay eglGetDisplay(EGLNativeDisplayType display_id)
         goto out;
     }
 
-    host_dpy = yagl_host_eglGetDisplay((uint32_t)display_id, &error);
-
-    if (!host_dpy) {
-        YAGL_SET_ERR(error);
-        YAGL_LOG_ERROR("unable to get host display for %p",
-                       (yagl_os_display)display_id);
-        goto out;
-    }
-
-    dpy = yagl_display_add(platform, (yagl_os_display)display_id, host_dpy);
+    dpy = yagl_display_add(platform, (yagl_os_display)display_id);
 
     if (!dpy) {
         YAGL_SET_ERR(EGL_BAD_DISPLAY);
-        YAGL_LOG_ERROR("unable to add display %p, %u",
-                       (yagl_os_display)display_id, host_dpy);
+        YAGL_LOG_ERROR("unable to add display %p",
+                       (yagl_os_display)display_id);
         goto out;
     }
 
@@ -1247,13 +1236,7 @@ YAGL_API EGLBoolean eglMakeCurrent(EGLDisplay dpy_,
         goto out;
     }
 
-    if (draw) {
-        yagl_surface_invalidate(draw);
-    }
-
-    if (read && (draw != read)) {
-        yagl_surface_invalidate(read);
-    }
+    yagl_render_invalidate(0);
 
     yagl_host_eglMakeCurrent((yagl_host_handle)dpy_,
                              (draw ? draw->res.handle : 0),
@@ -1490,7 +1473,7 @@ YAGL_API EGLBoolean eglSwapBuffers(EGLDisplay dpy_, EGLSurface surface_)
 
     res = EGL_TRUE;
 
-    yagl_render_invalidate();
+    yagl_render_invalidate(0);
 
 out:
     yagl_surface_release(surface);

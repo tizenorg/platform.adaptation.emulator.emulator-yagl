@@ -14,8 +14,8 @@ yagl_host_handle eglCreateContext(yagl_host_handle dpy, yagl_host_handle config,
 EGLBoolean eglDestroyContext(yagl_host_handle dpy, yagl_host_handle ctx, EGLint &error)
 void eglMakeCurrent(yagl_host_handle dpy, yagl_host_handle draw, yagl_host_handle read, yagl_host_handle ctx)
 EGLBoolean eglQueryContext(yagl_host_handle dpy, yagl_host_handle ctx, EGLint attribute, EGLint &value, EGLint &error)
-EGLBoolean eglSwapBuffers(yagl_host_handle dpy, yagl_host_handle surface, EGLint &error)
-EGLBoolean eglCopyBuffers(yagl_host_handle dpy, yagl_host_handle surface, EGLint &error)
+@void eglSwapBuffers(yagl_host_handle dpy, yagl_host_handle surface)
+@void eglCopyBuffers(yagl_host_handle dpy, yagl_host_handle surface)
 
 #
 # YaGL Extensions

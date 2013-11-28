@@ -9,6 +9,10 @@
 #include "yagl_backend.h"
 #include "yagl_transport.h"
 #include "yagl_utils.h"
+#include "yagl_display.h"
+#include "yagl_context.h"
+#include "yagl_fence.h"
+#include "yagl_egl_state.h"
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/mman.h>
@@ -44,6 +48,8 @@ struct yagl_state
 
     uint8_t *tmp_buff;
     uint32_t tmp_buff_size;
+
+    struct yagl_display *fence_dpy;
 };
 
 static pthread_key_t g_state_key;
@@ -77,20 +83,83 @@ static void *yagl_state_transport_resize(void *ops_data, uint32_t size)
     return buff;
 }
 
-static void yagl_state_transport_commit(void *ops_data, uint32_t offset)
+static void yagl_state_transport_commit(void *ops_data, int sync)
 {
     struct yagl_state *state = ops_data;
     volatile uint32_t *trigger =
         (uint32_t*)(YAGL_USER_PTR(state->regs, state->user_index) +
                     YAGL_REG_TRIGGER);
 
-    *trigger = offset;
+    *trigger = sync;
+}
+
+static uint32_t yagl_state_transport_flush(void *ops_data, void **fence)
+{
+    struct yagl_state *state = ops_data;
+    struct yagl_fence *fence_obj = NULL;
+    struct yagl_context *ctx = yagl_get_context();
+
+    if ((!ctx || ctx->need_throttle) && !fence) {
+        /*
+         * Throttle already set up and caller
+         * doesn't want a fence reference - no-op.
+         */
+
+        return 0;
+    }
+
+    if (fence && *fence) {
+        fence_obj = *fence;
+    } else if (state->fence_dpy) {
+        fence_obj = state->backend->create_fence(state->fence_dpy);
+    }
+
+    if (ctx && !ctx->need_throttle && (!fence || *fence)) {
+        /*
+         * Throttle haven't been set up yet and caller doesn't
+         * want a fence reference or he passed his own fence -
+         * set up throttle.
+         *
+         * Note that if the caller wants a fence reference then we
+         * don't want to set up throttle - the caller will wait for
+         * that fence anyway, so throttling is not necessary.
+         */
+        yagl_context_set_need_throttle(ctx, fence_obj);
+    }
+
+    if (!fence_obj) {
+        if (fence) {
+            *fence = NULL;
+        }
+        return 0;
+    }
+
+    if (fence) {
+        *fence = fence_obj;
+        return fence_obj->seq;
+    } else {
+        uint32_t seq = fence_obj->seq;
+        yagl_fence_release(fence_obj);
+        return seq;
+    }
+}
+
+static void yagl_state_transport_fence_wait(void *ops_data, void *fence)
+{
+    struct yagl_fence *fence_obj = fence;
+
+    if (fence_obj) {
+        fence_obj->wait(fence_obj);
+        yagl_fence_release(fence_obj);
+    }
 }
 
 static struct yagl_transport_ops yagl_state_transport_ops =
 {
     .resize = yagl_state_transport_resize,
-    .commit = yagl_state_transport_commit
+    .commit = yagl_state_transport_commit,
+    .flush = yagl_state_transport_flush,
+    .fence_wait = yagl_state_transport_fence_wait
 };
 
 static void yagl_state_free(void *ptr)
@@ -150,6 +219,8 @@ static void yagl_state_atfork()
          * 'fork' was called by a GL thread. Close
          * parent resources here.
          */
+
+        yagl_display_atfork();
 
         munmap(state->buff, state->buff_size);
         munmap(state->regs, sysconf(_SC_PAGE_SIZE));
@@ -356,4 +427,13 @@ int yagl_munlock(void *ptr)
     unsigned long arg = (unsigned long)ptr;
 
     return ioctl(yagl_get_state()->fd, YAGL_IOC_MUNLOCK, &arg);
+}
+
+void yagl_set_fence_display(struct yagl_display *fence_dpy)
+{
+    struct yagl_state *state = yagl_get_state();
+
+    if (!state->fence_dpy) {
+        state->fence_dpy = fence_dpy;
+    }
 }

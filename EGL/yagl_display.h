@@ -46,13 +46,14 @@ void yagl_display_init(struct yagl_display *dpy,
                        struct yagl_native_display *native_dpy,
                        yagl_host_handle host_dpy);
 
+void yagl_display_atfork(void);
+
 struct yagl_display *yagl_display_get(EGLDisplay handle);
 
 struct yagl_display *yagl_display_get_os(yagl_os_display os_dpy);
 
 struct yagl_display *yagl_display_add(struct yagl_native_platform *platform,
-                                      yagl_os_display display_id,
-                                      yagl_host_handle host_dpy);
+                                      yagl_os_display display_id);
 
 void yagl_display_prepare(struct yagl_display *dpy);
 

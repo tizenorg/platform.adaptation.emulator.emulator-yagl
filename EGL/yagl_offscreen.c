@@ -2,21 +2,33 @@
 #include "yagl_offscreen_surface.h"
 #include "yagl_offscreen_image_pixmap.h"
 #include "yagl_display.h"
+#include "yagl_native_display.h"
 #include "yagl_backend.h"
 #include "yagl_malloc.h"
 #include "yagl_native_platform.h"
+#include "yagl_egl_state.h"
+#include "yagl_host_egl_calls.h"
 
 static struct yagl_display
     *yagl_offscreen_create_display(struct yagl_native_platform *platform,
-                                   yagl_os_display os_dpy,
-                                   yagl_host_handle host_dpy)
+                                   yagl_os_display os_dpy)
 {
+    EGLint error = 0;
     struct yagl_display *dpy;
+    yagl_host_handle host_dpy;
     struct yagl_native_display *native_dpy;
 
     native_dpy = platform->wrap_display(os_dpy, 0);
 
     if (!native_dpy) {
+        return NULL;
+    }
+
+    host_dpy = yagl_host_eglGetDisplay((uint32_t)os_dpy, &error);
+
+    if (!host_dpy) {
+        yagl_set_error(error);
+        native_dpy->destroy(native_dpy);
         return NULL;
     }
 
@@ -89,6 +101,12 @@ static struct yagl_image
     return NULL;
 }
 
+static struct yagl_fence
+    *yagl_offscreen_create_fence(struct yagl_display *dpy)
+{
+    return NULL;
+}
+
 static void yagl_offscreen_destroy(struct yagl_backend *backend)
 {
     yagl_free(backend);
@@ -106,6 +124,7 @@ struct yagl_backend *yagl_offscreen_create()
     backend->create_pbuffer_surface = &yagl_offscreen_create_pbuffer_surface;
     backend->create_image_pixmap = &yagl_offscreen_create_image_pixmap;
     backend->create_image_wl_buffer = &yagl_offscreen_create_image_wl_buffer;
+    backend->create_fence = &yagl_offscreen_create_fence;
     backend->destroy = &yagl_offscreen_destroy;
     backend->y_inverted = 1;
 

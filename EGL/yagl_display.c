@@ -25,6 +25,8 @@
 
 #define YAGL_EGL_BUFFER_AGE_EXTENSIONS "EGL_EXT_buffer_age "
 
+void yagl_set_fence_display(struct yagl_display *fence_dpy);
+
 static pthread_once_t g_displays_init = PTHREAD_ONCE_INIT;
 static pthread_mutex_t g_displays_mutex;
 static YAGL_DECLARE_LIST(g_displays);
@@ -63,6 +65,16 @@ void yagl_display_init(struct yagl_display *dpy,
     yagl_list_init(&dpy->surfaces);
     yagl_list_init(&dpy->contexts);
     yagl_list_init(&dpy->images);
+}
+
+void yagl_display_atfork(void)
+{
+    /*
+     * Don't actually destroy displays, just
+     * reset the list. See yagl_state.c:yagl_state_atfork.
+     */
+
+    yagl_list_init(&g_displays);
 }
 
 struct yagl_display *yagl_display_get(EGLDisplay handle)
@@ -109,46 +121,33 @@ struct yagl_display *yagl_display_get_os(yagl_os_display os_dpy)
 }
 
 struct yagl_display *yagl_display_add(struct yagl_native_platform *platform,
-                                      yagl_os_display display_id,
-                                      yagl_host_handle host_dpy)
+                                      yagl_os_display display_id)
 {
     struct yagl_display *dpy;
-
-    YAGL_LOG_FUNC_SET(eglGetDisplay);
 
     yagl_displays_init();
 
     pthread_mutex_lock(&g_displays_mutex);
 
     yagl_list_for_each(struct yagl_display, dpy, &g_displays, list) {
-        if (dpy->host_dpy == host_dpy) {
+        if (dpy->display_id == display_id) {
             pthread_mutex_unlock(&g_displays_mutex);
-
-            if (dpy->display_id != display_id) {
-                YAGL_LOG_ERROR(
-                    "display id mismatch, host handle is %u, corresponding display id is %p, passed display id is %p",
-                     dpy->host_dpy,
-                     dpy->display_id,
-                     display_id );
-
-                return NULL;
-            } else {
-                return dpy;
-            }
+            return dpy;
         }
     }
 
-    dpy = yagl_get_backend()->create_display(platform, display_id, host_dpy);
+    dpy = yagl_get_backend()->create_display(platform, display_id);
 
     if (!dpy) {
         pthread_mutex_unlock(&g_displays_mutex);
-
         return NULL;
     }
 
     yagl_list_add(&g_displays, &dpy->list);
 
     pthread_mutex_unlock(&g_displays_mutex);
+
+    yagl_set_fence_display(dpy);
 
     return dpy;
 }

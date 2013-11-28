@@ -9,6 +9,7 @@
 struct yagl_display;
 struct yagl_surface;
 struct yagl_image;
+struct yagl_fence;
 struct yagl_native_platform;
 struct yagl_native_drawable;
 struct yagl_client_interface;
@@ -17,8 +18,7 @@ struct wl_resource;
 struct yagl_backend
 {
     struct yagl_display *(*create_display)(struct yagl_native_platform */*platform*/,
-                                           yagl_os_display /*os_dpy*/,
-                                           yagl_host_handle /*host_dpy*/);
+                                           yagl_os_display /*os_dpy*/);
 
     /*
      * Takes ownership of 'native_window'.
@@ -50,6 +50,8 @@ struct yagl_backend
     struct yagl_image *(*create_image_wl_buffer)(struct yagl_display */*dpy*/,
                                                  struct wl_resource */*buffer*/,
                                                  struct yagl_client_interface */*iface*/);
+
+    struct yagl_fence *(*create_fence)(struct yagl_display */*dpy*/);
 
     void (*destroy)(struct yagl_backend */*backend*/);
 

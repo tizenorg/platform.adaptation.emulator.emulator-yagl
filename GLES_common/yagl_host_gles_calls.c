@@ -33,13 +33,7 @@ void yagl_host_glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLv
     yagl_transport_put_out_GLsizei(t, count);
     yagl_transport_put_out_GLenum(t, type);
     yagl_transport_put_out_array(t, indices, indices_count, 1);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(indices, indices_count * 1);
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -57,13 +51,7 @@ void yagl_host_glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLe
     yagl_transport_put_out_GLenum(t, format);
     yagl_transport_put_out_GLenum(t, type);
     yagl_transport_put_in_array(t, pixels, pixels_maxcount, pixels_count, 1);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_write(pixels, pixels_maxcount * 1);
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -105,13 +93,7 @@ void yagl_host_glVertexAttribPointerData(GLuint indx, GLint size, GLenum type, G
     yagl_transport_put_out_GLsizei(t, stride);
     yagl_transport_put_out_GLint(t, first);
     yagl_transport_put_out_array(t, data, data_count, 1);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(data, data_count * 1);
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -144,13 +126,7 @@ void yagl_host_glVertexPointerData(GLint size, GLenum type, GLsizei stride, GLin
     yagl_transport_put_out_GLsizei(t, stride);
     yagl_transport_put_out_GLint(t, first);
     yagl_transport_put_out_array(t, data, data_count, 1);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(data, data_count * 1);
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -180,13 +156,7 @@ void yagl_host_glNormalPointerData(GLenum type, GLsizei stride, GLint first, con
     yagl_transport_put_out_GLsizei(t, stride);
     yagl_transport_put_out_GLint(t, first);
     yagl_transport_put_out_array(t, data, data_count, 1);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(data, data_count * 1);
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -216,13 +186,7 @@ void yagl_host_glColorPointerData(GLint size, GLenum type, GLsizei stride, GLint
     yagl_transport_put_out_GLsizei(t, stride);
     yagl_transport_put_out_GLint(t, first);
     yagl_transport_put_out_array(t, data, data_count, 1);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(data, data_count * 1);
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -254,13 +218,7 @@ void yagl_host_glTexCoordPointerData(GLint tex_id, GLint size, GLenum type, GLsi
     yagl_transport_put_out_GLsizei(t, stride);
     yagl_transport_put_out_GLint(t, first);
     yagl_transport_put_out_array(t, data, data_count, 1);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(data, data_count * 1);
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -311,13 +269,7 @@ void yagl_host_glGenBuffers(const GLuint *buffers, int32_t buffers_count)
 
     yagl_transport_begin(t, yagl_api_id_gles, 18, 2 * 8, 0 * 8 + yagl_transport_array_size(buffers, buffers_count, sizeof(GLuint)));
     yagl_transport_put_out_array(t, buffers, buffers_count, sizeof(GLuint));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(buffers, buffers_count * sizeof(GLuint));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -344,13 +296,7 @@ void yagl_host_glBufferData(GLenum target, const GLvoid *data, int32_t data_coun
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_array(t, data, data_count, 1);
     yagl_transport_put_out_GLenum(t, usage);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(data, data_count * 1);
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -364,13 +310,7 @@ void yagl_host_glBufferSubData(GLenum target, GLsizei offset, const GLvoid *data
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLsizei(t, offset);
     yagl_transport_put_out_array(t, data, data_count, 1);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(data, data_count * 1);
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -382,13 +322,7 @@ void yagl_host_glGenTextures(const GLuint *textures, int32_t textures_count)
 
     yagl_transport_begin(t, yagl_api_id_gles, 22, 2 * 8, 0 * 8 + yagl_transport_array_size(textures, textures_count, sizeof(GLuint)));
     yagl_transport_put_out_array(t, textures, textures_count, sizeof(GLuint));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(textures, textures_count * sizeof(GLuint));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -431,13 +365,7 @@ void yagl_host_glCompressedTexImage2D(GLenum target, GLint level, GLenum interna
     yagl_transport_put_out_GLsizei(t, height);
     yagl_transport_put_out_GLint(t, border);
     yagl_transport_put_out_array(t, data, data_count, 1);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(data, data_count * 1);
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -456,13 +384,7 @@ void yagl_host_glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffs
     yagl_transport_put_out_GLsizei(t, height);
     yagl_transport_put_out_GLenum(t, format);
     yagl_transport_put_out_array(t, data, data_count, 1);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(data, data_count * 1);
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -548,13 +470,7 @@ void yagl_host_glTexImage2D(GLenum target, GLint level, GLint internalformat, GL
     yagl_transport_put_out_GLenum(t, format);
     yagl_transport_put_out_GLenum(t, type);
     yagl_transport_put_out_array(t, pixels, pixels_count, 1);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(pixels, pixels_count * 1);
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -582,13 +498,7 @@ void yagl_host_glTexParameterfv(GLenum target, GLenum pname, const GLfloat *para
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_array(t, params, params_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(params, params_count * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -616,13 +526,7 @@ void yagl_host_glTexParameteriv(GLenum target, GLenum pname, const GLint *params
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_array(t, params, params_count, sizeof(GLint));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(params, params_count * sizeof(GLint));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -642,13 +546,7 @@ void yagl_host_glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint 
     yagl_transport_put_out_GLenum(t, format);
     yagl_transport_put_out_GLenum(t, type);
     yagl_transport_put_out_array(t, pixels, pixels_count, 1);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(pixels, pixels_count * 1);
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -718,13 +616,7 @@ void yagl_host_glTexEnviv(GLenum target, GLenum pname, const GLint *params, int3
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_array(t, params, params_count, sizeof(GLint));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(params, params_count * sizeof(GLint));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -738,13 +630,7 @@ void yagl_host_glTexEnvfv(GLenum target, GLenum pname, const GLfloat *params, in
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_array(t, params, params_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(params, params_count * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -758,13 +644,7 @@ void yagl_host_glGetTexEnviv(GLenum env, GLenum pname, GLint *params, int32_t pa
     yagl_transport_put_out_GLenum(t, env);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLint));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_write(params, params_maxcount * sizeof(GLint));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -778,13 +658,7 @@ void yagl_host_glGetTexEnvfv(GLenum env, GLenum pname, GLfloat *params, int32_t 
     yagl_transport_put_out_GLenum(t, env);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_write(params, params_maxcount * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -796,13 +670,7 @@ void yagl_host_glGenFramebuffers(const GLuint *framebuffers, int32_t framebuffer
 
     yagl_transport_begin(t, yagl_api_id_gles, 45, 2 * 8, 0 * 8 + yagl_transport_array_size(framebuffers, framebuffers_count, sizeof(GLuint)));
     yagl_transport_put_out_array(t, framebuffers, framebuffers_count, sizeof(GLuint));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(framebuffers, framebuffers_count * sizeof(GLuint));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -858,13 +726,7 @@ void yagl_host_glGenRenderbuffers(const GLuint *renderbuffers, int32_t renderbuf
 
     yagl_transport_begin(t, yagl_api_id_gles, 49, 2 * 8, 0 * 8 + yagl_transport_array_size(renderbuffers, renderbuffers_count, sizeof(GLuint)));
     yagl_transport_put_out_array(t, renderbuffers, renderbuffers_count, sizeof(GLuint));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(renderbuffers, renderbuffers_count * sizeof(GLuint));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -944,13 +806,7 @@ void yagl_host_glShaderSource(GLuint shader, const GLchar *string, int32_t strin
     yagl_transport_begin(t, yagl_api_id_gles, 55, 3 * 8, 1 * 8 + yagl_transport_array_size(string, string_count, sizeof(GLchar)));
     yagl_transport_put_out_GLuint(t, shader);
     yagl_transport_put_out_array(t, string, string_count, sizeof(GLchar));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(string, string_count * sizeof(GLchar));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1002,13 +858,7 @@ void yagl_host_glBindAttribLocation(GLuint program, GLuint index, const GLchar *
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_put_out_GLuint(t, index);
     yagl_transport_put_out_array(t, name, name_count, sizeof(GLchar));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(name, name_count * sizeof(GLchar));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1026,13 +876,7 @@ GLboolean yagl_host_glGetActiveAttrib(GLuint program, GLuint index, GLint *size,
     yagl_transport_put_in_GLenum(t, type);
     yagl_transport_put_in_array(t, name, name_maxcount, name_count, sizeof(GLchar));
     yagl_transport_put_in_GLboolean(t, &retval);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_write(name, name_maxcount * sizeof(GLchar));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 
     return retval;
 }
@@ -1052,13 +896,7 @@ GLboolean yagl_host_glGetActiveUniform(GLuint program, GLuint index, GLint *size
     yagl_transport_put_in_GLenum(t, type);
     yagl_transport_put_in_array(t, name, name_maxcount, name_count, sizeof(GLchar));
     yagl_transport_put_in_GLboolean(t, &retval);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_write(name, name_maxcount * sizeof(GLchar));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 
     return retval;
 }
@@ -1075,13 +913,7 @@ int yagl_host_glGetAttribLocation(GLuint program, const GLchar *name, int32_t na
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_put_out_array(t, name, name_count, sizeof(GLchar));
     yagl_transport_put_in_int(t, &retval);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(name, name_count * sizeof(GLchar));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 
     return retval;
 }
@@ -1112,13 +944,7 @@ GLboolean yagl_host_glGetProgramInfoLog(GLuint program, GLchar *infolog, int32_t
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_put_in_array(t, infolog, infolog_maxcount, infolog_count, sizeof(GLchar));
     yagl_transport_put_in_GLboolean(t, &retval);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_write(infolog, infolog_maxcount * sizeof(GLchar));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 
     return retval;
 }
@@ -1149,13 +975,7 @@ GLboolean yagl_host_glGetShaderInfoLog(GLuint shader, GLchar *infolog, int32_t i
     yagl_transport_put_out_GLuint(t, shader);
     yagl_transport_put_in_array(t, infolog, infolog_maxcount, infolog_count, sizeof(GLchar));
     yagl_transport_put_in_GLboolean(t, &retval);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_write(infolog, infolog_maxcount * sizeof(GLchar));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 
     return retval;
 }
@@ -1172,13 +992,7 @@ void yagl_host_glGetUniformfv(GLboolean tl, GLuint program, uint32_t location, G
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_write(params, params_maxcount * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1193,13 +1007,7 @@ void yagl_host_glGetUniformiv(GLboolean tl, GLuint program, uint32_t location, G
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLint));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_write(params, params_maxcount * sizeof(GLint));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1214,13 +1022,7 @@ int yagl_host_glGetUniformLocation(GLuint program, const GLchar *name, int32_t n
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_put_out_array(t, name, name_count, sizeof(GLchar));
     yagl_transport_put_in_int(t, &retval);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(name, name_count * sizeof(GLchar));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 
     return retval;
 }
@@ -1236,13 +1038,7 @@ void yagl_host_glGetVertexAttribfv(GLuint index, GLenum pname, GLfloat *params, 
     yagl_transport_put_out_GLuint(t, index);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_write(params, params_maxcount * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1256,13 +1052,7 @@ void yagl_host_glGetVertexAttribiv(GLuint index, GLenum pname, GLint *params, in
     yagl_transport_put_out_GLuint(t, index);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLint));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_write(params, params_maxcount * sizeof(GLint));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1302,13 +1092,7 @@ void yagl_host_glUniform1fv(GLboolean tl, uint32_t location, const GLfloat *v, i
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_array(t, v, v_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(v, v_count * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1336,13 +1120,7 @@ void yagl_host_glUniform1iv(GLboolean tl, uint32_t location, const GLint *v, int
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_array(t, v, v_count, sizeof(GLint));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(v, v_count * sizeof(GLint));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1371,13 +1149,7 @@ void yagl_host_glUniform2fv(GLboolean tl, uint32_t location, const GLfloat *v, i
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_array(t, v, v_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(v, v_count * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1406,13 +1178,7 @@ void yagl_host_glUniform2iv(GLboolean tl, uint32_t location, const GLint *v, int
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_array(t, v, v_count, sizeof(GLint));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(v, v_count * sizeof(GLint));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1442,13 +1208,7 @@ void yagl_host_glUniform3fv(GLboolean tl, uint32_t location, const GLfloat *v, i
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_array(t, v, v_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(v, v_count * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1478,13 +1238,7 @@ void yagl_host_glUniform3iv(GLboolean tl, uint32_t location, const GLint *v, int
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_array(t, v, v_count, sizeof(GLint));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(v, v_count * sizeof(GLint));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1515,13 +1269,7 @@ void yagl_host_glUniform4fv(GLboolean tl, uint32_t location, const GLfloat *v, i
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_array(t, v, v_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(v, v_count * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1552,13 +1300,7 @@ void yagl_host_glUniform4iv(GLboolean tl, uint32_t location, const GLint *v, int
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_array(t, v, v_count, sizeof(GLint));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(v, v_count * sizeof(GLint));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1573,13 +1315,7 @@ void yagl_host_glUniformMatrix2fv(GLboolean tl, uint32_t location, GLboolean tra
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_GLboolean(t, transpose);
     yagl_transport_put_out_array(t, value, value_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(value, value_count * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1594,13 +1330,7 @@ void yagl_host_glUniformMatrix3fv(GLboolean tl, uint32_t location, GLboolean tra
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_GLboolean(t, transpose);
     yagl_transport_put_out_array(t, value, value_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(value, value_count * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1615,13 +1345,7 @@ void yagl_host_glUniformMatrix4fv(GLboolean tl, uint32_t location, GLboolean tra
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_GLboolean(t, transpose);
     yagl_transport_put_out_array(t, value, value_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(value, value_count * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1671,13 +1395,7 @@ void yagl_host_glVertexAttrib1fv(GLuint indx, const GLfloat *values, int32_t val
     yagl_transport_begin(t, yagl_api_id_gles, 95, 3 * 8, 1 * 8 + yagl_transport_array_size(values, values_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLuint(t, indx);
     yagl_transport_put_out_array(t, values, values_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(values, values_count * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1704,13 +1422,7 @@ void yagl_host_glVertexAttrib2fv(GLuint indx, const GLfloat *values, int32_t val
     yagl_transport_begin(t, yagl_api_id_gles, 97, 3 * 8, 1 * 8 + yagl_transport_array_size(values, values_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLuint(t, indx);
     yagl_transport_put_out_array(t, values, values_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(values, values_count * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1738,13 +1450,7 @@ void yagl_host_glVertexAttrib3fv(GLuint indx, const GLfloat *values, int32_t val
     yagl_transport_begin(t, yagl_api_id_gles, 99, 3 * 8, 1 * 8 + yagl_transport_array_size(values, values_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLuint(t, indx);
     yagl_transport_put_out_array(t, values, values_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(values, values_count * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1773,13 +1479,7 @@ void yagl_host_glVertexAttrib4fv(GLuint indx, const GLfloat *values, int32_t val
     yagl_transport_begin(t, yagl_api_id_gles, 101, 3 * 8, 1 * 8 + yagl_transport_array_size(values, values_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLuint(t, indx);
     yagl_transport_put_out_array(t, values, values_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(values, values_count * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1792,13 +1492,7 @@ void yagl_host_glGetIntegerv(GLenum pname, GLint *params, int32_t params_maxcoun
     yagl_transport_begin(t, yagl_api_id_gles, 102, 3 * 8, 1 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLint)));
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLint));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_write(params, params_maxcount * sizeof(GLint));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1811,13 +1505,7 @@ void yagl_host_glGetFloatv(GLenum pname, GLfloat *params, int32_t params_maxcoun
     yagl_transport_begin(t, yagl_api_id_gles, 103, 3 * 8, 1 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLfloat)));
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_write(params, params_maxcount * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1830,13 +1518,7 @@ void yagl_host_glGetString(GLenum name, GLchar *str, int32_t str_maxcount, int32
     yagl_transport_begin(t, yagl_api_id_gles, 104, 3 * 8, 1 * 8 + yagl_transport_array_size(str, str_maxcount, sizeof(GLchar)));
     yagl_transport_put_out_GLenum(t, name);
     yagl_transport_put_in_array(t, str, str_maxcount, str_count, sizeof(GLchar));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_write(str, str_maxcount * sizeof(GLchar));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -1864,13 +1546,7 @@ void yagl_host_glDeleteObjects(const GLuint *objects, int32_t objects_count)
 
     yagl_transport_begin(t, yagl_api_id_gles, 106, 2 * 8, 0 * 8 + yagl_transport_array_size(objects, objects_count, sizeof(GLuint)));
     yagl_transport_put_out_array(t, objects, objects_count, sizeof(GLuint));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(objects, objects_count * sizeof(GLuint));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -2089,7 +1765,7 @@ void yagl_host_glFlush()
 
     yagl_transport_begin(t, yagl_api_id_gles, 123, 0 * 8, 0 * 8);
     yagl_transport_end(t);
-    yagl_transport_sync(t);
+    yagl_transport_flush(t, NULL);
 }
 
 /*
@@ -2490,13 +2166,7 @@ void yagl_host_glPointParameterfv(GLenum pname, const GLfloat *params, int32_t p
     yagl_transport_begin(t, yagl_api_id_gles, 153, 3 * 8, 1 * 8 + yagl_transport_array_size(params, params_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_array(t, params, params_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(params, params_count * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -2522,13 +2192,7 @@ void yagl_host_glFogfv(GLenum pname, const GLfloat *params, int32_t params_count
     yagl_transport_begin(t, yagl_api_id_gles, 155, 3 * 8, 1 * 8 + yagl_transport_array_size(params, params_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_array(t, params, params_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(params, params_count * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -2573,13 +2237,7 @@ void yagl_host_glLightfv(GLenum light, GLenum pname, const GLfloat *params, int3
     yagl_transport_put_out_GLenum(t, light);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_array(t, params, params_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(params, params_count * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -2593,13 +2251,7 @@ void yagl_host_glGetLightfv(GLenum light, GLenum pname, GLfloat *params, int32_t
     yagl_transport_put_out_GLenum(t, light);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_write(params, params_maxcount * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -2625,13 +2277,7 @@ void yagl_host_glLightModelfv(GLenum pname, const GLfloat *params, int32_t param
     yagl_transport_begin(t, yagl_api_id_gles, 161, 3 * 8, 1 * 8 + yagl_transport_array_size(params, params_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_array(t, params, params_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(params, params_count * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -2659,13 +2305,7 @@ void yagl_host_glMaterialfv(GLenum face, GLenum pname, const GLfloat *params, in
     yagl_transport_put_out_GLenum(t, face);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_array(t, params, params_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(params, params_count * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -2679,13 +2319,7 @@ void yagl_host_glGetMaterialfv(GLenum face, GLenum pname, GLfloat *params, int32
     yagl_transport_put_out_GLenum(t, face);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_write(params, params_maxcount * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -2721,13 +2355,7 @@ void yagl_host_glMultMatrixf(const GLfloat *m, int32_t m_count)
 
     yagl_transport_begin(t, yagl_api_id_gles, 167, 2 * 8, 0 * 8 + yagl_transport_array_size(m, m_count, sizeof(GLfloat)));
     yagl_transport_put_out_array(t, m, m_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(m, m_count * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -2739,13 +2367,7 @@ void yagl_host_glLoadMatrixf(const GLfloat *m, int32_t m_count)
 
     yagl_transport_begin(t, yagl_api_id_gles, 168, 2 * 8, 0 * 8 + yagl_transport_array_size(m, m_count, sizeof(GLfloat)));
     yagl_transport_put_out_array(t, m, m_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(m, m_count * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -2758,13 +2380,7 @@ void yagl_host_glClipPlanef(GLenum plane, const GLfloat *equation, int32_t equat
     yagl_transport_begin(t, yagl_api_id_gles, 169, 3 * 8, 1 * 8 + yagl_transport_array_size(equation, equation_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLenum(t, plane);
     yagl_transport_put_out_array(t, equation, equation_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(equation, equation_count * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -2777,13 +2393,7 @@ void yagl_host_glGetClipPlanef(GLenum pname, GLfloat *eqn, int32_t eqn_maxcount,
     yagl_transport_begin(t, yagl_api_id_gles, 170, 3 * 8, 1 * 8 + yagl_transport_array_size(eqn, eqn_maxcount, sizeof(GLfloat)));
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_array(t, eqn, eqn_maxcount, eqn_count, sizeof(GLfloat));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_write(eqn, eqn_maxcount * sizeof(GLfloat));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -2799,13 +2409,7 @@ void yagl_host_glUpdateOffscreenImageYAGL(GLuint texture, uint32_t width, uint32
     yagl_transport_put_out_uint32_t(t, height);
     yagl_transport_put_out_uint32_t(t, bpp);
     yagl_transport_put_out_array(t, pixels, pixels_count, 1);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(pixels, pixels_count * 1);
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -2819,13 +2423,7 @@ void yagl_host_glGenUniformLocationYAGL(uint32_t location, GLuint program, const
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_put_out_array(t, name, name_count, sizeof(GLchar));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(name, name_count * sizeof(GLchar));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
 
 /*
@@ -2837,11 +2435,5 @@ void yagl_host_glDeleteUniformLocationsYAGL(const uint32_t *locations, int32_t l
 
     yagl_transport_begin(t, yagl_api_id_gles, 173, 2 * 8, 0 * 8 + yagl_transport_array_size(locations, locations_count, sizeof(uint32_t)));
     yagl_transport_put_out_array(t, locations, locations_count, sizeof(uint32_t));
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(locations, locations_count * sizeof(uint32_t));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 }
