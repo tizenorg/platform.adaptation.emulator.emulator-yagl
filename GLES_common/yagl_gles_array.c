@@ -265,7 +265,7 @@ int yagl_gles_array_update_vbo(struct yagl_gles_array *array,
                           array->type,
                           array->need_convert,
                           GL_ARRAY_BUFFER);
-    array->apply(array, 0, 0, NULL, NULL);
+    array->apply(array, 0, 0, NULL, array->user_data);
     yagl_host_glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     return 1;
