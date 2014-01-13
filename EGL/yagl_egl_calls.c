@@ -18,6 +18,9 @@
 #include "yagl_client_context.h"
 #include "yagl_sharegroup.h"
 #include "yagl_tex_image_binding.h"
+#ifdef YAGL_PLATFORM_X11
+#include "x11/yagl_x11_platform.h"
+#endif
 #include "EGL/eglext.h"
 #include <stdio.h>
 #include <string.h>
@@ -1473,7 +1476,36 @@ YAGL_API EGLBoolean eglSwapBuffers(EGLDisplay dpy_, EGLSurface surface_)
 
     res = EGL_TRUE;
 
-    yagl_render_invalidate(0);
+#ifdef YAGL_PLATFORM_X11
+    if (dpy->native_dpy->platform == &yagl_x11_platform) {
+        /*
+         * Normally one should not invalidate right after eglSwapBuffers,
+         * instead invalidate should be called on first rendering call
+         * after eglSwapBuffers (see yagl_render.h:yagl_render_invalidate).
+         * But this doesn't work on Tizen mobile, without this invalidate
+         * Tizen compositor may miss surface updates.
+         * The problem is in "efl_sync" option of the compositor, which is 0
+         * by default in upstream and 1 in Tizen. Setting it to 0 in
+         * config doesn't seem to help, one had to manually change code:
+         * e17-extra-modules/comp-tizen/src/e_mod_comp_cfdata.c:
+         * cfg->efl_sync = 1;
+         * to:
+         * cfg->efl_sync = 0;
+         * AND set efl_sync to 0 in config to make this work.
+         * When efl_sync is set to 1 the compositor acts like this:
+         * + For normal X11 windows nothing is changed
+         * + For e17 windows (created via ecore_x_window_new) it doesn't redraw
+         *   the screen on damage events, but only on special SYNC_DRAW_DONE
+         *   events that are sent from _ecore_evas_x_flush_post, which is called
+         *   after eglSwapBuffers, that's why things work when invalidate
+         *   is inside eglSwapBuffers, it finishes the swap before sending
+         *   SYNC_DRAW_DONE, but once we move invalidate to first rendering call
+         *   after eglSwapBuffers SYNC_DRAW_DONE starts to come before
+         *   uxa copy, thus, missing last frame.
+         */
+        yagl_render_invalidate(0);
+    }
+#endif
 
 out:
     yagl_surface_release(surface);
