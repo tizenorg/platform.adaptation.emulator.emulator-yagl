@@ -59,20 +59,14 @@ static void yagl_onscreen_surface_invalidate(struct yagl_surface *sfc)
 
 static int yagl_onscreen_surface_swap_buffers(struct yagl_surface *sfc)
 {
-    EGLint error = 0;
     struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
     struct yagl_native_drawable *drawable = native_drawable(osfc);
     int ret;
 
     YAGL_LOG_FUNC_SET(eglSwapBuffers);
 
-    if (!yagl_host_eglSwapBuffers(sfc->dpy->host_dpy,
-                                  sfc->res.handle,
-                                  &error)) {
-        yagl_set_error(error);
-        YAGL_LOG_ERROR("eglSwapBuffers failed");
-        return 0;
-    }
+    yagl_host_eglSwapBuffers(sfc->dpy->host_dpy,
+                             sfc->res.handle);
 
     ret = vigs_drm_surface_set_gpu_dirty(osfc->drm_sfc);
 
@@ -89,20 +83,14 @@ static int yagl_onscreen_surface_swap_buffers(struct yagl_surface *sfc)
 static int yagl_onscreen_surface_copy_buffers(struct yagl_surface *sfc,
                                               yagl_os_pixmap target)
 {
-    EGLint error = 0;
     struct yagl_onscreen_surface *osfc = (struct yagl_onscreen_surface*)sfc;
     struct yagl_native_drawable *drawable = native_drawable(osfc);
     int ret;
 
     YAGL_LOG_FUNC_SET(eglCopyBuffers);
 
-    if (!yagl_host_eglCopyBuffers(sfc->dpy->host_dpy,
-                                  sfc->res.handle,
-                                  &error)) {
-        yagl_set_error(error);
-        YAGL_LOG_ERROR("eglCopyBuffers failed");
-        return 0;
-    }
+    yagl_host_eglCopyBuffers(sfc->dpy->host_dpy,
+                             sfc->res.handle);
 
     ret = vigs_drm_surface_set_gpu_dirty(osfc->drm_sfc);
 

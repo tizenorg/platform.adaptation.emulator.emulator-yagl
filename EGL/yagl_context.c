@@ -3,11 +3,16 @@
 #include "yagl_malloc.h"
 #include "yagl_utils.h"
 #include "yagl_display.h"
+#include "yagl_fence.h"
+#include "yagl_transport.h"
+#include "yagl_state.h"
 #include "yagl_client_context.h"
 
 static void yagl_context_destroy(struct yagl_ref *ref)
 {
     struct yagl_context *ctx = (struct yagl_context*)ref;
+
+    yagl_fence_release(ctx->throttle_fence);
 
     pthread_mutex_destroy(&ctx->mtx);
 
@@ -35,6 +40,32 @@ struct yagl_context
     yagl_mutex_init(&ctx->mtx);
 
     return ctx;
+}
+
+void yagl_context_set_need_throttle(struct yagl_context *ctx,
+                                    struct yagl_fence *throttle_fence)
+{
+    ctx->need_throttle = 1;
+    yagl_fence_acquire(throttle_fence);
+    yagl_fence_release(ctx->throttle_fence);
+    ctx->throttle_fence = throttle_fence;
+}
+
+void yagl_context_throttle(struct yagl_context *ctx)
+{
+    if (!ctx->need_throttle) {
+        return;
+    }
+
+    if (ctx->throttle_fence) {
+        ctx->throttle_fence->wait(ctx->throttle_fence);
+        yagl_fence_release(ctx->throttle_fence);
+        ctx->throttle_fence = NULL;
+    } else {
+        yagl_transport_wait(yagl_get_transport());
+    }
+
+    ctx->need_throttle = 0;
 }
 
 int yagl_context_mark_current(struct yagl_context *ctx, int current)

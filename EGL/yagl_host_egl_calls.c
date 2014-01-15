@@ -72,13 +72,7 @@ EGLBoolean yagl_host_eglGetConfigs(yagl_host_handle dpy, yagl_host_handle *confi
     yagl_transport_put_in_array(t, configs, configs_maxcount, configs_count, sizeof(yagl_host_handle));
     yagl_transport_put_in_EGLint(t, error);
     yagl_transport_put_in_EGLBoolean(t, &retval);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_write(configs, configs_maxcount * sizeof(yagl_host_handle));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 
     return retval;
 }
@@ -97,14 +91,7 @@ EGLBoolean yagl_host_eglChooseConfig(yagl_host_handle dpy, const EGLint *attrib_
     yagl_transport_put_in_array(t, configs, configs_maxcount, configs_count, sizeof(yagl_host_handle));
     yagl_transport_put_in_EGLint(t, error);
     yagl_transport_put_in_EGLBoolean(t, &retval);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(attrib_list, attrib_list_count * sizeof(EGLint));
-            yagl_transport_probe_write(configs, configs_maxcount * sizeof(yagl_host_handle));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 
     return retval;
 }
@@ -188,7 +175,7 @@ void yagl_host_eglWaitClient()
 
     yagl_transport_begin(t, yagl_api_id_egl, 10, 0 * 8, 0 * 8);
     yagl_transport_end(t);
-    yagl_transport_sync(t);
+    yagl_transport_flush(t, NULL);
 }
 
 /*
@@ -242,13 +229,7 @@ yagl_host_handle yagl_host_eglCreateContext(yagl_host_handle dpy, yagl_host_hand
     yagl_transport_put_out_array(t, attrib_list, attrib_list_count, sizeof(EGLint));
     yagl_transport_put_in_EGLint(t, error);
     yagl_transport_put_in_yagl_host_handle(t, &retval);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(attrib_list, attrib_list_count * sizeof(EGLint));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 
     return retval;
 }
@@ -309,37 +290,29 @@ EGLBoolean yagl_host_eglQueryContext(yagl_host_handle dpy, yagl_host_handle ctx,
 /*
  * eglSwapBuffers wrapper. id = 17
  */
-EGLBoolean yagl_host_eglSwapBuffers(yagl_host_handle dpy, yagl_host_handle surface, EGLint *error)
+void yagl_host_eglSwapBuffers(yagl_host_handle dpy, yagl_host_handle surface)
 {
     struct yagl_transport *t = yagl_get_transport();
-    EGLBoolean retval;
 
-    yagl_transport_begin(t, yagl_api_id_egl, 17, 6 * 8, 6 * 8);
+    yagl_transport_begin(t, yagl_api_id_egl, 17, 2 * 8, 2 * 8);
     yagl_transport_put_out_yagl_host_handle(t, dpy);
     yagl_transport_put_out_yagl_host_handle(t, surface);
-    yagl_transport_put_in_EGLint(t, error);
-    yagl_transport_put_in_EGLBoolean(t, &retval);
     yagl_transport_end(t);
-
-    return retval;
+    yagl_transport_flush(t, NULL);
 }
 
 /*
  * eglCopyBuffers wrapper. id = 18
  */
-EGLBoolean yagl_host_eglCopyBuffers(yagl_host_handle dpy, yagl_host_handle surface, EGLint *error)
+void yagl_host_eglCopyBuffers(yagl_host_handle dpy, yagl_host_handle surface)
 {
     struct yagl_transport *t = yagl_get_transport();
-    EGLBoolean retval;
 
-    yagl_transport_begin(t, yagl_api_id_egl, 18, 6 * 8, 6 * 8);
+    yagl_transport_begin(t, yagl_api_id_egl, 18, 2 * 8, 2 * 8);
     yagl_transport_put_out_yagl_host_handle(t, dpy);
     yagl_transport_put_out_yagl_host_handle(t, surface);
-    yagl_transport_put_in_EGLint(t, error);
-    yagl_transport_put_in_EGLBoolean(t, &retval);
     yagl_transport_end(t);
-
-    return retval;
+    yagl_transport_flush(t, NULL);
 }
 
 /*
@@ -360,13 +333,7 @@ yagl_host_handle yagl_host_eglCreateWindowSurfaceOffscreenYAGL(yagl_host_handle 
     yagl_transport_put_out_array(t, attrib_list, attrib_list_count, sizeof(EGLint));
     yagl_transport_put_in_EGLint(t, error);
     yagl_transport_put_in_yagl_host_handle(t, &retval);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(attrib_list, attrib_list_count * sizeof(EGLint));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 
     return retval;
 }
@@ -389,13 +356,7 @@ yagl_host_handle yagl_host_eglCreatePbufferSurfaceOffscreenYAGL(yagl_host_handle
     yagl_transport_put_out_array(t, attrib_list, attrib_list_count, sizeof(EGLint));
     yagl_transport_put_in_EGLint(t, error);
     yagl_transport_put_in_yagl_host_handle(t, &retval);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(attrib_list, attrib_list_count * sizeof(EGLint));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 
     return retval;
 }
@@ -418,13 +379,7 @@ yagl_host_handle yagl_host_eglCreatePixmapSurfaceOffscreenYAGL(yagl_host_handle 
     yagl_transport_put_out_array(t, attrib_list, attrib_list_count, sizeof(EGLint));
     yagl_transport_put_in_EGLint(t, error);
     yagl_transport_put_in_yagl_host_handle(t, &retval);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(attrib_list, attrib_list_count * sizeof(EGLint));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 
     return retval;
 }
@@ -466,13 +421,7 @@ yagl_host_handle yagl_host_eglCreateWindowSurfaceOnscreenYAGL(yagl_host_handle d
     yagl_transport_put_out_array(t, attrib_list, attrib_list_count, sizeof(EGLint));
     yagl_transport_put_in_EGLint(t, error);
     yagl_transport_put_in_yagl_host_handle(t, &retval);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(attrib_list, attrib_list_count * sizeof(EGLint));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 
     return retval;
 }
@@ -492,13 +441,7 @@ yagl_host_handle yagl_host_eglCreatePbufferSurfaceOnscreenYAGL(yagl_host_handle 
     yagl_transport_put_out_array(t, attrib_list, attrib_list_count, sizeof(EGLint));
     yagl_transport_put_in_EGLint(t, error);
     yagl_transport_put_in_yagl_host_handle(t, &retval);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(attrib_list, attrib_list_count * sizeof(EGLint));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 
     return retval;
 }
@@ -518,13 +461,7 @@ yagl_host_handle yagl_host_eglCreatePixmapSurfaceOnscreenYAGL(yagl_host_handle d
     yagl_transport_put_out_array(t, attrib_list, attrib_list_count, sizeof(EGLint));
     yagl_transport_put_in_EGLint(t, error);
     yagl_transport_put_in_yagl_host_handle(t, &retval);
-    if (yagl_transport_direct(t)) {
-        do {
-            yagl_transport_probe_read(attrib_list, attrib_list_count * sizeof(EGLint));
-        } while (!yagl_transport_end(t));
-    } else {
-        yagl_transport_end(t);
-    }
+    yagl_transport_end(t);
 
     return retval;
 }
@@ -541,7 +478,7 @@ void yagl_host_eglInvalidateOnscreenSurfaceYAGL(yagl_host_handle dpy, yagl_host_
     yagl_transport_put_out_yagl_host_handle(t, surface);
     yagl_transport_put_out_yagl_winsys_id(t, buffer);
     yagl_transport_end(t);
-    yagl_transport_sync(t);
+    yagl_transport_flush(t, NULL);
 }
 
 /*

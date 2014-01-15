@@ -583,7 +583,7 @@ YAGL_API void glSampleCoverage(GLclampf value, GLboolean invert)
 YAGL_API void glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT4(glScissor, GLint, GLint, GLsizei, GLsizei, x, y, width, height);
-    yagl_render_invalidate();
+    yagl_render_invalidate(0);
     yagl_host_glScissor(x, y, width, height);
     YAGL_LOG_FUNC_EXIT(NULL);
 }
@@ -634,7 +634,7 @@ YAGL_API void glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
         goto out;
     }
 
-    yagl_render_invalidate();
+    yagl_render_invalidate(0);
 
     ctx->have_viewport = 1;
     ctx->viewport[0] = x;
@@ -1073,7 +1073,8 @@ YAGL_API void glClear(GLbitfield mask)
 
     YAGL_GET_CTX();
 
-    yagl_render_invalidate();
+    yagl_render_invalidate((mask & GL_COLOR_BUFFER_BIT));
+
     yagl_host_glClear(mask);
 
     YAGL_LOG_FUNC_EXIT(NULL);
@@ -2246,7 +2247,7 @@ YAGL_API void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLen
         goto out;
     }
 
-    yagl_render_invalidate();
+    yagl_render_invalidate(0);
 
     pixels_from = yagl_convert_from_host_start(ctx->pack_alignment,
                                                width,
@@ -2428,7 +2429,7 @@ YAGL_API void glBlitFramebuffer(GLint srcX0, GLint srcY0,
 
     YAGL_GET_CTX();
 
-    yagl_render_invalidate();
+    yagl_render_invalidate(0);
 
     yagl_host_glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
 

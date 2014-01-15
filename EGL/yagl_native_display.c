@@ -1,9 +1,11 @@
 #include "yagl_native_display.h"
 #include "yagl_log.h"
+#include "yagl_backend.h"
 #ifdef YAGL_PLATFORM_WAYLAND
 #include "wayland-drm.h"
 #endif
 #include "vigs.h"
+#include "EGL/eglmesaext.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -130,6 +132,9 @@ int yagl_native_display_query_wl_buffer(struct yagl_native_display *dpy,
         break;
     case EGL_HEIGHT:
         *value = drm_sfc->height;
+        break;
+    case EGL_WAYLAND_Y_INVERTED_WL:
+        *value = yagl_get_backend()->y_inverted;
         break;
     default:
         return 0;

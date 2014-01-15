@@ -765,6 +765,14 @@ int yagl_gles_context_get_integerv(struct yagl_gles_context *ctx,
         *params = ctx->unpack_alignment;
         *num_params = 1;
         break;
+    case GL_IMPLEMENTATION_COLOR_READ_FORMAT:
+        *params = GL_RGBA;
+        *num_params = 1;
+        break;
+    case GL_IMPLEMENTATION_COLOR_READ_TYPE:
+        *params = GL_UNSIGNED_BYTE;
+        *num_params = 1;
+        break;
     case GL_VIEWPORT:
         if (ctx->have_viewport) {
             params[0] = ctx->viewport[0];
@@ -809,12 +817,6 @@ int yagl_gles_context_get_integerv(struct yagl_gles_context *ctx,
     }
 
     switch (pname) {
-    case GL_IMPLEMENTATION_COLOR_READ_FORMAT:
-        *num_params = 1;
-        break;
-    case GL_IMPLEMENTATION_COLOR_READ_TYPE:
-        *num_params = 1;
-        break;
     case GL_MAX_RENDERBUFFER_SIZE:
         *num_params = 1;
         break;
@@ -999,7 +1001,7 @@ void yagl_gles_context_draw_arrays(struct yagl_gles_context *ctx,
         goto out;
     }
 
-    yagl_render_invalidate();
+    yagl_render_invalidate(0);
 
     for (i = 0; i < ctx->vao->num_arrays; ++i) {
         yagl_gles_array_transfer(&ctx->vao->arrays[i],
@@ -1045,7 +1047,7 @@ void yagl_gles_context_draw_elements(struct yagl_gles_context *ctx,
         goto out;
     }
 
-    yagl_render_invalidate();
+    yagl_render_invalidate(0);
 
     for (i = 0; i < ctx->vao->num_arrays; ++i) {
         if (!ctx->vao->arrays[i].enabled) {

@@ -9,11 +9,18 @@
 #define YAGL_TRANSPORT_MAX_IN_ARGS 8
 #define YAGL_TRANSPORT_MAX_IN_ARRAYS 8
 
+#define YAGL_TRANSPORT_MAX_IN_DA 8
+#define YAGL_TRANSPORT_MAX_OUT_DA 8
+
 struct yagl_transport_ops
 {
     void *(*resize)(void */*ops_data*/, uint32_t /*size*/);
 
-    void (*commit)(void */*ops_data*/, uint32_t /*offset*/);
+    void (*commit)(void */*ops_data*/, int /*sync*/);
+
+    uint32_t (*flush)(void */*ops_data*/, void **/*fence*/);
+
+    void (*fence_wait)(void */*ops_data*/, void */*fence*/);
 };
 
 struct yagl_transport_in_arg
@@ -30,6 +37,12 @@ struct yagl_transport_in_array
     uint32_t el_size;
     int32_t *count;
     int32_t *ret_count;
+};
+
+struct yagl_transport_da
+{
+    void *data;
+    int32_t size;
 };
 
 struct yagl_transport
@@ -61,17 +74,17 @@ struct yagl_transport
 
     int direct;
 
-    uint8_t *ptr_begin;
-
     uint32_t num_in_args;
     uint32_t num_in_arrays;
 
-    uint32_t *res;
-
-    uint32_t retry_count;
+    uint32_t num_in_da;
+    uint32_t num_out_da;
 
     struct yagl_transport_in_arg in_args[YAGL_TRANSPORT_MAX_IN_ARGS];
     struct yagl_transport_in_array in_arrays[YAGL_TRANSPORT_MAX_IN_ARRAYS];
+
+    struct yagl_transport_da in_da[YAGL_TRANSPORT_MAX_IN_DA];
+    struct yagl_transport_da out_da[YAGL_TRANSPORT_MAX_OUT_DA];
 
     /*
      * @}
@@ -92,14 +105,18 @@ YAGL_API void yagl_transport_begin(struct yagl_transport *t,
                                    uint32_t min_data_size,
                                    uint32_t max_data_size);
 
-YAGL_API int yagl_transport_end(struct yagl_transport *t);
+YAGL_API void yagl_transport_end(struct yagl_transport *t);
 
-YAGL_API void yagl_transport_sync(struct yagl_transport *t);
+YAGL_API void yagl_transport_flush(struct yagl_transport *t,
+                                   void *fence);
 
-static __inline int yagl_transport_direct(struct yagl_transport *t)
-{
-    return t->direct;
-}
+/*
+ * Waits until all commands for this transport
+ * are done on host. The wait is ON HOST, not very nice,
+ * but it supposed to be used in offscreen backend only,
+ * so we don't care.
+ */
+YAGL_API void yagl_transport_wait(struct yagl_transport *t);
 
 /*
  * All marshalling/unmarshalling must be done with 8-byte alignment,
@@ -189,7 +206,16 @@ static __inline void yagl_transport_put_out_array(struct yagl_transport *t,
     yagl_transport_put_out_uint32_t(t, (uint32_t)data);
     yagl_transport_put_out_uint32_t(t, count);
 
-    if (!t->direct && data && (count > 0)) {
+    if (!data || (count <= 0)) {
+        return;
+    }
+
+    if (t->direct) {
+        t->out_da[t->num_out_da].data = (void*)data;
+        t->out_da[t->num_out_da].size = count * el_size;
+
+        ++t->num_out_da;
+    } else {
         memcpy(t->ptr, data, count * el_size);
         t->ptr += (count * el_size + 7U) & ~7U;
     }
@@ -215,7 +241,16 @@ static __inline void yagl_transport_put_in_array(struct yagl_transport *t,
 
     ++t->num_in_arrays;
 
-    if (!t->direct && data && (maxcount > 0)) {
+    if (!data || (maxcount <= 0)) {
+        return;
+    }
+
+    if (t->direct) {
+        t->in_da[t->num_in_da].data = data;
+        t->in_da[t->num_in_da].size = maxcount * el_size;
+
+        ++t->num_in_da;
+    } else {
         t->ptr += (maxcount * el_size + 7U) & ~7U;
     }
 }
