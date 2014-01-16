@@ -61,9 +61,6 @@ mkdir -p %{buildroot}/etc/emulator
 cp packaging/virtgl.sh %{buildroot}/etc/emulator
 %endif
 
-mkdir -p %{buildroot}/usr/lib/udev/rules.d
-cp packaging/95-tizen-emulator.rules %{buildroot}/usr/lib/udev/rules.d
-
 mkdir -p %{buildroot}/usr/include
 cp -r include/EGL %{buildroot}/usr/include/
 cp -r include/GL %{buildroot}/usr/include/
@@ -78,7 +75,6 @@ cp -r include/KHR %{buildroot}/usr/include/
 %files
 %manifest %{name}.manifest
 %defattr(-,root,root,-)
-/usr/lib/udev/rules.d/95-tizen-emulator.rules
 %if %{with wayland}
 /usr/lib/*.so*
 %else
