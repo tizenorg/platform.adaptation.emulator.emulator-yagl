@@ -2207,16 +2207,25 @@ YAGL_API YAGL_ALIAS(glCopyTexSubImage3D, glCopyTexSubImage3DOES);
 
 YAGL_API void glCompressedTexImage3D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLsizei imageSize, const void *data)
 {
+    /*
+     * TODO: Implement
+     */
 }
 YAGL_API YAGL_ALIAS(glCompressedTexImage3D, glCompressedTexImage3DOES);
 
 YAGL_API void glCompressedTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLsizei imageSize, const void *data)
 {
+    /*
+     * TODO: Implement
+     */
 }
 YAGL_API YAGL_ALIAS(glCompressedTexSubImage3D, glCompressedTexSubImage3DOES);
 
 YAGL_API void glFramebufferTexture3D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLint zoffset)
 {
+    /*
+     * TODO: Implement
+     */
 }
 YAGL_API YAGL_ALIAS(glFramebufferTexture3D, glFramebufferTexture3DOES);
 
