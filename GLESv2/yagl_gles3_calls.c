@@ -7,8 +7,12 @@
 #include "yagl_gles3_query.h"
 #include "yagl_gles3_validate.h"
 #include "yagl_gles2_shader.h"
-#include "yagl_sharegroup.h"
+#include "yagl_gles2_validate.h"
 #include "yagl_gles_buffer.h"
+#include "yagl_gles_texture.h"
+#include "yagl_gles_framebuffer.h"
+#include "yagl_gles_validate.h"
+#include "yagl_sharegroup.h"
 #include "yagl_log.h"
 #include "yagl_impl.h"
 #include "yagl_malloc.h"
@@ -857,4 +861,74 @@ YAGL_API GLboolean glIsQuery(GLuint id)
     YAGL_LOG_FUNC_EXIT_SPLIT(GLboolean, res);
 
     return res;
+}
+
+YAGL_API void glFramebufferTextureLayer(GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer)
+{
+    struct yagl_gles_framebuffer *framebuffer_obj = NULL;
+    struct yagl_gles_texture *texture_obj = NULL;
+    yagl_gles_framebuffer_attachment framebuffer_attachment;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT5(glFramebufferTextureLayer, GLenum, GLenum, GLuint, GLint, GLint, target, attachment, texture, level, layer);
+
+    YAGL_GET_CTX();
+
+    if (!yagl_gles_context_acquire_binded_framebuffer(&ctx->base.base,
+                                                      target,
+                                                      &framebuffer_obj)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if (!framebuffer_obj) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (texture) {
+        texture_obj = (struct yagl_gles_texture*)yagl_sharegroup_acquire_object(ctx->base.sg,
+            YAGL_NS_TEXTURE, texture);
+
+        if (!texture_obj) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            goto out;
+        }
+
+        if (!yagl_gles2_is_texture_target_layered(yagl_gles_texture_get_target(texture_obj))) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            goto out;
+        }
+
+        if (layer < 0) {
+            YAGL_SET_ERR(GL_INVALID_VALUE);
+            goto out;
+        }
+    }
+
+    if (attachment == GL_DEPTH_STENCIL_ATTACHMENT) {
+        yagl_gles_framebuffer_texture_layer(framebuffer_obj,
+                                            target, GL_DEPTH_ATTACHMENT,
+                                            yagl_gles_framebuffer_attachment_depth,
+                                            texture_obj, level, layer);
+        yagl_gles_framebuffer_texture_layer(framebuffer_obj,
+                                            target, GL_STENCIL_ATTACHMENT,
+                                            yagl_gles_framebuffer_attachment_stencil,
+                                            texture_obj, level, layer);
+    } else {
+        if (!yagl_gles_validate_framebuffer_attachment(attachment,
+                                                       ctx->base.base.max_color_attachments,
+                                                       &framebuffer_attachment)) {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
+            goto out;
+        }
+
+        yagl_gles_framebuffer_texture_layer(framebuffer_obj,
+                                            target, attachment,
+                                            framebuffer_attachment,
+                                            texture_obj, level, layer);
+    }
+
+out:
+    yagl_gles_texture_release(texture_obj);
+    yagl_gles_framebuffer_release(framebuffer_obj);
 }

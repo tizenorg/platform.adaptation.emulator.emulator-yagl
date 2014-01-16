@@ -1,4 +1,4 @@
-#include "GL/gl.h"
+#include "GLES3/gl3.h"
 #include "yagl_gles2_validate.h"
 
 int yagl_gles2_is_shader_type_valid(GLenum type)
@@ -12,9 +12,10 @@ int yagl_gles2_is_shader_type_valid(GLenum type)
     }
 }
 
-int yagl_gles2_is_texture_target_3d(GLenum target)
+int yagl_gles2_is_texture_target_layered(GLenum target)
 {
     switch (target) {
+    case GL_TEXTURE_2D_ARRAY:
     case GL_TEXTURE_3D:
         return 1;
     default:

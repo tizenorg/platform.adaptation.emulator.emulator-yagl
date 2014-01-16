@@ -54,11 +54,6 @@ YAGL_API void glRenderbufferStorageMultisample(GLenum target, GLsizei samples, G
     exit(5);
 }
 
-YAGL_API void glFramebufferTextureLayer(GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer)
-{
-    exit(5);
-}
-
 YAGL_API void glGetInteger64v(GLenum pname, GLint64 *params)
 {
     exit(5);

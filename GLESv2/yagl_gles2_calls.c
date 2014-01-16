@@ -2084,13 +2084,21 @@ YAGL_API YAGL_ALIAS(glVertexAttribDivisor, glVertexAttribDivisorEXT);
 
 YAGL_API void glTexImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const void *pixels)
 {
+    yagl_gles_texture_target texture_target;
     GLsizei stride = 0;
 
     YAGL_LOG_FUNC_ENTER_SPLIT10(glTexImage3D, GLenum, GLint, GLint, GLsizei, GLsizei, GLsizei, GLint, GLenum, GLenum, const void*, target, level, internalformat, width, height, depth, border, format, type, pixels);
 
     YAGL_GET_CTX();
 
-    if (!yagl_gles2_is_texture_target_3d(target)) {
+    if (!yagl_gles_context_validate_texture_target(&ctx->base,
+                                                   target,
+                                                   &texture_target)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if (!yagl_gles2_is_texture_target_layered(target)) {
         YAGL_SET_ERR(GL_INVALID_ENUM);
         goto out;
     }
@@ -2132,13 +2140,21 @@ YAGL_API YAGL_ALIAS(glTexImage3D, glTexImage3DOES);
 
 YAGL_API void glTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const void *pixels)
 {
+    yagl_gles_texture_target texture_target;
     GLsizei stride = 0;
 
     YAGL_LOG_FUNC_ENTER_SPLIT11(glTexSubImage3D, GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLenum, const void*, target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, pixels);
 
     YAGL_GET_CTX();
 
-    if (!yagl_gles2_is_texture_target_3d(target)) {
+    if (!yagl_gles_context_validate_texture_target(&ctx->base,
+                                                   target,
+                                                   &texture_target)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if (!yagl_gles2_is_texture_target_layered(target)) {
         YAGL_SET_ERR(GL_INVALID_ENUM);
         goto out;
     }
@@ -2181,11 +2197,20 @@ YAGL_API YAGL_ALIAS(glTexSubImage3D, glTexSubImage3DOES);
 
 YAGL_API void glCopyTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height)
 {
+    yagl_gles_texture_target texture_target;
+
     YAGL_LOG_FUNC_ENTER_SPLIT9(glCopyTexSubImage3D, GLenum, GLint, GLint, GLint, GLint, GLint, GLint, GLsizei, GLsizei, target, level, xoffset, yoffset, zoffset, x, y, width, height);
 
     YAGL_GET_CTX();
 
-    if (!yagl_gles2_is_texture_target_3d(target)) {
+    if (!yagl_gles_context_validate_texture_target(&ctx->base,
+                                                   target,
+                                                   &texture_target)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if (!yagl_gles2_is_texture_target_layered(target)) {
         YAGL_SET_ERR(GL_INVALID_ENUM);
         goto out;
     }

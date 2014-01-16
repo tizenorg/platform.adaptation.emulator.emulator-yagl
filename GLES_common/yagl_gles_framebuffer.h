@@ -14,6 +14,8 @@ struct yagl_gles_framebuffer_attachment_state
     yagl_object_name local_name;
 
     GLenum textarget;
+
+    GLint layer;
 };
 
 struct yagl_gles_framebuffer
@@ -55,6 +57,14 @@ void yagl_gles_framebuffer_texture2d(struct yagl_gles_framebuffer *fb,
                                      GLenum textarget,
                                      GLint level,
                                      struct yagl_gles_texture *texture);
+
+void yagl_gles_framebuffer_texture_layer(struct yagl_gles_framebuffer *fb,
+                                         GLenum target,
+                                         GLenum attachment,
+                                         yagl_gles_framebuffer_attachment framebuffer_attachment,
+                                         struct yagl_gles_texture *texture,
+                                         GLint level,
+                                         GLint layer);
 
 /*
  * Assumes that 'target' is valid.

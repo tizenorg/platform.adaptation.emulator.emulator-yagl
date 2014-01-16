@@ -496,9 +496,21 @@ static int yagl_gles3_context_validate_texture_target(struct yagl_gles_context *
                                                       GLenum target,
                                                       yagl_gles_texture_target *texture_target)
 {
-    return yagl_gles2_context_validate_texture_target(ctx,
-                                                      target,
-                                                      texture_target);
+    if (yagl_gles2_context_validate_texture_target(ctx,
+                                                   target,
+                                                   texture_target)) {
+        return 1;
+    }
+
+    switch (target) {
+    case GL_TEXTURE_2D_ARRAY:
+        *texture_target = yagl_gles_texture_target_2d_array;
+        break;
+    default:
+        return 0;
+    }
+
+    return 1;
 }
 
 static int yagl_gles3_context_get_stride(struct yagl_gles_context *ctx,

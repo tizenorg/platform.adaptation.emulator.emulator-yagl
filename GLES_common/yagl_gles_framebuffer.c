@@ -62,6 +62,7 @@ void yagl_gles_framebuffer_renderbuffer(struct yagl_gles_framebuffer *fb,
                                         struct yagl_gles_renderbuffer *rb)
 {
     fb->attachment_states[framebuffer_attachment].textarget = 0;
+    fb->attachment_states[framebuffer_attachment].layer = 0;
 
     if (rb) {
         fb->attachment_states[framebuffer_attachment].type = GL_RENDERBUFFER;
@@ -86,6 +87,7 @@ void yagl_gles_framebuffer_texture2d(struct yagl_gles_framebuffer *fb,
                                      struct yagl_gles_texture *texture)
 {
     fb->attachment_states[framebuffer_attachment].textarget = 0;
+    fb->attachment_states[framebuffer_attachment].layer = 0;
 
     if (texture) {
         fb->attachment_states[framebuffer_attachment].type = GL_TEXTURE;
@@ -101,6 +103,34 @@ void yagl_gles_framebuffer_texture2d(struct yagl_gles_framebuffer *fb,
                                      textarget,
                                      (texture ? texture->global_name : 0),
                                      level);
+}
+
+void yagl_gles_framebuffer_texture_layer(struct yagl_gles_framebuffer *fb,
+                                         GLenum target,
+                                         GLenum attachment,
+                                         yagl_gles_framebuffer_attachment framebuffer_attachment,
+                                         struct yagl_gles_texture *texture,
+                                         GLint level,
+                                         GLint layer)
+{
+    fb->attachment_states[framebuffer_attachment].textarget = 0;
+
+    if (texture) {
+        fb->attachment_states[framebuffer_attachment].type = GL_TEXTURE;
+        fb->attachment_states[framebuffer_attachment].local_name = texture->base.local_name;
+        fb->attachment_states[framebuffer_attachment].textarget = yagl_gles_texture_get_target(texture);
+        fb->attachment_states[framebuffer_attachment].layer = layer;
+    } else {
+        fb->attachment_states[framebuffer_attachment].type = GL_NONE;
+        fb->attachment_states[framebuffer_attachment].local_name = 0;
+        fb->attachment_states[framebuffer_attachment].layer = 0;
+    }
+
+    yagl_host_glFramebufferTextureLayer(target,
+                                        attachment,
+                                        (texture ? texture->global_name : 0),
+                                        level,
+                                        layer);
 }
 
 void yagl_gles_framebuffer_bind(struct yagl_gles_framebuffer *fb,
