@@ -11,6 +11,7 @@
 #include "yagl_gles_buffer.h"
 #include "yagl_gles_texture.h"
 #include "yagl_gles_framebuffer.h"
+#include "yagl_gles_sampler.h"
 #include "yagl_gles_validate.h"
 #include "yagl_sharegroup.h"
 #include "yagl_log.h"
@@ -931,4 +932,316 @@ YAGL_API void glFramebufferTextureLayer(GLenum target, GLenum attachment, GLuint
 out:
     yagl_gles_texture_release(texture_obj);
     yagl_gles_framebuffer_release(framebuffer_obj);
+}
+
+YAGL_API void glGenSamplers(GLsizei count, GLuint *sampler_names)
+{
+    struct yagl_gles_sampler **samplers = NULL;
+    GLsizei i;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glGenSamplers, GLsizei, GLuint*, count, sampler_names);
+
+    YAGL_GET_CTX();
+
+    if (count < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    samplers = yagl_malloc0(count * sizeof(*samplers));
+
+    for (i = 0; i < count; ++i) {
+        samplers[i] = yagl_gles_sampler_create();
+
+        if (!samplers[i]) {
+            goto out;
+        }
+    }
+
+    for (i = 0; i < count; ++i) {
+        yagl_sharegroup_add(ctx->base.sg,
+                            YAGL_NS_SAMPLER,
+                            &samplers[i]->base);
+
+        if (sampler_names) {
+            sampler_names[i] = samplers[i]->base.local_name;
+        }
+    }
+
+out:
+    for (i = 0; i < count; ++i) {
+        yagl_gles_sampler_release(samplers[i]);
+    }
+    yagl_free(samplers);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glDeleteSamplers(GLsizei count, const GLuint *samplers)
+{
+    GLsizei i;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glDeleteSamplers, GLsizei, const GLuint*, count, samplers);
+
+    YAGL_GET_CTX();
+
+    if (count < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (samplers) {
+        for (i = 0; i < count; ++i) {
+            yagl_gles3_context_unbind_sampler(ctx, samplers[i]);
+
+            yagl_sharegroup_remove(ctx->base.sg,
+                                   YAGL_NS_SAMPLER,
+                                   samplers[i]);
+        }
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API GLboolean glIsSampler(GLuint sampler)
+{
+    GLboolean res = GL_FALSE;
+    struct yagl_gles_sampler *sampler_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT1(glIsSampler, GLuint, sampler);
+
+    YAGL_GET_CTX_RET(GL_FALSE);
+
+    sampler_obj = (struct yagl_gles_sampler*)yagl_sharegroup_acquire_object(ctx->base.sg,
+        YAGL_NS_SAMPLER, sampler);
+
+    if (sampler_obj && yagl_gles_sampler_was_bound(sampler_obj)) {
+        res = GL_TRUE;
+    }
+
+    yagl_gles_sampler_release(sampler_obj);
+
+    YAGL_LOG_FUNC_EXIT_SPLIT(GLboolean, res);
+
+    return res;
+}
+
+YAGL_API void glBindSampler(GLuint unit, GLuint sampler)
+{
+    struct yagl_gles_sampler *sampler_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glBindSampler, GLuint, GLuint, unit, sampler);
+
+    YAGL_GET_CTX();
+
+    if (sampler != 0) {
+        sampler_obj = (struct yagl_gles_sampler*)yagl_sharegroup_acquire_object(ctx->base.sg,
+            YAGL_NS_SAMPLER, sampler);
+
+        if (!sampler_obj) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            goto out;
+        }
+    }
+
+    if (!yagl_gles3_context_bind_sampler(ctx, unit, sampler_obj)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+out:
+    yagl_gles_sampler_release(sampler_obj);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glSamplerParameteri(GLuint sampler, GLenum pname, GLint param)
+{
+    struct yagl_gles_sampler *sampler_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glSamplerParameteri, GLuint, GLenum, GLint, sampler, pname, param);
+
+    YAGL_GET_CTX();
+
+    sampler_obj = (struct yagl_gles_sampler*)yagl_sharegroup_acquire_object(ctx->base.sg,
+        YAGL_NS_SAMPLER, sampler);
+
+    if (!sampler_obj) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (!yagl_gles_sampler_set_parameteriv(sampler_obj, pname, &param)) {
+        GLfloat float_param = param;
+
+        if (!yagl_gles_sampler_set_parameterfv(sampler_obj, pname, &float_param)) {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
+            goto out;
+        }
+    }
+
+out:
+    yagl_gles_sampler_release(sampler_obj);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glSamplerParameteriv(GLuint sampler, GLenum pname, const GLint *param)
+{
+    struct yagl_gles_sampler *sampler_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glSamplerParameteriv, GLuint, GLenum, const GLint*, sampler, pname, param);
+
+    YAGL_GET_CTX();
+
+    sampler_obj = (struct yagl_gles_sampler*)yagl_sharegroup_acquire_object(ctx->base.sg,
+        YAGL_NS_SAMPLER, sampler);
+
+    if (!sampler_obj) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (!yagl_gles_sampler_set_parameteriv(sampler_obj, pname, param)) {
+        GLfloat float_param = param[0];
+
+        if (!yagl_gles_sampler_set_parameterfv(sampler_obj, pname, &float_param)) {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
+            goto out;
+        }
+    }
+
+out:
+    yagl_gles_sampler_release(sampler_obj);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glSamplerParameterf(GLuint sampler, GLenum pname, GLfloat param)
+{
+    struct yagl_gles_sampler *sampler_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glSamplerParameterf, GLuint, GLenum, GLfloat, sampler, pname, param);
+
+    YAGL_GET_CTX();
+
+    sampler_obj = (struct yagl_gles_sampler*)yagl_sharegroup_acquire_object(ctx->base.sg,
+        YAGL_NS_SAMPLER, sampler);
+
+    if (!sampler_obj) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (!yagl_gles_sampler_set_parameterfv(sampler_obj, pname, &param)) {
+        GLint int_param = param;
+
+        if (!yagl_gles_sampler_set_parameteriv(sampler_obj, pname, &int_param)) {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
+            goto out;
+        }
+    }
+
+out:
+    yagl_gles_sampler_release(sampler_obj);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glSamplerParameterfv(GLuint sampler, GLenum pname, const GLfloat *param)
+{
+    struct yagl_gles_sampler *sampler_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glSamplerParameterfv, GLuint, GLenum, const GLfloat*, sampler, pname, param);
+
+    YAGL_GET_CTX();
+
+    sampler_obj = (struct yagl_gles_sampler*)yagl_sharegroup_acquire_object(ctx->base.sg,
+        YAGL_NS_SAMPLER, sampler);
+
+    if (!sampler_obj) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (!yagl_gles_sampler_set_parameterfv(sampler_obj, pname, param)) {
+        GLint int_param = param[0];
+
+        if (!yagl_gles_sampler_set_parameteriv(sampler_obj, pname, &int_param)) {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
+            goto out;
+        }
+    }
+
+out:
+    yagl_gles_sampler_release(sampler_obj);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glGetSamplerParameteriv(GLuint sampler, GLenum pname, GLint *params)
+{
+    struct yagl_gles_sampler *sampler_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glGetSamplerParameteriv, GLuint, GLenum, GLint*, sampler, pname, params);
+
+    YAGL_GET_CTX();
+
+    sampler_obj = (struct yagl_gles_sampler*)yagl_sharegroup_acquire_object(ctx->base.sg,
+        YAGL_NS_SAMPLER, sampler);
+
+    if (!sampler_obj) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (!yagl_gles_sampler_get_parameteriv(sampler_obj, pname, params)) {
+        GLfloat float_param;
+
+        if (!yagl_gles_sampler_get_parameterfv(sampler_obj, pname, &float_param)) {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
+            goto out;
+        }
+
+        params[0] = float_param;
+    }
+
+out:
+    yagl_gles_sampler_release(sampler_obj);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glGetSamplerParameterfv(GLuint sampler, GLenum pname, GLfloat *params)
+{
+    struct yagl_gles_sampler *sampler_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glGetSamplerParameterfv, GLuint, GLenum, GLfloat*, sampler, pname, params);
+
+    YAGL_GET_CTX();
+
+    sampler_obj = (struct yagl_gles_sampler*)yagl_sharegroup_acquire_object(ctx->base.sg,
+        YAGL_NS_SAMPLER, sampler);
+
+    if (!sampler_obj) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (!yagl_gles_sampler_get_parameterfv(sampler_obj, pname, params)) {
+        GLint int_param;
+
+        if (!yagl_gles_sampler_get_parameteriv(sampler_obj, pname, &int_param)) {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
+            goto out;
+        }
+
+        params[0] = int_param;
+    }
+
+out:
+    yagl_gles_sampler_release(sampler_obj);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
 }

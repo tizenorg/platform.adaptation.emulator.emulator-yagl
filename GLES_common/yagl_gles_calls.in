@@ -148,6 +148,13 @@ void glGenQueries(const GLuint *ids)
 void glBeginQuery(GLenum target, GLuint id)
 void glEndQuery(GLenum target)
 GLboolean glGetQueryObjectuiv(GLuint id, GLuint &result)
+# Samplers
+void glGenSamplers(const GLuint *samplers)
+void glBindSampler(GLuint unit, GLuint sampler)
+void glSamplerParameteri(GLuint sampler, GLenum pname, GLint param)
+void glSamplerParameteriv(GLuint sampler, GLenum pname, const GLint *param)
+void glSamplerParameterf(GLuint sampler, GLenum pname, GLfloat param)
+void glSamplerParameterfv(GLuint sampler, GLenum pname, const GLfloat *param)
 # Misc
 void glDeleteObjects(const GLuint *objects)
 void glBlendEquation(GLenum mode)

@@ -6,6 +6,7 @@
 #include "yagl_list.h"
 
 struct yagl_gles_buffer;
+struct yagl_gles_sampler;
 struct yagl_gles3_buffer_binding;
 struct yagl_gles3_transform_feedback;
 struct yagl_gles3_query;
@@ -94,5 +95,12 @@ void yagl_gles3_context_end_query(struct yagl_gles3_context *ctx,
 int yagl_gles3_context_acquire_active_query(struct yagl_gles3_context *ctx,
                                             GLenum target,
                                             struct yagl_gles3_query **query);
+
+int yagl_gles3_context_bind_sampler(struct yagl_gles3_context *ctx,
+                                    GLuint unit,
+                                    struct yagl_gles_sampler *sampler);
+
+void yagl_gles3_context_unbind_sampler(struct yagl_gles3_context *ctx,
+                                       yagl_object_name sampler_local_name);
 
 #endif

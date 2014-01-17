@@ -5,6 +5,8 @@
 #include "yagl_gles3_query.h"
 #include "yagl_gles2_utils.h"
 #include "yagl_gles_buffer.h"
+#include "yagl_gles_texture_unit.h"
+#include "yagl_gles_sampler.h"
 #include "yagl_log.h"
 #include "yagl_malloc.h"
 #include "yagl_state.h"
@@ -268,6 +270,7 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
 {
     int processed = 1;
     struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
+    struct yagl_gles_sampler *sampler;
 
     switch (pname) {
     case GL_MAX_UNIFORM_BUFFER_BINDINGS:
@@ -304,6 +307,11 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
         break;
     case GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
         *params = gles3_ctx->tfbo ? gles3_ctx->tfbo->base.local_name : 0;
+        *num_params = 1;
+        break;
+    case GL_SAMPLER_BINDING:
+        sampler = yagl_gles_context_get_active_texture_unit(ctx)->sampler;
+        *params = sampler ? sampler->base.local_name : 0;
         *num_params = 1;
         break;
     default:
@@ -1019,4 +1027,35 @@ int yagl_gles3_context_acquire_active_query(struct yagl_gles3_context *ctx,
     }
 
     return 1;
+}
+
+int yagl_gles3_context_bind_sampler(struct yagl_gles3_context *ctx,
+                                    GLuint unit,
+                                    struct yagl_gles_sampler *sampler)
+{
+    if (unit > ctx->base.base.num_texture_units) {
+        return 0;
+    }
+
+    yagl_gles_sampler_acquire(sampler);
+    yagl_gles_sampler_release(ctx->base.base.texture_units[unit].sampler);
+    ctx->base.base.texture_units[unit].sampler = sampler;
+
+    yagl_gles_sampler_bind(sampler, unit);
+
+    return 1;
+}
+
+void yagl_gles3_context_unbind_sampler(struct yagl_gles3_context *ctx,
+                                       yagl_object_name sampler_local_name)
+{
+    int i;
+
+    for (i = 0; i < ctx->base.base.num_texture_units; ++i) {
+        if (ctx->base.base.texture_units[i].sampler &&
+            (ctx->base.base.texture_units[i].sampler->base.local_name == sampler_local_name)) {
+            yagl_gles_sampler_release(ctx->base.base.texture_units[i].sampler);
+            ctx->base.base.texture_units[i].sampler = NULL;
+        }
+    }
 }

@@ -141,55 +141,6 @@ YAGL_API void glUniformMatrix2x3fv(GLint location, GLsizei count, GLboolean tran
     exit(5);
 }
 
-YAGL_API void glGenSamplers(GLsizei count, GLuint *samplers)
-{
-    assert(0);
-    exit(5);
-}
-
-YAGL_API void glDeleteSamplers(GLsizei count, const GLuint *samplers)
-{
-    assert(0);
-    exit(5);
-}
-
-YAGL_API GLboolean glIsSampler(GLuint sampler)
-{
-    assert(0);
-    exit(5);
-    return 0;
-}
-
-YAGL_API void glBindSampler(GLuint unit, GLuint sampler)
-{
-    assert(0);
-    exit(5);
-}
-
-YAGL_API void glSamplerParameteri(GLuint sampler, GLenum pname, GLint param)
-{
-    assert(0);
-    exit(5);
-}
-
-YAGL_API void glSamplerParameteriv(GLuint sampler, GLenum pname, const GLint *param)
-{
-    assert(0);
-    exit(5);
-}
-
-YAGL_API void glSamplerParameterf(GLuint sampler, GLenum pname, GLfloat param)
-{
-    assert(0);
-    exit(5);
-}
-
-YAGL_API void glSamplerParameterfv(GLuint sampler, GLenum pname, const GLfloat *param)
-{
-    assert(0);
-    exit(5);
-}
-
 YAGL_API void glGetVertexAttribIiv(GLuint index, GLenum pname, GLint *params)
 {
     assert(0);
@@ -258,18 +209,6 @@ YAGL_API const GLubyte *glGetStringi(GLenum name, GLuint index)
 }
 
 YAGL_API void glCopyBufferSubData(GLenum readTarget, GLenum writeTarget, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size)
-{
-    assert(0);
-    exit(5);
-}
-
-YAGL_API void glGetSamplerParameteriv(GLuint sampler, GLenum pname, GLint *params)
-{
-    assert(0);
-    exit(5);
-}
-
-YAGL_API void glGetSamplerParameterfv(GLuint sampler, GLenum pname, GLfloat *params)
 {
     assert(0);
     exit(5);

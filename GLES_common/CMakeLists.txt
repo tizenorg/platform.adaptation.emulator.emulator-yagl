@@ -7,6 +7,7 @@ set(SOURCES
     yagl_gles_framebuffer.c
     yagl_gles_renderbuffer.c
     yagl_gles_image.c
+    yagl_gles_sampler.c
     yagl_gles_context.c
     yagl_gles_validate.c
     yagl_gles_calls.c

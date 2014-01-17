@@ -4,6 +4,7 @@
 #include "yagl_gles_types.h"
 
 struct yagl_gles_texture;
+struct yagl_gles_sampler;
 
 struct yagl_gles_texture_target_state
 {
@@ -19,6 +20,8 @@ struct yagl_gles_texture_target_state
 struct yagl_gles_texture_unit
 {
     struct yagl_gles_texture_target_state target_states[YAGL_NUM_GLES_TEXTURE_TARGETS];
+
+    struct yagl_gles_sampler *sampler;
 };
 
 void yagl_gles_texture_unit_init(struct yagl_gles_texture_unit *texture_unit);
