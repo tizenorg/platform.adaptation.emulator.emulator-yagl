@@ -1116,7 +1116,7 @@ void glFramebufferTexture2D(GLenum target,
         goto out;
     }
 
-    if (texture_obj && (yagl_gles_texture_get_target(texture_obj) != squashed_textarget)) {
+    if (texture_obj && (texture_obj->target != squashed_textarget)) {
         YAGL_SET_ERR(GL_INVALID_ENUM);
         goto out;
     }
@@ -1573,11 +1573,9 @@ YAGL_API void glGetTexParameterfv(GLenum target, GLenum pname, GLfloat *params)
 
     YAGL_GET_CTX();
 
-    /*
-     * TODO: Passthrough for now.
-     */
-
-    yagl_gles_context_get_tex_parameterfv(ctx, target, pname, params);
+    if (!yagl_gles_context_get_tex_parameterfv(ctx, target, pname, params)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+    }
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
@@ -1588,10 +1586,9 @@ YAGL_API void glGetTexParameteriv(GLenum target, GLenum pname, GLint *params)
 
     YAGL_GET_CTX();
 
-    /*
-     * TODO: Passthrough for now.
-     */
-    yagl_host_glGetTexParameteriv(target, pname, params);
+    if (!yagl_gles_context_get_tex_parameteriv(ctx, target, pname, params)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+    }
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
@@ -1692,7 +1689,7 @@ YAGL_API GLboolean glIsTexture(GLuint texture)
     texture_obj = (struct yagl_gles_texture*)yagl_sharegroup_acquire_object(ctx->base.sg,
         YAGL_NS_TEXTURE, texture);
 
-    if (texture_obj && (yagl_gles_texture_get_target(texture_obj) != 0)) {
+    if (texture_obj && (texture_obj->target != 0)) {
         res = GL_TRUE;
     }
 
@@ -2422,6 +2419,103 @@ out:
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 YAGL_API YAGL_ALIAS(glFlushMappedBufferRange, glFlushMappedBufferRangeEXT);
+
+/*
+ * @}
+ */
+
+/*
+ * GL_EXT_texture_storage.
+ * @{
+ */
+
+YAGL_API void glTexStorage2D(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height)
+{
+    yagl_gles_texture_target texture_target;
+    struct yagl_gles_texture *texture_obj;
+    GLsizei i, j;
+    GLenum cubemap_targets[] =
+    {
+        GL_TEXTURE_CUBE_MAP_POSITIVE_X,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+        GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
+        GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+    };
+
+    YAGL_LOG_FUNC_ENTER_SPLIT5(glTexStorage2D, GLenum, GLsizei, GLenum, GLsizei, GLsizei, target, levels, internalformat, width, height);
+
+    YAGL_GET_CTX();
+
+    if ((levels <= 0) || (width <= 0) || (height <= 0)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (!yagl_gles_context_validate_texture_target(ctx, target, &texture_target)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    texture_obj = yagl_gles_context_get_active_texture_target_state(ctx,
+                                                                    texture_target)->texture;
+
+    if (!texture_obj || texture_obj->immutable) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    switch (texture_target) {
+    case yagl_gles_texture_target_2d:
+        for (i = 0; i < levels; ++i) {
+            yagl_host_glTexImage2D(target, i, internalformat,
+                                   width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE,
+                                   NULL, 0);
+
+            width >>= 1;
+            if (width == 0) {
+                width = 1;
+            }
+
+            height >>= 1;
+            if (height == 0) {
+                height = 1;
+            }
+        }
+        break;
+    case yagl_gles_texture_target_cubemap:
+        for (i = 0; i < levels; ++i) {
+            for (j = 0;
+                 j < sizeof(cubemap_targets)/sizeof(cubemap_targets[0]);
+                 ++j) {
+                yagl_host_glTexImage2D(cubemap_targets[j], i, internalformat,
+                                       width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE,
+                                       NULL, 0);
+            }
+
+            width >>= 1;
+            if (width == 0) {
+                width = 1;
+            }
+
+            height >>= 1;
+            if (height == 0) {
+                height = 1;
+            }
+        }
+        break;
+    default:
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    yagl_gles_texture_set_immutable(texture_obj);
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+YAGL_API YAGL_ALIAS(glTexStorage2D, glTexStorage2DEXT);
 
 /*
  * @}

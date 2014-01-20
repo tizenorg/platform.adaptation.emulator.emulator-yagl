@@ -118,7 +118,7 @@ void yagl_gles_framebuffer_texture_layer(struct yagl_gles_framebuffer *fb,
     if (texture) {
         fb->attachment_states[framebuffer_attachment].type = GL_TEXTURE;
         fb->attachment_states[framebuffer_attachment].local_name = texture->base.local_name;
-        fb->attachment_states[framebuffer_attachment].textarget = yagl_gles_texture_get_target(texture);
+        fb->attachment_states[framebuffer_attachment].textarget = texture->target;
         fb->attachment_states[framebuffer_attachment].layer = layer;
     } else {
         fb->attachment_states[framebuffer_attachment].type = GL_NONE;

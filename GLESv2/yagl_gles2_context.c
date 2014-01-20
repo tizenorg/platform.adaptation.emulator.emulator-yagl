@@ -43,6 +43,7 @@ static const GLchar *map_buffer_range_ext = "GL_EXT_map_buffer_range";
 static const GLchar *element_index_uint_ext = "GL_OES_element_index_uint";
 static const GLchar *texture_3d_ext = "GL_OES_texture_3D";
 static const GLchar *blend_minmax_ext = "GL_EXT_blend_minmax";
+static const GLchar *texture_storage_ext = "GL_EXT_texture_storage";
 static const GLchar *packed_depth_stencil_ext = "GL_OES_packed_depth_stencil";
 static const GLchar *texture_npot_ext = "GL_OES_texture_npot";
 static const GLchar *texture_rectangle_ext = "GL_ARB_texture_rectangle";
@@ -76,6 +77,7 @@ static const GLchar **yagl_gles2_context_get_extensions(struct yagl_gles2_contex
     extensions[i++] = element_index_uint_ext;
     extensions[i++] = texture_3d_ext;
     extensions[i++] = blend_minmax_ext;
+    extensions[i++] = texture_storage_ext;
 
     if (ctx->base.packed_depth_stencil) {
         extensions[i++] = packed_depth_stencil_ext;

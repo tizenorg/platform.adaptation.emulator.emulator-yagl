@@ -45,6 +45,7 @@ static const GLchar *framebuffer_blit_ext = "GL_ANGLE_framebuffer_blit";
 static const GLchar *draw_buffers_ext = "GL_EXT_draw_buffers";
 static const GLchar *mapbuffer_ext = "GL_OES_mapbuffer";
 static const GLchar *map_buffer_range_ext = "GL_EXT_map_buffer_range";
+static const GLchar *texture_storage_ext = "GL_EXT_texture_storage";
 static const GLchar *packed_depth_stencil_ext = "GL_OES_packed_depth_stencil";
 static const GLchar *texture_npot_ext = "GL_OES_texture_npot";
 static const GLchar *texture_filter_anisotropic_ext = "GL_EXT_texture_filter_anisotropic";
@@ -83,6 +84,7 @@ static const GLchar **yagl_gles1_context_get_extensions(struct yagl_gles1_contex
     extensions[i++] = draw_buffers_ext;
     extensions[i++] = mapbuffer_ext;
     extensions[i++] = map_buffer_range_ext;
+    extensions[i++] = texture_storage_ext;
 
     if (ctx->base.texture_npot) {
         extensions[i++] = texture_npot_ext;

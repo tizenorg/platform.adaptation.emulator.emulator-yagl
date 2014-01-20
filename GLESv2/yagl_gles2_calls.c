@@ -1,4 +1,5 @@
 #include "GLES2/gl2.h"
+#include "GLES2/gl2ext.h"
 #include "yagl_host_gles_calls.h"
 #include "yagl_gles2_program.h"
 #include "yagl_gles2_shader.h"
@@ -7,6 +8,8 @@
 #include "yagl_gles_vertex_array.h"
 #include "yagl_gles_array.h"
 #include "yagl_gles_buffer.h"
+#include "yagl_gles_texture_unit.h"
+#include "yagl_gles_texture.h"
 #include "yagl_gles_utils.h"
 #include "yagl_impl.h"
 #include "yagl_malloc.h"
@@ -2235,6 +2238,8 @@ YAGL_API void glCompressedTexImage3D(GLenum target, GLint level, GLenum internal
     /*
      * TODO: Implement
      */
+    assert(0);
+    exit(5);
 }
 YAGL_API YAGL_ALIAS(glCompressedTexImage3D, glCompressedTexImage3DOES);
 
@@ -2243,6 +2248,8 @@ YAGL_API void glCompressedTexSubImage3D(GLenum target, GLint level, GLint xoffse
     /*
      * TODO: Implement
      */
+    assert(0);
+    exit(5);
 }
 YAGL_API YAGL_ALIAS(glCompressedTexSubImage3D, glCompressedTexSubImage3DOES);
 
@@ -2251,8 +2258,99 @@ YAGL_API void glFramebufferTexture3D(GLenum target, GLenum attachment, GLenum te
     /*
      * TODO: Implement
      */
+    assert(0);
+    exit(5);
 }
 YAGL_API YAGL_ALIAS(glFramebufferTexture3D, glFramebufferTexture3DOES);
+
+/*
+ * @}
+ */
+
+/*
+ * GL_EXT_texture_storage.
+ * @{
+ */
+
+YAGL_API void glTexStorage3D(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth)
+{
+    yagl_gles_texture_target texture_target;
+    struct yagl_gles_texture *texture_obj;
+    GLsizei i;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT6(glTexStorage3D, GLenum, GLsizei, GLenum, GLsizei, GLsizei, GLsizei, target, levels, internalformat, width, height, depth);
+
+    YAGL_GET_CTX();
+
+    if ((levels <= 0) || (width <= 0) || (height <= 0)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (!yagl_gles_context_validate_texture_target(&ctx->base, target, &texture_target)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    texture_obj = yagl_gles_context_get_active_texture_target_state(&ctx->base,
+                                                                    texture_target)->texture;
+
+    if (!texture_obj || texture_obj->immutable) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    switch (texture_target) {
+    case yagl_gles_texture_target_3d:
+        for (i = 0; i < levels; ++i) {
+            yagl_host_glTexImage3D(target, i, internalformat,
+                                   width, height, depth, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE,
+                                   NULL, 0);
+
+            width >>= 1;
+            if (width == 0) {
+                width = 1;
+            }
+
+            height >>= 1;
+            if (height == 0) {
+                height = 1;
+            }
+
+            depth >>= 1;
+            if (depth == 0) {
+                depth = 1;
+            }
+        }
+        break;
+    case yagl_gles_texture_target_2d_array:
+        for (i = 0; i < levels; ++i) {
+            yagl_host_glTexImage3D(target, i, internalformat,
+                                   width, height, depth, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE,
+                                   NULL, 0);
+
+            width >>= 1;
+            if (width == 0) {
+                width = 1;
+            }
+
+            height >>= 1;
+            if (height == 0) {
+                height = 1;
+            }
+        }
+        break;
+    default:
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    yagl_gles_texture_set_immutable(texture_obj);
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+YAGL_API YAGL_ALIAS(glTexStorage3D, glTexStorage3DEXT);
 
 /*
  * @}

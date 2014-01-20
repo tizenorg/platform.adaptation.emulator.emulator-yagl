@@ -1245,12 +1245,60 @@ void yagl_gles_context_tex_parameterfv(struct yagl_gles_context *ctx,
     yagl_host_glTexParameterfv(target, pname, params, 1);
 }
 
-void yagl_gles_context_get_tex_parameterfv(struct yagl_gles_context *ctx,
-                                           GLenum target,
-                                           GLenum pname,
-                                           GLfloat *params)
+int yagl_gles_context_get_tex_parameterfv(struct yagl_gles_context *ctx,
+                                          GLenum target,
+                                          GLenum pname,
+                                          GLfloat *params)
 {
+    yagl_gles_texture_target texture_target;
+    struct yagl_gles_texture *texture_obj;
+
+    if (!yagl_gles_context_validate_texture_target(ctx, target, &texture_target)) {
+        return 0;
+    }
+
+    texture_obj = yagl_gles_context_get_active_texture_target_state(ctx,
+                                                                    texture_target)->texture;
+
+    switch (pname) {
+    case GL_TEXTURE_IMMUTABLE_FORMAT:
+        params[0] = texture_obj ? texture_obj->immutable : GL_FALSE;
+        return 1;
+    default:
+        break;
+    }
+
     yagl_host_glGetTexParameterfv(target, pname, params);
+
+    return 1;
+}
+
+int yagl_gles_context_get_tex_parameteriv(struct yagl_gles_context *ctx,
+                                          GLenum target,
+                                          GLenum pname,
+                                          GLint *params)
+{
+    yagl_gles_texture_target texture_target;
+    struct yagl_gles_texture *texture_obj;
+
+    if (!yagl_gles_context_validate_texture_target(ctx, target, &texture_target)) {
+        return 0;
+    }
+
+    texture_obj = yagl_gles_context_get_active_texture_target_state(ctx,
+                                                                    texture_target)->texture;
+
+    switch (pname) {
+    case GL_TEXTURE_IMMUTABLE_FORMAT:
+        params[0] = texture_obj ? texture_obj->immutable : GL_FALSE;
+        return 1;
+    default:
+        break;
+    }
+
+    yagl_host_glGetTexParameteriv(target, pname, params);
+
+    return 1;
 }
 
 void yagl_gles_context_clear_color(struct yagl_gles_context *ctx,

@@ -895,7 +895,7 @@ YAGL_API void glFramebufferTextureLayer(GLenum target, GLenum attachment, GLuint
             goto out;
         }
 
-        if (!yagl_gles2_is_texture_target_layered(yagl_gles_texture_get_target(texture_obj))) {
+        if (!yagl_gles2_is_texture_target_layered(texture_obj->target)) {
             YAGL_SET_ERR(GL_INVALID_OPERATION);
             goto out;
         }

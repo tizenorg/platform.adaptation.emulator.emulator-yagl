@@ -77,9 +77,9 @@ int yagl_gles_texture_bind(struct yagl_gles_texture *texture,
     return 1;
 }
 
-GLenum yagl_gles_texture_get_target(struct yagl_gles_texture *texture)
+void yagl_gles_texture_set_immutable(struct yagl_gles_texture *texture)
 {
-    return texture->target;
+    texture->immutable = GL_TRUE;
 }
 
 void yagl_gles_texture_set_image(struct yagl_gles_texture *texture,

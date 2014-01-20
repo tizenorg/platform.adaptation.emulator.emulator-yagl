@@ -324,10 +324,15 @@ void yagl_gles_context_tex_parameterfv(struct yagl_gles_context *ctx,
                                        GLenum pname,
                                        const GLfloat *params);
 
-void yagl_gles_context_get_tex_parameterfv(struct yagl_gles_context *ctx,
-                                           GLenum target,
-                                           GLenum pname,
-                                           GLfloat *params);
+int yagl_gles_context_get_tex_parameterfv(struct yagl_gles_context *ctx,
+                                          GLenum target,
+                                          GLenum pname,
+                                          GLfloat *params);
+
+int yagl_gles_context_get_tex_parameteriv(struct yagl_gles_context *ctx,
+                                          GLenum target,
+                                          GLenum pname,
+                                          GLint *params);
 
 void yagl_gles_context_clear_color(struct yagl_gles_context *ctx,
                                    GLclampf red,

@@ -129,12 +129,6 @@ YAGL_API void glGetSynciv(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *l
     exit(5);
 }
 
-YAGL_API void glTexStorage2D(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height)
-{
-    assert(0);
-    exit(5);
-}
-
 YAGL_API void glUniformMatrix2x3fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
 {
     assert(0);
@@ -221,12 +215,6 @@ YAGL_API void glInvalidateSubFramebuffer(GLenum target, GLsizei numAttachments, 
 }
 
 YAGL_API void glProgramParameteri(GLuint program, GLenum pname, GLint value)
-{
-    assert(0);
-    exit(5);
-}
-
-YAGL_API void glTexStorage3D(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth)
 {
     assert(0);
     exit(5);

@@ -1285,12 +1285,10 @@ YAGL_API void glGetTexParameterxv(GLenum target, GLenum pname, GLfixed *params)
 
     YAGL_GET_CTX();
 
-    if (target != GL_TEXTURE_2D) {
+    if (!yagl_gles_context_get_tex_parameterfv(&ctx->base, target, pname, &paramf)) {
         YAGL_SET_ERR(GL_INVALID_ENUM);
         goto out;
     }
-
-    yagl_gles_context_get_tex_parameterfv(&ctx->base, target, pname, &paramf);
 
     if (params) {
         *params = (GLfixed)paramf;
