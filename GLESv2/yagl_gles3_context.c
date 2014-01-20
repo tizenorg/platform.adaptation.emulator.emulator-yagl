@@ -521,6 +521,206 @@ static int yagl_gles3_context_validate_texture_target(struct yagl_gles_context *
     return 1;
 }
 
+static int yagl_gles3_context_validate_texture_internalformat(struct yagl_gles_context *ctx,
+                                                              GLenum *internalformat,
+                                                              GLenum *any_format,
+                                                              GLenum *any_type)
+{
+    if (yagl_gles2_context_validate_texture_internalformat(ctx,
+                                                           internalformat,
+                                                           any_format,
+                                                           any_type)) {
+        return 1;
+    }
+
+    switch (*internalformat) {
+    case GL_R8:
+        *any_format = GL_RED;
+        *any_type = GL_UNSIGNED_BYTE;
+        break;
+    case GL_R8_SNORM:
+        *any_format = GL_RED;
+        *any_type = GL_BYTE;
+        break;
+    case GL_R16F:
+    case GL_R32F:
+        *any_format = GL_RED;
+        *any_type = GL_FLOAT;
+        break;
+    case GL_R8UI:
+        *any_format = GL_RED_INTEGER;
+        *any_type = GL_UNSIGNED_BYTE;
+        break;
+    case GL_R8I:
+        *any_format = GL_RED_INTEGER;
+        *any_type = GL_BYTE;
+        break;
+    case GL_R16UI:
+        *any_format = GL_RED_INTEGER;
+        *any_type = GL_UNSIGNED_SHORT;
+        break;
+    case GL_R16I:
+        *any_format = GL_RED_INTEGER;
+        *any_type = GL_SHORT;
+        break;
+    case GL_R32UI:
+        *any_format = GL_RED_INTEGER;
+        *any_type = GL_UNSIGNED_INT;
+        break;
+    case GL_R32I:
+        *any_format = GL_RED_INTEGER;
+        *any_type = GL_INT;
+        break;
+    case GL_RG8:
+        *any_format = GL_RG;
+        *any_type = GL_UNSIGNED_BYTE;
+        break;
+    case GL_RG8_SNORM:
+        *any_format = GL_RG;
+        *any_type = GL_BYTE;
+        break;
+    case GL_RG16F:
+    case GL_RG32F:
+        *any_format = GL_RG;
+        *any_type = GL_FLOAT;
+        break;
+    case GL_RG8UI:
+        *any_format = GL_RG_INTEGER;
+        *any_type = GL_UNSIGNED_BYTE;
+        break;
+    case GL_RG8I:
+        *any_format = GL_RG_INTEGER;
+        *any_type = GL_BYTE;
+        break;
+    case GL_RG16UI:
+        *any_format = GL_RG_INTEGER;
+        *any_type = GL_UNSIGNED_SHORT;
+        break;
+    case GL_RG16I:
+        *any_format = GL_RG_INTEGER;
+        *any_type = GL_SHORT;
+        break;
+    case GL_RG32UI:
+        *any_format = GL_RG_INTEGER;
+        *any_type = GL_UNSIGNED_INT;
+        break;
+    case GL_RG32I:
+        *any_format = GL_RG_INTEGER;
+        *any_type = GL_INT;
+        break;
+    case GL_RGB8:
+    case GL_SRGB8:
+    case GL_RGB565:
+        *any_format = GL_RGB;
+        *any_type = GL_UNSIGNED_BYTE;
+        break;
+    case GL_RGB8_SNORM:
+        *any_format = GL_RGB;
+        *any_type = GL_BYTE;
+        break;
+    case GL_R11F_G11F_B10F:
+    case GL_RGB9_E5:
+    case GL_RGB16F:
+    case GL_RGB32F:
+        *any_format = GL_RGB;
+        *any_type = GL_FLOAT;
+        break;
+    case GL_RGB8UI:
+        *any_format = GL_RGB_INTEGER;
+        *any_type = GL_UNSIGNED_BYTE;
+        break;
+    case GL_RGB8I:
+        *any_format = GL_RGB_INTEGER;
+        *any_type = GL_BYTE;
+        break;
+    case GL_RGB16UI:
+        *any_format = GL_RGB_INTEGER;
+        *any_type = GL_UNSIGNED_SHORT;
+        break;
+    case GL_RGB16I:
+        *any_format = GL_RGB_INTEGER;
+        *any_type = GL_SHORT;
+        break;
+    case GL_RGB32UI:
+        *any_format = GL_RGB_INTEGER;
+        *any_type = GL_UNSIGNED_INT;
+        break;
+    case GL_RGB32I:
+        *any_format = GL_RGB_INTEGER;
+        *any_type = GL_INT;
+        break;
+    case GL_RGBA8:
+    case GL_SRGB8_ALPHA8:
+    case GL_RGB5_A1:
+    case GL_RGBA4:
+        *any_format = GL_RGBA;
+        *any_type = GL_UNSIGNED_BYTE;
+        break;
+    case GL_RGBA8_SNORM:
+        *any_format = GL_RGBA;
+        *any_type = GL_BYTE;
+        break;
+    case GL_RGB10_A2:
+        *any_format = GL_RGBA;
+        *any_type = GL_UNSIGNED_INT_2_10_10_10_REV;
+        break;
+    case GL_RGBA16F:
+    case GL_RGBA32F:
+        *any_format = GL_RGBA;
+        *any_type = GL_FLOAT;
+        break;
+    case GL_RGBA8UI:
+        *any_format = GL_RGBA_INTEGER;
+        *any_type = GL_UNSIGNED_BYTE;
+        break;
+    case GL_RGBA8I:
+        *any_format = GL_RGBA_INTEGER;
+        *any_type = GL_BYTE;
+        break;
+    case GL_RGB10_A2UI:
+        *any_format = GL_RGBA_INTEGER;
+        *any_type = GL_UNSIGNED_INT_2_10_10_10_REV;
+        break;
+    case GL_RGBA16UI:
+        *any_format = GL_RGBA_INTEGER;
+        *any_type = GL_UNSIGNED_SHORT;
+        break;
+    case GL_RGBA16I:
+        *any_format = GL_RGBA_INTEGER;
+        *any_type = GL_SHORT;
+        break;
+    case GL_RGBA32I:
+        *any_format = GL_RGBA_INTEGER;
+        *any_type = GL_INT;
+        break;
+    case GL_RGBA32UI:
+        *any_format = GL_RGBA_INTEGER;
+        *any_type = GL_UNSIGNED_INT;
+        break;
+    case GL_DEPTH_COMPONENT16:
+    case GL_DEPTH_COMPONENT24:
+        *any_format = GL_DEPTH_COMPONENT;
+        *any_type = GL_UNSIGNED_INT;
+        break;
+    case GL_DEPTH_COMPONENT32F:
+        *any_format = GL_DEPTH_COMPONENT;
+        *any_type = GL_FLOAT;
+        break;
+    case GL_DEPTH24_STENCIL8:
+        *any_format = GL_DEPTH_STENCIL;
+        *any_type = GL_UNSIGNED_INT_24_8;
+        break;
+    case GL_DEPTH32F_STENCIL8:
+        *any_format = GL_DEPTH_STENCIL;
+        *any_type = GL_FLOAT_32_UNSIGNED_INT_24_8_REV;
+        break;
+    default:
+        return 0;
+    }
+
+    return 1;
+}
+
 static int yagl_gles3_context_get_stride(struct yagl_gles_context *ctx,
                                          GLsizei alignment,
                                          GLsizei width,
@@ -724,6 +924,7 @@ struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg
     gles3_ctx->base.base.unbind_buffer = &yagl_gles3_context_unbind_buffer;
     gles3_ctx->base.base.acquire_binded_buffer = &yagl_gles3_context_acquire_binded_buffer;
     gles3_ctx->base.base.validate_texture_target = &yagl_gles3_context_validate_texture_target;
+    gles3_ctx->base.base.validate_texture_internalformat = &yagl_gles3_context_validate_texture_internalformat;
     gles3_ctx->base.base.get_stride = &yagl_gles3_context_get_stride;
     gles3_ctx->base.shader_patch = &yagl_gles3_context_shader_patch;
 

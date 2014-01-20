@@ -2433,6 +2433,7 @@ YAGL_API void glTexStorage2D(GLenum target, GLsizei levels, GLenum internalforma
 {
     yagl_gles_texture_target texture_target;
     struct yagl_gles_texture *texture_obj;
+    GLenum format, type;
     GLsizei i, j;
     GLenum cubemap_targets[] =
     {
@@ -2453,6 +2454,14 @@ YAGL_API void glTexStorage2D(GLenum target, GLsizei levels, GLenum internalforma
         goto out;
     }
 
+    if (!yagl_gles_context_validate_texture_internalformat(ctx,
+                                                           &internalformat,
+                                                           &format,
+                                                           &type)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
     if (!yagl_gles_context_validate_texture_target(ctx, target, &texture_target)) {
         YAGL_SET_ERR(GL_INVALID_ENUM);
         goto out;
@@ -2466,11 +2475,15 @@ YAGL_API void glTexStorage2D(GLenum target, GLsizei levels, GLenum internalforma
         goto out;
     }
 
+    internalformat = yagl_gles_get_actual_internalformat(internalformat);
+    format = yagl_gles_get_actual_format(format);
+    type = yagl_gles_get_actual_type(type);
+
     switch (texture_target) {
     case yagl_gles_texture_target_2d:
         for (i = 0; i < levels; ++i) {
             yagl_host_glTexImage2D(target, i, internalformat,
-                                   width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE,
+                                   width, height, 0, format, type,
                                    NULL, 0);
 
             width >>= 1;
@@ -2490,7 +2503,7 @@ YAGL_API void glTexStorage2D(GLenum target, GLsizei levels, GLenum internalforma
                  j < sizeof(cubemap_targets)/sizeof(cubemap_targets[0]);
                  ++j) {
                 yagl_host_glTexImage2D(cubemap_targets[j], i, internalformat,
-                                       width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE,
+                                       width, height, 0, format, type,
                                        NULL, 0);
             }
 

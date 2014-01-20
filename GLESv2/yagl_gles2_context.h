@@ -25,9 +25,6 @@ struct yagl_gles2_context
      */
     int gen_locations;
 
-    GLenum *compressed_texture_formats;
-    int num_compressed_texture_formats;
-
     int num_shader_binary_formats;
 
     int texture_half_float;
@@ -108,6 +105,11 @@ void yagl_gles2_context_draw_elements(struct yagl_gles_context *ctx,
 int yagl_gles2_context_validate_texture_target(struct yagl_gles_context *ctx,
                                                GLenum target,
                                                yagl_gles_texture_target *texture_target);
+
+int yagl_gles2_context_validate_texture_internalformat(struct yagl_gles_context *ctx,
+                                                       GLenum *internalformat,
+                                                       GLenum *any_format,
+                                                       GLenum *any_type);
 
 char *yagl_gles2_context_shader_patch(struct yagl_gles2_context *ctx,
                                       const char *source,

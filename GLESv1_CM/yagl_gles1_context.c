@@ -1297,6 +1297,27 @@ static int yagl_gles1_context_validate_texture_target(struct yagl_gles_context *
     return 0;
 }
 
+static int yagl_gles1_context_validate_texture_internalformat(struct yagl_gles_context *ctx,
+                                                              GLenum *internalformat,
+                                                              GLenum *any_format,
+                                                              GLenum *any_type)
+{
+    YaglGles1PalFmtDesc fmt_desc;
+
+    switch (*internalformat) {
+    case GL_PALETTE4_RGB8_OES ... GL_PALETTE8_RGB5_A1_OES:
+        yagl_gles1_cpal_format_get_descr(*internalformat, &fmt_desc);
+        *internalformat = fmt_desc.uncomp_format;
+        *any_format = fmt_desc.uncomp_format;
+        *any_type = fmt_desc.pixel_type;
+        break;
+    default:
+        return 0;
+    }
+
+    return 1;
+}
+
 static int yagl_gles1_context_get_stride(struct yagl_gles_context *ctx,
                                          GLsizei alignment,
                                          GLsizei width,
@@ -1335,6 +1356,7 @@ struct yagl_client_context *yagl_gles1_context_create(struct yagl_sharegroup *sg
     gles1_ctx->base.unbind_buffer = &yagl_gles1_context_unbind_buffer;
     gles1_ctx->base.acquire_binded_buffer = &yagl_gles1_context_acquire_binded_buffer;
     gles1_ctx->base.validate_texture_target = &yagl_gles1_context_validate_texture_target;
+    gles1_ctx->base.validate_texture_internalformat = &yagl_gles1_context_validate_texture_internalformat;
     gles1_ctx->base.get_stride = &yagl_gles1_context_get_stride;
 
     YAGL_LOG_FUNC_EXIT("%p", gles1_ctx);

@@ -2276,6 +2276,7 @@ YAGL_API void glTexStorage3D(GLenum target, GLsizei levels, GLenum internalforma
 {
     yagl_gles_texture_target texture_target;
     struct yagl_gles_texture *texture_obj;
+    GLenum format, type;
     GLsizei i;
 
     YAGL_LOG_FUNC_ENTER_SPLIT6(glTexStorage3D, GLenum, GLsizei, GLenum, GLsizei, GLsizei, GLsizei, target, levels, internalformat, width, height, depth);
@@ -2284,6 +2285,14 @@ YAGL_API void glTexStorage3D(GLenum target, GLsizei levels, GLenum internalforma
 
     if ((levels <= 0) || (width <= 0) || (height <= 0)) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (!yagl_gles_context_validate_texture_internalformat(&ctx->base,
+                                                           &internalformat,
+                                                           &format,
+                                                           &type)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
         goto out;
     }
 
@@ -2300,11 +2309,15 @@ YAGL_API void glTexStorage3D(GLenum target, GLsizei levels, GLenum internalforma
         goto out;
     }
 
+    internalformat = yagl_gles_get_actual_internalformat(internalformat);
+    format = yagl_gles_get_actual_format(format);
+    type = yagl_gles_get_actual_type(type);
+
     switch (texture_target) {
     case yagl_gles_texture_target_3d:
         for (i = 0; i < levels; ++i) {
             yagl_host_glTexImage3D(target, i, internalformat,
-                                   width, height, depth, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE,
+                                   width, height, depth, 0, format, type,
                                    NULL, 0);
 
             width >>= 1;
@@ -2326,7 +2339,7 @@ YAGL_API void glTexStorage3D(GLenum target, GLsizei levels, GLenum internalforma
     case yagl_gles_texture_target_2d_array:
         for (i = 0; i < levels; ++i) {
             yagl_host_glTexImage3D(target, i, internalformat,
-                                   width, height, depth, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE,
+                                   width, height, depth, 0, format, type,
                                    NULL, 0);
 
             width >>= 1;

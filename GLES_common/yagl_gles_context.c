@@ -456,6 +456,54 @@ int yagl_gles_context_validate_texture_target(struct yagl_gles_context *ctx,
     return 1;
 }
 
+int yagl_gles_context_validate_texture_internalformat(struct yagl_gles_context *ctx,
+                                                      GLenum *internalformat,
+                                                      GLenum *any_format,
+                                                      GLenum *any_type)
+{
+    switch (*internalformat) {
+    case GL_ALPHA:
+        *any_format = GL_ALPHA;
+        *any_type = GL_UNSIGNED_BYTE;
+        break;
+    case GL_LUMINANCE:
+        *any_format = GL_LUMINANCE;
+        *any_type = GL_UNSIGNED_BYTE;
+        break;
+    case GL_LUMINANCE_ALPHA:
+        *any_format = GL_LUMINANCE_ALPHA;
+        *any_type = GL_UNSIGNED_BYTE;
+        break;
+    case GL_RGB:
+        *any_format = GL_RGB;
+        *any_type = GL_UNSIGNED_BYTE;
+        break;
+    case GL_RGBA:
+        *any_format = GL_RGBA;
+        *any_type = GL_UNSIGNED_BYTE;
+        break;
+    case GL_BGRA_EXT:
+        *any_format = GL_BGRA_EXT;
+        *any_type = GL_UNSIGNED_BYTE;
+        break;
+    case GL_DEPTH_COMPONENT:
+        *any_format = GL_DEPTH_COMPONENT;
+        *any_type = GL_UNSIGNED_INT;
+        break;
+    case GL_DEPTH_STENCIL_EXT:
+        *any_format = GL_DEPTH_STENCIL_EXT;
+        *any_type = GL_UNSIGNED_INT_24_8_EXT;
+        break;
+    default:
+        return ctx->validate_texture_internalformat(ctx,
+                                                    internalformat,
+                                                    any_format,
+                                                    any_type);
+    }
+
+    return 1;
+}
+
 void yagl_gles_context_set_active_texture(struct yagl_gles_context *ctx,
                                           GLenum texture)
 {

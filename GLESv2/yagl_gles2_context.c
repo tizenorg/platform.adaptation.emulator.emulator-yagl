@@ -277,8 +277,6 @@ void yagl_gles2_context_cleanup(struct yagl_gles2_context *ctx)
 {
     yagl_gles2_program_release(ctx->program);
 
-    yagl_free(ctx->compressed_texture_formats);
-
     yagl_gles_context_cleanup(&ctx->base);
 }
 
@@ -320,19 +318,6 @@ void yagl_gles2_context_prepare(struct yagl_gles2_context *ctx)
     } else {
         ctx->gen_locations = 1;
     }
-
-    yagl_host_glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS,
-                            &ctx->num_compressed_texture_formats,
-                            1, NULL);
-
-    ctx->compressed_texture_formats =
-        yagl_malloc0(ctx->num_compressed_texture_formats *
-                     sizeof(ctx->compressed_texture_formats[0]));
-
-    yagl_host_glGetIntegerv(GL_COMPRESSED_TEXTURE_FORMATS,
-                            (GLint*)ctx->compressed_texture_formats,
-                            ctx->num_compressed_texture_formats,
-                            NULL);
 
     /*
      * We don't support it for now...
@@ -390,7 +375,6 @@ void yagl_gles2_context_compressed_tex_image(struct yagl_gles_context *gles_ctx,
     GLsizei src_stride;
     GLsizei dst_stride;
     GLsizei dst_size;
-    int i;
     uint8_t *buff;
     GLint saved_alignment;
 
@@ -412,27 +396,6 @@ void yagl_gles2_context_compressed_tex_image(struct yagl_gles_context *gles_ctx,
                                    &dst_size)) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
         return;
-    }
-
-    /*
-     * Check if host hw supports this format.
-     */
-
-    for (i = 0; i < ctx->num_compressed_texture_formats; ++i) {
-        if (ctx->compressed_texture_formats[i] == internalformat) {
-            /*
-             * Let the host do the work.
-             */
-            yagl_host_glCompressedTexImage2D(target,
-                                             level,
-                                             internalformat,
-                                             width,
-                                             height,
-                                             border,
-                                             data,
-                                             imageSize);
-            return;
-        }
     }
 
     buff = yagl_get_tmp_buffer(dst_size);
@@ -483,7 +446,6 @@ void yagl_gles2_context_compressed_tex_sub_image(struct yagl_gles_context *gles_
     GLsizei src_stride;
     GLsizei dst_stride;
     GLsizei dst_size;
-    int i;
     uint8_t *buff;
     GLint saved_alignment;
 
@@ -505,28 +467,6 @@ void yagl_gles2_context_compressed_tex_sub_image(struct yagl_gles_context *gles_
                                    &dst_size)) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
         return;
-    }
-
-    /*
-     * Check if host hw supports this format.
-     */
-
-    for (i = 0; i < ctx->num_compressed_texture_formats; ++i) {
-        if (ctx->compressed_texture_formats[i] == format) {
-            /*
-             * Let the host do the work.
-             */
-            yagl_host_glCompressedTexSubImage2D(target,
-                                                level,
-                                                xoffset,
-                                                yoffset,
-                                                width,
-                                                height,
-                                                format,
-                                                data,
-                                                imageSize);
-            return;
-        }
     }
 
     buff = yagl_get_tmp_buffer(dst_size);
@@ -770,6 +710,26 @@ int yagl_gles2_context_validate_texture_target(struct yagl_gles_context *ctx,
     return 1;
 }
 
+int yagl_gles2_context_validate_texture_internalformat(struct yagl_gles_context *ctx,
+                                                       GLenum *internalformat,
+                                                       GLenum *any_format,
+                                                       GLenum *any_type)
+{
+    struct yagl_texcompress_format *tc_format;
+
+    tc_format = yagl_texcompress_get_format(*internalformat);
+
+    if (!tc_format) {
+        return 0;
+    }
+
+    *internalformat = tc_format->dst_internalformat;
+    *any_format = tc_format->dst_format;
+    *any_type = tc_format->dst_type;
+
+    return 1;
+}
+
 char *yagl_gles2_context_shader_patch(struct yagl_gles2_context *ctx,
                                       const char *source,
                                       int len,
@@ -842,6 +802,7 @@ struct yagl_client_context *yagl_gles2_context_create(struct yagl_sharegroup *sg
     gles2_ctx->base.unbind_buffer = &yagl_gles2_context_unbind_buffer;
     gles2_ctx->base.acquire_binded_buffer = &yagl_gles2_context_acquire_binded_buffer;
     gles2_ctx->base.validate_texture_target = &yagl_gles2_context_validate_texture_target;
+    gles2_ctx->base.validate_texture_internalformat = &yagl_gles2_context_validate_texture_internalformat;
     gles2_ctx->base.get_stride = &yagl_gles2_context_get_stride;
     gles2_ctx->shader_patch = &yagl_gles2_context_shader_patch;
 

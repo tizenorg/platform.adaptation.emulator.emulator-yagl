@@ -99,6 +99,11 @@ struct yagl_gles_context
                                    GLenum /*target*/,
                                    yagl_gles_texture_target */*texture_target*/);
 
+    int (*validate_texture_internalformat)(struct yagl_gles_context */*ctx*/,
+                                           GLenum */*internalformat*/,
+                                           GLenum */*any_format*/,
+                                           GLenum */*any_type*/);
+
     int (*get_stride)(struct yagl_gles_context */*ctx*/,
                       GLsizei /*alignment*/,
                       GLsizei /*width*/,
@@ -234,6 +239,11 @@ void yagl_gles_context_unbind_vertex_array(struct yagl_gles_context *ctx,
 int yagl_gles_context_validate_texture_target(struct yagl_gles_context *ctx,
                                               GLenum target,
                                               yagl_gles_texture_target *texture_target);
+
+int yagl_gles_context_validate_texture_internalformat(struct yagl_gles_context *ctx,
+                                                      GLenum *internalformat,
+                                                      GLenum *any_format,
+                                                      GLenum *any_type);
 
 void yagl_gles_context_set_active_texture(struct yagl_gles_context *ctx,
                                           GLenum texture);
