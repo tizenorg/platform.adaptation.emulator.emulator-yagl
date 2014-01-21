@@ -44,6 +44,7 @@ static const GLchar *element_index_uint_ext = "GL_OES_element_index_uint";
 static const GLchar *texture_3d_ext = "GL_OES_texture_3D";
 static const GLchar *blend_minmax_ext = "GL_EXT_blend_minmax";
 static const GLchar *texture_storage_ext = "GL_EXT_texture_storage";
+static const GLchar *pbo_ext = "GL_NV_pixel_buffer_object";
 static const GLchar *packed_depth_stencil_ext = "GL_OES_packed_depth_stencil";
 static const GLchar *texture_npot_ext = "GL_OES_texture_npot";
 static const GLchar *texture_rectangle_ext = "GL_ARB_texture_rectangle";
@@ -78,6 +79,7 @@ static const GLchar **yagl_gles2_context_get_extensions(struct yagl_gles2_contex
     extensions[i++] = texture_3d_ext;
     extensions[i++] = blend_minmax_ext;
     extensions[i++] = texture_storage_ext;
+    extensions[i++] = pbo_ext;
 
     if (ctx->base.packed_depth_stencil) {
         extensions[i++] = packed_depth_stencil_ext;
@@ -408,22 +410,22 @@ void yagl_gles2_context_compressed_tex_image(struct yagl_gles_context *gles_ctx,
                       buff,
                       dst_stride);
 
-    saved_alignment = gles_ctx->unpack_alignment;
+    saved_alignment = gles_ctx->unpack.alignment;
 
     if (saved_alignment != 1) {
         yagl_host_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     }
 
-    yagl_host_glTexImage2D(target,
-                           level,
-                           tc_format->dst_internalformat,
-                           width,
-                           height,
-                           border,
-                           tc_format->dst_format,
-                           tc_format->dst_type,
-                           buff,
-                           dst_size);
+    yagl_host_glTexImage2DData(target,
+                               level,
+                               tc_format->dst_internalformat,
+                               width,
+                               height,
+                               border,
+                               tc_format->dst_format,
+                               tc_format->dst_type,
+                               buff,
+                               dst_size);
 
     if (saved_alignment != 1) {
         yagl_host_glPixelStorei(GL_UNPACK_ALIGNMENT, saved_alignment);
@@ -479,22 +481,22 @@ void yagl_gles2_context_compressed_tex_sub_image(struct yagl_gles_context *gles_
                       buff,
                       dst_stride);
 
-    saved_alignment = gles_ctx->unpack_alignment;
+    saved_alignment = gles_ctx->unpack.alignment;
 
     if (saved_alignment != 1) {
         yagl_host_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     }
 
-    yagl_host_glTexSubImage2D(target,
-                              level,
-                              xoffset,
-                              yoffset,
-                              width,
-                              height,
-                              tc_format->dst_format,
-                              tc_format->dst_type,
-                              buff,
-                              dst_size);
+    yagl_host_glTexSubImage2DData(target,
+                                  level,
+                                  xoffset,
+                                  yoffset,
+                                  width,
+                                  height,
+                                  tc_format->dst_format,
+                                  tc_format->dst_type,
+                                  buff,
+                                  dst_size);
 
     if (saved_alignment != 1) {
         yagl_host_glPixelStorei(GL_UNPACK_ALIGNMENT, saved_alignment);

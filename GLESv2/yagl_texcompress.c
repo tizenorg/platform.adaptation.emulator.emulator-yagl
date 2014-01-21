@@ -181,10 +181,6 @@ int yagl_texcompress_get_info(struct yagl_texcompress_format *format,
     GLsizei hblocks = (height + format->block_height - 1) / format->block_height;
     GLsizei num_components = 0, bpp = 0;
 
-    if ((width < 0) || (height < 0)) {
-        return 0;
-    }
-
     if (src_size != (wblocks * hblocks * format->block_bytes)) {
         return 0;
     }

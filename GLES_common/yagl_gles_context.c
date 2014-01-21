@@ -118,6 +118,9 @@ void yagl_gles_context_init(struct yagl_gles_context *ctx,
 
     ctx->error = GL_NO_ERROR;
 
+    ctx->pack.alignment = 4;
+    ctx->unpack.alignment = 4;
+
     ctx->blend_equation_rgb = GL_FUNC_ADD;
     ctx->blend_equation_alpha = GL_FUNC_ADD;
 
@@ -144,9 +147,6 @@ void yagl_gles_context_init(struct yagl_gles_context *ctx,
     ctx->depth_range[1] = 1.0f;
 
     ctx->front_face_mode = GL_CCW;
-
-    ctx->pack_alignment = 4;
-    ctx->unpack_alignment = 4;
 
     ctx->draw_buffers[0] = GL_BACK;
     for (i = 1; i < YAGL_MAX_GLES_DRAW_BUFFERS; ++i) {
@@ -275,6 +275,8 @@ void yagl_gles_context_cleanup(struct yagl_gles_context *ctx)
 {
     int i;
 
+    yagl_gles_buffer_release(ctx->unpack.pbo);
+    yagl_gles_buffer_release(ctx->pack.pbo);
     yagl_gles_renderbuffer_release(ctx->rbo);
     yagl_gles_framebuffer_release(ctx->fbo_read);
     yagl_gles_framebuffer_release(ctx->fbo_draw);
@@ -319,14 +321,18 @@ int yagl_gles_context_get_stride(struct yagl_gles_context *ctx,
                                  GLsizei width,
                                  GLenum format,
                                  GLenum type,
-                                 GLsizei *stride)
+                                 GLsizei *stride,
+                                 int *need_convert)
 {
     int num_components = 0;
     GLsizei bpp = 0;
 
+    *need_convert = 0;
+
     switch (format) {
     case GL_ALPHA:
         num_components = 4; /* This gets converted to BGRA. */
+        *need_convert = 1;
         break;
     case GL_RGB:
         num_components = 3;
@@ -339,9 +345,11 @@ int yagl_gles_context_get_stride(struct yagl_gles_context *ctx,
         break;
     case GL_LUMINANCE:
         num_components = 4; /* This gets converted to BGRA. */
+        *need_convert = 1;
         break;
     case GL_LUMINANCE_ALPHA:
         num_components = 4; /* This gets converted to BGRA. */
+        *need_convert = 1;
         break;
     case GL_DEPTH_STENCIL_EXT:
         if ((type != GL_UNSIGNED_INT_24_8_EXT)) {
@@ -604,6 +612,16 @@ void yagl_gles_context_bind_buffer(struct yagl_gles_context *ctx,
         yagl_gles_buffer_release(ctx->vao->ebo);
         ctx->vao->ebo = buffer;
         break;
+    case GL_PIXEL_PACK_BUFFER:
+        yagl_gles_buffer_acquire(buffer);
+        yagl_gles_buffer_release(ctx->pack.pbo);
+        ctx->pack.pbo = buffer;
+        break;
+    case GL_PIXEL_UNPACK_BUFFER:
+        yagl_gles_buffer_acquire(buffer);
+        yagl_gles_buffer_release(ctx->unpack.pbo);
+        ctx->unpack.pbo = buffer;
+        break;
     default:
         if (!ctx->bind_buffer(ctx, target, buffer)) {
             YAGL_SET_ERR(GL_INVALID_ENUM);
@@ -625,6 +643,12 @@ void yagl_gles_context_unbind_buffer(struct yagl_gles_context *ctx,
     } else if (ctx->vao->ebo && (ctx->vao->ebo->base.local_name == buffer_local_name)) {
         yagl_gles_buffer_release(ctx->vao->ebo);
         ctx->vao->ebo = NULL;
+    } else if (ctx->pack.pbo && (ctx->pack.pbo->base.local_name == buffer_local_name)) {
+        yagl_gles_buffer_release(ctx->pack.pbo);
+        ctx->pack.pbo = NULL;
+    } else if (ctx->unpack.pbo && (ctx->unpack.pbo->base.local_name == buffer_local_name)) {
+        yagl_gles_buffer_release(ctx->unpack.pbo);
+        ctx->unpack.pbo = NULL;
     }
 
     ctx->unbind_buffer(ctx, buffer_local_name);
@@ -717,6 +741,14 @@ int yagl_gles_context_acquire_binded_buffer(struct yagl_gles_context *ctx,
     case GL_ELEMENT_ARRAY_BUFFER:
         yagl_gles_buffer_acquire(ctx->vao->ebo);
         *buffer = ctx->vao->ebo;
+        break;
+    case GL_PIXEL_PACK_BUFFER:
+        yagl_gles_buffer_acquire(ctx->pack.pbo);
+        *buffer = ctx->pack.pbo;
+        break;
+    case GL_PIXEL_UNPACK_BUFFER:
+        yagl_gles_buffer_acquire(ctx->unpack.pbo);
+        *buffer = ctx->unpack.pbo;
         break;
     default:
         return ctx->acquire_binded_buffer(ctx, target, buffer);
@@ -928,11 +960,11 @@ int yagl_gles_context_get_integerv(struct yagl_gles_context *ctx,
         *num_params = 1;
         break;
     case GL_PACK_ALIGNMENT:
-        *params = ctx->pack_alignment;
+        *params = ctx->pack.alignment;
         *num_params = 1;
         break;
     case GL_UNPACK_ALIGNMENT:
-        *params = ctx->unpack_alignment;
+        *params = ctx->unpack.alignment;
         *num_params = 1;
         break;
     case GL_IMPLEMENTATION_COLOR_READ_FORMAT:
@@ -968,6 +1000,14 @@ int yagl_gles_context_get_integerv(struct yagl_gles_context *ctx,
         break;
     case GL_MAX_DRAW_BUFFERS:
         *params = ctx->max_draw_buffers;
+        *num_params = 1;
+        break;
+    case GL_PIXEL_PACK_BUFFER_BINDING:
+        *params = ctx->pack.pbo ? ctx->pack.pbo->base.local_name : 0;
+        *num_params = 1;
+        break;
+    case GL_PIXEL_UNPACK_BUFFER_BINDING:
+        *params = ctx->unpack.pbo ? ctx->unpack.pbo->base.local_name : 0;
         *num_params = 1;
         break;
     default:
@@ -1269,6 +1309,108 @@ void yagl_gles_context_draw_elements(struct yagl_gles_context *ctx,
 
 out:
     YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+int yagl_gles_context_pre_unpack(struct yagl_gles_context *ctx,
+                                 const GLvoid **pixels,
+                                 int need_convert,
+                                 int *using_pbo)
+{
+    *using_pbo = 0;
+
+    if (!ctx->unpack.pbo) {
+        return 1;
+    }
+
+    if (!need_convert) {
+        yagl_gles_buffer_bind(ctx->unpack.pbo,
+                              0,
+                              0,
+                              GL_PIXEL_UNPACK_BUFFER);
+        yagl_gles_buffer_transfer(ctx->unpack.pbo,
+                                  0,
+                                  GL_PIXEL_UNPACK_BUFFER,
+                                  0);
+
+        *using_pbo = 1;
+
+        return 1;
+    }
+
+    if (!yagl_gles_buffer_map(ctx->unpack.pbo,
+                              0, ctx->unpack.pbo->size,
+                              GL_MAP_READ_BIT)) {
+        return 0;
+    }
+
+    *pixels = ctx->unpack.pbo->map_pointer + (uint32_t)*pixels;
+
+    return 1;
+}
+
+void yagl_gles_context_post_unpack(struct yagl_gles_context *ctx,
+                                   int need_convert)
+{
+    if (!ctx->unpack.pbo) {
+        return;
+    }
+
+    if (need_convert) {
+        yagl_gles_buffer_unmap(ctx->unpack.pbo);
+    } else {
+        yagl_host_glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    }
+}
+
+int yagl_gles_context_pre_pack(struct yagl_gles_context *ctx,
+                               GLvoid **pixels,
+                               int need_convert,
+                               int *using_pbo)
+{
+    *using_pbo = 0;
+
+    if (!ctx->pack.pbo) {
+        return 1;
+    }
+
+    if (!need_convert) {
+        yagl_gles_buffer_bind(ctx->pack.pbo,
+                              0,
+                              0,
+                              GL_PIXEL_PACK_BUFFER);
+        yagl_gles_buffer_transfer(ctx->pack.pbo,
+                                  0,
+                                  GL_PIXEL_PACK_BUFFER,
+                                  0);
+
+        *using_pbo = 1;
+
+        return 1;
+    }
+
+    if (!yagl_gles_buffer_map(ctx->pack.pbo,
+                              0, ctx->pack.pbo->size,
+                              GL_MAP_WRITE_BIT)) {
+        return 0;
+    }
+
+    *pixels = ctx->pack.pbo->map_pointer + (uint32_t)*pixels;
+
+    return 1;
+}
+
+void yagl_gles_context_post_pack(struct yagl_gles_context *ctx,
+                                 int need_convert)
+{
+    if (!ctx->pack.pbo) {
+        return;
+    }
+
+    if (need_convert) {
+        yagl_gles_buffer_unmap(ctx->pack.pbo);
+    } else {
+        yagl_host_glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+    }
 }
 
 void yagl_gles_context_line_width(struct yagl_gles_context *ctx,

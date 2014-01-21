@@ -158,6 +158,9 @@ struct yagl_gles_context
 
     struct yagl_gles_renderbuffer *rbo;
 
+    struct yagl_gles_pixelstore pack;
+    struct yagl_gles_pixelstore unpack;
+
     GLenum blend_equation_rgb;
     GLenum blend_equation_alpha;
 
@@ -182,9 +185,6 @@ struct yagl_gles_context
     GLclampf depth_range[2];
 
     GLenum front_face_mode;
-
-    GLint pack_alignment;
-    GLint unpack_alignment;
 
     int have_viewport;
     GLint viewport[4];
@@ -228,7 +228,8 @@ int yagl_gles_context_get_stride(struct yagl_gles_context *ctx,
                                  GLsizei width,
                                  GLenum format,
                                  GLenum type,
-                                 GLsizei *stride);
+                                 GLsizei *stride,
+                                 int *need_convert);
 
 void yagl_gles_context_bind_vertex_array(struct yagl_gles_context *ctx,
                                          struct yagl_gles_vertex_array *va);
@@ -320,6 +321,22 @@ void yagl_gles_context_draw_elements(struct yagl_gles_context *ctx,
                                      GLenum mode, GLsizei count,
                                      GLenum type, const GLvoid *indices,
                                      GLsizei primcount);
+
+int yagl_gles_context_pre_unpack(struct yagl_gles_context *ctx,
+                                 const GLvoid **pixels,
+                                 int need_convert,
+                                 int *using_pbo);
+
+void yagl_gles_context_post_unpack(struct yagl_gles_context *ctx,
+                                   int need_convert);
+
+int yagl_gles_context_pre_pack(struct yagl_gles_context *ctx,
+                               GLvoid **pixels,
+                               int need_convert,
+                               int *using_pbo);
+
+void yagl_gles_context_post_pack(struct yagl_gles_context *ctx,
+                                 int need_convert);
 
 void yagl_gles_context_line_width(struct yagl_gles_context *ctx,
                                   GLfloat width);

@@ -6,6 +6,7 @@
 #include "yagl_gles2_utils.h"
 #include "yagl_gles_buffer.h"
 #include "yagl_gles_texture_unit.h"
+#include "yagl_gles_texture.h"
 #include "yagl_gles_sampler.h"
 #include "yagl_log.h"
 #include "yagl_malloc.h"
@@ -271,6 +272,7 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
     int processed = 1;
     struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
     struct yagl_gles_sampler *sampler;
+    struct yagl_gles_texture_target_state *tts;
 
     switch (pname) {
     case GL_MAX_UNIFORM_BUFFER_BINDINGS:
@@ -314,6 +316,12 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
         *params = sampler ? sampler->base.local_name : 0;
         *num_params = 1;
         break;
+    case GL_TEXTURE_BINDING_2D_ARRAY:
+        tts = yagl_gles_context_get_active_texture_target_state(ctx,
+            yagl_gles_texture_target_2d_array);
+        *params = tts->texture ? tts->texture->base.local_name : 0;
+        *num_params = 1;
+        break;
     default:
         processed = 0;
         break;
@@ -328,7 +336,6 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
     case GL_COPY_WRITE_BUFFER_BINDING:
     case GL_FRAGMENT_SHADER_DERIVATIVE_HINT:
     case GL_MAJOR_VERSION:
-    case GL_MAX_3D_TEXTURE_SIZE:
     case GL_MAX_ARRAY_TEXTURE_LAYERS:
     case GL_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS:
     case GL_MAX_COMBINED_UNIFORM_BLOCKS:
@@ -358,13 +365,8 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
     case GL_PACK_SKIP_IMAGES:
     case GL_PACK_SKIP_PIXELS:
     case GL_PACK_SKIP_ROWS:
-    case GL_PIXEL_PACK_BUFFER_BINDING:
-    case GL_PIXEL_UNPACK_BUFFER_BINDING:
     case GL_PRIMITIVE_RESTART_FIXED_INDEX:
     case GL_READ_BUFFER:
-    case GL_SAMPLER_BINDING:
-    case GL_TEXTURE_BINDING_2D_ARRAY:
-    case GL_TEXTURE_BINDING_3D:
     case GL_TRANSFORM_FEEDBACK_BUFFER_SIZE:
     case GL_TRANSFORM_FEEDBACK_BUFFER_START:
     case GL_UNIFORM_BUFFER_SIZE:

@@ -60,7 +60,7 @@ const GLvoid *yagl_gles_convert_to_host(GLsizei alignment,
     GLsizei bpc, d, i, j, converted_stride;
     uint8_t *tmp, *iter;
 
-    if ((width <= 0) || (height <= 0) || (depth <= 0) || !pixels) {
+    if (!pixels) {
         return pixels;
     }
 
@@ -255,10 +255,6 @@ GLvoid *yagl_gles_convert_from_host_start(GLsizei alignment,
     int num_components;
     GLsizei bpp;
 
-    if ((width <= 0) || (height <= 0)) {
-        return pixels;
-    }
-
     switch (format) {
     case GL_ALPHA:
         num_components = 1;
@@ -302,10 +298,6 @@ void yagl_gles_convert_from_host_end(GLsizei alignment,
                                      GLvoid *pixels_to)
 {
     GLsizei i, j;
-
-    if ((width <= 0) || (height <= 0)) {
-        return;
-    }
 
     type = yagl_gles_get_actual_type(type);
 

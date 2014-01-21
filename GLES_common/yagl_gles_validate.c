@@ -5,8 +5,14 @@ int yagl_gles_is_buffer_usage_valid(GLenum usage)
 {
     switch (usage) {
     case GL_STREAM_DRAW:
+    case GL_STREAM_READ:
+    case GL_STREAM_COPY:
     case GL_STATIC_DRAW:
+    case GL_STATIC_READ:
+    case GL_STATIC_COPY:
     case GL_DYNAMIC_DRAW:
+    case GL_DYNAMIC_READ:
+    case GL_DYNAMIC_COPY:
         return 1;
     default:
         return 0;

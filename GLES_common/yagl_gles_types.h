@@ -3,6 +3,8 @@
 
 #include "yagl_types.h"
 
+struct yagl_gles_buffer;
+
 typedef enum
 {
     yagl_gles_texture_target_2d = 0,
@@ -23,5 +25,11 @@ typedef enum
 #define YAGL_MAX_GLES_FRAMEBUFFER_COLOR_ATTACHMENTS 16
 
 #define YAGL_MAX_GLES_DRAW_BUFFERS 16
+
+struct yagl_gles_pixelstore
+{
+    GLint alignment;
+    struct yagl_gles_buffer *pbo;
+};
 
 #endif
