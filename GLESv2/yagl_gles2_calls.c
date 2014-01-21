@@ -2300,21 +2300,117 @@ YAGL_API YAGL_ALIAS(glCopyTexSubImage3D, glCopyTexSubImage3DOES);
 
 YAGL_API void glCompressedTexImage3D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLsizei imageSize, const void *data)
 {
-    /*
-     * TODO: Implement
-     */
-    assert(0);
-    exit(5);
+    yagl_gles_texture_target texture_target;
+    int using_pbo = 0;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT9(glCompressedTexImage3D, GLenum, GLint, GLenum, GLsizei, GLsizei, GLsizei, GLint, GLsizei, const GLvoid*, target, level, internalformat, width, height, depth, border, imageSize, data);
+
+    YAGL_GET_CTX();
+
+    if (!yagl_gles_context_validate_texture_target(&ctx->base,
+                                                   target,
+                                                   &texture_target)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if (!yagl_gles2_is_texture_target_layered(target)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if ((width < 0) || (height < 0) || (depth < 0)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if ((width == 0) || (height == 0) || (depth == 0)) {
+        width = height = depth = 0;
+    }
+
+    if ((width != 0) && !yagl_gles_context_pre_unpack(&ctx->base, &data, 1, &using_pbo)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    assert(!using_pbo);
+
+    yagl_gles2_context_compressed_tex_image_3d(ctx,
+                                               target,
+                                               level,
+                                               internalformat,
+                                               width,
+                                               height,
+                                               depth,
+                                               border,
+                                               imageSize,
+                                               data);
+
+    if (width != 0) {
+        yagl_gles_context_post_unpack(&ctx->base, 1);
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
 }
 YAGL_API YAGL_ALIAS(glCompressedTexImage3D, glCompressedTexImage3DOES);
 
 YAGL_API void glCompressedTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLsizei imageSize, const void *data)
 {
-    /*
-     * TODO: Implement
-     */
-    assert(0);
-    exit(5);
+    yagl_gles_texture_target texture_target;
+    int using_pbo = 0;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT11(glCompressedTexSubImage3D, GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLsizei, const GLvoid*, target, level, xoffset, yoffset, zoffset, width, height, depth, format, imageSize, data);
+
+    YAGL_GET_CTX();
+
+    if (!yagl_gles_context_validate_texture_target(&ctx->base,
+                                                   target,
+                                                   &texture_target)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if (!yagl_gles2_is_texture_target_layered(target)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if ((width < 0) || (height < 0) || (depth < 0)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if ((width == 0) || (height == 0) || (depth == 0)) {
+        width = height = depth = 0;
+    }
+
+    if ((width != 0) && !yagl_gles_context_pre_unpack(&ctx->base, &data, 1, &using_pbo)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    assert(!using_pbo);
+
+    yagl_gles2_context_compressed_tex_sub_image_3d(ctx,
+                                                   target,
+                                                   level,
+                                                   xoffset,
+                                                   yoffset,
+                                                   zoffset,
+                                                   width,
+                                                   height,
+                                                   depth,
+                                                   format,
+                                                   imageSize,
+                                                   data);
+
+    if (width != 0) {
+        yagl_gles_context_post_unpack(&ctx->base, 1);
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
 }
 YAGL_API YAGL_ALIAS(glCompressedTexSubImage3D, glCompressedTexSubImage3DOES);
 

@@ -914,8 +914,8 @@ struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg
     gles3_ctx->base.base.base.destroy = &yagl_gles3_context_destroy;
     gles3_ctx->base.base.create_arrays = &yagl_gles2_context_create_arrays;
     gles3_ctx->base.base.get_string = &yagl_gles3_context_get_string;
-    gles3_ctx->base.base.compressed_tex_image = &yagl_gles2_context_compressed_tex_image;
-    gles3_ctx->base.base.compressed_tex_sub_image = &yagl_gles2_context_compressed_tex_sub_image;
+    gles3_ctx->base.base.compressed_tex_image_2d = &yagl_gles2_context_compressed_tex_image_2d;
+    gles3_ctx->base.base.compressed_tex_sub_image_2d = &yagl_gles2_context_compressed_tex_sub_image_2d;
     gles3_ctx->base.base.enable = &yagl_gles3_context_enable;
     gles3_ctx->base.base.is_enabled = &yagl_gles3_context_is_enabled;
     gles3_ctx->base.base.get_integerv = &yagl_gles3_context_get_integerv;

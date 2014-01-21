@@ -647,15 +647,15 @@ static void yagl_gles1_cpal_tex_uncomp_and_apply(struct yagl_gles_context *ctx,
     }
 }
 
-static void yagl_gles1_context_compressed_tex_image(struct yagl_gles_context *ctx,
-                                                    GLenum target,
-                                                    GLint level,
-                                                    GLenum internalformat,
-                                                    GLsizei width,
-                                                    GLsizei height,
-                                                    GLint border,
-                                                    GLsizei imageSize,
-                                                    const GLvoid *data)
+static void yagl_gles1_context_compressed_tex_image_2d(struct yagl_gles_context *ctx,
+                                                       GLenum target,
+                                                       GLint level,
+                                                       GLenum internalformat,
+                                                       GLsizei width,
+                                                       GLsizei height,
+                                                       GLint border,
+                                                       GLsizei imageSize,
+                                                       const GLvoid *data)
 {
     const int max_tex_size = ((struct yagl_gles1_context*)ctx)->max_tex_size;
     YaglGles1PalFmtDesc fmt_desc;
@@ -692,16 +692,16 @@ static void yagl_gles1_context_compressed_tex_image(struct yagl_gles_context *ct
     }
 }
 
-static void yagl_gles1_context_compressed_tex_sub_image(struct yagl_gles_context *ctx,
-                                                        GLenum target,
-                                                        GLint level,
-                                                        GLint xoffset,
-                                                        GLint yoffset,
-                                                        GLsizei width,
-                                                        GLsizei height,
-                                                        GLenum format,
-                                                        GLsizei imageSize,
-                                                        const GLvoid *data)
+static void yagl_gles1_context_compressed_tex_sub_image_2d(struct yagl_gles_context *ctx,
+                                                           GLenum target,
+                                                           GLint level,
+                                                           GLint xoffset,
+                                                           GLint yoffset,
+                                                           GLsizei width,
+                                                           GLsizei height,
+                                                           GLenum format,
+                                                           GLsizei imageSize,
+                                                           const GLvoid *data)
 {
     YAGL_LOG_FUNC_SET(glCompressedTexSubImage2D);
 
@@ -1346,8 +1346,8 @@ struct yagl_client_context *yagl_gles1_context_create(struct yagl_sharegroup *sg
     gles1_ctx->base.base.destroy = &yagl_gles1_context_destroy;
     gles1_ctx->base.create_arrays = &yagl_gles1_context_create_arrays;
     gles1_ctx->base.get_string = &yagl_gles1_context_get_string;
-    gles1_ctx->base.compressed_tex_image = &yagl_gles1_context_compressed_tex_image;
-    gles1_ctx->base.compressed_tex_sub_image = &yagl_gles1_context_compressed_tex_sub_image;
+    gles1_ctx->base.compressed_tex_image_2d = &yagl_gles1_context_compressed_tex_image_2d;
+    gles1_ctx->base.compressed_tex_sub_image_2d = &yagl_gles1_context_compressed_tex_sub_image_2d;
     gles1_ctx->base.enable = &yagl_gles1_context_enable;
     gles1_ctx->base.is_enabled = &yagl_gles1_context_is_enabled;
     gles1_ctx->base.get_integerv = &yagl_gles1_context_get_integerv;

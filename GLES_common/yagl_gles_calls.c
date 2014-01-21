@@ -682,15 +682,15 @@ YAGL_API void glCompressedTexImage2D(GLenum target, GLint level, GLenum internal
         }
     }
 
-    ctx->compressed_tex_image(ctx,
-                              target,
-                              level,
-                              internalformat,
-                              width,
-                              height,
-                              border,
-                              imageSize,
-                              data);
+    ctx->compressed_tex_image_2d(ctx,
+                                 target,
+                                 level,
+                                 internalformat,
+                                 width,
+                                 height,
+                                 border,
+                                 imageSize,
+                                 data);
 
     if (width != 0) {
         yagl_gles_context_post_unpack(ctx, 1);
@@ -724,16 +724,16 @@ YAGL_API void glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffse
 
     assert(!using_pbo);
 
-    ctx->compressed_tex_sub_image(ctx,
-                                  target,
-                                  level,
-                                  xoffset,
-                                  yoffset,
-                                  width,
-                                  height,
-                                  format,
-                                  imageSize,
-                                  data);
+    ctx->compressed_tex_sub_image_2d(ctx,
+                                     target,
+                                     level,
+                                     xoffset,
+                                     yoffset,
+                                     width,
+                                     height,
+                                     format,
+                                     imageSize,
+                                     data);
 
     if (width != 0) {
         yagl_gles_context_post_unpack(ctx, 1);
