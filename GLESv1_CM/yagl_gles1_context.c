@@ -47,6 +47,7 @@ static const GLchar *mapbuffer_ext = "GL_OES_mapbuffer";
 static const GLchar *map_buffer_range_ext = "GL_EXT_map_buffer_range";
 static const GLchar *texture_storage_ext = "GL_EXT_texture_storage";
 static const GLchar *pbo_ext = "GL_NV_pixel_buffer_object";
+static const GLchar *read_buffer_ext = "GL_NV_read_buffer";
 static const GLchar *packed_depth_stencil_ext = "GL_OES_packed_depth_stencil";
 static const GLchar *texture_npot_ext = "GL_OES_texture_npot";
 static const GLchar *texture_filter_anisotropic_ext = "GL_EXT_texture_filter_anisotropic";
@@ -87,6 +88,7 @@ static const GLchar **yagl_gles1_context_get_extensions(struct yagl_gles1_contex
     extensions[i++] = map_buffer_range_ext;
     extensions[i++] = texture_storage_ext;
     extensions[i++] = pbo_ext;
+    extensions[i++] = read_buffer_ext;
 
     if (ctx->base.texture_npot) {
         extensions[i++] = texture_npot_ext;

@@ -190,6 +190,7 @@ struct yagl_gles_context
     GLint viewport[4];
 
     GLenum draw_buffers[YAGL_MAX_GLES_DRAW_BUFFERS];
+    GLenum read_buffer;
 
     GLboolean blend_enabled;
     GLboolean cull_face_enabled;

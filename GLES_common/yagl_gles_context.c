@@ -152,6 +152,7 @@ void yagl_gles_context_init(struct yagl_gles_context *ctx,
     for (i = 1; i < YAGL_MAX_GLES_DRAW_BUFFERS; ++i) {
         ctx->draw_buffers[i] = GL_NONE;
     }
+    ctx->read_buffer = GL_BACK;
 
     ctx->dither_enabled = GL_TRUE;
 }
@@ -1008,6 +1009,10 @@ int yagl_gles_context_get_integerv(struct yagl_gles_context *ctx,
         break;
     case GL_PIXEL_UNPACK_BUFFER_BINDING:
         *params = ctx->unpack.pbo ? ctx->unpack.pbo->base.local_name : 0;
+        *num_params = 1;
+        break;
+    case GL_READ_BUFFER:
+        *params = ctx->read_buffer;
         *num_params = 1;
         break;
     default:

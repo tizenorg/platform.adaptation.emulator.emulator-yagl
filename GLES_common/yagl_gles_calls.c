@@ -2299,6 +2299,43 @@ YAGL_API YAGL_ALIAS(glDrawBuffers, glDrawBuffersEXT);
  */
 
 /*
+ * GL_NV_read_buffer.
+ * @{
+ */
+
+YAGL_API void glReadBuffer(GLenum mode)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT1(glReadBuffer, GLenum, mode);
+
+    YAGL_GET_CTX();
+
+    if (ctx->fbo_read) {
+        if (mode != GL_NONE) {
+            if ((mode < GL_COLOR_ATTACHMENT0) ||
+                (mode >= (GL_COLOR_ATTACHMENT0 + ctx->max_color_attachments))) {
+                YAGL_SET_ERR(GL_INVALID_OPERATION);
+                goto out;
+            }
+        }
+    } else if ((mode != GL_NONE) && (mode != GL_BACK)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    ctx->read_buffer = mode;
+
+    yagl_host_glReadBuffer(mode);
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+YAGL_API YAGL_ALIAS(glReadBuffer, glReadBufferNV);
+
+/*
+ * @}
+ */
+
+/*
  * GL_OES_mapbuffer.
  * @{
  */

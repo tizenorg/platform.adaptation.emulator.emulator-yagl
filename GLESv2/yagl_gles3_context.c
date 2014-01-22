@@ -370,7 +370,6 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
     case GL_PACK_SKIP_PIXELS:
     case GL_PACK_SKIP_ROWS:
     case GL_PRIMITIVE_RESTART_FIXED_INDEX:
-    case GL_READ_BUFFER:
     case GL_TRANSFORM_FEEDBACK_BUFFER_SIZE:
     case GL_TRANSFORM_FEEDBACK_BUFFER_START:
     case GL_UNIFORM_BUFFER_SIZE:

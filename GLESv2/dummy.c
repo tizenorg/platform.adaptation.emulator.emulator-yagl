@@ -3,12 +3,6 @@
 #include <stdlib.h>
 #include <assert.h>
 
-YAGL_API void glReadBuffer(GLenum mode)
-{
-    assert(0);
-    exit(5);
-}
-
 YAGL_API void glDrawRangeElements(GLenum mode, GLuint start, GLuint end,
                                   GLsizei count, GLenum type,
                                   const void *indices)
