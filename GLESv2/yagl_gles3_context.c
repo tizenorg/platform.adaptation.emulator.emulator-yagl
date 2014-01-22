@@ -774,7 +774,7 @@ static int yagl_gles3_context_get_stride(struct yagl_gles_context *ctx,
         num_components = 1;
         break;
     default:
-        break;
+        return 0;
     }
 
     switch (type) {
