@@ -1853,7 +1853,7 @@ YAGL_API void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLen
     }
 
     if (width != 0) {
-        yagl_gles_context_post_pack(ctx, need_convert);
+        yagl_gles_context_post_pack(ctx, pixels, stride * height, need_convert);
     }
 
 out:

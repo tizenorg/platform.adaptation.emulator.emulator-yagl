@@ -1400,6 +1400,8 @@ int yagl_gles_context_pre_pack(struct yagl_gles_context *ctx,
 }
 
 void yagl_gles_context_post_pack(struct yagl_gles_context *ctx,
+                                 GLvoid *pixels,
+                                 GLsizei size,
                                  int need_convert)
 {
     if (!ctx->pack.pbo) {
@@ -1410,6 +1412,9 @@ void yagl_gles_context_post_pack(struct yagl_gles_context *ctx,
         yagl_gles_buffer_unmap(ctx->pack.pbo);
     } else {
         yagl_host_glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+        yagl_gles_buffer_set_gpu_dirty(ctx->pack.pbo,
+                                       (GLint)pixels,
+                                       size);
     }
 }
 

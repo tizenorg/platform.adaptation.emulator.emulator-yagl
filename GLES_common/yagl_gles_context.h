@@ -336,6 +336,8 @@ int yagl_gles_context_pre_pack(struct yagl_gles_context *ctx,
                                int *using_pbo);
 
 void yagl_gles_context_post_pack(struct yagl_gles_context *ctx,
+                                 GLvoid *pixels,
+                                 GLsizei size,
                                  int need_convert);
 
 void yagl_gles_context_line_width(struct yagl_gles_context *ctx,

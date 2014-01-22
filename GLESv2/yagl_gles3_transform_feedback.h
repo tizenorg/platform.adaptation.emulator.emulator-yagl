@@ -64,6 +64,8 @@ void yagl_gles3_transform_feedback_pause(struct yagl_gles3_transform_feedback *t
 
 void yagl_gles3_transform_feedback_resume(struct yagl_gles3_transform_feedback *tf);
 
+void yagl_gles3_transform_feedback_post_draw(struct yagl_gles3_transform_feedback *tf);
+
 void yagl_gles3_transform_feedback_end(struct yagl_gles3_transform_feedback *tf);
 
 #endif

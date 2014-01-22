@@ -289,9 +289,9 @@ void yagl_gles_array_transfer(struct yagl_gles_array *array,
     }
 
     if (array->vbo) {
-        if (yagl_gles_buffer_is_dirty(array->vbo,
-                                      array->type,
-                                      array->need_convert)) {
+        if (yagl_gles_buffer_is_cpu_dirty(array->vbo,
+                                          array->type,
+                                          array->need_convert)) {
             yagl_gles_buffer_bind(array->vbo,
                                   array->type,
                                   array->need_convert,

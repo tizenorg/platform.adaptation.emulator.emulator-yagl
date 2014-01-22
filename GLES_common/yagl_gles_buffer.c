@@ -3,6 +3,7 @@
 #include "yagl_state.h"
 #include "yagl_utils.h"
 #include "yagl_malloc.h"
+#include "yagl_log.h"
 #include "yagl_gles_buffer.h"
 #include "yagl_gles_validate.h"
 #include "yagl_host_gles_calls.h"
@@ -149,6 +150,46 @@ static void yagl_gles_buffer_transfer_internal(struct yagl_gles_buffer *buffer,
     yagl_range_list_clear(range_list);
 }
 
+static void yagl_gles_buffer_transfer_from_gpu(struct yagl_gles_buffer *buffer)
+{
+    int i, num_ranges = yagl_range_list_size(&buffer->gpu_dirty_list);
+    GLuint* ranges;
+    int current = 0;
+
+    YAGL_LOG_FUNC_SET(yagl_gles_buffer_transfer_from_gpu);
+
+    if (num_ranges <= 0) {
+        return;
+    }
+
+    ranges = (GLuint*)yagl_get_tmp_buffer2(num_ranges * 2);
+
+    for (i = 0; i < num_ranges; ++i) {
+        int start, size;
+
+        yagl_range_list_get(&buffer->gpu_dirty_list,
+                            i,
+                            &start,
+                            &size);
+
+        ranges[(i * 2) + 0] = start - current;
+        ranges[(i * 2) + 1] = size;
+
+        current = start + size;
+    }
+
+    YAGL_LOG_DEBUG("transferring %d ranges, max %d bytes",
+                   num_ranges, (int32_t)(current - ranges[0]));
+
+    yagl_host_glMapBuffer(buffer->default_part.global_name,
+                          ranges, num_ranges * 2,
+                          buffer->data + ranges[0],
+                          current - ranges[0],
+                          NULL);
+
+    yagl_range_list_clear(&buffer->gpu_dirty_list);
+}
+
 static void yagl_gles_buffer_destroy(struct yagl_ref *ref)
 {
     GLuint buffer_names[3];
@@ -160,6 +201,8 @@ static void yagl_gles_buffer_destroy(struct yagl_ref *ref)
 
     yagl_host_glDeleteObjects(buffer_names,
                               sizeof(buffer_names)/sizeof(buffer_names[0]));
+
+    yagl_range_list_cleanup(&buffer->gpu_dirty_list);
 
     yagl_range_list_cleanup(&buffer->default_part.range_list);
     yagl_range_list_cleanup(&buffer->fixed_part.range_list);
@@ -191,6 +234,8 @@ struct yagl_gles_buffer *yagl_gles_buffer_create(void)
     yagl_range_list_init(&buffer->default_part.range_list);
     yagl_range_list_init(&buffer->fixed_part.range_list);
     yagl_range_list_init(&buffer->byte_part.range_list);
+
+    yagl_range_list_init(&buffer->gpu_dirty_list);
 
     return buffer;
 }
@@ -240,6 +285,12 @@ void yagl_gles_buffer_set_data(struct yagl_gles_buffer *buffer,
     yagl_range_list_clear(&buffer->fixed_part.range_list);
     yagl_range_list_clear(&buffer->byte_part.range_list);
 
+    /*
+     * Full data update, we don't care about GPU dirty
+     * regions anymore, just discard them.
+     */
+    yagl_range_list_clear(&buffer->gpu_dirty_list);
+
     yagl_range_list_add(&buffer->default_part.range_list, 0, buffer->size);
     yagl_range_list_add(&buffer->fixed_part.range_list, 0, buffer->size);
     yagl_range_list_add(&buffer->byte_part.range_list, 0, buffer->size);
@@ -259,6 +310,14 @@ int yagl_gles_buffer_update_data(struct yagl_gles_buffer *buffer,
     if (size == 0) {
         return 1;
     }
+
+    /*
+     * We're partially updating data, the region being updated might
+     * intersect with GPU dirty region, thus, if we issue
+     * 'update_from_gpu' later we might screw things up, so do
+     * this now.
+     */
+    yagl_gles_buffer_transfer_from_gpu(buffer);
 
     memcpy(buffer->data + offset, data, size);
 
@@ -300,6 +359,8 @@ int yagl_gles_buffer_get_minmax_index(struct yagl_gles_buffer *buffer,
         *max_idx = buffer->cached_max_idx;
         return 1;
     }
+
+    yagl_gles_buffer_transfer_from_gpu(buffer);
 
     switch (type) {
     case GL_UNSIGNED_BYTE:
@@ -452,6 +513,8 @@ int yagl_gles_buffer_map(struct yagl_gles_buffer *buffer,
         yagl_range_list_clear(&buffer->default_part.range_list);
         yagl_range_list_clear(&buffer->fixed_part.range_list);
         yagl_range_list_clear(&buffer->byte_part.range_list);
+    } else {
+        yagl_gles_buffer_transfer_from_gpu(buffer);
     }
 
     buffer->map_pointer = buffer->data + offset;
@@ -527,9 +590,9 @@ int yagl_gles_buffer_was_bound(struct yagl_gles_buffer *buffer)
     return buffer->was_bound;
 }
 
-int yagl_gles_buffer_is_dirty(struct yagl_gles_buffer *buffer,
-                              GLenum type,
-                              int need_convert)
+int yagl_gles_buffer_is_cpu_dirty(struct yagl_gles_buffer *buffer,
+                                  GLenum type,
+                                  int need_convert)
 {
     struct yagl_gles_buffer_part *bufpart = &buffer->default_part;
 
@@ -545,4 +608,22 @@ int yagl_gles_buffer_is_dirty(struct yagl_gles_buffer *buffer,
     }
 
     return yagl_range_list_size(&bufpart->range_list) > 0;
+}
+
+void yagl_gles_buffer_set_gpu_dirty(struct yagl_gles_buffer *buffer,
+                                    GLint offset,
+                                    GLint size)
+{
+    if ((offset < 0) || (size < 0) || ((offset + size) > buffer->size)) {
+        assert(0);
+        return;
+    }
+
+    if (size == 0) {
+        return;
+    }
+
+    yagl_range_list_add(&buffer->gpu_dirty_list, offset, size);
+
+    buffer->cached_minmax_idx = 0;
 }

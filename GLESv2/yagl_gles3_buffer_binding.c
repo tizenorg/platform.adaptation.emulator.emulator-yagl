@@ -4,6 +4,29 @@
 #include "yagl_host_gles_calls.h"
 #include <assert.h>
 
+static int yagl_gles3_buffer_binding_fixup(struct yagl_gles3_buffer_binding *buffer_binding,
+                                           GLint *offset,
+                                           GLsizei *size)
+{
+    *offset = buffer_binding->offset;
+    *size = buffer_binding->size;
+
+    if (*offset < 0) {
+        *size += *offset;
+        *offset = 0;
+    }
+
+    if ((*offset >= buffer_binding->buffer->size) || (*size <= 0)) {
+        return 0;
+    }
+
+    if ((*offset + *size) > buffer_binding->buffer->size) {
+        *size = buffer_binding->buffer->size - *offset;
+    }
+
+    return 1;
+}
+
 void yagl_gles3_buffer_binding_init(struct yagl_gles3_buffer_binding *buffer_binding,
                                     GLenum target,
                                     GLuint index)
@@ -62,7 +85,7 @@ void yagl_gles3_buffer_binding_transfer_begin(struct yagl_gles3_buffer_binding *
         return;
     }
 
-    if (yagl_gles_buffer_is_dirty(buffer_binding->buffer, 0, 0)) {
+    if (yagl_gles_buffer_is_cpu_dirty(buffer_binding->buffer, 0, 0)) {
         yagl_gles_buffer_bind(buffer_binding->buffer, 0, 0,
                               buffer_binding->target);
         yagl_gles_buffer_transfer(buffer_binding->buffer, 0,
@@ -74,20 +97,10 @@ void yagl_gles3_buffer_binding_transfer_begin(struct yagl_gles3_buffer_binding *
                                    buffer_binding->index,
                                    buffer_binding->buffer->default_part.global_name);
     } else {
-        offset = buffer_binding->offset;
-        size = buffer_binding->size;
-
-        if (offset < 0) {
-            size += offset;
-            offset = 0;
-        }
-
-        if ((offset >= buffer_binding->buffer->size) || (size <= 0)) {
+        if (!yagl_gles3_buffer_binding_fixup(buffer_binding,
+                                             &offset,
+                                             &size)) {
             return;
-        }
-
-        if ((offset + size) > buffer_binding->buffer->size) {
-            size = buffer_binding->buffer->size - offset;
         }
 
         yagl_host_glBindBufferRange(buffer_binding->target,
@@ -102,4 +115,27 @@ void yagl_gles3_buffer_binding_transfer_end(struct yagl_gles3_buffer_binding *bu
     yagl_host_glBindBufferBase(buffer_binding->target,
                                buffer_binding->index,
                                0);
+}
+
+void yagl_gles3_buffer_binding_set_gpu_dirty(struct yagl_gles3_buffer_binding *buffer_binding)
+{
+    GLint offset;
+    GLsizei size;
+
+    assert(buffer_binding->buffer);
+    if (!buffer_binding->buffer) {
+        return;
+    }
+
+    if (buffer_binding->entire) {
+        yagl_gles_buffer_set_gpu_dirty(buffer_binding->buffer,
+                                       0,
+                                       buffer_binding->buffer->size);
+    } else if (yagl_gles3_buffer_binding_fixup(buffer_binding,
+                                               &offset,
+                                               &size)) {
+        yagl_gles_buffer_set_gpu_dirty(buffer_binding->buffer,
+                                       offset,
+                                       size);
+    }
 }

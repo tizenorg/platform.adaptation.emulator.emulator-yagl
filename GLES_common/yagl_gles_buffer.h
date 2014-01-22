@@ -47,6 +47,8 @@ struct yagl_gles_buffer
     GLintptr map_offset;
     GLsizeiptr map_length;
 
+    struct yagl_range_list gpu_dirty_list;
+
     int was_bound;
 
     int cached_minmax_idx;
@@ -120,8 +122,12 @@ void yagl_gles_buffer_set_bound(struct yagl_gles_buffer *buffer);
 
 int yagl_gles_buffer_was_bound(struct yagl_gles_buffer *buffer);
 
-int yagl_gles_buffer_is_dirty(struct yagl_gles_buffer *buffer,
-                              GLenum type,
-                              int need_convert);
+int yagl_gles_buffer_is_cpu_dirty(struct yagl_gles_buffer *buffer,
+                                  GLenum type,
+                                  int need_convert);
+
+void yagl_gles_buffer_set_gpu_dirty(struct yagl_gles_buffer *buffer,
+                                    GLint offset,
+                                    GLint size);
 
 #endif

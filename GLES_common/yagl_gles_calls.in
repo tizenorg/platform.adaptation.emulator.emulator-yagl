@@ -31,6 +31,7 @@ void glBufferData(GLenum target, const GLvoid *data, GLenum usage)
 void glBufferSubData(GLenum target, GLsizei offset, const GLvoid *data)
 void glBindBufferBase(GLenum target, GLuint index, GLuint buffer)
 void glBindBufferRange(GLenum target, GLuint index, GLuint buffer, GLint offset, GLsizei size)
+void glMapBuffer(GLuint buffer, const GLuint *ranges, GLvoid *data)
 # Textures
 void glGenTextures(const GLuint *textures)
 void glBindTexture(GLenum target, GLuint texture)

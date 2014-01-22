@@ -118,6 +118,10 @@ static inline void yagl_gles3_context_post_draw(struct yagl_gles3_context *ctx)
                        &ctx->active_uniform_buffer_bindings, list) {
         yagl_gles3_buffer_binding_transfer_end(buffer_binding);
     }
+
+    if (ctx->tfo->active && !ctx->tfo->paused) {
+        yagl_gles3_transform_feedback_post_draw(ctx->tfo);
+    }
 }
 
 static void yagl_gles3_context_prepare(struct yagl_client_context *ctx)

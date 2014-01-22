@@ -38,4 +38,6 @@ void yagl_gles3_buffer_binding_transfer_begin(struct yagl_gles3_buffer_binding *
 
 void yagl_gles3_buffer_binding_transfer_end(struct yagl_gles3_buffer_binding *buffer_binding);
 
+void yagl_gles3_buffer_binding_set_gpu_dirty(struct yagl_gles3_buffer_binding *buffer_binding);
+
 #endif

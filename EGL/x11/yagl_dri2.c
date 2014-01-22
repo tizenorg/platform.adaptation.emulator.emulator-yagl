@@ -78,7 +78,7 @@ static Bool DRI2WireToEvent(Display *x_dpy, XEvent *event, xEvent *wire)
         if (sfc) {
             if (sfc->type == EGL_WINDOW_BIT) {
                 ++sfc->native_drawable->stamp;
-                YAGL_LOG_DEBUG("EGL surface 0x%X invalidated, stamp = %u",
+                YAGL_LOG_TRACE("EGL surface 0x%X invalidated, stamp = %u",
                                awire->drawable,
                                sfc->native_drawable->stamp);
             } else {

@@ -164,6 +164,15 @@ void yagl_gles3_transform_feedback_resume(struct yagl_gles3_transform_feedback *
     tf->paused = 0;
 }
 
+void yagl_gles3_transform_feedback_post_draw(struct yagl_gles3_transform_feedback *tf)
+{
+    GLuint i;
+
+    for (i = 0; i < tf->num_active_buffer_bindings; ++i) {
+        yagl_gles3_buffer_binding_set_gpu_dirty(&tf->buffer_bindings[i]);
+    }
+}
+
 void yagl_gles3_transform_feedback_end(struct yagl_gles3_transform_feedback *tf)
 {
     GLuint i;
