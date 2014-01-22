@@ -1245,3 +1245,14 @@ out:
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
+
+YAGL_API void glRenderbufferStorageMultisample(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT5(glRenderbufferStorageMultisample, GLenum, GLsizei, GLenum, GLsizei, GLsizei, target, samples, internalformat, width, height);
+
+    YAGL_GET_CTX();
+
+    yagl_host_glRenderbufferStorageMultisample(target, samples, internalformat, width, height);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}

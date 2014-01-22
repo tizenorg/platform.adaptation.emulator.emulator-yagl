@@ -76,6 +76,7 @@ void glGenRenderbuffers(const GLuint *renderbuffers)
 void glBindRenderbuffer(GLenum target, GLuint renderbuffer)
 void glRenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height)
 void glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint &param)
+void glRenderbufferStorageMultisample(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height)
 # Shaders
 void glCreateProgram(GLuint program)
 void glCreateShader(GLuint shader, GLenum type)

@@ -53,12 +53,6 @@ YAGL_API void glClearBufferfi(GLenum buffer, GLint drawbuffer, GLfloat depth, GL
     exit(5);
 }
 
-YAGL_API void glRenderbufferStorageMultisample(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height)
-{
-    assert(0);
-    exit(5);
-}
-
 YAGL_API void glGetInteger64v(GLenum pname, GLint64 *params)
 {
     assert(0);
