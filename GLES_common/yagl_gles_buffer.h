@@ -130,4 +130,12 @@ void yagl_gles_buffer_set_gpu_dirty(struct yagl_gles_buffer *buffer,
                                     GLint offset,
                                     GLint size);
 
+int yagl_gles_buffer_copy_gpu(struct yagl_gles_buffer *from_buffer,
+                              GLenum from_target,
+                              struct yagl_gles_buffer *to_buffer,
+                              GLenum to_target,
+                              GLint from_offset,
+                              GLint to_offset,
+                              GLint size);
+
 #endif

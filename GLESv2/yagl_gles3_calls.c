@@ -1256,3 +1256,71 @@ YAGL_API void glRenderbufferStorageMultisample(GLenum target, GLsizei samples, G
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
+
+YAGL_API void glCopyBufferSubData(GLenum readTarget, GLenum writeTarget, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size)
+{
+    struct yagl_gles_buffer *read_buffer_obj = NULL;
+    struct yagl_gles_buffer *write_buffer_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT5(glCopyBufferSubData, GLenum, GLenum, GLintptr, GLintptr, GLsizeiptr, readTarget, writeTarget, readOffset, writeOffset, size);
+
+    YAGL_GET_CTX();
+
+    if (!yagl_gles_context_acquire_binded_buffer(&ctx->base.base, readTarget, &read_buffer_obj)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if (!read_buffer_obj) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!yagl_gles_context_acquire_binded_buffer(&ctx->base.base, writeTarget, &write_buffer_obj)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if (!write_buffer_obj) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    yagl_gles_buffer_bind(read_buffer_obj,
+                          0,
+                          0,
+                          readTarget);
+    yagl_gles_buffer_bind(write_buffer_obj,
+                          0,
+                          0,
+                          writeTarget);
+    yagl_gles_buffer_transfer(read_buffer_obj,
+                              0,
+                              readTarget,
+                              0);
+    yagl_gles_buffer_transfer(write_buffer_obj,
+                              0,
+                              writeTarget,
+                              0);
+
+    if (yagl_gles_buffer_copy_gpu(read_buffer_obj, readTarget,
+                                  write_buffer_obj, writeTarget,
+                                  readOffset,
+                                  writeOffset,
+                                  size)) {
+        yagl_gles_buffer_set_gpu_dirty(write_buffer_obj,
+                                       writeOffset,
+                                       size);
+    } else {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+    }
+
+    yagl_host_glBindBuffer(writeTarget, 0);
+    yagl_host_glBindBuffer(readTarget, 0);
+
+out:
+    yagl_gles_buffer_release(read_buffer_obj);
+    yagl_gles_buffer_release(write_buffer_obj);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}

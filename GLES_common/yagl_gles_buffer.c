@@ -8,6 +8,7 @@
 #include "yagl_gles_validate.h"
 #include "yagl_host_gles_calls.h"
 #include <string.h>
+#include <stdlib.h>
 #include <assert.h>
 
 /*
@@ -626,4 +627,31 @@ void yagl_gles_buffer_set_gpu_dirty(struct yagl_gles_buffer *buffer,
     yagl_range_list_add(&buffer->gpu_dirty_list, offset, size);
 
     buffer->cached_minmax_idx = 0;
+}
+
+int yagl_gles_buffer_copy_gpu(struct yagl_gles_buffer *from_buffer,
+                              GLenum from_target,
+                              struct yagl_gles_buffer *to_buffer,
+                              GLenum to_target,
+                              GLint from_offset,
+                              GLint to_offset,
+                              GLint size)
+{
+    if ((from_offset < 0) || (to_offset < 0) || (size < 0) ||
+        ((from_offset + size) > from_buffer->size) ||
+        ((to_offset + size) > to_buffer->size)) {
+        return 0;
+    }
+
+    if ((from_buffer == to_buffer) &&
+        (abs(to_offset - from_offset) < size)) {
+        return 0;
+    }
+
+    if (size != 0) {
+        yagl_host_glCopyBufferSubData(from_target, to_target,
+                                      from_offset, to_offset, size);
+    }
+
+    return 1;
 }

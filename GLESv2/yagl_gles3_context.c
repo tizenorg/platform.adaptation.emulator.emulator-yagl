@@ -182,6 +182,9 @@ static void yagl_gles3_context_destroy(struct yagl_client_context *ctx)
 
     YAGL_LOG_FUNC_ENTER(yagl_gles3_context_destroy, "%p", ctx);
 
+    yagl_gles_buffer_release(gles3_ctx->cwbo);
+    yagl_gles_buffer_release(gles3_ctx->crbo);
+
     yagl_gles3_query_release(gles3_ctx->occlusion_query);
     yagl_gles3_query_release(gles3_ctx->tf_primitives_written_query);
 
@@ -326,6 +329,14 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
         *params = tts->texture ? tts->texture->base.local_name : 0;
         *num_params = 1;
         break;
+    case GL_COPY_READ_BUFFER_BINDING:
+        *params = gles3_ctx->crbo ? gles3_ctx->crbo->base.local_name : 0;
+        *num_params = 1;
+        break;
+    case GL_COPY_WRITE_BUFFER_BINDING:
+        *params = gles3_ctx->cwbo ? gles3_ctx->cwbo->base.local_name : 0;
+        *num_params = 1;
+        break;
     default:
         processed = 0;
         break;
@@ -336,8 +347,6 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
     }
 
     switch (pname) {
-    case GL_COPY_READ_BUFFER_BINDING:
-    case GL_COPY_WRITE_BUFFER_BINDING:
     case GL_FRAGMENT_SHADER_DERIVATIVE_HINT:
     case GL_MAJOR_VERSION:
     case GL_MAX_ARRAY_TEXTURE_LAYERS:
@@ -448,6 +457,16 @@ static int yagl_gles3_context_bind_buffer(struct yagl_gles_context *ctx,
         yagl_gles_buffer_release(gles3_ctx->tfbo);
         gles3_ctx->tfbo = buffer;
         break;
+    case GL_COPY_READ_BUFFER:
+        yagl_gles_buffer_acquire(buffer);
+        yagl_gles_buffer_release(gles3_ctx->crbo);
+        gles3_ctx->crbo = buffer;
+        break;
+    case GL_COPY_WRITE_BUFFER:
+        yagl_gles_buffer_acquire(buffer);
+        yagl_gles_buffer_release(gles3_ctx->cwbo);
+        gles3_ctx->cwbo = buffer;
+        break;
     default:
         return 0;
     }
@@ -481,6 +500,16 @@ static void yagl_gles3_context_unbind_buffer(struct yagl_gles_context *ctx,
 
     yagl_gles3_transform_feedback_unbind_buffer(gles3_ctx->tfo,
                                                 buffer_local_name);
+
+    if (gles3_ctx->crbo && (gles3_ctx->crbo->base.local_name == buffer_local_name)) {
+        yagl_gles_buffer_release(gles3_ctx->crbo);
+        gles3_ctx->crbo = NULL;
+    }
+
+    if (gles3_ctx->cwbo && (gles3_ctx->cwbo->base.local_name == buffer_local_name)) {
+        yagl_gles_buffer_release(gles3_ctx->cwbo);
+        gles3_ctx->cwbo = NULL;
+    }
 }
 
 static int yagl_gles3_context_acquire_binded_buffer(struct yagl_gles_context *ctx,
@@ -497,6 +526,14 @@ static int yagl_gles3_context_acquire_binded_buffer(struct yagl_gles_context *ct
     case GL_TRANSFORM_FEEDBACK_BUFFER:
         yagl_gles_buffer_acquire(gles3_ctx->tfbo);
         *buffer = gles3_ctx->tfbo;
+        break;
+    case GL_COPY_READ_BUFFER:
+        yagl_gles_buffer_acquire(gles3_ctx->crbo);
+        *buffer = gles3_ctx->crbo;
+        break;
+    case GL_COPY_WRITE_BUFFER:
+        yagl_gles_buffer_acquire(gles3_ctx->cwbo);
+        *buffer = gles3_ctx->cwbo;
         break;
     default:
         return 0;

@@ -65,6 +65,18 @@ struct yagl_gles3_context
     /*
      * @}
      */
+
+    /*
+     * Copy buffer objects.
+     * @{
+     */
+
+    struct yagl_gles_buffer *crbo;
+    struct yagl_gles_buffer *cwbo;
+
+    /*
+     * @}
+     */
 };
 
 struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg);

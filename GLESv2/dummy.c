@@ -190,12 +190,6 @@ YAGL_API const GLubyte *glGetStringi(GLenum name, GLuint index)
     return NULL;
 }
 
-YAGL_API void glCopyBufferSubData(GLenum readTarget, GLenum writeTarget, GLintptr readOffset, GLintptr writeOffset, GLsizeiptr size)
-{
-    assert(0);
-    exit(5);
-}
-
 YAGL_API void glInvalidateSubFramebuffer(GLenum target, GLsizei numAttachments, const GLenum *attachments, GLint x, GLint y, GLsizei width, GLsizei height)
 {
     assert(0);
