@@ -26,12 +26,6 @@
     yagl_gles_context_set_error(&ctx->base.base, err); \
     YAGL_LOG_ERROR("error = 0x%X", err)
 
-/*
- * We can't include GL/glext.h here
- */
-#define GL_PACK_IMAGE_HEIGHT 0x806C
-#define GL_PACK_SKIP_IMAGES 0x806B
-
 static const GLchar *egl_image_ext = "GL_OES_EGL_image";
 static const GLchar *depth24_ext = "GL_OES_depth24";
 static const GLchar *depth32_ext = "GL_OES_depth32";
@@ -375,21 +369,11 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
     case GL_MINOR_VERSION:
     case GL_MIN_PROGRAM_TEXEL_OFFSET:
     case GL_NUM_EXTENSIONS:
-    case GL_PACK_IMAGE_HEIGHT:
-    case GL_PACK_ROW_LENGTH:
-    case GL_PACK_SKIP_IMAGES:
-    case GL_PACK_SKIP_PIXELS:
-    case GL_PACK_SKIP_ROWS:
     case GL_PRIMITIVE_RESTART_FIXED_INDEX:
     case GL_TRANSFORM_FEEDBACK_BUFFER_SIZE:
     case GL_TRANSFORM_FEEDBACK_BUFFER_START:
     case GL_UNIFORM_BUFFER_SIZE:
     case GL_UNIFORM_BUFFER_START:
-    case GL_UNPACK_IMAGE_HEIGHT:
-    case GL_UNPACK_ROW_LENGTH:
-    case GL_UNPACK_SKIP_IMAGES:
-    case GL_UNPACK_SKIP_PIXELS:
-    case GL_UNPACK_SKIP_ROWS:
         *num_params = 1;
         break;
     case GL_PROGRAM_BINARY_FORMATS:
@@ -765,15 +749,12 @@ static int yagl_gles3_context_validate_texture_internalformat(struct yagl_gles_c
     return 1;
 }
 
-static int yagl_gles3_context_get_stride(struct yagl_gles_context *ctx,
-                                         GLsizei alignment,
-                                         GLsizei width,
-                                         GLenum format,
-                                         GLenum type,
-                                         GLsizei *stride)
+static int yagl_gles3_context_validate_format(struct yagl_gles_context *ctx,
+                                              GLenum format,
+                                              GLenum type,
+                                              GLsizei *bpp)
 {
     int num_components = 0;
-    GLsizei bpp = 0;
 
     switch (format) {
     case GL_RGB:
@@ -822,7 +803,7 @@ static int yagl_gles3_context_get_stride(struct yagl_gles_context *ctx,
     switch (type) {
     case GL_UNSIGNED_BYTE:
     case GL_BYTE:
-        bpp = num_components;
+        *bpp = num_components;
         break;
     case GL_UNSIGNED_SHORT:
     case GL_SHORT:
@@ -832,7 +813,7 @@ static int yagl_gles3_context_get_stride(struct yagl_gles_context *ctx,
             (format != GL_RGBA_INTEGER)) {
             return 0;
         }
-        bpp = num_components * 2;
+        *bpp = num_components * 2;
         break;
     case GL_UNSIGNED_INT:
     case GL_INT:
@@ -842,7 +823,7 @@ static int yagl_gles3_context_get_stride(struct yagl_gles_context *ctx,
             (format != GL_RGBA_INTEGER)) {
             return 0;
         }
-        bpp = num_components * 4;
+        *bpp = num_components * 4;
         break;
     case GL_FLOAT:
         if ((format == GL_RED_INTEGER) ||
@@ -851,7 +832,7 @@ static int yagl_gles3_context_get_stride(struct yagl_gles_context *ctx,
             (format == GL_RGBA_INTEGER)) {
             return 0;
         }
-        bpp = num_components * 4;
+        *bpp = num_components * 4;
         break;
     case GL_HALF_FLOAT_OES:
     case GL_HALF_FLOAT:
@@ -861,35 +842,31 @@ static int yagl_gles3_context_get_stride(struct yagl_gles_context *ctx,
             (format == GL_RGBA_INTEGER)) {
             return 0;
         }
-        bpp = num_components * 2;
+        *bpp = num_components * 2;
         break;
     case GL_UNSIGNED_INT_2_10_10_10_REV:
         if ((format != GL_RGBA) &&
             (format != GL_RGBA_INTEGER)) {
             return 0;
         }
-        bpp = 4;
+        *bpp = 4;
         break;
     case GL_UNSIGNED_INT_10F_11F_11F_REV:
     case GL_UNSIGNED_INT_5_9_9_9_REV:
         if (format != GL_RGB) {
             return 0;
         }
-        bpp = 4;
+        *bpp = 4;
         break;
     case GL_FLOAT_32_UNSIGNED_INT_24_8_REV:
         if (format != GL_DEPTH_STENCIL) {
             return 0;
         }
-        bpp = 4;
+        *bpp = 4;
         break;
     default:
         return 0;
     }
-
-    assert(alignment > 0);
-
-    *stride = ((width * bpp) + alignment - 1) & ~(alignment - 1);
 
     return 1;
 }
@@ -969,7 +946,7 @@ struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg
     gles3_ctx->base.base.acquire_binded_buffer = &yagl_gles3_context_acquire_binded_buffer;
     gles3_ctx->base.base.validate_texture_target = &yagl_gles3_context_validate_texture_target;
     gles3_ctx->base.base.validate_texture_internalformat = &yagl_gles3_context_validate_texture_internalformat;
-    gles3_ctx->base.base.get_stride = &yagl_gles3_context_get_stride;
+    gles3_ctx->base.base.validate_format = &yagl_gles3_context_validate_format;
     gles3_ctx->base.shader_patch = &yagl_gles3_context_shader_patch;
 
     YAGL_LOG_FUNC_EXIT("%p", gles3_ctx);

@@ -8,6 +8,7 @@
 #include "yagl_gles_texture.h"
 #include "yagl_gles_texture_unit.h"
 #include "yagl_gles_vertex_array.h"
+#include "yagl_gles_utils.h"
 #include "yagl_log.h"
 #include "yagl_malloc.h"
 #include "yagl_state.h"
@@ -47,6 +48,8 @@ static const GLchar *texture_storage_ext = "GL_EXT_texture_storage";
 static const GLchar *pbo_ext = "GL_NV_pixel_buffer_object";
 static const GLchar *read_buffer_ext = "GL_NV_read_buffer";
 static const GLchar *compressed_etc1_rgb8_texture_ext = "GL_OES_compressed_ETC1_RGB8_texture";
+static const GLchar *pack_subimage_ext = "GL_NV_pack_subimage";
+static const GLchar *unpack_subimage_ext = " GL_EXT_unpack_subimage";
 static const GLchar *packed_depth_stencil_ext = "GL_OES_packed_depth_stencil";
 static const GLchar *texture_npot_ext = "GL_OES_texture_npot";
 static const GLchar *texture_rectangle_ext = "GL_ARB_texture_rectangle";
@@ -84,6 +87,8 @@ static const GLchar **yagl_gles2_context_get_extensions(struct yagl_gles2_contex
     extensions[i++] = pbo_ext;
     extensions[i++] = read_buffer_ext;
     extensions[i++] = compressed_etc1_rgb8_texture_ext;
+    extensions[i++] = pack_subimage_ext;
+    extensions[i++] = unpack_subimage_ext;
 
     if (ctx->base.packed_depth_stencil) {
         extensions[i++] = packed_depth_stencil_ext;
@@ -260,12 +265,10 @@ static int yagl_gles2_context_acquire_binded_buffer(struct yagl_gles_context *ct
     return 0;
 }
 
-static int yagl_gles2_context_get_stride(struct yagl_gles_context *ctx,
-                                         GLsizei alignment,
-                                         GLsizei width,
-                                         GLenum format,
-                                         GLenum type,
-                                         GLsizei *stride)
+static int yagl_gles2_context_validate_format(struct yagl_gles_context *ctx,
+                                              GLenum format,
+                                              GLenum type,
+                                              GLsizei *bpp)
 {
     return 0;
 }
@@ -382,7 +385,6 @@ void yagl_gles2_context_compressed_tex_image_2d(struct yagl_gles_context *gles_c
     GLsizei dst_stride;
     GLsizei dst_size;
     uint8_t *buff;
-    GLint saved_alignment;
 
     YAGL_LOG_FUNC_SET(glCompressedTexImage2D);
 
@@ -414,11 +416,7 @@ void yagl_gles2_context_compressed_tex_image_2d(struct yagl_gles_context *gles_c
                       buff,
                       dst_stride);
 
-    saved_alignment = gles_ctx->unpack.alignment;
-
-    if (saved_alignment != 1) {
-        yagl_host_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    }
+    yagl_gles_reset_unpack(&gles_ctx->unpack);
 
     yagl_host_glTexImage2DData(target,
                                level,
@@ -431,9 +429,7 @@ void yagl_gles2_context_compressed_tex_image_2d(struct yagl_gles_context *gles_c
                                buff,
                                dst_size);
 
-    if (saved_alignment != 1) {
-        yagl_host_glPixelStorei(GL_UNPACK_ALIGNMENT, saved_alignment);
-    }
+    yagl_gles_set_unpack(&gles_ctx->unpack);
 }
 
 void yagl_gles2_context_compressed_tex_sub_image_2d(struct yagl_gles_context *gles_ctx,
@@ -453,7 +449,6 @@ void yagl_gles2_context_compressed_tex_sub_image_2d(struct yagl_gles_context *gl
     GLsizei dst_stride;
     GLsizei dst_size;
     uint8_t *buff;
-    GLint saved_alignment;
 
     YAGL_LOG_FUNC_SET(glCompressedTexSubImage2D);
 
@@ -495,11 +490,7 @@ void yagl_gles2_context_compressed_tex_sub_image_2d(struct yagl_gles_context *gl
                       buff,
                       dst_stride);
 
-    saved_alignment = gles_ctx->unpack.alignment;
-
-    if (saved_alignment != 1) {
-        yagl_host_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    }
+    yagl_gles_reset_unpack(&gles_ctx->unpack);
 
     yagl_host_glTexSubImage2DData(target,
                                   level,
@@ -512,9 +503,7 @@ void yagl_gles2_context_compressed_tex_sub_image_2d(struct yagl_gles_context *gl
                                   buff,
                                   dst_size);
 
-    if (saved_alignment != 1) {
-        yagl_host_glPixelStorei(GL_UNPACK_ALIGNMENT, saved_alignment);
-    }
+    yagl_gles_set_unpack(&gles_ctx->unpack);
 }
 
 void yagl_gles2_context_compressed_tex_image_3d(struct yagl_gles2_context *ctx,
@@ -534,7 +523,6 @@ void yagl_gles2_context_compressed_tex_image_3d(struct yagl_gles2_context *ctx,
     GLsizei dst_stride;
     GLsizei dst_size;
     uint8_t *buff, *tmp;
-    GLint saved_alignment;
     GLsizei i;
 
     YAGL_LOG_FUNC_SET(glCompressedTexImage3D);
@@ -575,11 +563,7 @@ void yagl_gles2_context_compressed_tex_image_3d(struct yagl_gles2_context *ctx,
         tmp += dst_size;
     }
 
-    saved_alignment = ctx->base.unpack.alignment;
-
-    if (saved_alignment != 1) {
-        yagl_host_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    }
+    yagl_gles_reset_unpack(&ctx->base.unpack);
 
     yagl_host_glTexImage3DData(target,
                                level,
@@ -593,9 +577,7 @@ void yagl_gles2_context_compressed_tex_image_3d(struct yagl_gles2_context *ctx,
                                buff,
                                dst_size * depth);
 
-    if (saved_alignment != 1) {
-        yagl_host_glPixelStorei(GL_UNPACK_ALIGNMENT, saved_alignment);
-    }
+    yagl_gles_set_unpack(&ctx->base.unpack);
 }
 
 void yagl_gles2_context_compressed_tex_sub_image_3d(struct yagl_gles2_context *ctx,
@@ -617,7 +599,6 @@ void yagl_gles2_context_compressed_tex_sub_image_3d(struct yagl_gles2_context *c
     GLsizei dst_stride;
     GLsizei dst_size;
     uint8_t *buff, *tmp;
-    GLint saved_alignment;
     GLsizei i;
 
     YAGL_LOG_FUNC_SET(glCompressedTexSubImage3D);
@@ -668,11 +649,7 @@ void yagl_gles2_context_compressed_tex_sub_image_3d(struct yagl_gles2_context *c
         tmp += dst_size;
     }
 
-    saved_alignment = ctx->base.unpack.alignment;
-
-    if (saved_alignment != 1) {
-        yagl_host_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    }
+    yagl_gles_reset_unpack(&ctx->base.unpack);
 
     yagl_host_glTexSubImage3DData(target,
                                   level,
@@ -687,9 +664,7 @@ void yagl_gles2_context_compressed_tex_sub_image_3d(struct yagl_gles2_context *c
                                   buff,
                                   dst_size * depth);
 
-    if (saved_alignment != 1) {
-        yagl_host_glPixelStorei(GL_UNPACK_ALIGNMENT, saved_alignment);
-    }
+    yagl_gles_set_unpack(&ctx->base.unpack);
 }
 
 int yagl_gles2_context_get_integerv(struct yagl_gles_context *ctx,
@@ -1001,7 +976,7 @@ struct yagl_client_context *yagl_gles2_context_create(struct yagl_sharegroup *sg
     gles2_ctx->base.acquire_binded_buffer = &yagl_gles2_context_acquire_binded_buffer;
     gles2_ctx->base.validate_texture_target = &yagl_gles2_context_validate_texture_target;
     gles2_ctx->base.validate_texture_internalformat = &yagl_gles2_context_validate_texture_internalformat;
-    gles2_ctx->base.get_stride = &yagl_gles2_context_get_stride;
+    gles2_ctx->base.validate_format = &yagl_gles2_context_validate_format;
     gles2_ctx->shader_patch = &yagl_gles2_context_shader_patch;
 
     YAGL_LOG_FUNC_EXIT("%p", gles2_ctx);

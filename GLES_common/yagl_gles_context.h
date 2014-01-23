@@ -104,12 +104,10 @@ struct yagl_gles_context
                                            GLenum */*any_format*/,
                                            GLenum */*any_type*/);
 
-    int (*get_stride)(struct yagl_gles_context */*ctx*/,
-                      GLsizei /*alignment*/,
-                      GLsizei /*width*/,
-                      GLenum /*format*/,
-                      GLenum /*type*/,
-                      GLsizei */*stride*/);
+    int (*validate_format)(struct yagl_gles_context */*ctx*/,
+                           GLenum /*format*/,
+                           GLenum /*type*/,
+                           GLsizei */*bpp*/);
 
     struct yagl_namespace framebuffers;
 
@@ -224,13 +222,11 @@ void yagl_gles_context_set_error(struct yagl_gles_context *ctx, GLenum error);
 
 GLenum yagl_gles_context_get_error(struct yagl_gles_context *ctx);
 
-int yagl_gles_context_get_stride(struct yagl_gles_context *ctx,
-                                 GLsizei alignment,
-                                 GLsizei width,
-                                 GLenum format,
-                                 GLenum type,
-                                 GLsizei *stride,
-                                 int *need_convert);
+int yagl_gles_context_validate_format(struct yagl_gles_context *ctx,
+                                      GLenum format,
+                                      GLenum type,
+                                      GLsizei *bpp,
+                                      int *need_convert);
 
 void yagl_gles_context_bind_vertex_array(struct yagl_gles_context *ctx,
                                          struct yagl_gles_vertex_array *va);

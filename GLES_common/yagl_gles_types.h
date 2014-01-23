@@ -29,6 +29,11 @@ typedef enum
 struct yagl_gles_pixelstore
 {
     GLint alignment;
+    GLint row_length;
+    GLint image_height;
+    GLint skip_pixels;
+    GLint skip_rows;
+    GLint skip_images;
     struct yagl_gles_buffer *pbo;
 };
 

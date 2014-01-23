@@ -317,16 +317,13 @@ GLenum yagl_gles_context_get_error(struct yagl_gles_context *ctx)
     return error;
 }
 
-int yagl_gles_context_get_stride(struct yagl_gles_context *ctx,
-                                 GLsizei alignment,
-                                 GLsizei width,
-                                 GLenum format,
-                                 GLenum type,
-                                 GLsizei *stride,
-                                 int *need_convert)
+int yagl_gles_context_validate_format(struct yagl_gles_context *ctx,
+                                      GLenum format,
+                                      GLenum type,
+                                      GLsizei *bpp,
+                                      int *need_convert)
 {
     int num_components = 0;
-    GLsizei bpp = 0;
 
     *need_convert = 0;
 
@@ -370,59 +367,54 @@ int yagl_gles_context_get_stride(struct yagl_gles_context *ctx,
 
     switch (type) {
     case GL_UNSIGNED_BYTE:
-        bpp = num_components;
+        *bpp = num_components;
         break;
     case GL_UNSIGNED_SHORT_5_6_5:
         if (format != GL_RGB) {
             goto fail;
         }
-        bpp = 2;
+        *bpp = 2;
         break;
     case GL_UNSIGNED_SHORT_4_4_4_4:
     case GL_UNSIGNED_SHORT_5_5_5_1:
         if (format != GL_RGBA) {
             goto fail;
         }
-        bpp = 2;
+        *bpp = 2;
         break;
     case GL_UNSIGNED_INT_24_8_EXT:
         if (format != GL_DEPTH_STENCIL_EXT) {
             goto fail;
         }
-        bpp = num_components * 4;
+        *bpp = num_components * 4;
         break;
     case GL_UNSIGNED_SHORT:
         if (format != GL_DEPTH_COMPONENT) {
             goto fail;
         }
-        bpp = num_components * 2;
+        *bpp = num_components * 2;
         break;
     case GL_UNSIGNED_INT:
         if (format != GL_DEPTH_COMPONENT) {
             goto fail;
         }
-        bpp = num_components * 4;
+        *bpp = num_components * 4;
         break;
     case GL_FLOAT:
-        bpp = num_components * 4;
+        *bpp = num_components * 4;
         break;
     case GL_HALF_FLOAT_OES:
     case GL_HALF_FLOAT:
-        bpp = num_components * 2;
+        *bpp = num_components * 2;
         break;
     default:
         goto fail;
     }
 
-    assert(alignment > 0);
-
-    *stride = ((width * bpp) + alignment - 1) & ~(alignment - 1);
-
     return 1;
 
 fail:
-    return ctx->get_stride(ctx, alignment, width,
-                           format, type, stride);
+    return ctx->validate_format(ctx, format, type, bpp);
 }
 
 void yagl_gles_context_bind_vertex_array(struct yagl_gles_context *ctx,
@@ -964,8 +956,48 @@ int yagl_gles_context_get_integerv(struct yagl_gles_context *ctx,
         *params = ctx->pack.alignment;
         *num_params = 1;
         break;
+    case GL_PACK_IMAGE_HEIGHT:
+        *params = ctx->pack.image_height;
+        *num_params = 1;
+        break;
+    case GL_PACK_ROW_LENGTH:
+        *params = ctx->pack.row_length;
+        *num_params = 1;
+        break;
+    case GL_PACK_SKIP_IMAGES:
+        *params = ctx->pack.skip_images;
+        *num_params = 1;
+        break;
+    case GL_PACK_SKIP_PIXELS:
+        *params = ctx->pack.skip_pixels;
+        *num_params = 1;
+        break;
+    case GL_PACK_SKIP_ROWS:
+        *params = ctx->pack.skip_rows;
+        *num_params = 1;
+        break;
     case GL_UNPACK_ALIGNMENT:
         *params = ctx->unpack.alignment;
+        *num_params = 1;
+        break;
+    case GL_UNPACK_IMAGE_HEIGHT:
+        *params = ctx->unpack.image_height;
+        *num_params = 1;
+        break;
+    case GL_UNPACK_ROW_LENGTH:
+        *params = ctx->unpack.row_length;
+        *num_params = 1;
+        break;
+    case GL_UNPACK_SKIP_IMAGES:
+        *params = ctx->unpack.skip_images;
+        *num_params = 1;
+        break;
+    case GL_UNPACK_SKIP_PIXELS:
+        *params = ctx->unpack.skip_pixels;
+        *num_params = 1;
+        break;
+    case GL_UNPACK_SKIP_ROWS:
+        *params = ctx->unpack.skip_rows;
         *num_params = 1;
         break;
     case GL_IMPLEMENTATION_COLOR_READ_FORMAT:
