@@ -1,5 +1,6 @@
 #include "GLES3/gl3.h"
 #include "yagl_texcompress.h"
+#include "yagl_texcompress_etc1.h"
 #include "yagl_texcompress_etc2.h"
 #include <assert.h>
 
@@ -8,7 +9,12 @@
  */
 #define GL_BGRA 0x80E1
 
-#define YAGL_TEXCOMPRESS_ETC2_UNPACK_IMPL(name) \
+/*
+ * We can't include GLES2/gl2ext.h here
+ */
+#define GL_ETC1_RGB8_OES 0x8D64
+
+#define YAGL_TEXCOMPRESS_ETC_UNPACK_IMPL(etc, name) \
     static void yagl_texcompress_unpack_##name(struct yagl_texcompress_format *format, \
                                                const GLvoid *src, \
                                                GLsizei width, \
@@ -17,27 +23,38 @@
                                                GLvoid *dst, \
                                                GLsizei dst_stride) \
     { \
-        yagl_texcompress_etc2_unpack_##name(dst, \
-                                            dst_stride, \
-                                            src, \
-                                            src_stride, \
-                                            width, \
-                                            height); \
+        yagl_texcompress_##etc##_unpack_##name(dst, \
+                                               dst_stride, \
+                                               src, \
+                                               src_stride, \
+                                               width, \
+                                               height); \
     }
 
-YAGL_TEXCOMPRESS_ETC2_UNPACK_IMPL(r11)
-YAGL_TEXCOMPRESS_ETC2_UNPACK_IMPL(signed_r11)
-YAGL_TEXCOMPRESS_ETC2_UNPACK_IMPL(rg11)
-YAGL_TEXCOMPRESS_ETC2_UNPACK_IMPL(signed_rg11)
-YAGL_TEXCOMPRESS_ETC2_UNPACK_IMPL(rgb8)
-YAGL_TEXCOMPRESS_ETC2_UNPACK_IMPL(srgb8)
-YAGL_TEXCOMPRESS_ETC2_UNPACK_IMPL(rgb8_punchthrough_alpha1)
-YAGL_TEXCOMPRESS_ETC2_UNPACK_IMPL(srgb8_punchthrough_alpha1)
-YAGL_TEXCOMPRESS_ETC2_UNPACK_IMPL(rgba8)
-YAGL_TEXCOMPRESS_ETC2_UNPACK_IMPL(srgb8_alpha8)
+YAGL_TEXCOMPRESS_ETC_UNPACK_IMPL(etc1, rgba8888)
+YAGL_TEXCOMPRESS_ETC_UNPACK_IMPL(etc2, r11)
+YAGL_TEXCOMPRESS_ETC_UNPACK_IMPL(etc2, signed_r11)
+YAGL_TEXCOMPRESS_ETC_UNPACK_IMPL(etc2, rg11)
+YAGL_TEXCOMPRESS_ETC_UNPACK_IMPL(etc2, signed_rg11)
+YAGL_TEXCOMPRESS_ETC_UNPACK_IMPL(etc2, rgb8)
+YAGL_TEXCOMPRESS_ETC_UNPACK_IMPL(etc2, srgb8)
+YAGL_TEXCOMPRESS_ETC_UNPACK_IMPL(etc2, rgb8_punchthrough_alpha1)
+YAGL_TEXCOMPRESS_ETC_UNPACK_IMPL(etc2, srgb8_punchthrough_alpha1)
+YAGL_TEXCOMPRESS_ETC_UNPACK_IMPL(etc2, rgba8)
+YAGL_TEXCOMPRESS_ETC_UNPACK_IMPL(etc2, srgb8_alpha8)
 
 static struct yagl_texcompress_format texcompress_formats[] =
 {
+    {
+        .unpack = &yagl_texcompress_unpack_rgba8888,
+        .src_format = GL_ETC1_RGB8_OES,
+        .block_width = 4,
+        .block_height = 4,
+        .block_bytes = 8,
+        .dst_format = GL_RGBA,
+        .dst_internalformat = GL_RGBA8,
+        .dst_type = GL_UNSIGNED_BYTE
+    },
     {
         .unpack = &yagl_texcompress_unpack_r11,
         .src_format = GL_COMPRESSED_R11_EAC,

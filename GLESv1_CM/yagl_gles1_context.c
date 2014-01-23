@@ -9,17 +9,24 @@
 #include "yagl_log.h"
 #include "yagl_malloc.h"
 #include "yagl_utils.h"
+#include "yagl_state.h"
 #include "yagl_host_gles_calls.h"
+#include "yagl_texcompress_etc1.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 
+/*
+ * We can't include GL/gl.h here
+ */
+#define GL_RGBA8 0x8058
+
 #define YAGL_SET_ERR(err) \
     yagl_gles_context_set_error(ctx, err); \
     YAGL_LOG_ERROR("error = 0x%X", err)
 
-#define YAGL_GLES1_NUM_COMP_TEX_FORMATS 10
+#define YAGL_GLES1_NUM_COMP_TEX_FORMATS 11
 
 static const GLchar *blend_subtract_ext = "GL_OES_blend_subtract";
 static const GLchar *blend_equation_separate_ext = "GL_OES_blend_equation_separate";
@@ -48,6 +55,7 @@ static const GLchar *map_buffer_range_ext = "GL_EXT_map_buffer_range";
 static const GLchar *texture_storage_ext = "GL_EXT_texture_storage";
 static const GLchar *pbo_ext = "GL_NV_pixel_buffer_object";
 static const GLchar *read_buffer_ext = "GL_NV_read_buffer";
+static const GLchar *compressed_etc1_rgb8_texture_ext = "GL_OES_compressed_ETC1_RGB8_texture";
 static const GLchar *packed_depth_stencil_ext = "GL_OES_packed_depth_stencil";
 static const GLchar *texture_npot_ext = "GL_OES_texture_npot";
 static const GLchar *texture_filter_anisotropic_ext = "GL_EXT_texture_filter_anisotropic";
@@ -89,6 +97,7 @@ static const GLchar **yagl_gles1_context_get_extensions(struct yagl_gles1_contex
     extensions[i++] = texture_storage_ext;
     extensions[i++] = pbo_ext;
     extensions[i++] = read_buffer_ext;
+    extensions[i++] = compressed_etc1_rgb8_texture_ext;
 
     if (ctx->base.texture_npot) {
         extensions[i++] = texture_npot_ext;
@@ -127,6 +136,7 @@ static void yagl_gles1_compressed_texture_formats_fill(GLint *params)
     params[7] = GL_PALETTE8_R5_G6_B5_OES;
     params[8] = GL_PALETTE8_RGBA4_OES;
     params[9] = GL_PALETTE8_RGB5_A1_OES;
+    params[10] = GL_ETC1_RGB8_OES;
 }
 
 static void yagl_gles1_vertex_array_apply(struct yagl_gles_array *array,
@@ -649,6 +659,57 @@ static void yagl_gles1_cpal_tex_uncomp_and_apply(struct yagl_gles_context *ctx,
     }
 }
 
+static void yagl_gles1_etc1_rgb8_uncomp_and_apply(struct yagl_gles_context *ctx,
+                                                  GLint level,
+                                                  GLsizei width,
+                                                  GLsizei height,
+                                                  GLint border,
+                                                  GLsizei imageSize,
+                                                  const GLvoid *data)
+{
+    GLsizei wblocks = (width + 3) / 4;
+    GLsizei hblocks = (height + 3) / 4;
+    uint8_t *buff;
+    GLint saved_alignment;
+
+    YAGL_LOG_FUNC_SET(glCompressedTexImage2D);
+
+    if (imageSize != (wblocks * hblocks * 8)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        return;
+    }
+
+    buff = yagl_get_tmp_buffer(width * height * 4);
+
+    yagl_texcompress_etc1_unpack_rgba8888(buff,
+                                          (width * 4),
+                                          data,
+                                          (wblocks * 8),
+                                          width,
+                                          height);
+
+    saved_alignment = ctx->unpack.alignment;
+
+    if (saved_alignment != 1) {
+        yagl_host_glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    }
+
+    yagl_host_glTexImage2DData(GL_TEXTURE_2D,
+                               level,
+                               GL_RGBA8,
+                               width,
+                               height,
+                               border,
+                               GL_RGBA,
+                               GL_UNSIGNED_BYTE,
+                               buff,
+                               width * height * 4);
+
+    if (saved_alignment != 1) {
+        yagl_host_glPixelStorei(GL_UNPACK_ALIGNMENT, saved_alignment);
+    }
+}
+
 static void yagl_gles1_context_compressed_tex_image_2d(struct yagl_gles_context *ctx,
                                                        GLenum target,
                                                        GLint level,
@@ -687,6 +748,10 @@ static void yagl_gles1_context_compressed_tex_image_2d(struct yagl_gles_context 
                                              width,
                                              height,
                                              data);
+        break;
+    case GL_ETC1_RGB8_OES:
+        yagl_gles1_etc1_rgb8_uncomp_and_apply(ctx, level, width, height, border,
+                                              imageSize, data);
         break;
     default:
         YAGL_SET_ERR(GL_INVALID_ENUM);

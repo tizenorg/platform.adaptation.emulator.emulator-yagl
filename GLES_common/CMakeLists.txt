@@ -13,6 +13,7 @@ set(SOURCES
     yagl_gles_calls.c
     yagl_gles_utils.c
     yagl_host_gles_calls.c
+    yagl_texcompress_etc1.c
 )
 
 include_directories(.)

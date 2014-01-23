@@ -39,6 +39,7 @@ static const GLchar *texture_float_ext = "GL_OES_texture_float";
 static const GLchar *texture_float_linear_ext = "GL_OES_texture_float_linear";
 static const GLchar *texture_format_bgra8888_ext = "GL_EXT_texture_format_BGRA8888";
 static const GLchar *depth_texture_ext = "GL_OES_depth_texture";
+static const GLchar *compressed_etc1_rgb8_texture_ext = "GL_OES_compressed_ETC1_RGB8_texture";
 static const GLchar *packed_depth_stencil_ext = "GL_OES_packed_depth_stencil";
 static const GLchar *texture_npot_ext = "GL_OES_texture_npot";
 static const GLchar *texture_rectangle_ext = "GL_ARB_texture_rectangle";
@@ -63,6 +64,7 @@ static const GLchar **yagl_gles3_context_get_extensions(struct yagl_gles3_contex
     extensions[i++] = texture_float_linear_ext;
     extensions[i++] = texture_format_bgra8888_ext;
     extensions[i++] = depth_texture_ext;
+    extensions[i++] = compressed_etc1_rgb8_texture_ext;
 
     if (ctx->base.base.packed_depth_stencil) {
         extensions[i++] = packed_depth_stencil_ext;
