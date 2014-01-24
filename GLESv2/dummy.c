@@ -78,45 +78,6 @@ YAGL_API void glProgramBinary(GLuint program, GLenum binaryFormat, const void *b
     exit(5);
 }
 
-YAGL_API GLsync glFenceSync(GLenum condition, GLbitfield flags)
-{
-    assert(0);
-    exit(5);
-    return 0;
-}
-
-YAGL_API GLboolean glIsSync(GLsync sync)
-{
-    assert(0);
-    exit(5);
-    return 0;
-}
-
-YAGL_API void glDeleteSync(GLsync sync)
-{
-    assert(0);
-    exit(5);
-}
-
-YAGL_API GLenum glClientWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout)
-{
-    assert(0);
-    exit(5);
-    return 0;
-}
-
-YAGL_API void glWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout)
-{
-    assert(0);
-    exit(5);
-}
-
-YAGL_API void glGetSynciv(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values)
-{
-    assert(0);
-    exit(5);
-}
-
 YAGL_API void glUniformMatrix2x3fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
 {
     assert(0);

@@ -5,6 +5,7 @@
 #include "yagl_gles3_transform_feedback.h"
 #include "yagl_gles3_buffer_binding.h"
 #include "yagl_gles3_query.h"
+#include "yagl_gles3_sync.h"
 #include "yagl_gles3_validate.h"
 #include "yagl_gles2_shader.h"
 #include "yagl_gles2_validate.h"
@@ -17,6 +18,9 @@
 #include "yagl_log.h"
 #include "yagl_impl.h"
 #include "yagl_malloc.h"
+#include "yagl_transport.h"
+#include "yagl_state.h"
+#include "yagl_egl_fence.h"
 
 #define YAGL_SET_ERR(err) \
     yagl_gles_context_set_error(&ctx->base.base, err); \
@@ -1321,6 +1325,232 @@ YAGL_API void glCopyBufferSubData(GLenum readTarget, GLenum writeTarget, GLintpt
 out:
     yagl_gles_buffer_release(read_buffer_obj);
     yagl_gles_buffer_release(write_buffer_obj);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API GLsync glFenceSync(GLenum condition, GLbitfield flags)
+{
+    GLsync res = NULL;
+    struct yagl_gles3_sync *sync = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glFenceSync, GLenum, GLbitfield, condition, flags);
+
+    YAGL_GET_CTX_RET(NULL);
+
+    if (!yagl_egl_fence_supported()) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (condition != GL_SYNC_GPU_COMMANDS_COMPLETE) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if (flags != 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    sync = yagl_gles3_sync_create();
+
+    if (!sync) {
+        goto out;
+    }
+
+    yagl_sharegroup_add(ctx->base.sg, YAGL_NS_SYNC, &sync->base);
+    res = (GLsync)sync->base.local_name;
+
+    yagl_transport_flush(yagl_get_transport(), sync->egl_fence);
+
+out:
+    yagl_gles3_sync_release(sync);
+
+    YAGL_LOG_FUNC_EXIT_SPLIT(GLsync, res);
+
+    return res;
+}
+
+YAGL_API GLboolean glIsSync(GLsync sync)
+{
+    GLboolean res = GL_FALSE;
+    struct yagl_gles3_sync *sync_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT1(glIsSync, GLsync, sync);
+
+    YAGL_GET_CTX_RET(GL_FALSE);
+
+    sync_obj = (struct yagl_gles3_sync*)yagl_sharegroup_acquire_object(ctx->base.sg,
+        YAGL_NS_SYNC, (yagl_object_name)sync);
+
+    res = (sync_obj != NULL);
+
+    yagl_gles3_sync_release(sync_obj);
+
+    YAGL_LOG_FUNC_EXIT_SPLIT(GLboolean, res);
+
+    return res;
+}
+
+YAGL_API void glDeleteSync(GLsync sync)
+{
+    struct yagl_gles3_sync *sync_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT1(glDeleteSync, GLsync, sync);
+
+    YAGL_GET_CTX();
+
+    if (sync == NULL) {
+        goto out;
+    }
+
+    sync_obj = (struct yagl_gles3_sync*)yagl_sharegroup_acquire_object(ctx->base.sg,
+        YAGL_NS_SYNC, (yagl_object_name)sync);
+
+    if (!sync_obj) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    yagl_sharegroup_remove(ctx->base.sg,
+                           YAGL_NS_SYNC,
+                           (yagl_object_name)sync);
+
+out:
+    yagl_gles3_sync_release(sync_obj);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API GLenum glClientWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout)
+{
+    GLenum status = GL_WAIT_FAILED;
+    struct yagl_gles3_sync *sync_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glClientWaitSync, GLsync, GLbitfield, GLuint64, sync, flags, timeout);
+
+    YAGL_GET_CTX_RET(status);
+
+    if (flags & ~(GL_SYNC_FLUSH_COMMANDS_BIT)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    sync_obj = (struct yagl_gles3_sync*)yagl_sharegroup_acquire_object(ctx->base.sg,
+        YAGL_NS_SYNC, (yagl_object_name)sync);
+
+    if (!sync_obj) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (timeout == 0) {
+        status = sync_obj->egl_fence->signaled(sync_obj->egl_fence) ? GL_CONDITION_SATISFIED
+                                                                    : GL_TIMEOUT_EXPIRED;
+    } else if (sync_obj->egl_fence->wait(sync_obj->egl_fence)) {
+        status = GL_CONDITION_SATISFIED;
+    } else {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+    }
+
+out:
+    yagl_gles3_sync_release(sync_obj);
+
+    YAGL_LOG_FUNC_EXIT_SPLIT(GLenum, status);
+
+    return status;
+}
+
+YAGL_API void glWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout)
+{
+    struct yagl_gles3_sync *sync_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glWaitSync, GLsync, GLbitfield, GLuint64, sync, flags, timeout);
+
+    YAGL_GET_CTX();
+
+    if ((flags != 0) || (timeout != GL_TIMEOUT_IGNORED)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    sync_obj = (struct yagl_gles3_sync*)yagl_sharegroup_acquire_object(ctx->base.sg,
+        YAGL_NS_SYNC, (yagl_object_name)sync);
+
+    if (!sync_obj) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    /*
+     * All our OpenGL commands are serialized, this is a no-op.
+     */
+
+out:
+    yagl_gles3_sync_release(sync_obj);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glGetSynciv(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *length, GLint *values)
+{
+    struct yagl_gles3_sync *sync_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT5(glGetSynciv, GLsync, GLenum, GLsizei, GLsizei*, GLint*, sync, pname, bufSize, length, values);
+
+    YAGL_GET_CTX();
+
+    sync_obj = (struct yagl_gles3_sync*)yagl_sharegroup_acquire_object(ctx->base.sg,
+        YAGL_NS_SYNC, (yagl_object_name)sync);
+
+    if (!sync_obj) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    switch (pname) {
+    case GL_OBJECT_TYPE:
+        if (bufSize > 0) {
+            *values = GL_SYNC_FENCE;
+            if (length) {
+                *length = 1;
+            }
+        } else if (length) {
+            *length = 0;
+        }
+        break;
+    case GL_SYNC_STATUS:
+        if (bufSize > 0) {
+            *values = (sync_obj->egl_fence->signaled(sync_obj->egl_fence) ? GL_SIGNALED : GL_UNSIGNALED);
+            if (length) {
+                *length = 1;
+            }
+        } else if (length) {
+            *length = 0;
+        }
+        break;
+    case GL_SYNC_CONDITION:
+        if (bufSize > 0) {
+            *values = GL_SYNC_GPU_COMMANDS_COMPLETE;
+            if (length) {
+                *length = 1;
+            }
+        } else if (length) {
+            *length = 0;
+        }
+        break;
+    case GL_SYNC_FLAGS:
+        if (length) {
+            *length = 0;
+        }
+        break;
+    default:
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+    }
+
+out:
+    yagl_gles3_sync_release(sync_obj);
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }

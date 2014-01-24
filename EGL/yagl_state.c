@@ -101,7 +101,7 @@ static void yagl_state_transport_commit(void *ops_data, int sync)
     *trigger = sync;
 }
 
-static uint32_t yagl_state_transport_flush(void *ops_data, void **fence)
+static uint32_t yagl_state_transport_flush(void *ops_data, struct yagl_egl_fence **fence)
 {
     struct yagl_state *state = ops_data;
     struct yagl_fence *fence_obj = NULL;
@@ -117,7 +117,7 @@ static uint32_t yagl_state_transport_flush(void *ops_data, void **fence)
     }
 
     if (fence && *fence) {
-        fence_obj = *fence;
+        fence_obj = (struct yagl_fence*)*fence;
     } else if (state->fence_dpy) {
         fence_obj = state->backend->create_fence(state->fence_dpy);
     }
@@ -143,7 +143,7 @@ static uint32_t yagl_state_transport_flush(void *ops_data, void **fence)
     }
 
     if (fence) {
-        *fence = fence_obj;
+        *fence = &fence_obj->base;
         return fence_obj->seq;
     } else {
         uint32_t seq = fence_obj->seq;
@@ -152,22 +152,11 @@ static uint32_t yagl_state_transport_flush(void *ops_data, void **fence)
     }
 }
 
-static void yagl_state_transport_fence_wait(void *ops_data, void *fence)
-{
-    struct yagl_fence *fence_obj = fence;
-
-    if (fence_obj) {
-        fence_obj->wait(fence_obj);
-        yagl_fence_release(fence_obj);
-    }
-}
-
 static struct yagl_transport_ops yagl_state_transport_ops =
 {
     .resize = yagl_state_transport_resize,
     .commit = yagl_state_transport_commit,
-    .flush = yagl_state_transport_flush,
-    .fence_wait = yagl_state_transport_fence_wait
+    .flush = yagl_state_transport_flush
 };
 
 static void yagl_state_free(void *ptr)

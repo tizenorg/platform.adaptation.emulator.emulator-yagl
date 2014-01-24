@@ -142,6 +142,7 @@ struct yagl_backend *yagl_onscreen_create()
     backend->create_fence = &yagl_onscreen_create_fence;
     backend->destroy = &yagl_onscreen_destroy;
     backend->y_inverted = 0;
+    backend->fence_supported = 1;
 
     return backend;
 }

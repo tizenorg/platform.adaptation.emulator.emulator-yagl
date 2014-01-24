@@ -12,6 +12,7 @@
 struct yagl_surface;
 struct yagl_context;
 struct yagl_image;
+struct yagl_fence;
 struct yagl_native_platform;
 struct yagl_native_display;
 
@@ -36,6 +37,8 @@ struct yagl_display
     struct yagl_list contexts;
 
     struct yagl_list images;
+
+    struct yagl_list fences;
 };
 
 /*
@@ -142,6 +145,33 @@ struct yagl_image *yagl_display_image_acquire(struct yagl_display *dpy,
 
 int yagl_display_image_remove(struct yagl_display *dpy,
                               EGLImageKHR handle);
+
+/*
+ * @}
+ */
+
+/*
+ * Fences.
+ * @{
+ */
+
+/*
+ * This acquires 'fence', so the caller should
+ * release 'fence' if he doesn't want to use it and wants it to belong to the
+ * display alone.
+ */
+void yagl_display_fence_add(struct yagl_display *dpy,
+                            struct yagl_fence *fence);
+
+/*
+ * Acquires a fence by handle. Be sure to release the fence when
+ * you're done.
+ */
+struct yagl_fence *yagl_display_fence_acquire(struct yagl_display *dpy,
+                                              EGLSyncKHR handle);
+
+int yagl_display_fence_remove(struct yagl_display *dpy,
+                              EGLSyncKHR handle);
 
 /*
  * @}

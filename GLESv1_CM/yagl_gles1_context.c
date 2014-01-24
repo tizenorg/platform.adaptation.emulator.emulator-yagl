@@ -11,6 +11,7 @@
 #include "yagl_malloc.h"
 #include "yagl_utils.h"
 #include "yagl_state.h"
+#include "yagl_egl_fence.h"
 #include "yagl_host_gles_calls.h"
 #include "yagl_texcompress_etc1.h"
 #include <string.h>
@@ -58,7 +59,8 @@ static const GLchar *pbo_ext = "GL_NV_pixel_buffer_object";
 static const GLchar *read_buffer_ext = "GL_NV_read_buffer";
 static const GLchar *compressed_etc1_rgb8_texture_ext = "GL_OES_compressed_ETC1_RGB8_texture";
 static const GLchar *pack_subimage_ext = "GL_NV_pack_subimage";
-static const GLchar *unpack_subimage_ext = " GL_EXT_unpack_subimage";
+static const GLchar *unpack_subimage_ext = "GL_EXT_unpack_subimage";
+static const GLchar *egl_sync_ext = "GL_OES_EGL_sync";
 static const GLchar *packed_depth_stencil_ext = "GL_OES_packed_depth_stencil";
 static const GLchar *texture_npot_ext = "GL_OES_texture_npot";
 static const GLchar *texture_filter_anisotropic_ext = "GL_EXT_texture_filter_anisotropic";
@@ -103,6 +105,10 @@ static const GLchar **yagl_gles1_context_get_extensions(struct yagl_gles1_contex
     extensions[i++] = compressed_etc1_rgb8_texture_ext;
     extensions[i++] = pack_subimage_ext;
     extensions[i++] = unpack_subimage_ext;
+
+    if (yagl_egl_fence_supported()) {
+        extensions[i++] = egl_sync_ext;
+    }
 
     if (ctx->base.texture_npot) {
         extensions[i++] = texture_npot_ext;

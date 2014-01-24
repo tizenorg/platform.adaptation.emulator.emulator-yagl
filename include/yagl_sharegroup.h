@@ -6,7 +6,7 @@
 #include "yagl_ref.h"
 #include "yagl_namespace.h"
 
-#define YAGL_NUM_NAMESPACES 5
+#define YAGL_NUM_NAMESPACES 6
 
 struct yagl_sharegroup
 {

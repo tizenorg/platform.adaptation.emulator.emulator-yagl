@@ -58,7 +58,7 @@ void yagl_context_throttle(struct yagl_context *ctx)
     }
 
     if (ctx->throttle_fence) {
-        ctx->throttle_fence->wait(ctx->throttle_fence);
+        ctx->throttle_fence->base.wait(&ctx->throttle_fence->base);
         yagl_fence_release(ctx->throttle_fence);
         ctx->throttle_fence = NULL;
     } else {

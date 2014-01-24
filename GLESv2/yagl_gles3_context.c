@@ -11,6 +11,7 @@
 #include "yagl_log.h"
 #include "yagl_malloc.h"
 #include "yagl_state.h"
+#include "yagl_egl_fence.h"
 #include "yagl_host_gles_calls.h"
 #include <string.h>
 #include <stdlib.h>
@@ -34,6 +35,7 @@ static const GLchar *texture_float_linear_ext = "GL_OES_texture_float_linear";
 static const GLchar *texture_format_bgra8888_ext = "GL_EXT_texture_format_BGRA8888";
 static const GLchar *depth_texture_ext = "GL_OES_depth_texture";
 static const GLchar *compressed_etc1_rgb8_texture_ext = "GL_OES_compressed_ETC1_RGB8_texture";
+static const GLchar *egl_sync_ext = "GL_OES_EGL_sync";
 static const GLchar *packed_depth_stencil_ext = "GL_OES_packed_depth_stencil";
 static const GLchar *texture_npot_ext = "GL_OES_texture_npot";
 static const GLchar *texture_rectangle_ext = "GL_ARB_texture_rectangle";
@@ -59,6 +61,10 @@ static const GLchar **yagl_gles3_context_get_extensions(struct yagl_gles3_contex
     extensions[i++] = texture_format_bgra8888_ext;
     extensions[i++] = depth_texture_ext;
     extensions[i++] = compressed_etc1_rgb8_texture_ext;
+
+    if (yagl_egl_fence_supported()) {
+        extensions[i++] = egl_sync_ext;
+    }
 
     if (ctx->base.base.packed_depth_stencil) {
         extensions[i++] = packed_depth_stencil_ext;
@@ -333,6 +339,10 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
         *params = gles3_ctx->cwbo ? gles3_ctx->cwbo->base.local_name : 0;
         *num_params = 1;
         break;
+    case GL_MAX_SERVER_WAIT_TIMEOUT:
+        *params = 0x7FFFFFFE;
+        *num_params = 1;
+        break;
     default:
         processed = 0;
         break;
@@ -357,7 +367,6 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
     case GL_MAX_FRAGMENT_UNIFORM_COMPONENTS:
     case GL_MAX_PROGRAM_TEXEL_OFFSET:
     case GL_MAX_SAMPLES:
-    case GL_MAX_SERVER_WAIT_TIMEOUT:
     case GL_MAX_TEXTURE_LOD_BIAS:
     case GL_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS:
     case GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS:

@@ -5,9 +5,10 @@
 #include "yagl_surface.h"
 #include "yagl_context.h"
 #include "yagl_image.h"
+#include "yagl_malloc.h"
+#include "yagl_fence.h"
 #include "yagl_native_display.h"
 #include "yagl_native_platform.h"
-#include "yagl_malloc.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -24,6 +25,8 @@
 #define YAGL_EGL_WL_BIND_WAYLAND_DISPLAY_EXTENSIONS "EGL_WL_bind_wayland_display "
 
 #define YAGL_EGL_BUFFER_AGE_EXTENSIONS "EGL_EXT_buffer_age "
+
+#define YAGL_EGL_FENCE_EXTENSIONS "EGL_KHR_fence_sync "
 
 void yagl_set_fence_display(struct yagl_display *fence_dpy);
 
@@ -65,6 +68,7 @@ void yagl_display_init(struct yagl_display *dpy,
     yagl_list_init(&dpy->surfaces);
     yagl_list_init(&dpy->contexts);
     yagl_list_init(&dpy->images);
+    yagl_list_init(&dpy->fences);
 }
 
 void yagl_display_atfork(void)
@@ -211,9 +215,19 @@ void yagl_display_terminate(struct yagl_display *dpy)
         yagl_list_add_tail(&tmp_list, &res->list);
     }
 
+    yagl_list_for_each_safe(struct yagl_resource,
+                            res,
+                            next,
+                            &dpy->fences,
+                            list) {
+        yagl_list_remove(&res->list);
+        yagl_list_add_tail(&tmp_list, &res->list);
+    }
+
     assert(yagl_list_empty(&dpy->surfaces));
     assert(yagl_list_empty(&dpy->contexts));
     assert(yagl_list_empty(&dpy->images));
+    assert(yagl_list_empty(&dpy->fences));
 
     dpy->prepared = 0;
 
@@ -255,6 +269,10 @@ const char *yagl_display_get_extensions(struct yagl_display *dpy)
             len += strlen(YAGL_EGL_BUFFER_AGE_EXTENSIONS);
         }
 
+        if (yagl_egl_fence_supported()) {
+            len += strlen(YAGL_EGL_FENCE_EXTENSIONS);
+        }
+
         dpy->extensions = yagl_malloc(len + 1);
 
         strcpy(dpy->extensions, YAGL_EGL_BASE_EXTENSIONS);
@@ -269,6 +287,10 @@ const char *yagl_display_get_extensions(struct yagl_display *dpy)
 
         if (dpy->native_dpy->platform->buffer_age_supported) {
             strcat(dpy->extensions, YAGL_EGL_BUFFER_AGE_EXTENSIONS);
+        }
+
+        if (yagl_egl_fence_supported()) {
+            strcat(dpy->extensions, YAGL_EGL_FENCE_EXTENSIONS);
         }
     }
 
@@ -441,6 +463,58 @@ int yagl_display_image_remove(struct yagl_display *dpy,
 
     yagl_list_for_each(struct yagl_resource, res, &dpy->images, list) {
         if (((struct yagl_image*)res)->client_handle == handle) {
+            yagl_list_remove(&res->list);
+            yagl_resource_release(res);
+            pthread_mutex_unlock(&dpy->mutex);
+            return 1;
+        }
+    }
+
+    pthread_mutex_unlock(&dpy->mutex);
+
+    return 0;
+}
+
+void yagl_display_fence_add(struct yagl_display *dpy,
+                            struct yagl_fence *fence)
+{
+    pthread_mutex_lock(&dpy->mutex);
+
+    yagl_resource_acquire(&fence->base.res);
+    yagl_list_add_tail(&dpy->fences, &fence->base.res.list);
+
+    pthread_mutex_unlock(&dpy->mutex);
+}
+
+struct yagl_fence *yagl_display_fence_acquire(struct yagl_display *dpy,
+                                              EGLSyncKHR handle)
+{
+    struct yagl_resource *res = NULL;
+
+    pthread_mutex_lock(&dpy->mutex);
+
+    yagl_list_for_each(struct yagl_resource, res, &dpy->fences, list) {
+        if ((EGLSyncKHR)res == handle) {
+            yagl_resource_acquire(res);
+            pthread_mutex_unlock(&dpy->mutex);
+            return (struct yagl_fence*)res;
+        }
+    }
+
+    pthread_mutex_unlock(&dpy->mutex);
+
+    return NULL;
+}
+
+int yagl_display_fence_remove(struct yagl_display *dpy,
+                              EGLSyncKHR handle)
+{
+    struct yagl_resource *res;
+
+    pthread_mutex_lock(&dpy->mutex);
+
+    yagl_list_for_each(struct yagl_resource, res, &dpy->fences, list) {
+        if ((EGLSyncKHR)res == handle) {
             yagl_list_remove(&res->list);
             yagl_resource_release(res);
             pthread_mutex_unlock(&dpy->mutex);

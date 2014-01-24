@@ -6,16 +6,18 @@
 #include "vigs.h"
 #include <string.h>
 
-static int yagl_onscreen_fence_wait(struct yagl_fence *fence)
+static int yagl_onscreen_fence_wait(struct yagl_egl_fence *egl_fence)
 {
-    struct yagl_onscreen_fence *ofence = (struct yagl_onscreen_fence*)fence;
+    struct yagl_onscreen_fence *ofence = (struct yagl_onscreen_fence*)egl_fence;
     int ret;
 
     YAGL_LOG_FUNC_SET(eglClientWaitSyncKHR);
 
     ret = vigs_drm_fence_wait(ofence->drm_fence);
 
-    if (ret != 0) {
+    if (ret == 0) {
+        ofence->signaled = 1;
+    } else {
         YAGL_LOG_ERROR("vigs_drm_fence_wait failed: %s",
                        strerror(-ret));
     }
@@ -23,12 +25,16 @@ static int yagl_onscreen_fence_wait(struct yagl_fence *fence)
     return (ret == 0);
 }
 
-static int yagl_onscreen_fence_signaled(struct yagl_fence *fence)
+static int yagl_onscreen_fence_signaled(struct yagl_egl_fence *egl_fence)
 {
-    struct yagl_onscreen_fence *ofence = (struct yagl_onscreen_fence*)fence;
+    struct yagl_onscreen_fence *ofence = (struct yagl_onscreen_fence*)egl_fence;
     int ret;
 
     YAGL_LOG_FUNC_SET(eglGetSyncAttribKHR);
+
+    if (ofence->signaled) {
+        return 1;
+    }
 
     ret = vigs_drm_fence_check(ofence->drm_fence);
 
@@ -37,7 +43,9 @@ static int yagl_onscreen_fence_signaled(struct yagl_fence *fence)
                        strerror(-ret));
     }
 
-    return ofence->drm_fence->signaled;
+    ofence->signaled = ofence->drm_fence->signaled;
+
+    return ofence->signaled;
 }
 
 static void yagl_onscreen_fence_destroy(struct yagl_ref *ref)
@@ -74,8 +82,8 @@ struct yagl_onscreen_fence
                     dpy,
                     fence->drm_fence->seq);
 
-    fence->base.wait = &yagl_onscreen_fence_wait;
-    fence->base.signaled = &yagl_onscreen_fence_signaled;
+    fence->base.base.wait = &yagl_onscreen_fence_wait;
+    fence->base.base.signaled = &yagl_onscreen_fence_signaled;
 
     return fence;
 

@@ -2,22 +2,17 @@
 #define _YAGL_FENCE_H_
 
 #include "yagl_export.h"
-#include "yagl_types.h"
-#include "yagl_resource.h"
+#include "yagl_egl_fence.h"
 
 struct yagl_display;
 
 struct yagl_fence
 {
-    struct yagl_resource res;
+    struct yagl_egl_fence base;
 
     struct yagl_display *dpy;
 
     uint32_t seq;
-
-    int (*wait)(struct yagl_fence */*fence*/);
-
-    int (*signaled)(struct yagl_fence */*fence*/);
 };
 
 void yagl_fence_init(struct yagl_fence *fence,

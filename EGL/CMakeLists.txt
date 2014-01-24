@@ -11,6 +11,7 @@ set(SOURCES
     yagl_display.c
     yagl_egl_calls.c
     yagl_egl_state.c
+    yagl_egl_fence.c
     yagl_host_egl_calls.c
     yagl_image.c
     yagl_log.c

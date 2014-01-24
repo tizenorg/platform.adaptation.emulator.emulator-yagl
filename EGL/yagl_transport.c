@@ -1,6 +1,7 @@
 #include "yagl_transport.h"
 #include "yagl_malloc.h"
 #include "yagl_log.h"
+#include "yagl_egl_fence.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -189,7 +190,7 @@ void yagl_transport_begin(struct yagl_transport *t,
 void yagl_transport_end(struct yagl_transport *t)
 {
     uint32_t i, retry_count = 0;
-    void *fence = NULL;
+    struct yagl_egl_fence *fence = NULL;
     int have_ret = (t->num_in_args != 0) || (t->num_in_arrays != 0);
 
     if (!have_ret) {
@@ -248,7 +249,10 @@ void yagl_transport_end(struct yagl_transport *t)
         t->ops->commit(t->ops_data, 0);
     } while (!yagl_transport_check_call_result(t, &retry_count));
 
-    t->ops->fence_wait(t->ops_data, fence);
+    if (fence) {
+        fence->wait(fence);
+        yagl_egl_fence_release(fence);
+    }
 
     do {
         for (i = 0; i < t->num_in_da; ++i) {
@@ -281,7 +285,7 @@ void yagl_transport_end(struct yagl_transport *t)
 }
 
 void yagl_transport_flush(struct yagl_transport *t,
-                          void *fence)
+                          struct yagl_egl_fence *fence)
 {
     uint32_t batch_size = yagl_transport_batch_size(t);
 
