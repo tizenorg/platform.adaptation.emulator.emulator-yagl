@@ -1554,3 +1554,134 @@ out:
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
+
+YAGL_API void glGetInteger64v(GLenum pname, GLint64 *params)
+{
+    uint32_t i, num = 0;
+    int needs_map = 0;
+    GLint ints[100]; // This fits all cases.
+
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glGetInteger64v, GLenum, GLint64*, pname, params);
+
+    YAGL_GET_CTX();
+
+    if (!yagl_gles_context_get_integerv(&ctx->base.base, pname, ints, &num)) {
+        GLfloat floats[100]; // This fits all cases.
+        if (yagl_gles_context_get_floatv(&ctx->base.base, pname, floats, &num, &needs_map)) {
+            for (i = 0; i < num; ++i) {
+                if (needs_map) {
+                    params[i] = 2147483647.0 * floats[i];
+                } else {
+                    params[i] = floats[i];
+                }
+            }
+        } else {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
+        }
+    } else {
+        for (i = 0; i < num; ++i) {
+            params[i] = ints[i];
+        }
+    }
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glGetIntegeri_v(GLenum target, GLuint index, GLint *data)
+{
+    uint32_t num = 0;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glGetIntegeri_v, GLenum, GLuint, GLint*, target, index, data);
+
+    YAGL_GET_CTX();
+
+    yagl_gles3_context_get_integerv_indexed(ctx,
+                                            target,
+                                            index,
+                                            data,
+                                            &num);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glGetInteger64i_v(GLenum target, GLuint index, GLint64 *data)
+{
+    uint32_t i, num = 0;
+    GLint ints[100]; // This fits all cases.
+
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glGetInteger64i_v, GLenum, GLuint, GLint64*, target, index, data);
+
+    YAGL_GET_CTX();
+
+    if (yagl_gles3_context_get_integerv_indexed(ctx,
+                                                target,
+                                                index,
+                                                ints,
+                                                &num)) {
+        for (i = 0; i < num; ++i) {
+            data[i] = ints[i];
+        }
+    }
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API const GLubyte *glGetStringi(GLenum name, GLuint index)
+{
+    const char *str = NULL;
+
+    YAGL_LOG_FUNC_ENTER(glGetStringi, "name = 0x%X, index = %u", name, index);
+
+    YAGL_GET_CTX_RET(NULL);
+
+    switch (name) {
+    case GL_EXTENSIONS:
+        if (index >= ctx->base.base.num_extensions) {
+            YAGL_SET_ERR(GL_INVALID_VALUE);
+            break;
+        }
+        str = ctx->base.base.extensions[index];
+        break;
+    default:
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        break;
+    }
+
+    YAGL_LOG_FUNC_EXIT("%s", str);
+
+    return (const GLubyte*)str;
+}
+
+YAGL_API void glGetBufferParameteri64v(GLenum target, GLenum pname, GLint64 *params)
+{
+    struct yagl_gles_buffer *buffer_obj = NULL;
+    GLint int_param = 0;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glGetBufferParameteri64v, GLenum, GLenum, GLint64*, target, pname, params);
+
+    YAGL_GET_CTX();
+
+    if (!yagl_gles_context_acquire_binded_buffer(&ctx->base.base, target, &buffer_obj)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if (!buffer_obj) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (yagl_gles_buffer_get_parameter(buffer_obj,
+                                       pname,
+                                       &int_param)) {
+        params[0] = int_param;
+    } else {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+out:
+    yagl_gles_buffer_release(buffer_obj);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}

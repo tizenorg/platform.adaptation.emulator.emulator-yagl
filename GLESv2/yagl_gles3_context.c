@@ -343,6 +343,18 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
         *params = 0x7FFFFFFE;
         *num_params = 1;
         break;
+    case GL_NUM_EXTENSIONS:
+        *params = ctx->num_extensions;
+        *num_params = 1;
+        break;
+    case GL_MAJOR_VERSION:
+        *params = 3;
+        *num_params = 1;
+        break;
+    case GL_MINOR_VERSION:
+        *params = 0;
+        *num_params = 1;
+        break;
     default:
         processed = 0;
         break;
@@ -354,7 +366,6 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
 
     switch (pname) {
     case GL_FRAGMENT_SHADER_DERIVATIVE_HINT:
-    case GL_MAJOR_VERSION:
     case GL_MAX_ARRAY_TEXTURE_LAYERS:
     case GL_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS:
     case GL_MAX_COMBINED_UNIFORM_BLOCKS:
@@ -375,14 +386,8 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
     case GL_MAX_VERTEX_OUTPUT_COMPONENTS:
     case GL_MAX_VERTEX_UNIFORM_BLOCKS:
     case GL_MAX_VERTEX_UNIFORM_COMPONENTS:
-    case GL_MINOR_VERSION:
     case GL_MIN_PROGRAM_TEXEL_OFFSET:
-    case GL_NUM_EXTENSIONS:
     case GL_PRIMITIVE_RESTART_FIXED_INDEX:
-    case GL_TRANSFORM_FEEDBACK_BUFFER_SIZE:
-    case GL_TRANSFORM_FEEDBACK_BUFFER_START:
-    case GL_UNIFORM_BUFFER_SIZE:
-    case GL_UNIFORM_BUFFER_START:
         *num_params = 1;
         break;
     case GL_PROGRAM_BINARY_FORMATS:
@@ -1289,4 +1294,93 @@ void yagl_gles3_context_unbind_sampler(struct yagl_gles3_context *ctx,
             ctx->base.base.texture_units[i].sampler = NULL;
         }
     }
+}
+
+int yagl_gles3_context_get_integerv_indexed(struct yagl_gles3_context *ctx,
+                                            GLenum target,
+                                            GLuint index,
+                                            GLint *params,
+                                            uint32_t *num_params)
+{
+    YAGL_LOG_FUNC_SET(glGetIntegeri_v);
+
+    switch (target) {
+    case GL_TRANSFORM_FEEDBACK_BUFFER_SIZE:
+        if (index >= ctx->tfo->num_buffer_bindings) {
+            YAGL_SET_ERR(GL_INVALID_VALUE);
+            return 0;
+        }
+
+        if (ctx->tfo->buffer_bindings[index].entire) {
+            *params = ctx->tfo->buffer_bindings[index].buffer->size;
+        } else {
+            *params = ctx->tfo->buffer_bindings[index].size;
+        }
+
+        *num_params = 1;
+        break;
+    case GL_TRANSFORM_FEEDBACK_BUFFER_START:
+        if (index >= ctx->tfo->num_buffer_bindings) {
+            YAGL_SET_ERR(GL_INVALID_VALUE);
+            return 0;
+        }
+
+        if (ctx->tfo->buffer_bindings[index].entire) {
+            *params = 0;
+        } else {
+            *params = ctx->tfo->buffer_bindings[index].offset;
+        }
+
+        *num_params = 1;
+        break;
+    case GL_UNIFORM_BUFFER_SIZE:
+        if (index >= ctx->num_uniform_buffer_bindings) {
+            YAGL_SET_ERR(GL_INVALID_VALUE);
+            return 0;
+        }
+
+        if (ctx->uniform_buffer_bindings[index].entire) {
+            *params = ctx->uniform_buffer_bindings[index].buffer->size;
+        } else {
+            *params = ctx->uniform_buffer_bindings[index].size;
+        }
+
+        *num_params = 1;
+        break;
+    case GL_UNIFORM_BUFFER_START:
+        if (index >= ctx->num_uniform_buffer_bindings) {
+            YAGL_SET_ERR(GL_INVALID_VALUE);
+            return 0;
+        }
+
+        if (ctx->uniform_buffer_bindings[index].entire) {
+            *params = 0;
+        } else {
+            *params = ctx->uniform_buffer_bindings[index].offset;
+        }
+
+        *num_params = 1;
+        break;
+    case GL_TRANSFORM_FEEDBACK_BUFFER_BINDING:
+        if (index >= ctx->tfo->num_buffer_bindings) {
+            YAGL_SET_ERR(GL_INVALID_VALUE);
+            return 0;
+        }
+        *params = ctx->tfo->buffer_bindings[index].buffer ? ctx->tfo->buffer_bindings[index].buffer->base.local_name : 0;
+        *num_params = 1;
+        break;
+    case GL_UNIFORM_BUFFER_BINDING:
+        if (index >= ctx->num_uniform_buffer_bindings) {
+            YAGL_SET_ERR(GL_INVALID_VALUE);
+            return 0;
+        }
+        *params = ctx->uniform_buffer_bindings[index].buffer ? ctx->uniform_buffer_bindings[index].buffer->base.local_name : 0;
+        *num_params = 1;
+        break;
+    default:
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        return 0;
+    }
+
+    return 1;
 }

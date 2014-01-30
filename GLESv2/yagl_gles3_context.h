@@ -115,4 +115,10 @@ int yagl_gles3_context_bind_sampler(struct yagl_gles3_context *ctx,
 void yagl_gles3_context_unbind_sampler(struct yagl_gles3_context *ctx,
                                        yagl_object_name sampler_local_name);
 
+int yagl_gles3_context_get_integerv_indexed(struct yagl_gles3_context *ctx,
+                                            GLenum target,
+                                            GLuint index,
+                                            GLint *params,
+                                            uint32_t *num_params);
+
 #endif
