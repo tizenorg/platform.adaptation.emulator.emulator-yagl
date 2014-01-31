@@ -2549,3 +2549,47 @@ YAGL_API void glDrawRangeElements(GLenum mode, GLuint start, GLuint end,
 out:
     YAGL_LOG_FUNC_EXIT(NULL);
 }
+
+YAGL_API void glGetProgramBinary(GLuint program, GLsizei bufSize, GLsizei *length, GLenum *binaryFormat, void *binary)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT5(glGetProgramBinary, GLuint, GLsizei, GLsizei*, GLenum*, void*, program, bufSize, length, binaryFormat, binary);
+
+    YAGL_GET_CTX();
+
+    YAGL_SET_ERR(GL_INVALID_OPERATION);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glProgramBinary(GLuint program, GLenum binaryFormat, const void *binary, GLsizei length)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT4(glProgramBinary, GLuint, GLenum, const void*, GLsizei, program, binaryFormat, binary, length);
+
+    YAGL_GET_CTX();
+
+    YAGL_SET_ERR(GL_INVALID_OPERATION);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glProgramParameteri(GLuint program, GLenum pname, GLint value)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glProgramParameteri, GLuint, GLenum, GLint, program, pname, value);
+
+    YAGL_GET_CTX();
+
+    YAGL_SET_ERR(GL_INVALID_OPERATION);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glGetInternalformativ(GLenum target, GLenum internalformat, GLenum pname, GLsizei bufSize, GLint *params)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT5(glGetInternalformativ, GLenum, GLenum, GLenum, GLsizei, GLint*, target, internalformat, pname, bufSize, params);
+
+    YAGL_GET_CTX();
+
+    YAGL_SET_ERR(GL_INVALID_OPERATION);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
