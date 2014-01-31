@@ -45,4 +45,50 @@ void yagl_gles3_program_get_transform_feedback_varying(struct yagl_gles2_program
                                                        GLenum *type,
                                                        GLchar *name);
 
+int yagl_gles3_program_get_uniformuiv(struct yagl_gles2_program *program,
+                                      GLint location,
+                                      GLuint *params);
+
+int yagl_gles3_program_uniform1ui(struct yagl_gles2_program *program,
+                                  GLint location,
+                                  GLuint v0);
+
+int yagl_gles3_program_uniform2ui(struct yagl_gles2_program *program,
+                                  GLint location,
+                                  GLuint v0,
+                                  GLuint v1);
+
+int yagl_gles3_program_uniform3ui(struct yagl_gles2_program *program,
+                                  GLint location,
+                                  GLuint v0,
+                                  GLuint v1,
+                                  GLuint v2);
+
+int yagl_gles3_program_uniform4ui(struct yagl_gles2_program *program,
+                                  GLint location,
+                                  GLuint v0,
+                                  GLuint v1,
+                                  GLuint v2,
+                                  GLuint v3);
+
+int yagl_gles3_program_uniform1uiv(struct yagl_gles2_program *program,
+                                   GLint location,
+                                   GLsizei count,
+                                   const GLuint *v);
+
+int yagl_gles3_program_uniform2uiv(struct yagl_gles2_program *program,
+                                   GLint location,
+                                   GLsizei count,
+                                   const GLuint *v);
+
+int yagl_gles3_program_uniform3uiv(struct yagl_gles2_program *program,
+                                   GLint location,
+                                   GLsizei count,
+                                   const GLuint *v);
+
+int yagl_gles3_program_uniform4uiv(struct yagl_gles2_program *program,
+                                   GLint location,
+                                   GLsizei count,
+                                   const GLuint *v);
+
 #endif

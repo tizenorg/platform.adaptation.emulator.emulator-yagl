@@ -3,6 +3,7 @@
 
 #include "yagl_gles_context.h"
 
+struct yagl_gles_array;
 struct yagl_gles2_program;
 
 struct yagl_gles2_context
@@ -53,8 +54,11 @@ void yagl_gles2_context_cleanup(struct yagl_gles2_context *ctx);
 
 void yagl_gles2_context_prepare(struct yagl_gles2_context *ctx);
 
-struct yagl_gles_array
-    *yagl_gles2_context_create_arrays(struct yagl_gles_context *ctx);
+void yagl_gles2_array_apply(struct yagl_gles_array *array,
+                            uint32_t first,
+                            uint32_t count,
+                            const GLvoid *ptr,
+                            void *user_data);
 
 void yagl_gles2_context_compressed_tex_image_2d(struct yagl_gles_context *ctx,
                                                 GLenum target,

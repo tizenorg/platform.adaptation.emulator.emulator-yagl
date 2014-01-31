@@ -585,3 +585,177 @@ void yagl_gles3_program_get_transform_feedback_varying(struct yagl_gles2_program
         *type = varying->type;
     }
 }
+
+int yagl_gles3_program_get_uniformuiv(struct yagl_gles2_program *program,
+                                      GLint location,
+                                      GLuint *params)
+{
+    uint32_t global_location;
+    GLuint tmp[100]; // This fits all cases.
+    int32_t num = 0;
+
+    if (!yagl_gles2_program_translate_location(program,
+                                               location,
+                                               &global_location)) {
+        return 0;
+    }
+
+    yagl_host_glGetUniformuiv(program->gen_locations,
+                              program->global_name,
+                              global_location,
+                              tmp,
+                              sizeof(tmp)/sizeof(tmp[0]),
+                              &num);
+
+    if (params) {
+        memcpy(params, tmp, num * sizeof(tmp[0]));
+    }
+
+    return 1;
+}
+
+int yagl_gles3_program_uniform1ui(struct yagl_gles2_program *program,
+                                  GLint location,
+                                  GLuint v0)
+{
+    uint32_t global_location;
+
+    if (!yagl_gles2_program_translate_location(program,
+                                               location,
+                                               &global_location)) {
+        return 0;
+    }
+
+    yagl_host_glUniform1ui(program->gen_locations, global_location, v0);
+
+    return 1;
+}
+
+int yagl_gles3_program_uniform2ui(struct yagl_gles2_program *program,
+                                  GLint location,
+                                  GLuint v0,
+                                  GLuint v1)
+{
+    uint32_t global_location;
+
+    if (!yagl_gles2_program_translate_location(program,
+                                               location,
+                                               &global_location)) {
+        return 0;
+    }
+
+    yagl_host_glUniform2ui(program->gen_locations, global_location, v0, v1);
+
+    return 1;
+}
+
+int yagl_gles3_program_uniform3ui(struct yagl_gles2_program *program,
+                                  GLint location,
+                                  GLuint v0,
+                                  GLuint v1,
+                                  GLuint v2)
+{
+    uint32_t global_location;
+
+    if (!yagl_gles2_program_translate_location(program,
+                                               location,
+                                               &global_location)) {
+        return 0;
+    }
+
+    yagl_host_glUniform3ui(program->gen_locations, global_location, v0, v1, v2);
+
+    return 1;
+}
+
+int yagl_gles3_program_uniform4ui(struct yagl_gles2_program *program,
+                                  GLint location,
+                                  GLuint v0,
+                                  GLuint v1,
+                                  GLuint v2,
+                                  GLuint v3)
+{
+    uint32_t global_location;
+
+    if (!yagl_gles2_program_translate_location(program,
+                                               location,
+                                               &global_location)) {
+        return 0;
+    }
+
+    yagl_host_glUniform4ui(program->gen_locations, global_location, v0, v1, v2, v3);
+
+    return 1;
+}
+
+int yagl_gles3_program_uniform1uiv(struct yagl_gles2_program *program,
+                                   GLint location,
+                                   GLsizei count,
+                                   const GLuint *v)
+{
+    uint32_t global_location;
+
+    if (!yagl_gles2_program_translate_location(program,
+                                               location,
+                                               &global_location)) {
+        return 0;
+    }
+
+    yagl_host_glUniform1uiv(program->gen_locations, global_location, v, count);
+
+    return 1;
+}
+
+int yagl_gles3_program_uniform2uiv(struct yagl_gles2_program *program,
+                                   GLint location,
+                                   GLsizei count,
+                                   const GLuint *v)
+{
+    uint32_t global_location;
+
+    if (!yagl_gles2_program_translate_location(program,
+                                               location,
+                                               &global_location)) {
+        return 0;
+    }
+
+    yagl_host_glUniform2uiv(program->gen_locations, global_location, v, 2 * count);
+
+    return 1;
+}
+
+int yagl_gles3_program_uniform3uiv(struct yagl_gles2_program *program,
+                                   GLint location,
+                                   GLsizei count,
+                                   const GLuint *v)
+{
+    uint32_t global_location;
+
+    if (!yagl_gles2_program_translate_location(program,
+                                               location,
+                                               &global_location)) {
+        return 0;
+    }
+
+    yagl_host_glUniform3uiv(program->gen_locations, global_location, v, 3 * count);
+
+    return 1;
+}
+
+int yagl_gles3_program_uniform4uiv(struct yagl_gles2_program *program,
+                                   GLint location,
+                                   GLsizei count,
+                                   const GLuint *v)
+{
+    uint32_t global_location;
+
+    if (!yagl_gles2_program_translate_location(program,
+                                               location,
+                                               &global_location)) {
+        return 0;
+    }
+
+    yagl_host_glUniform4uiv(program->gen_locations, global_location, v, 4 * count);
+
+    return 1;
+}

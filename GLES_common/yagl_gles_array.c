@@ -14,6 +14,7 @@
 #define GL_HALF_FLOAT 0x140B
 
 static __inline int yagl_get_el_size(GLenum type,
+                                     int integer,
                                      int *el_size,
                                      GLenum *actual_type)
 {
@@ -24,16 +25,31 @@ static __inline int yagl_get_el_size(GLenum type,
     switch (type) {
     case GL_BYTE:
         *el_size = 1;
-        break;
+        return 1;
     case GL_UNSIGNED_BYTE:
         *el_size = 1;
-        break;
+        return 1;
     case GL_SHORT:
         *el_size = 2;
-        break;
+        return 1;
     case GL_UNSIGNED_SHORT:
         *el_size = 2;
+        return 1;
+    case GL_INT:
+        *el_size = 4;
+        return 1;
+    case GL_UNSIGNED_INT:
+        *el_size = 4;
+        return 1;
+    default:
         break;
+    }
+
+    if (integer) {
+        return 0;
+    }
+
+    switch (type) {
     case GL_FLOAT:
         *el_size = 4;
         break;
@@ -50,6 +66,7 @@ static __inline int yagl_get_el_size(GLenum type,
     default:
         return 0;
     }
+
     return 1;
 }
 
@@ -179,9 +196,10 @@ int yagl_gles_array_update(struct yagl_gles_array *array,
                            int need_convert,
                            GLboolean normalized,
                            GLsizei stride,
-                           const GLvoid *ptr)
+                           const GLvoid *ptr,
+                           int integer)
 {
-    if (!yagl_get_el_size(type, &array->el_size, &type)) {
+    if (!yagl_get_el_size(type, integer, &array->el_size, &type)) {
         return 0;
     }
 
@@ -192,7 +210,7 @@ int yagl_gles_array_update(struct yagl_gles_array *array,
                     &array->actual_stride,
                     NULL);
 
-    yagl_get_el_size(array->actual_type, &array->actual_el_size, NULL);
+    yagl_get_el_size(array->actual_type, integer, &array->actual_el_size, NULL);
 
     array->size = size;
     array->type = type;
@@ -207,6 +225,8 @@ int yagl_gles_array_update(struct yagl_gles_array *array,
     if (!array->actual_stride) {
         array->actual_stride = array->size * array->actual_el_size;
     }
+
+    array->integer = integer;
 
     array->ptr = ptr;
 
@@ -224,9 +244,10 @@ int yagl_gles_array_update_vbo(struct yagl_gles_array *array,
                                GLboolean normalized,
                                GLsizei stride,
                                struct yagl_gles_buffer *vbo,
-                               GLint offset)
+                               GLint offset,
+                               int integer)
 {
-    if (!yagl_get_el_size(type, &array->el_size, &type)) {
+    if (!yagl_get_el_size(type, integer, &array->el_size, &type)) {
         return 0;
     }
 
@@ -239,7 +260,7 @@ int yagl_gles_array_update_vbo(struct yagl_gles_array *array,
                     &array->actual_stride,
                     &array->actual_offset);
 
-    yagl_get_el_size(array->actual_type, &array->actual_el_size, NULL);
+    yagl_get_el_size(array->actual_type, integer, &array->actual_el_size, NULL);
 
     array->size = size;
     array->type = type;
@@ -254,6 +275,8 @@ int yagl_gles_array_update_vbo(struct yagl_gles_array *array,
     if (!array->actual_stride) {
         array->actual_stride = array->size * array->actual_el_size;
     }
+
+    array->integer = integer;
 
     array->vbo = vbo;
     array->offset = offset;

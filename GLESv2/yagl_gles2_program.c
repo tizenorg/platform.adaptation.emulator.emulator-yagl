@@ -141,28 +141,6 @@ static void yagl_gles2_program_reset_cached(struct yagl_gles2_program *program)
     }
 }
 
-static __inline int yagl_gles2_program_translate_location(struct yagl_gles2_program *program,
-                                                          GLint location,
-                                                          uint32_t *global_location)
-{
-    struct yagl_gles2_location_v *locations;
-
-    if (program->gen_locations) {
-        if ((location < 0) ||
-            (location >= yagl_vector_size(&program->uniform_locations_v))) {
-            return 0;
-        }
-
-        locations = yagl_vector_data(&program->uniform_locations_v);
-
-        *global_location = locations[location].global_location;
-    } else {
-        *global_location = location;
-    }
-
-    return 1;
-}
-
 static void yagl_gles2_program_destroy(struct yagl_ref *ref)
 {
     struct yagl_gles2_program *program = (struct yagl_gles2_program*)ref;
@@ -184,6 +162,28 @@ static void yagl_gles2_program_destroy(struct yagl_ref *ref)
     yagl_object_cleanup(&program->base);
 
     yagl_free(program);
+}
+
+int yagl_gles2_program_translate_location(struct yagl_gles2_program *program,
+                                          GLint location,
+                                          uint32_t *global_location)
+{
+    struct yagl_gles2_location_v *locations;
+
+    if (program->gen_locations) {
+        if ((location < 0) ||
+            (location >= yagl_vector_size(&program->uniform_locations_v))) {
+            return 0;
+        }
+
+        locations = yagl_vector_data(&program->uniform_locations_v);
+
+        *global_location = locations[location].global_location;
+    } else {
+        *global_location = location;
+    }
+
+    return 1;
 }
 
 void yagl_gles2_transform_feedback_info_reset(

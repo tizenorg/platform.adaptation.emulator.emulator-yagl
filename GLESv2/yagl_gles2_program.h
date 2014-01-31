@@ -207,6 +207,10 @@ struct yagl_gles2_program
     GLint info_log_length;
 };
 
+int yagl_gles2_program_translate_location(struct yagl_gles2_program *program,
+                                          GLint location,
+                                          uint32_t *global_location);
+
 void yagl_gles2_transform_feedback_info_reset(
     struct yagl_gles2_transform_feedback_info *transform_feedback_info);
 

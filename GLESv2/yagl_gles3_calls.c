@@ -13,6 +13,8 @@
 #include "yagl_gles_texture.h"
 #include "yagl_gles_framebuffer.h"
 #include "yagl_gles_sampler.h"
+#include "yagl_gles_vertex_array.h"
+#include "yagl_gles_array.h"
 #include "yagl_gles_validate.h"
 #include "yagl_sharegroup.h"
 #include "yagl_log.h"
@@ -1683,5 +1685,423 @@ YAGL_API void glGetBufferParameteri64v(GLenum target, GLenum pname, GLint64 *par
 out:
     yagl_gles_buffer_release(buffer_obj);
 
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glVertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsizei stride, const void *pointer)
+{
+    struct yagl_gles_array *array;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT5(glVertexAttribIPointer, GLuint, GLint, GLenum, GLsizei, const void*, index, size, type, stride, pointer);
+
+    YAGL_GET_CTX();
+
+    if (index >= ctx->base.base.num_arrays) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    array = &ctx->base.base.vao->arrays[index];
+
+    if (ctx->base.base.vbo) {
+        if (!yagl_gles_array_update_vbo(array,
+                                        size,
+                                        type,
+                                        0,
+                                        GL_FALSE,
+                                        stride,
+                                        ctx->base.base.vbo,
+                                        (GLint)pointer,
+                                        1)) {
+            YAGL_SET_ERR(GL_INVALID_VALUE);
+        }
+    } else {
+        /*
+         * GL_OES_vertex_array_object:
+         * "Binding a zero-named vertex array buffer:
+         * this can be detected by *Pointer(ES1) or VertexAttribPointer(ES2);
+         * if the pointer argument is not NULL:
+         * this means to bind a client vertex array;
+         * an INVALID_OPERATION error will be returned."
+         */
+        if ((ctx->base.base.vao != ctx->base.base.va_zero) && pointer) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            goto out;
+        }
+
+        if (!yagl_gles_array_update(array,
+                                    size,
+                                    type,
+                                    0,
+                                    GL_FALSE,
+                                    stride,
+                                    pointer,
+                                    1)) {
+            YAGL_SET_ERR(GL_INVALID_VALUE);
+        }
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glGetVertexAttribIiv(GLuint index, GLenum pname, GLint *params)
+{
+    GLint tmp[100]; // This fits all cases.
+    int32_t num = 0;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glGetVertexAttribIiv, GLuint, GLenum, GLint*, index, pname, params);
+
+    YAGL_GET_CTX();
+
+    if (yagl_gles2_context_get_array_param(&ctx->base,
+                                           index,
+                                           pname,
+                                           params)) {
+    } else {
+        yagl_host_glGetVertexAttribIiv(index, pname, tmp, sizeof(tmp)/sizeof(tmp[0]), &num);
+        if (params) {
+            memcpy(params, tmp, num * sizeof(tmp[0]));
+        }
+    }
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glGetVertexAttribIuiv(GLuint index, GLenum pname, GLuint *params)
+{
+    GLint param = 0;
+    GLuint tmp[100]; // This fits all cases.
+    int32_t num = 0;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glGetVertexAttribIuiv, GLuint, GLenum, GLuint*, index, pname, params);
+
+    YAGL_GET_CTX();
+
+    if (yagl_gles2_context_get_array_param(&ctx->base,
+                                           index,
+                                           pname,
+                                           &param)) {
+        if (params) {
+            params[0] = param;
+        }
+    } else {
+        yagl_host_glGetVertexAttribIuiv(index, pname, tmp, sizeof(tmp)/sizeof(tmp[0]), &num);
+        if (params) {
+            memcpy(params, tmp, num * sizeof(tmp[0]));
+        }
+    }
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_IMPLEMENT_API_NORET5(glVertexAttribI4i, GLuint, GLint, GLint, GLint, GLint, index, x, y, z, w)
+YAGL_IMPLEMENT_API_NORET5(glVertexAttribI4ui, GLuint, GLuint, GLuint, GLuint, GLuint, index, x, y, z, w)
+
+YAGL_API void glVertexAttribI4iv(GLuint index, const GLint *v)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glVertexAttribI4iv, GLuint, const GLint*, index, v);
+    yagl_host_glVertexAttribI4iv(index, v, 4);
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glVertexAttribI4uiv(GLuint index, const GLuint *v)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glVertexAttribI4uiv, GLuint, const GLuint*, index, v);
+    yagl_host_glVertexAttribI4uiv(index, v, 4);
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glGetUniformuiv(GLuint program, GLint location, GLuint *params)
+{
+    struct yagl_gles2_program *program_obj = NULL;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glGetUniformuiv, GLuint, GLint, GLuint*, program, location, params);
+
+    YAGL_GET_CTX();
+
+    program_obj = (struct yagl_gles2_program*)yagl_sharegroup_acquire_object(ctx->base.sg,
+        YAGL_NS_SHADER_PROGRAM, program);
+
+    if (!program_obj) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (program_obj->is_shader) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!program_obj->linked) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (location < 0) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!yagl_gles3_program_get_uniformuiv(program_obj, location, params)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+out:
+    yagl_gles2_program_release(program_obj);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glUniform1ui(GLint location, GLuint v0)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glUniform1ui, GLint, GLuint, location, v0);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->base.program) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (location == -1) {
+        goto out;
+    }
+
+    if (location < 0) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!yagl_gles3_program_uniform1ui(ctx->base.program, location, v0)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glUniform2ui(GLint location, GLuint v0, GLuint v1)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glUniform2ui, GLint, GLuint, GLuint, location, v0, v1);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->base.program) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (location == -1) {
+        goto out;
+    }
+
+    if (location < 0) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!yagl_gles3_program_uniform2ui(ctx->base.program, location, v0, v1)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glUniform3ui(GLint location, GLuint v0, GLuint v1, GLuint v2)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT4(glUniform3ui, GLint, GLuint, GLuint, GLuint, location, v0, v1, v2);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->base.program) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (location == -1) {
+        goto out;
+    }
+
+    if (location < 0) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!yagl_gles3_program_uniform3ui(ctx->base.program, location, v0, v1, v2)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glUniform4ui(GLint location, GLuint v0, GLuint v1, GLuint v2, GLuint v3)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT5(glUniform4ui, GLint, GLuint, GLuint, GLuint, GLuint, location, v0, v1, v2, v3);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->base.program) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (location == -1) {
+        goto out;
+    }
+
+    if (location < 0) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!yagl_gles3_program_uniform4ui(ctx->base.program, location, v0, v1, v2, v3)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glUniform1uiv(GLint location, GLsizei count, const GLuint *value)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glUniform1uiv, GLint, GLsizei, const GLuint*, location, count, value);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->base.program) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (count < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (location == -1) {
+        goto out;
+    }
+
+    if (location < 0) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!yagl_gles3_program_uniform1uiv(ctx->base.program, location, count, value)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glUniform2uiv(GLint location, GLsizei count, const GLuint *value)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glUniform2uiv, GLint, GLsizei, const GLuint*, location, count, value);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->base.program) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (count < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (location == -1) {
+        goto out;
+    }
+
+    if (location < 0) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!yagl_gles3_program_uniform2uiv(ctx->base.program, location, count, value)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glUniform3uiv(GLint location, GLsizei count, const GLuint *value)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glUniform3uiv, GLint, GLsizei, const GLuint*, location, count, value);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->base.program) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (count < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (location == -1) {
+        goto out;
+    }
+
+    if (location < 0) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!yagl_gles3_program_uniform3uiv(ctx->base.program, location, count, value)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glUniform4uiv(GLint location, GLsizei count, const GLuint *value)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glUniform4uiv, GLint, GLsizei, const GLuint*, location, count, value);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->base.program) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (count < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (location == -1) {
+        goto out;
+    }
+
+    if (location < 0) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!yagl_gles3_program_uniform4uiv(ctx->base.program, location, count, value)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+out:
     YAGL_LOG_FUNC_EXIT(NULL);
 }

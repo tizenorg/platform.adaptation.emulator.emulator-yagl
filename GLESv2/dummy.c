@@ -11,12 +11,6 @@ YAGL_API void glDrawRangeElements(GLenum mode, GLuint start, GLuint end,
     exit(5);
 }
 
-YAGL_API void glVertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsizei stride, const void *pointer)
-{
-    assert(0);
-    exit(5);
-}
-
 YAGL_API void glClearBufferfv(GLenum buffer, GLint drawbuffer, const GLfloat *value)
 {
     assert(0);
@@ -60,61 +54,7 @@ YAGL_API void glUniformMatrix2x3fv(GLint location, GLsizei count, GLboolean tran
     exit(5);
 }
 
-YAGL_API void glGetVertexAttribIiv(GLuint index, GLenum pname, GLint *params)
-{
-    assert(0);
-    exit(5);
-}
-
 YAGL_API void glClearBufferuiv(GLenum buffer, GLint drawbuffer, const GLuint *value)
-{
-    assert(0);
-    exit(5);
-}
-
-YAGL_API void glGetVertexAttribIuiv(GLuint index, GLenum pname, GLuint *params)
-{
-    assert(0);
-    exit(5);
-}
-
-YAGL_API void glVertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w)
-{
-    assert(0);
-    exit(5);
-}
-
-YAGL_API void glVertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w)
-{
-    assert(0);
-    exit(5);
-}
-
-YAGL_API void glVertexAttribI4iv(GLuint index, const GLint *v)
-{
-    assert(0);
-    exit(5);
-}
-
-YAGL_API void glVertexAttribI4uiv(GLuint index, const GLuint *v)
-{
-    assert(0);
-    exit(5);
-}
-
-YAGL_API void glGetUniformuiv(GLuint program, GLint location, GLuint *params)
-{
-    assert(0);
-    exit(5);
-}
-
-YAGL_API void glUniform2ui(GLint location, GLuint v0, GLuint v1)
-{
-    assert(0);
-    exit(5);
-}
-
-YAGL_API void glUniform2uiv(GLint location, GLsizei count, const GLuint *value)
 {
     assert(0);
     exit(5);

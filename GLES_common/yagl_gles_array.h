@@ -45,6 +45,7 @@ struct yagl_gles_array
     GLsizei stride;
     GLsizei actual_stride;
     GLuint divisor;
+    int integer;
 
     /*
      * Specifies if array data needs to be converted before transferring to
@@ -92,7 +93,8 @@ int yagl_gles_array_update(struct yagl_gles_array *array,
                            int need_convert,
                            GLboolean normalized,
                            GLsizei stride,
-                           const GLvoid *ptr);
+                           const GLvoid *ptr,
+                           int integer);
 
 int yagl_gles_array_update_vbo(struct yagl_gles_array *array,
                                GLint size,
@@ -101,7 +103,8 @@ int yagl_gles_array_update_vbo(struct yagl_gles_array *array,
                                GLboolean normalized,
                                GLsizei stride,
                                struct yagl_gles_buffer *vbo,
-                               GLint offset);
+                               GLint offset,
+                               int integer);
 
 void yagl_gles_array_set_divisor(struct yagl_gles_array *array, GLuint divisor);
 

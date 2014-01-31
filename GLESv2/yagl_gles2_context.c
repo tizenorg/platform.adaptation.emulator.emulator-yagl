@@ -30,6 +30,7 @@
 #define GL_MAX_FRAGMENT_UNIFORM_COMPONENTS 0x8B49
 #define GL_MAX_VERTEX_UNIFORM_COMPONENTS   0x8B4A
 #define GL_MAX_VARYING_FLOATS              0x8B4B
+#define GL_VERTEX_ATTRIB_ARRAY_INTEGER     0x88FD
 
 static const GLchar *egl_image_ext = "GL_OES_EGL_image";
 static const GLchar *depth24_ext = "GL_OES_depth24";
@@ -164,31 +165,6 @@ static inline void yagl_gles2_context_post_draw(struct yagl_gles_context *ctx, G
     }
 }
 
-static void yagl_gles2_array_apply(struct yagl_gles_array *array,
-                                   uint32_t first,
-                                   uint32_t count,
-                                   const GLvoid *ptr,
-                                   void *user_data)
-{
-    if (array->vbo) {
-        yagl_host_glVertexAttribPointerOffset(array->index,
-                                              array->size,
-                                              array->actual_type,
-                                              array->normalized,
-                                              array->actual_stride,
-                                              array->actual_offset);
-    } else {
-        yagl_host_glVertexAttribPointerData(array->index,
-                                            array->size,
-                                            array->actual_type,
-                                            array->normalized,
-                                            array->actual_stride,
-                                            first,
-                                            ptr + (first * array->actual_stride),
-                                            count * array->actual_stride);
-    }
-}
-
 static void yagl_gles2_context_prepare_internal(struct yagl_client_context *ctx)
 {
     struct yagl_gles2_context *gles2_ctx = (struct yagl_gles2_context*)ctx;
@@ -213,6 +189,24 @@ static void yagl_gles2_context_destroy(struct yagl_client_context *ctx)
     yagl_free(gles2_ctx);
 
     YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+static struct yagl_gles_array
+    *yagl_gles2_context_create_arrays(struct yagl_gles_context *ctx)
+{
+    GLint i;
+    struct yagl_gles_array *arrays;
+
+    arrays = yagl_malloc(ctx->num_arrays * sizeof(*arrays));
+
+    for (i = 0; i < ctx->num_arrays; ++i) {
+        yagl_gles_array_init(&arrays[i],
+                             i,
+                             &yagl_gles2_array_apply,
+                             ctx);
+    }
+
+    return arrays;
 }
 
 static const GLchar
@@ -357,22 +351,29 @@ void yagl_gles2_context_prepare(struct yagl_gles2_context *ctx)
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-struct yagl_gles_array
-    *yagl_gles2_context_create_arrays(struct yagl_gles_context *ctx)
+void yagl_gles2_array_apply(struct yagl_gles_array *array,
+                            uint32_t first,
+                            uint32_t count,
+                            const GLvoid *ptr,
+                            void *user_data)
 {
-    GLint i;
-    struct yagl_gles_array *arrays;
-
-    arrays = yagl_malloc(ctx->num_arrays * sizeof(*arrays));
-
-    for (i = 0; i < ctx->num_arrays; ++i) {
-        yagl_gles_array_init(&arrays[i],
-                             i,
-                             &yagl_gles2_array_apply,
-                             ctx);
+    if (array->vbo) {
+        yagl_host_glVertexAttribPointerOffset(array->index,
+                                              array->size,
+                                              array->actual_type,
+                                              array->normalized,
+                                              array->actual_stride,
+                                              array->actual_offset);
+    } else {
+        yagl_host_glVertexAttribPointerData(array->index,
+                                            array->size,
+                                            array->actual_type,
+                                            array->normalized,
+                                            array->actual_stride,
+                                            first,
+                                            ptr + (first * array->actual_stride),
+                                            count * array->actual_stride);
     }
-
-    return arrays;
 }
 
 void yagl_gles2_context_compressed_tex_image_2d(struct yagl_gles_context *gles_ctx,
@@ -1049,6 +1050,13 @@ int yagl_gles2_context_get_array_param(struct yagl_gles2_context *ctx,
     case GL_VERTEX_ATTRIB_ARRAY_DIVISOR_EXT:
         if (ctx->instanced_arrays) {
             *param = array->divisor;
+        } else {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
+        }
+        break;
+    case GL_VERTEX_ATTRIB_ARRAY_INTEGER:
+        if (ctx->base.base.client_api == yagl_client_api_gles3) {
+            *param = array->integer;
         } else {
             YAGL_SET_ERR(GL_INVALID_ENUM);
         }
