@@ -50,6 +50,15 @@ YAGL_API void glInvalidateFramebuffer(GLenum target, GLsizei numAttachments, con
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
+YAGL_API void glInvalidateSubFramebuffer(GLenum target, GLsizei numAttachments, const GLenum *attachments, GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT7(glInvalidateSubFramebuffer, GLenum, GLsizei, const GLenum*, GLint, GLint, GLsizei, GLsizei, target, numAttachments, attachments, x, y, width, height);
+
+    YAGL_GET_CTX();
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
 YAGL_API void glBindBufferBase(GLenum target, GLuint index, GLuint buffer)
 {
     struct yagl_gles_buffer *buffer_obj = NULL;
@@ -2100,6 +2109,130 @@ YAGL_API void glUniform4uiv(GLint location, GLsizei count, const GLuint *value)
     if (!yagl_gles3_program_uniform4uiv(ctx->base.program, location, count, value)) {
         YAGL_SET_ERR(GL_INVALID_OPERATION);
         goto out;
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glClearBufferiv(GLenum buffer, GLint drawbuffer, const GLint *value)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glClearBufferiv, GLenum, GLint, const GLint*, buffer, drawbuffer, value);
+
+    YAGL_GET_CTX();
+
+    if (!yagl_gles3_is_buffer_valid(buffer)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    switch (buffer) {
+    case GL_DEPTH:
+    case GL_STENCIL:
+        if (drawbuffer != 0) {
+            YAGL_SET_ERR(GL_INVALID_VALUE);
+            goto out;
+        }
+        yagl_host_glClearBufferiv(buffer, drawbuffer, value, 1);
+        break;
+    default:
+        if ((drawbuffer < 0) ||
+            (drawbuffer >= ctx->base.base.max_draw_buffers)) {
+            YAGL_SET_ERR(GL_INVALID_VALUE);
+            goto out;
+        }
+        yagl_host_glClearBufferiv(buffer, drawbuffer, value, 4);
+        break;
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glClearBufferuiv(GLenum buffer, GLint drawbuffer, const GLuint *value)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glClearBufferuiv, GLenum, GLint, const GLuint*, buffer, drawbuffer, value);
+
+    YAGL_GET_CTX();
+
+    if (!yagl_gles3_is_buffer_valid(buffer)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    switch (buffer) {
+    case GL_DEPTH:
+    case GL_STENCIL:
+        if (drawbuffer != 0) {
+            YAGL_SET_ERR(GL_INVALID_VALUE);
+            goto out;
+        }
+        yagl_host_glClearBufferuiv(buffer, drawbuffer, value, 1);
+        break;
+    default:
+        if ((drawbuffer < 0) ||
+            (drawbuffer >= ctx->base.base.max_draw_buffers)) {
+            YAGL_SET_ERR(GL_INVALID_VALUE);
+            goto out;
+        }
+        yagl_host_glClearBufferuiv(buffer, drawbuffer, value, 4);
+        break;
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glClearBufferfi(GLenum buffer, GLint drawbuffer, GLfloat depth, GLint stencil)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT4(glClearBufferfi, GLenum, GLint, GLfloat, GLint, buffer, drawbuffer, depth, stencil);
+
+    YAGL_GET_CTX();
+
+    if (buffer != GL_DEPTH_STENCIL) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if (drawbuffer != 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    yagl_host_glClearBufferfi(buffer, drawbuffer, depth, stencil);
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glClearBufferfv(GLenum buffer, GLint drawbuffer, const GLfloat *value)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glClearBufferfv, GLenum, GLint, const GLfloat*, buffer, drawbuffer, value);
+
+    YAGL_GET_CTX();
+
+    if (!yagl_gles3_is_buffer_valid(buffer)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    switch (buffer) {
+    case GL_DEPTH:
+    case GL_STENCIL:
+        if (drawbuffer != 0) {
+            YAGL_SET_ERR(GL_INVALID_VALUE);
+            goto out;
+        }
+        yagl_host_glClearBufferfv(buffer, drawbuffer, value, 1);
+        break;
+    default:
+        if ((drawbuffer < 0) ||
+            (drawbuffer >= ctx->base.base.max_draw_buffers)) {
+            YAGL_SET_ERR(GL_INVALID_VALUE);
+            goto out;
+        }
+        yagl_host_glClearBufferfv(buffer, drawbuffer, value, 4);
+        break;
     }
 
 out:

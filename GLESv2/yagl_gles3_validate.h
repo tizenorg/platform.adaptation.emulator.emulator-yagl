@@ -9,4 +9,6 @@ int yagl_gles3_is_transform_feedback_buffer_mode_valid(GLenum buffer_mode);
 
 int yagl_gles3_is_primitive_mode_valid(GLenum primitive_mode);
 
+int yagl_gles3_is_buffer_valid(GLenum buffer);
+
 #endif

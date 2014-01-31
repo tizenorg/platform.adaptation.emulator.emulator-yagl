@@ -40,3 +40,18 @@ int yagl_gles3_is_primitive_mode_valid(GLenum primitive_mode)
         return 0;
     }
 }
+
+int yagl_gles3_is_buffer_valid(GLenum buffer)
+{
+    switch (buffer) {
+    case GL_COLOR:
+    case GL_FRONT:
+    case GL_BACK:
+    case GL_FRONT_AND_BACK:
+    case GL_DEPTH:
+    case GL_STENCIL:
+        return 1;
+    default:
+        return 0;
+    }
+}
