@@ -161,6 +161,7 @@ void glUniformMatrix3x2fv(GLboolean tl, uint32_t location, GLboolean transpose, 
 void glUniformMatrix3x4fv(GLboolean tl, uint32_t location, GLboolean transpose, const GLfloat *value)
 void glUniformMatrix4x2fv(GLboolean tl, uint32_t location, GLboolean transpose, const GLfloat *value)
 void glUniformMatrix4x3fv(GLboolean tl, uint32_t location, GLboolean transpose, const GLfloat *value)
+int glGetFragDataLocation(GLuint program, const GLchar *name)
 # State queries
 void glGetIntegerv(GLenum pname, GLint *params)
 void glGetFloatv(GLenum pname, GLfloat *params)

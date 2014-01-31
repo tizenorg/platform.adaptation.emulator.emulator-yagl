@@ -2442,3 +2442,40 @@ YAGL_API void glClearBufferfv(GLenum buffer, GLint drawbuffer, const GLfloat *va
 out:
     YAGL_LOG_FUNC_EXIT(NULL);
 }
+
+YAGL_API GLint glGetFragDataLocation(GLuint program, const GLchar *name)
+{
+    struct yagl_gles2_program *program_obj = NULL;
+    GLint ret = 0;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glGetFragDataLocation, GLuint, const GLchar*, program, name);
+
+    YAGL_GET_CTX_RET(0);
+
+    program_obj = (struct yagl_gles2_program*)yagl_sharegroup_acquire_object(ctx->base.sg,
+        YAGL_NS_SHADER_PROGRAM, program);
+
+    if (!program_obj) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (program_obj->is_shader) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!program_obj->linked) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    ret = yagl_gles3_program_get_frag_data_location(program_obj, name);
+
+out:
+    yagl_gles2_program_release(program_obj);
+
+    YAGL_LOG_FUNC_EXIT_SPLIT(GLint, ret);
+
+    return ret;
+}

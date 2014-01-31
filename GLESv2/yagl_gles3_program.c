@@ -3,6 +3,7 @@
 #include "yagl_gles2_utils.h"
 #include "yagl_malloc.h"
 #include "yagl_state.h"
+#include "yagl_transport.h"
 #include "yagl_log.h"
 #include "yagl_host_gles_calls.h"
 #include <string.h>
@@ -872,4 +873,33 @@ int yagl_gles3_program_uniform_matrix4x3fv(struct yagl_gles2_program *program,
     yagl_host_glUniformMatrix4x3fv(program->gen_locations, global_location, transpose, value, 4 * 3 * count);
 
     return 1;
+}
+
+int yagl_gles3_program_get_frag_data_location(struct yagl_gles2_program *program,
+                                              const GLchar *name)
+{
+    struct yagl_gles2_location_l *location;
+    int ret;
+
+    yagl_list_for_each(struct yagl_gles2_location_l,
+                       location,
+                       &program->frag_data_locations, list) {
+        if (strcmp(location->name, name) == 0) {
+            return location->location;
+        }
+    }
+
+    ret = yagl_host_glGetFragDataLocation(program->global_name,
+                                          name,
+                                          yagl_transport_string_count(name));
+
+    location = yagl_malloc(sizeof(*location));
+
+    yagl_list_init(&location->list);
+    location->name = strdup(name);
+    location->location = ret;
+
+    yagl_list_add_tail(&program->frag_data_locations, &location->list);
+
+    return ret;
 }

@@ -12,15 +12,6 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-struct yagl_gles2_location_l
-{
-    struct yagl_list list;
-
-    int location;
-
-    GLchar *name;
-};
-
 struct yagl_gles2_location_v
 {
     GLchar *name;
@@ -104,6 +95,15 @@ static void yagl_gles2_program_reset_cached(struct yagl_gles2_program *program)
     }
     yagl_free(program->active_uniform_blocks);
     program->active_uniform_blocks = NULL;
+
+    yagl_list_for_each_safe(struct yagl_gles2_location_l,
+                            location_l,
+                            tmp_l,
+                            &program->frag_data_locations, list) {
+        yagl_list_remove(&location_l->list);
+        free(location_l->name);
+        yagl_free(location_l);
+    }
 
     yagl_list_for_each_safe(struct yagl_gles2_location_l,
                             location_l,
@@ -220,6 +220,7 @@ struct yagl_gles2_program *yagl_gles2_program_create(int gen_locations)
     }
 
     yagl_list_init(&program->attrib_locations);
+    yagl_list_init(&program->frag_data_locations);
 
     yagl_host_glCreateProgram(program->global_name);
 

@@ -11,13 +11,6 @@ YAGL_API void glDrawRangeElements(GLenum mode, GLuint start, GLuint end,
     exit(5);
 }
 
-YAGL_API GLint glGetFragDataLocation(GLuint program, const GLchar *name)
-{
-    assert(0);
-    exit(5);
-    return 0;
-}
-
 YAGL_API void glGetProgramBinary(GLuint program, GLsizei bufSize, GLsizei *length, GLenum *binaryFormat, void *binary)
 {
     assert(0);

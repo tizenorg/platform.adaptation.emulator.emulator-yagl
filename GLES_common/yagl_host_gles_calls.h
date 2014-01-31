@@ -783,452 +783,457 @@ void yagl_host_glUniformMatrix4x2fv(GLboolean tl, uint32_t location, GLboolean t
 void yagl_host_glUniformMatrix4x3fv(GLboolean tl, uint32_t location, GLboolean transpose, const GLfloat *value, int32_t value_count);
 
 /*
- * glGetIntegerv wrapper. id = 156
+ * glGetFragDataLocation wrapper. id = 156
+ */
+int yagl_host_glGetFragDataLocation(GLuint program, const GLchar *name, int32_t name_count);
+
+/*
+ * glGetIntegerv wrapper. id = 157
  */
 void yagl_host_glGetIntegerv(GLenum pname, GLint *params, int32_t params_maxcount, int32_t *params_count);
 
 /*
- * glGetFloatv wrapper. id = 157
+ * glGetFloatv wrapper. id = 158
  */
 void yagl_host_glGetFloatv(GLenum pname, GLfloat *params, int32_t params_maxcount, int32_t *params_count);
 
 /*
- * glGetString wrapper. id = 158
+ * glGetString wrapper. id = 159
  */
 void yagl_host_glGetString(GLenum name, GLchar *str, int32_t str_maxcount, int32_t *str_count);
 
 /*
- * glIsEnabled wrapper. id = 159
+ * glIsEnabled wrapper. id = 160
  */
 GLboolean yagl_host_glIsEnabled(GLenum cap);
 
 /*
- * glGenTransformFeedbacks wrapper. id = 160
+ * glGenTransformFeedbacks wrapper. id = 161
  */
 void yagl_host_glGenTransformFeedbacks(const GLuint *ids, int32_t ids_count);
 
 /*
- * glBindTransformFeedback wrapper. id = 161
+ * glBindTransformFeedback wrapper. id = 162
  */
 void yagl_host_glBindTransformFeedback(GLenum target, GLuint id);
 
 /*
- * glBeginTransformFeedback wrapper. id = 162
+ * glBeginTransformFeedback wrapper. id = 163
  */
 void yagl_host_glBeginTransformFeedback(GLenum primitiveMode);
 
 /*
- * glEndTransformFeedback wrapper. id = 163
+ * glEndTransformFeedback wrapper. id = 164
  */
 void yagl_host_glEndTransformFeedback();
 
 /*
- * glPauseTransformFeedback wrapper. id = 164
+ * glPauseTransformFeedback wrapper. id = 165
  */
 void yagl_host_glPauseTransformFeedback();
 
 /*
- * glResumeTransformFeedback wrapper. id = 165
+ * glResumeTransformFeedback wrapper. id = 166
  */
 void yagl_host_glResumeTransformFeedback();
 
 /*
- * glTransformFeedbackVaryings wrapper. id = 166
+ * glTransformFeedbackVaryings wrapper. id = 167
  */
 void yagl_host_glTransformFeedbackVaryings(GLuint program, const GLchar *varyings, int32_t varyings_count, GLenum bufferMode);
 
 /*
- * glGetTransformFeedbackVaryings wrapper. id = 167
+ * glGetTransformFeedbackVaryings wrapper. id = 168
  */
 void yagl_host_glGetTransformFeedbackVaryings(GLuint program, GLsizei *sizes, int32_t sizes_maxcount, int32_t *sizes_count, GLenum *types, int32_t types_maxcount, int32_t *types_count);
 
 /*
- * glGenQueries wrapper. id = 168
+ * glGenQueries wrapper. id = 169
  */
 void yagl_host_glGenQueries(const GLuint *ids, int32_t ids_count);
 
 /*
- * glBeginQuery wrapper. id = 169
+ * glBeginQuery wrapper. id = 170
  */
 void yagl_host_glBeginQuery(GLenum target, GLuint id);
 
 /*
- * glEndQuery wrapper. id = 170
+ * glEndQuery wrapper. id = 171
  */
 void yagl_host_glEndQuery(GLenum target);
 
 /*
- * glGetQueryObjectuiv wrapper. id = 171
+ * glGetQueryObjectuiv wrapper. id = 172
  */
 GLboolean yagl_host_glGetQueryObjectuiv(GLuint id, GLuint *result);
 
 /*
- * glGenSamplers wrapper. id = 172
+ * glGenSamplers wrapper. id = 173
  */
 void yagl_host_glGenSamplers(const GLuint *samplers, int32_t samplers_count);
 
 /*
- * glBindSampler wrapper. id = 173
+ * glBindSampler wrapper. id = 174
  */
 void yagl_host_glBindSampler(GLuint unit, GLuint sampler);
 
 /*
- * glSamplerParameteri wrapper. id = 174
+ * glSamplerParameteri wrapper. id = 175
  */
 void yagl_host_glSamplerParameteri(GLuint sampler, GLenum pname, GLint param);
 
 /*
- * glSamplerParameteriv wrapper. id = 175
+ * glSamplerParameteriv wrapper. id = 176
  */
 void yagl_host_glSamplerParameteriv(GLuint sampler, GLenum pname, const GLint *param, int32_t param_count);
 
 /*
- * glSamplerParameterf wrapper. id = 176
+ * glSamplerParameterf wrapper. id = 177
  */
 void yagl_host_glSamplerParameterf(GLuint sampler, GLenum pname, GLfloat param);
 
 /*
- * glSamplerParameterfv wrapper. id = 177
+ * glSamplerParameterfv wrapper. id = 178
  */
 void yagl_host_glSamplerParameterfv(GLuint sampler, GLenum pname, const GLfloat *param, int32_t param_count);
 
 /*
- * glDeleteObjects wrapper. id = 178
+ * glDeleteObjects wrapper. id = 179
  */
 void yagl_host_glDeleteObjects(const GLuint *objects, int32_t objects_count);
 
 /*
- * glBlendEquation wrapper. id = 179
+ * glBlendEquation wrapper. id = 180
  */
 void yagl_host_glBlendEquation(GLenum mode);
 
 /*
- * glBlendEquationSeparate wrapper. id = 180
+ * glBlendEquationSeparate wrapper. id = 181
  */
 void yagl_host_glBlendEquationSeparate(GLenum modeRGB, GLenum modeAlpha);
 
 /*
- * glBlendFunc wrapper. id = 181
+ * glBlendFunc wrapper. id = 182
  */
 void yagl_host_glBlendFunc(GLenum sfactor, GLenum dfactor);
 
 /*
- * glBlendFuncSeparate wrapper. id = 182
+ * glBlendFuncSeparate wrapper. id = 183
  */
 void yagl_host_glBlendFuncSeparate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha);
 
 /*
- * glBlendColor wrapper. id = 183
+ * glBlendColor wrapper. id = 184
  */
 void yagl_host_glBlendColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
 
 /*
- * glClear wrapper. id = 184
+ * glClear wrapper. id = 185
  */
 void yagl_host_glClear(GLbitfield mask);
 
 /*
- * glClearColor wrapper. id = 185
+ * glClearColor wrapper. id = 186
  */
 void yagl_host_glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha);
 
 /*
- * glClearDepthf wrapper. id = 186
+ * glClearDepthf wrapper. id = 187
  */
 void yagl_host_glClearDepthf(GLclampf depth);
 
 /*
- * glClearStencil wrapper. id = 187
+ * glClearStencil wrapper. id = 188
  */
 void yagl_host_glClearStencil(GLint s);
 
 /*
- * glColorMask wrapper. id = 188
+ * glColorMask wrapper. id = 189
  */
 void yagl_host_glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
 
 /*
- * glCullFace wrapper. id = 189
+ * glCullFace wrapper. id = 190
  */
 void yagl_host_glCullFace(GLenum mode);
 
 /*
- * glDepthFunc wrapper. id = 190
+ * glDepthFunc wrapper. id = 191
  */
 void yagl_host_glDepthFunc(GLenum func);
 
 /*
- * glDepthMask wrapper. id = 191
+ * glDepthMask wrapper. id = 192
  */
 void yagl_host_glDepthMask(GLboolean flag);
 
 /*
- * glDepthRangef wrapper. id = 192
+ * glDepthRangef wrapper. id = 193
  */
 void yagl_host_glDepthRangef(GLclampf zNear, GLclampf zFar);
 
 /*
- * glEnable wrapper. id = 193
+ * glEnable wrapper. id = 194
  */
 void yagl_host_glEnable(GLenum cap);
 
 /*
- * glDisable wrapper. id = 194
+ * glDisable wrapper. id = 195
  */
 void yagl_host_glDisable(GLenum cap);
 
 /*
- * glFlush wrapper. id = 195
+ * glFlush wrapper. id = 196
  */
 void yagl_host_glFlush();
 
 /*
- * glFrontFace wrapper. id = 196
+ * glFrontFace wrapper. id = 197
  */
 void yagl_host_glFrontFace(GLenum mode);
 
 /*
- * glGenerateMipmap wrapper. id = 197
+ * glGenerateMipmap wrapper. id = 198
  */
 void yagl_host_glGenerateMipmap(GLenum target);
 
 /*
- * glHint wrapper. id = 198
+ * glHint wrapper. id = 199
  */
 void yagl_host_glHint(GLenum target, GLenum mode);
 
 /*
- * glLineWidth wrapper. id = 199
+ * glLineWidth wrapper. id = 200
  */
 void yagl_host_glLineWidth(GLfloat width);
 
 /*
- * glPixelStorei wrapper. id = 200
+ * glPixelStorei wrapper. id = 201
  */
 void yagl_host_glPixelStorei(GLenum pname, GLint param);
 
 /*
- * glPolygonOffset wrapper. id = 201
+ * glPolygonOffset wrapper. id = 202
  */
 void yagl_host_glPolygonOffset(GLfloat factor, GLfloat units);
 
 /*
- * glScissor wrapper. id = 202
+ * glScissor wrapper. id = 203
  */
 void yagl_host_glScissor(GLint x, GLint y, GLsizei width, GLsizei height);
 
 /*
- * glStencilFunc wrapper. id = 203
+ * glStencilFunc wrapper. id = 204
  */
 void yagl_host_glStencilFunc(GLenum func, GLint ref, GLuint mask);
 
 /*
- * glStencilMask wrapper. id = 204
+ * glStencilMask wrapper. id = 205
  */
 void yagl_host_glStencilMask(GLuint mask);
 
 /*
- * glStencilOp wrapper. id = 205
+ * glStencilOp wrapper. id = 206
  */
 void yagl_host_glStencilOp(GLenum fail, GLenum zfail, GLenum zpass);
 
 /*
- * glSampleCoverage wrapper. id = 206
+ * glSampleCoverage wrapper. id = 207
  */
 void yagl_host_glSampleCoverage(GLclampf value, GLboolean invert);
 
 /*
- * glViewport wrapper. id = 207
+ * glViewport wrapper. id = 208
  */
 void yagl_host_glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
 
 /*
- * glStencilFuncSeparate wrapper. id = 208
+ * glStencilFuncSeparate wrapper. id = 209
  */
 void yagl_host_glStencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask);
 
 /*
- * glStencilMaskSeparate wrapper. id = 209
+ * glStencilMaskSeparate wrapper. id = 210
  */
 void yagl_host_glStencilMaskSeparate(GLenum face, GLuint mask);
 
 /*
- * glStencilOpSeparate wrapper. id = 210
+ * glStencilOpSeparate wrapper. id = 211
  */
 void yagl_host_glStencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenum zpass);
 
 /*
- * glPointSize wrapper. id = 211
+ * glPointSize wrapper. id = 212
  */
 void yagl_host_glPointSize(GLfloat size);
 
 /*
- * glAlphaFunc wrapper. id = 212
+ * glAlphaFunc wrapper. id = 213
  */
 void yagl_host_glAlphaFunc(GLenum func, GLclampf ref);
 
 /*
- * glMatrixMode wrapper. id = 213
+ * glMatrixMode wrapper. id = 214
  */
 void yagl_host_glMatrixMode(GLenum mode);
 
 /*
- * glLoadIdentity wrapper. id = 214
+ * glLoadIdentity wrapper. id = 215
  */
 void yagl_host_glLoadIdentity();
 
 /*
- * glPopMatrix wrapper. id = 215
+ * glPopMatrix wrapper. id = 216
  */
 void yagl_host_glPopMatrix();
 
 /*
- * glPushMatrix wrapper. id = 216
+ * glPushMatrix wrapper. id = 217
  */
 void yagl_host_glPushMatrix();
 
 /*
- * glRotatef wrapper. id = 217
+ * glRotatef wrapper. id = 218
  */
 void yagl_host_glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z);
 
 /*
- * glTranslatef wrapper. id = 218
+ * glTranslatef wrapper. id = 219
  */
 void yagl_host_glTranslatef(GLfloat x, GLfloat y, GLfloat z);
 
 /*
- * glScalef wrapper. id = 219
+ * glScalef wrapper. id = 220
  */
 void yagl_host_glScalef(GLfloat x, GLfloat y, GLfloat z);
 
 /*
- * glOrthof wrapper. id = 220
+ * glOrthof wrapper. id = 221
  */
 void yagl_host_glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar);
 
 /*
- * glColor4f wrapper. id = 221
+ * glColor4f wrapper. id = 222
  */
 void yagl_host_glColor4f(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
 
 /*
- * glColor4ub wrapper. id = 222
+ * glColor4ub wrapper. id = 223
  */
 void yagl_host_glColor4ub(GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha);
 
 /*
- * glNormal3f wrapper. id = 223
+ * glNormal3f wrapper. id = 224
  */
 void yagl_host_glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz);
 
 /*
- * glPointParameterf wrapper. id = 224
+ * glPointParameterf wrapper. id = 225
  */
 void yagl_host_glPointParameterf(GLenum pname, GLfloat param);
 
 /*
- * glPointParameterfv wrapper. id = 225
+ * glPointParameterfv wrapper. id = 226
  */
 void yagl_host_glPointParameterfv(GLenum pname, const GLfloat *params, int32_t params_count);
 
 /*
- * glFogf wrapper. id = 226
+ * glFogf wrapper. id = 227
  */
 void yagl_host_glFogf(GLenum pname, GLfloat param);
 
 /*
- * glFogfv wrapper. id = 227
+ * glFogfv wrapper. id = 228
  */
 void yagl_host_glFogfv(GLenum pname, const GLfloat *params, int32_t params_count);
 
 /*
- * glFrustumf wrapper. id = 228
+ * glFrustumf wrapper. id = 229
  */
 void yagl_host_glFrustumf(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar);
 
 /*
- * glLightf wrapper. id = 229
+ * glLightf wrapper. id = 230
  */
 void yagl_host_glLightf(GLenum light, GLenum pname, GLfloat param);
 
 /*
- * glLightfv wrapper. id = 230
+ * glLightfv wrapper. id = 231
  */
 void yagl_host_glLightfv(GLenum light, GLenum pname, const GLfloat *params, int32_t params_count);
 
 /*
- * glGetLightfv wrapper. id = 231
+ * glGetLightfv wrapper. id = 232
  */
 void yagl_host_glGetLightfv(GLenum light, GLenum pname, GLfloat *params, int32_t params_maxcount, int32_t *params_count);
 
 /*
- * glLightModelf wrapper. id = 232
+ * glLightModelf wrapper. id = 233
  */
 void yagl_host_glLightModelf(GLenum pname, GLfloat param);
 
 /*
- * glLightModelfv wrapper. id = 233
+ * glLightModelfv wrapper. id = 234
  */
 void yagl_host_glLightModelfv(GLenum pname, const GLfloat *params, int32_t params_count);
 
 /*
- * glMaterialf wrapper. id = 234
+ * glMaterialf wrapper. id = 235
  */
 void yagl_host_glMaterialf(GLenum face, GLenum pname, GLfloat param);
 
 /*
- * glMaterialfv wrapper. id = 235
+ * glMaterialfv wrapper. id = 236
  */
 void yagl_host_glMaterialfv(GLenum face, GLenum pname, const GLfloat *params, int32_t params_count);
 
 /*
- * glGetMaterialfv wrapper. id = 236
+ * glGetMaterialfv wrapper. id = 237
  */
 void yagl_host_glGetMaterialfv(GLenum face, GLenum pname, GLfloat *params, int32_t params_maxcount, int32_t *params_count);
 
 /*
- * glShadeModel wrapper. id = 237
+ * glShadeModel wrapper. id = 238
  */
 void yagl_host_glShadeModel(GLenum mode);
 
 /*
- * glLogicOp wrapper. id = 238
+ * glLogicOp wrapper. id = 239
  */
 void yagl_host_glLogicOp(GLenum opcode);
 
 /*
- * glMultMatrixf wrapper. id = 239
+ * glMultMatrixf wrapper. id = 240
  */
 void yagl_host_glMultMatrixf(const GLfloat *m, int32_t m_count);
 
 /*
- * glLoadMatrixf wrapper. id = 240
+ * glLoadMatrixf wrapper. id = 241
  */
 void yagl_host_glLoadMatrixf(const GLfloat *m, int32_t m_count);
 
 /*
- * glClipPlanef wrapper. id = 241
+ * glClipPlanef wrapper. id = 242
  */
 void yagl_host_glClipPlanef(GLenum plane, const GLfloat *equation, int32_t equation_count);
 
 /*
- * glGetClipPlanef wrapper. id = 242
+ * glGetClipPlanef wrapper. id = 243
  */
 void yagl_host_glGetClipPlanef(GLenum pname, GLfloat *eqn, int32_t eqn_maxcount, int32_t *eqn_count);
 
 /*
- * glUpdateOffscreenImageYAGL wrapper. id = 243
+ * glUpdateOffscreenImageYAGL wrapper. id = 244
  */
 void yagl_host_glUpdateOffscreenImageYAGL(GLuint texture, uint32_t width, uint32_t height, uint32_t bpp, const void *pixels, int32_t pixels_count);
 
 /*
- * glGenUniformLocationYAGL wrapper. id = 244
+ * glGenUniformLocationYAGL wrapper. id = 245
  */
 void yagl_host_glGenUniformLocationYAGL(uint32_t location, GLuint program, const GLchar *name, int32_t name_count);
 
 /*
- * glDeleteUniformLocationsYAGL wrapper. id = 245
+ * glDeleteUniformLocationsYAGL wrapper. id = 246
  */
 void yagl_host_glDeleteUniformLocationsYAGL(const uint32_t *locations, int32_t locations_count);
 

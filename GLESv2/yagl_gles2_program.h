@@ -8,6 +8,15 @@
 
 struct yagl_gles2_shader;
 
+struct yagl_gles2_location_l
+{
+    struct yagl_list list;
+
+    int location;
+
+    GLchar *name;
+};
+
 struct yagl_gles2_attrib_variable
 {
     int fetched;
@@ -178,6 +187,8 @@ struct yagl_gles2_program
     };
 
     struct yagl_list attrib_locations;
+
+    struct yagl_list frag_data_locations;
 
     struct yagl_gles2_attrib_variable *active_attribs;
     GLuint num_active_attribs;

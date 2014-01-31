@@ -127,4 +127,7 @@ int yagl_gles3_program_uniform_matrix4x3fv(struct yagl_gles2_program *program,
                                            GLboolean transpose,
                                            const GLfloat *value);
 
+int yagl_gles3_program_get_frag_data_location(struct yagl_gles2_program *program,
+                                              const GLchar *name);
+
 #endif
