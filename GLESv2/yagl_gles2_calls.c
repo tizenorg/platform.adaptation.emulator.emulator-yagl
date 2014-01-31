@@ -2428,11 +2428,7 @@ YAGL_API YAGL_ALIAS(glCompressedTexSubImage3D, glCompressedTexSubImage3DOES);
 
 YAGL_API void glFramebufferTexture3D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLint zoffset)
 {
-    /*
-     * TODO: Implement
-     */
-    assert(0);
-    exit(5);
+    fprintf(stderr, "glFramebufferTexture3D not supported in YaGL\n");
 }
 YAGL_API YAGL_ALIAS(glFramebufferTexture3D, glFramebufferTexture3DOES);
 
