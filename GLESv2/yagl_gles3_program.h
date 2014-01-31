@@ -91,4 +91,40 @@ int yagl_gles3_program_uniform4uiv(struct yagl_gles2_program *program,
                                    GLsizei count,
                                    const GLuint *v);
 
+int yagl_gles3_program_uniform_matrix2x3fv(struct yagl_gles2_program *program,
+                                           GLint location,
+                                           GLsizei count,
+                                           GLboolean transpose,
+                                           const GLfloat *value);
+
+int yagl_gles3_program_uniform_matrix2x4fv(struct yagl_gles2_program *program,
+                                           GLint location,
+                                           GLsizei count,
+                                           GLboolean transpose,
+                                           const GLfloat *value);
+
+int yagl_gles3_program_uniform_matrix3x2fv(struct yagl_gles2_program *program,
+                                           GLint location,
+                                           GLsizei count,
+                                           GLboolean transpose,
+                                           const GLfloat *value);
+
+int yagl_gles3_program_uniform_matrix3x4fv(struct yagl_gles2_program *program,
+                                           GLint location,
+                                           GLsizei count,
+                                           GLboolean transpose,
+                                           const GLfloat *value);
+
+int yagl_gles3_program_uniform_matrix4x2fv(struct yagl_gles2_program *program,
+                                           GLint location,
+                                           GLsizei count,
+                                           GLboolean transpose,
+                                           const GLfloat *value);
+
+int yagl_gles3_program_uniform_matrix4x3fv(struct yagl_gles2_program *program,
+                                           GLint location,
+                                           GLsizei count,
+                                           GLboolean transpose,
+                                           const GLfloat *value);
+
 #endif

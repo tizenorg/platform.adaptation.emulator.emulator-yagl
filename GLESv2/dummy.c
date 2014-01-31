@@ -30,12 +30,6 @@ YAGL_API void glProgramBinary(GLuint program, GLenum binaryFormat, const void *b
     exit(5);
 }
 
-YAGL_API void glUniformMatrix2x3fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
-{
-    assert(0);
-    exit(5);
-}
-
 YAGL_API void glProgramParameteri(GLuint program, GLenum pname, GLint value)
 {
     assert(0);

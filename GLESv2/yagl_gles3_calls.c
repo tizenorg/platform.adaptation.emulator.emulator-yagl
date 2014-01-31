@@ -2115,6 +2115,210 @@ out:
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
+YAGL_API void glUniformMatrix2x3fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT4(glUniformMatrix2x3fv, GLint, GLsizei, GLboolean, const GLfloat*, location, count, transpose, value);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->base.program) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (count < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (location == -1) {
+        goto out;
+    }
+
+    if (location < 0) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!yagl_gles3_program_uniform_matrix2x3fv(ctx->base.program, location, count, transpose, value)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glUniformMatrix2x4fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT4(glUniformMatrix2x4fv, GLint, GLsizei, GLboolean, const GLfloat*, location, count, transpose, value);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->base.program) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (count < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (location == -1) {
+        goto out;
+    }
+
+    if (location < 0) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!yagl_gles3_program_uniform_matrix2x4fv(ctx->base.program, location, count, transpose, value)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glUniformMatrix3x2fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT4(glUniformMatrix3x2fv, GLint, GLsizei, GLboolean, const GLfloat*, location, count, transpose, value);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->base.program) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (count < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (location == -1) {
+        goto out;
+    }
+
+    if (location < 0) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!yagl_gles3_program_uniform_matrix3x2fv(ctx->base.program, location, count, transpose, value)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glUniformMatrix3x4fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT4(glUniformMatrix3x4fv, GLint, GLsizei, GLboolean, const GLfloat*, location, count, transpose, value);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->base.program) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (count < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (location == -1) {
+        goto out;
+    }
+
+    if (location < 0) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!yagl_gles3_program_uniform_matrix3x4fv(ctx->base.program, location, count, transpose, value)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glUniformMatrix4x2fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT4(glUniformMatrix4x2fv, GLint, GLsizei, GLboolean, const GLfloat*, location, count, transpose, value);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->base.program) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (count < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (location == -1) {
+        goto out;
+    }
+
+    if (location < 0) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!yagl_gles3_program_uniform_matrix4x2fv(ctx->base.program, location, count, transpose, value)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glUniformMatrix4x3fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat *value)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT4(glUniformMatrix4x3fv, GLint, GLsizei, GLboolean, const GLfloat*, location, count, transpose, value);
+
+    YAGL_GET_CTX();
+
+    if (!ctx->base.program) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (count < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (location == -1) {
+        goto out;
+    }
+
+    if (location < 0) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!yagl_gles3_program_uniform_matrix4x3fv(ctx->base.program, location, count, transpose, value)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
 YAGL_API void glClearBufferiv(GLenum buffer, GLint drawbuffer, const GLint *value)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT3(glClearBufferiv, GLenum, GLint, const GLint*, buffer, drawbuffer, value);

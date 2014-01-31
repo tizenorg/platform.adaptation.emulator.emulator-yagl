@@ -759,3 +759,117 @@ int yagl_gles3_program_uniform4uiv(struct yagl_gles2_program *program,
 
     return 1;
 }
+
+int yagl_gles3_program_uniform_matrix2x3fv(struct yagl_gles2_program *program,
+                                           GLint location,
+                                           GLsizei count,
+                                           GLboolean transpose,
+                                           const GLfloat *value)
+{
+    uint32_t global_location;
+
+    if (!yagl_gles2_program_translate_location(program,
+                                               location,
+                                               &global_location)) {
+        return 0;
+    }
+
+    yagl_host_glUniformMatrix2x3fv(program->gen_locations, global_location, transpose, value, 2 * 3 * count);
+
+    return 1;
+}
+
+int yagl_gles3_program_uniform_matrix2x4fv(struct yagl_gles2_program *program,
+                                           GLint location,
+                                           GLsizei count,
+                                           GLboolean transpose,
+                                           const GLfloat *value)
+{
+    uint32_t global_location;
+
+    if (!yagl_gles2_program_translate_location(program,
+                                               location,
+                                               &global_location)) {
+        return 0;
+    }
+
+    yagl_host_glUniformMatrix2x4fv(program->gen_locations, global_location, transpose, value, 2 * 4 * count);
+
+    return 1;
+}
+
+int yagl_gles3_program_uniform_matrix3x2fv(struct yagl_gles2_program *program,
+                                           GLint location,
+                                           GLsizei count,
+                                           GLboolean transpose,
+                                           const GLfloat *value)
+{
+    uint32_t global_location;
+
+    if (!yagl_gles2_program_translate_location(program,
+                                               location,
+                                               &global_location)) {
+        return 0;
+    }
+
+    yagl_host_glUniformMatrix3x2fv(program->gen_locations, global_location, transpose, value, 3 * 2 * count);
+
+    return 1;
+}
+
+int yagl_gles3_program_uniform_matrix3x4fv(struct yagl_gles2_program *program,
+                                           GLint location,
+                                           GLsizei count,
+                                           GLboolean transpose,
+                                           const GLfloat *value)
+{
+    uint32_t global_location;
+
+    if (!yagl_gles2_program_translate_location(program,
+                                               location,
+                                               &global_location)) {
+        return 0;
+    }
+
+    yagl_host_glUniformMatrix3x4fv(program->gen_locations, global_location, transpose, value, 3 * 4 * count);
+
+    return 1;
+}
+
+int yagl_gles3_program_uniform_matrix4x2fv(struct yagl_gles2_program *program,
+                                           GLint location,
+                                           GLsizei count,
+                                           GLboolean transpose,
+                                           const GLfloat *value)
+{
+    uint32_t global_location;
+
+    if (!yagl_gles2_program_translate_location(program,
+                                               location,
+                                               &global_location)) {
+        return 0;
+    }
+
+    yagl_host_glUniformMatrix4x2fv(program->gen_locations, global_location, transpose, value, 4 * 2 * count);
+
+    return 1;
+}
+
+int yagl_gles3_program_uniform_matrix4x3fv(struct yagl_gles2_program *program,
+                                           GLint location,
+                                           GLsizei count,
+                                           GLboolean transpose,
+                                           const GLfloat *value)
+{
+    uint32_t global_location;
+
+    if (!yagl_gles2_program_translate_location(program,
+                                               location,
+                                               &global_location)) {
+        return 0;
+    }
+
+    yagl_host_glUniformMatrix4x3fv(program->gen_locations, global_location, transpose, value, 4 * 3 * count);
+
+    return 1;
+}
