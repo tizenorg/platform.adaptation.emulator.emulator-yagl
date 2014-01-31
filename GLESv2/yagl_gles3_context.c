@@ -1431,3 +1431,21 @@ int yagl_gles3_context_get_integerv_indexed(struct yagl_gles3_context *ctx,
 
     return 1;
 }
+
+void yagl_gles3_context_draw_range_elements(struct yagl_gles3_context *ctx,
+                                            GLenum mode,
+                                            GLuint start,
+                                            GLuint end,
+                                            GLsizei count,
+                                            GLenum type,
+                                            const GLvoid *indices,
+                                            int32_t indices_count)
+{
+    yagl_gles3_context_pre_draw(ctx);
+    yagl_gles2_context_pre_draw(&ctx->base, mode);
+
+    yagl_host_glDrawRangeElements(mode, start, end, count, type, indices, indices_count);
+
+    yagl_gles2_context_post_draw(&ctx->base, mode);
+    yagl_gles3_context_post_draw(ctx);
+}

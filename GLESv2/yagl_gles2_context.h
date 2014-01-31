@@ -54,6 +54,10 @@ void yagl_gles2_context_cleanup(struct yagl_gles2_context *ctx);
 
 void yagl_gles2_context_prepare(struct yagl_gles2_context *ctx);
 
+void yagl_gles2_context_pre_draw(struct yagl_gles2_context *ctx, GLenum mode);
+
+void yagl_gles2_context_post_draw(struct yagl_gles2_context *ctx, GLenum mode);
+
 void yagl_gles2_array_apply(struct yagl_gles_array *array,
                             uint32_t first,
                             uint32_t count,

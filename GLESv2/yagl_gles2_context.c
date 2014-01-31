@@ -139,32 +139,6 @@ static const GLchar **yagl_gles2_context_get_extensions(struct yagl_gles2_contex
     return extensions;
 }
 
-static inline void yagl_gles2_context_pre_draw(struct yagl_gles_context *ctx, GLenum mode)
-{
-    /*
-     * Enable texture generation for GL_POINTS and gl_PointSize shader variable.
-     * GLESv2 assumes this is enabled by default, we need to set this
-     * state for GL.
-     */
-
-    if (mode == GL_POINTS) {
-        if (yagl_get_host_gl_version() <= yagl_gl_2) {
-            yagl_host_glEnable(GL_POINT_SPRITE);
-        }
-        yagl_host_glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-    }
-}
-
-static inline void yagl_gles2_context_post_draw(struct yagl_gles_context *ctx, GLenum mode)
-{
-    if (mode == GL_POINTS) {
-        yagl_host_glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
-        if (yagl_get_host_gl_version() <= yagl_gl_2) {
-            yagl_host_glDisable(GL_POINT_SPRITE);
-        }
-    }
-}
-
 static void yagl_gles2_context_prepare_internal(struct yagl_client_context *ctx)
 {
     struct yagl_gles2_context *gles2_ctx = (struct yagl_gles2_context*)ctx;
@@ -349,6 +323,32 @@ void yagl_gles2_context_prepare(struct yagl_gles2_context *ctx)
     ctx->instanced_arrays = (yagl_get_host_gl_version() > yagl_gl_2);
 
     YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+void yagl_gles2_context_pre_draw(struct yagl_gles2_context *ctx, GLenum mode)
+{
+    /*
+     * Enable texture generation for GL_POINTS and gl_PointSize shader variable.
+     * GLESv2 assumes this is enabled by default, we need to set this
+     * state for GL.
+     */
+
+    if (mode == GL_POINTS) {
+        if (yagl_get_host_gl_version() <= yagl_gl_2) {
+            yagl_host_glEnable(GL_POINT_SPRITE);
+        }
+        yagl_host_glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    }
+}
+
+void yagl_gles2_context_post_draw(struct yagl_gles2_context *ctx, GLenum mode)
+{
+    if (mode == GL_POINTS) {
+        yagl_host_glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
+        if (yagl_get_host_gl_version() <= yagl_gl_2) {
+            yagl_host_glDisable(GL_POINT_SPRITE);
+        }
+    }
 }
 
 void yagl_gles2_array_apply(struct yagl_gles_array *array,
@@ -835,7 +835,9 @@ void yagl_gles2_context_draw_arrays(struct yagl_gles_context *ctx,
                                     GLsizei count,
                                     GLsizei primcount)
 {
-    yagl_gles2_context_pre_draw(ctx, mode);
+    struct yagl_gles2_context *gles2_ctx = (struct yagl_gles2_context*)ctx;
+
+    yagl_gles2_context_pre_draw(gles2_ctx, mode);
 
     if (primcount < 0) {
         yagl_host_glDrawArrays(mode, first, count);
@@ -843,7 +845,7 @@ void yagl_gles2_context_draw_arrays(struct yagl_gles_context *ctx,
         yagl_host_glDrawArraysInstanced(mode, first, count, primcount);
     }
 
-    yagl_gles2_context_post_draw(ctx, mode);
+    yagl_gles2_context_post_draw(gles2_ctx, mode);
 }
 
 void yagl_gles2_context_draw_elements(struct yagl_gles_context *ctx,
@@ -854,7 +856,9 @@ void yagl_gles2_context_draw_elements(struct yagl_gles_context *ctx,
                                       int32_t indices_count,
                                       GLsizei primcount)
 {
-    yagl_gles2_context_pre_draw(ctx, mode);
+    struct yagl_gles2_context *gles2_ctx = (struct yagl_gles2_context*)ctx;
+
+    yagl_gles2_context_pre_draw(gles2_ctx, mode);
 
     if (primcount < 0) {
         yagl_host_glDrawElements(mode, count, type, indices, indices_count);
@@ -862,7 +866,7 @@ void yagl_gles2_context_draw_elements(struct yagl_gles_context *ctx,
         yagl_host_glDrawElementsInstanced(mode, count, type, indices, indices_count, primcount);
     }
 
-    yagl_gles2_context_post_draw(ctx, mode);
+    yagl_gles2_context_post_draw(gles2_ctx, mode);
 }
 
 int yagl_gles2_context_validate_texture_target(struct yagl_gles_context *ctx,

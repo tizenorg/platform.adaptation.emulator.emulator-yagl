@@ -22,6 +22,7 @@
 #include "yagl_malloc.h"
 #include "yagl_transport.h"
 #include "yagl_state.h"
+#include "yagl_render.h"
 #include "yagl_egl_fence.h"
 
 #define YAGL_SET_ERR(err) \
@@ -2478,4 +2479,73 @@ out:
     YAGL_LOG_FUNC_EXIT_SPLIT(GLint, ret);
 
     return ret;
+}
+
+YAGL_API void glDrawRangeElements(GLenum mode, GLuint start, GLuint end,
+                                  GLsizei count, GLenum type,
+                                  const void *indices)
+{
+    int index_size = 0;
+    GLuint i;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT6(glDrawRangeElements, GLenum, GLuint, GLuint, GLsizei, GLenum, const void*, mode, start, end, count, type, indices);
+
+    YAGL_GET_CTX();
+
+    if (count < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (end < start) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (!yagl_gles_get_index_size(type, &index_size)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if (!ctx->base.base.vao->ebo && !indices) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (count == 0) {
+        goto out;
+    }
+
+    yagl_render_invalidate(0);
+
+    for (i = 0; i < ctx->base.base.vao->num_arrays; ++i) {
+        if (!ctx->base.base.vao->arrays[i].enabled) {
+            continue;
+        }
+
+        yagl_gles_array_transfer(&ctx->base.base.vao->arrays[i],
+                                 start,
+                                 end + 1 - start,
+                                 -1);
+    }
+
+    if (ctx->base.base.vao->ebo) {
+        yagl_gles_buffer_bind(ctx->base.base.vao->ebo,
+                              type,
+                              0,
+                              GL_ELEMENT_ARRAY_BUFFER);
+        yagl_gles_buffer_transfer(ctx->base.base.vao->ebo,
+                                  type,
+                                  GL_ELEMENT_ARRAY_BUFFER,
+                                  0);
+        yagl_gles3_context_draw_range_elements(ctx, mode, start, end, count,
+                                               type, NULL, (int32_t)indices);
+        yagl_host_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    } else {
+        yagl_gles3_context_draw_range_elements(ctx, mode, start, end, count,
+                                               type, indices, count * index_size);
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
 }

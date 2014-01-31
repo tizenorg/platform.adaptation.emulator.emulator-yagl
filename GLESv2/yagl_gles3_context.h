@@ -121,4 +121,13 @@ int yagl_gles3_context_get_integerv_indexed(struct yagl_gles3_context *ctx,
                                             GLint *params,
                                             uint32_t *num_params);
 
+void yagl_gles3_context_draw_range_elements(struct yagl_gles3_context *ctx,
+                                            GLenum mode,
+                                            GLuint start,
+                                            GLuint end,
+                                            GLsizei count,
+                                            GLenum type,
+                                            const GLvoid *indices,
+                                            int32_t indices_count);
+
 #endif
