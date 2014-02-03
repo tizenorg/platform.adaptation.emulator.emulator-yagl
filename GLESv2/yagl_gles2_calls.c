@@ -1966,7 +1966,7 @@ YAGL_API void glVertexAttribPointer(GLuint indx, GLint size, GLenum type, GLbool
                                         ctx->base.vbo,
                                         (GLint)ptr,
                                         0)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     } else {
         /*
@@ -1990,7 +1990,7 @@ YAGL_API void glVertexAttribPointer(GLuint indx, GLint size, GLenum type, GLbool
                                     stride,
                                     ptr,
                                     0)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     }
 

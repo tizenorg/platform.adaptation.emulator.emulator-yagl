@@ -682,6 +682,21 @@ static void yagl_gles1_etc1_rgb8_uncomp_and_apply(struct yagl_gles_context *ctx,
         return;
     }
 
+    if (!data) {
+        yagl_host_glTexImage2DData(GL_TEXTURE_2D,
+                                   level,
+                                   GL_RGBA8,
+                                   width,
+                                   height,
+                                   border,
+                                   GL_RGBA,
+                                   GL_UNSIGNED_BYTE,
+                                   NULL,
+                                   width * height * 4);
+
+        return;
+    }
+
     buff = yagl_get_tmp_buffer(width * height * 4);
 
     yagl_texcompress_etc1_unpack_rgba8888(buff,

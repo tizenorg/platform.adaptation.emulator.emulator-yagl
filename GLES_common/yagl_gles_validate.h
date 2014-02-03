@@ -3,6 +3,8 @@
 
 #include "yagl_gles_types.h"
 
+int yagl_gles_is_draw_mode_valid(GLenum mode);
+
 int yagl_gles_is_buffer_usage_valid(GLenum usage);
 
 int yagl_gles_is_blend_equation_valid(GLenum mode);

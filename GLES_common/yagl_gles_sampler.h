@@ -21,8 +21,6 @@ struct yagl_gles_sampler
     GLenum wrap_r;
     GLenum compare_mode;
     GLenum compare_func;
-
-    int was_bound;
 };
 
 struct yagl_gles_sampler *yagl_gles_sampler_create(void);

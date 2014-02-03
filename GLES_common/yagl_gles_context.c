@@ -1239,6 +1239,11 @@ void yagl_gles_context_draw_arrays(struct yagl_gles_context *ctx,
 
     YAGL_LOG_FUNC_SET(yagl_gles_context_draw_arrays);
 
+    if (!yagl_gles_is_draw_mode_valid(mode)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
     if ((first < 0) || (count < 0)) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
         goto out;
@@ -1274,6 +1279,11 @@ void yagl_gles_context_draw_elements(struct yagl_gles_context *ctx,
     GLuint i;
 
     YAGL_LOG_FUNC_SET(yagl_gles_context_draw_elements);
+
+    if (!yagl_gles_is_draw_mode_valid(mode)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
 
     if (count < 0) {
         YAGL_SET_ERR(GL_INVALID_VALUE);

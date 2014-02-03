@@ -63,13 +63,6 @@ void yagl_gles_sampler_bind(struct yagl_gles_sampler *sampler,
     }
 
     yagl_host_glBindSampler(unit, sampler->global_name);
-
-    sampler->was_bound = 1;
-}
-
-int yagl_gles_sampler_was_bound(struct yagl_gles_sampler *sampler)
-{
-    return sampler->was_bound;
 }
 
 int yagl_gles_sampler_set_parameteriv(struct yagl_gles_sampler *sampler,

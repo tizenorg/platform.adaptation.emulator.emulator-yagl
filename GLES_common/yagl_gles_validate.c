@@ -1,6 +1,22 @@
 #include "GL/gl.h"
 #include "yagl_gles_validate.h"
 
+int yagl_gles_is_draw_mode_valid(GLenum mode)
+{
+    switch (mode) {
+    case GL_POINTS:
+    case GL_LINE_STRIP:
+    case GL_LINE_LOOP:
+    case GL_LINES:
+    case GL_TRIANGLE_STRIP:
+    case GL_TRIANGLE_FAN:
+    case GL_TRIANGLES:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
 int yagl_gles_is_buffer_usage_valid(GLenum usage)
 {
     switch (usage) {

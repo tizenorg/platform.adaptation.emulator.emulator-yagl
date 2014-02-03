@@ -981,7 +981,7 @@ YAGL_API void glNormalPointer(GLenum type, GLsizei stride, const GLvoid* pointer
                                         ctx->base.vbo,
                                         (GLint)pointer,
                                         0)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     } else {
         /*
@@ -1005,7 +1005,7 @@ YAGL_API void glNormalPointer(GLenum type, GLsizei stride, const GLvoid* pointer
                                     stride,
                                     pointer,
                                     0)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     }
 
@@ -1044,7 +1044,7 @@ YAGL_API void glVertexPointer(GLint size, GLenum type, GLsizei stride, const GLv
                                         ctx->base.vbo,
                                         (GLint)pointer,
                                         0)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     } else {
         /*
@@ -1068,7 +1068,7 @@ YAGL_API void glVertexPointer(GLint size, GLenum type, GLsizei stride, const GLv
                                     stride,
                                     pointer,
                                     0)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     }
 
@@ -1106,7 +1106,7 @@ YAGL_API void glColorPointer(GLint size, GLenum type, GLsizei stride, const GLvo
                                         ctx->base.vbo,
                                         (GLint)pointer,
                                         0)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     } else {
         /*
@@ -1130,7 +1130,7 @@ YAGL_API void glColorPointer(GLint size, GLenum type, GLsizei stride, const GLvo
                                     stride,
                                     pointer,
                                     0)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     }
 
@@ -1169,7 +1169,7 @@ YAGL_API void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const G
                                         ctx->base.vbo,
                                         (GLint)pointer,
                                         0)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     } else {
         /*
@@ -1193,7 +1193,7 @@ YAGL_API void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const G
                                     stride,
                                     pointer,
                                     0)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     }
 
@@ -1231,7 +1231,7 @@ YAGL_API void glPointSizePointerOES(GLenum type, GLsizei stride, const GLvoid* p
                                         ctx->base.vbo,
                                         (GLint)pointer,
                                         0)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     } else {
         /*
@@ -1255,7 +1255,7 @@ YAGL_API void glPointSizePointerOES(GLenum type, GLsizei stride, const GLvoid* p
                                     stride,
                                     pointer,
                                     0)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     }
 

@@ -413,6 +413,21 @@ void yagl_gles2_context_compressed_tex_image_2d(struct yagl_gles_context *gles_c
         return;
     }
 
+    if (!data) {
+        yagl_host_glTexImage2DData(target,
+                                   level,
+                                   tc_format->dst_internalformat,
+                                   width,
+                                   height,
+                                   border,
+                                   tc_format->dst_format,
+                                   tc_format->dst_type,
+                                   NULL,
+                                   dst_size);
+
+        return;
+    }
+
     buff = yagl_get_tmp_buffer(dst_size);
 
     tc_format->unpack(tc_format,
@@ -487,6 +502,21 @@ void yagl_gles2_context_compressed_tex_sub_image_2d(struct yagl_gles_context *gl
         return;
     }
 
+    if (!data) {
+        yagl_host_glTexSubImage2DData(target,
+                                      level,
+                                      xoffset,
+                                      yoffset,
+                                      width,
+                                      height,
+                                      tc_format->dst_format,
+                                      tc_format->dst_type,
+                                      NULL,
+                                      dst_size);
+
+        return;
+    }
+
     buff = yagl_get_tmp_buffer(dst_size);
 
     tc_format->unpack(tc_format,
@@ -553,6 +583,22 @@ void yagl_gles2_context_compressed_tex_image_3d(struct yagl_gles2_context *ctx,
                                    &dst_stride,
                                    &dst_size)) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
+        return;
+    }
+
+    if (!data) {
+        yagl_host_glTexImage3DData(target,
+                                   level,
+                                   tc_format->dst_internalformat,
+                                   width,
+                                   height,
+                                   depth,
+                                   border,
+                                   tc_format->dst_format,
+                                   tc_format->dst_type,
+                                   NULL,
+                                   dst_size * depth);
+
         return;
     }
 
@@ -639,6 +685,23 @@ void yagl_gles2_context_compressed_tex_sub_image_3d(struct yagl_gles2_context *c
                                    &dst_stride,
                                    &dst_size)) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
+        return;
+    }
+
+    if (!data) {
+        yagl_host_glTexSubImage3DData(target,
+                                      level,
+                                      xoffset,
+                                      yoffset,
+                                      zoffset,
+                                      width,
+                                      height,
+                                      depth,
+                                      tc_format->dst_format,
+                                      tc_format->dst_type,
+                                      NULL,
+                                      dst_size * depth);
+
         return;
     }
 

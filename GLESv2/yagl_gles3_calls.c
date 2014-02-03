@@ -44,9 +44,45 @@
 
 YAGL_API void glInvalidateFramebuffer(GLenum target, GLsizei numAttachments, const GLenum *attachments)
 {
+    struct yagl_gles_framebuffer *framebuffer_obj = NULL;
+    GLsizei i;
+    yagl_gles_framebuffer_attachment framebuffer_attachment;
+
     YAGL_LOG_FUNC_ENTER_SPLIT3(glInvalidateFramebuffer, GLenum, GLsizei, const GLenum*, target, numAttachments, attachments);
 
     YAGL_GET_CTX();
+
+    if (!yagl_gles_context_acquire_binded_framebuffer(&ctx->base.base,
+                                                      target,
+                                                      &framebuffer_obj)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    for (i = 0; i < numAttachments; ++i) {
+        if (framebuffer_obj) {
+            if ((attachments[i] != GL_DEPTH_STENCIL_ATTACHMENT) &&
+                !yagl_gles_validate_framebuffer_attachment(attachments[i],
+                                                           ctx->base.base.max_color_attachments,
+                                                           &framebuffer_attachment)) {
+                YAGL_SET_ERR(GL_INVALID_OPERATION);
+                goto out;
+            }
+        } else {
+            switch (attachments[i]) {
+            case GL_COLOR:
+            case GL_DEPTH:
+            case GL_STENCIL:
+                break;
+            default:
+                YAGL_SET_ERR(GL_INVALID_OPERATION);
+                goto out;
+            }
+        }
+    }
+
+out:
+    yagl_gles_framebuffer_release(framebuffer_obj);
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
@@ -227,7 +263,7 @@ YAGL_API void glGetActiveUniformsiv(GLuint program, GLsizei uniformCount,
         goto out;
     }
 
-    if (uniformCount >= program_obj->num_active_uniforms) {
+    if (uniformCount > program_obj->num_active_uniforms) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
         goto out;
     }
@@ -948,6 +984,8 @@ YAGL_API void glFramebufferTextureLayer(GLenum target, GLenum attachment, GLuint
 out:
     yagl_gles_texture_release(texture_obj);
     yagl_gles_framebuffer_release(framebuffer_obj);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
 }
 
 YAGL_API void glGenSamplers(GLsizei count, GLuint *sampler_names)
@@ -1032,7 +1070,7 @@ YAGL_API GLboolean glIsSampler(GLuint sampler)
     sampler_obj = (struct yagl_gles_sampler*)yagl_sharegroup_acquire_object(ctx->base.sg,
         YAGL_NS_SAMPLER, sampler);
 
-    if (sampler_obj && yagl_gles_sampler_was_bound(sampler_obj)) {
+    if (sampler_obj) {
         res = GL_TRUE;
     }
 
@@ -1723,7 +1761,7 @@ YAGL_API void glVertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsi
                                         ctx->base.base.vbo,
                                         (GLint)pointer,
                                         1)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     } else {
         /*
@@ -1747,7 +1785,7 @@ YAGL_API void glVertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsi
                                     stride,
                                     pointer,
                                     1)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     }
 
@@ -2492,6 +2530,11 @@ YAGL_API void glDrawRangeElements(GLenum mode, GLuint start, GLuint end,
 
     YAGL_GET_CTX();
 
+    if (!yagl_gles_is_draw_mode_valid(mode)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
     if (count < 0) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
         goto out;
@@ -2577,8 +2620,6 @@ YAGL_API void glProgramParameteri(GLuint program, GLenum pname, GLint value)
     YAGL_LOG_FUNC_ENTER_SPLIT3(glProgramParameteri, GLuint, GLenum, GLint, program, pname, value);
 
     YAGL_GET_CTX();
-
-    YAGL_SET_ERR(GL_INVALID_OPERATION);
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }

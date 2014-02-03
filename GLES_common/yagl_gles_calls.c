@@ -2180,10 +2180,37 @@ YAGL_API void glBlitFramebuffer(GLint srcX0, GLint srcY0,
 
     YAGL_GET_CTX();
 
+    if (mask & ~(GL_COLOR_BUFFER_BIT |
+                 GL_DEPTH_BUFFER_BIT |
+                 GL_STENCIL_BUFFER_BIT)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    switch (filter) {
+    case GL_NEAREST:
+    case GL_LINEAR:
+        break;
+    default:
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if ((mask & (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT)) &&
+        (filter != GL_NEAREST)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    if (!ctx->fbo_draw || !ctx->fbo_read) {
+        goto out;
+    }
+
     yagl_render_invalidate(0);
 
     yagl_host_glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
 
+out:
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 YAGL_API YAGL_ALIAS(glBlitFramebuffer, glBlitFramebufferANGLE);
