@@ -238,6 +238,8 @@ struct yagl_gles_buffer *yagl_gles_buffer_create(void)
 
     yagl_range_list_init(&buffer->gpu_dirty_list);
 
+    buffer->usage = GL_STATIC_DRAW;
+
     return buffer;
 }
 
@@ -616,7 +618,6 @@ void yagl_gles_buffer_set_gpu_dirty(struct yagl_gles_buffer *buffer,
                                     GLint size)
 {
     if ((offset < 0) || (size < 0) || ((offset + size) > buffer->size)) {
-        assert(0);
         return;
     }
 

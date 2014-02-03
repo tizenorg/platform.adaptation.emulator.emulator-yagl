@@ -1241,16 +1241,16 @@ void yagl_gles_context_draw_arrays(struct yagl_gles_context *ctx,
 
     if (!yagl_gles_is_draw_mode_valid(mode)) {
         YAGL_SET_ERR(GL_INVALID_ENUM);
-        goto out;
+        return;
     }
 
     if ((first < 0) || (count < 0)) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
-        goto out;
+        return;
     }
 
     if ((count == 0) || (primcount == 0)) {
-        goto out;
+        return;
     }
 
     yagl_render_invalidate(0);
@@ -1263,9 +1263,6 @@ void yagl_gles_context_draw_arrays(struct yagl_gles_context *ctx,
     }
 
     ctx->draw_arrays(ctx, mode, first, count, primcount);
-
-out:
-    YAGL_LOG_FUNC_EXIT(NULL);
 }
 
 void yagl_gles_context_draw_elements(struct yagl_gles_context *ctx,
@@ -1282,26 +1279,26 @@ void yagl_gles_context_draw_elements(struct yagl_gles_context *ctx,
 
     if (!yagl_gles_is_draw_mode_valid(mode)) {
         YAGL_SET_ERR(GL_INVALID_ENUM);
-        goto out;
+        return;
     }
 
     if (count < 0) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
-        goto out;
+        return;
     }
 
     if (!yagl_gles_get_index_size(type, &index_size)) {
         YAGL_SET_ERR(GL_INVALID_ENUM);
-        goto out;
+        return;
     }
 
     if (!ctx->vao->ebo && !indices) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
-        goto out;
+        return;
     }
 
     if ((count == 0) || (primcount == 0)) {
-        goto out;
+        return;
     }
 
     yagl_render_invalidate(0);
@@ -1320,7 +1317,7 @@ void yagl_gles_context_draw_elements(struct yagl_gles_context *ctx,
                                                        &min_idx,
                                                        &max_idx)) {
                     YAGL_LOG_WARN("unable to get min/max index from ebo");
-                    goto out;
+                    return;
                 }
             } else {
                 yagl_get_minmax_index(indices, count, type,
@@ -1336,7 +1333,7 @@ void yagl_gles_context_draw_elements(struct yagl_gles_context *ctx,
     }
 
     if (!have_range) {
-        goto out;
+        return;
     }
 
     if (ctx->vao->ebo) {
@@ -1353,9 +1350,6 @@ void yagl_gles_context_draw_elements(struct yagl_gles_context *ctx,
     } else {
         ctx->draw_elements(ctx, mode, count, type, indices, count * index_size, primcount);
     }
-
-out:
-    YAGL_LOG_FUNC_EXIT(NULL);
 }
 
 int yagl_gles_context_pre_unpack(struct yagl_gles_context *ctx,

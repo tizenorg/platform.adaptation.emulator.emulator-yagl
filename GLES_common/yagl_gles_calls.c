@@ -2394,9 +2394,14 @@ YAGL_API void glDrawBuffers(GLsizei n, const GLenum *bufs)
                 continue;
             }
 
-            if ((bufs[i] < GL_COLOR_ATTACHMENT0) ||
+            if ((bufs[i] == GL_BACK) ||
                 (bufs[i] >= (GL_COLOR_ATTACHMENT0 + ctx->max_color_attachments))) {
                 YAGL_SET_ERR(GL_INVALID_OPERATION);
+                goto out;
+            }
+
+            if (bufs[i] < GL_COLOR_ATTACHMENT0) {
+                YAGL_SET_ERR(GL_INVALID_ENUM);
                 goto out;
             }
 
