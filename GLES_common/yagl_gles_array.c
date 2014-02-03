@@ -12,6 +12,7 @@
  * We can't include GL/glext.h here
  */
 #define GL_HALF_FLOAT 0x140B
+#define GL_INT_2_10_10_10_REV 0x8D9F
 
 static __inline int yagl_get_el_size(GLenum type,
                                      int integer,
@@ -61,6 +62,10 @@ static __inline int yagl_get_el_size(GLenum type,
         }
         break;
     case GL_FIXED:
+        *el_size = 4;
+        break;
+    case GL_INT_2_10_10_10_REV:
+    case GL_UNSIGNED_INT_2_10_10_10_REV_EXT:
         *el_size = 4;
         break;
     default:

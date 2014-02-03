@@ -923,7 +923,7 @@ static int yagl_gles3_context_validate_format(struct yagl_gles_context *ctx,
         if (format != GL_DEPTH_STENCIL) {
             return 0;
         }
-        *bpp = 4;
+        *bpp = 8;
         break;
     default:
         return 0;
