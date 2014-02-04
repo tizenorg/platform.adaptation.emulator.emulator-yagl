@@ -1345,10 +1345,10 @@ void yagl_gles_context_draw_elements(struct yagl_gles_context *ctx,
                                   type,
                                   GL_ELEMENT_ARRAY_BUFFER,
                                   0);
-        ctx->draw_elements(ctx, mode, count, type, NULL, (int32_t)indices, primcount);
+        ctx->draw_elements(ctx, mode, count, type, NULL, (int32_t)indices, primcount, max_idx);
         yagl_host_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     } else {
-        ctx->draw_elements(ctx, mode, count, type, indices, count * index_size, primcount);
+        ctx->draw_elements(ctx, mode, count, type, indices, count * index_size, primcount, max_idx);
     }
 }
 

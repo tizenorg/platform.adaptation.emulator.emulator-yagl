@@ -106,6 +106,8 @@ int yagl_gles_array_update_vbo(struct yagl_gles_array *array,
                                GLint offset,
                                int integer);
 
+void yagl_gles_array_apply(struct yagl_gles_array *array);
+
 void yagl_gles_array_set_divisor(struct yagl_gles_array *array, GLuint divisor);
 
 void yagl_gles_array_transfer(struct yagl_gles_array *array,

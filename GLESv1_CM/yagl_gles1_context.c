@@ -1337,7 +1337,8 @@ static void yagl_gles1_context_draw_elements(struct yagl_gles_context *ctx,
                                              GLenum type,
                                              const GLvoid *indices,
                                              int32_t indices_count,
-                                             GLsizei primcount)
+                                             GLsizei primcount,
+                                             uint32_t max_idx)
 {
     assert(primcount < 0);
 

@@ -8,7 +8,6 @@
 #include "yagl_gles_texture_unit.h"
 #include "yagl_gles_texture.h"
 #include "yagl_gles_sampler.h"
-#include "yagl_gles_array.h"
 #include "yagl_log.h"
 #include "yagl_malloc.h"
 #include "yagl_state.h"
@@ -127,34 +126,6 @@ static inline void yagl_gles3_context_post_draw(struct yagl_gles3_context *ctx)
     }
 }
 
-static void yagl_gles3_array_apply(struct yagl_gles_array *array,
-                                   uint32_t first,
-                                   uint32_t count,
-                                   const GLvoid *ptr,
-                                   void *user_data)
-{
-    if (!array->integer) {
-        yagl_gles2_array_apply(array, first, count, ptr, user_data);
-        return;
-    }
-
-    if (array->vbo) {
-        yagl_host_glVertexAttribIPointerOffset(array->index,
-                                               array->size,
-                                               array->actual_type,
-                                               array->actual_stride,
-                                               array->actual_offset);
-    } else {
-        yagl_host_glVertexAttribIPointerData(array->index,
-                                             array->size,
-                                             array->actual_type,
-                                             array->actual_stride,
-                                             first,
-                                             ptr + (first * array->actual_stride),
-                                             count * array->actual_stride);
-    }
-}
-
 static void yagl_gles3_context_prepare(struct yagl_client_context *ctx)
 {
     struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
@@ -239,24 +210,6 @@ static void yagl_gles3_context_destroy(struct yagl_client_context *ctx)
     yagl_free(gles3_ctx);
 
     YAGL_LOG_FUNC_EXIT(NULL);
-}
-
-static struct yagl_gles_array
-    *yagl_gles3_context_create_arrays(struct yagl_gles_context *ctx)
-{
-    GLint i;
-    struct yagl_gles_array *arrays;
-
-    arrays = yagl_malloc(ctx->num_arrays * sizeof(*arrays));
-
-    for (i = 0; i < ctx->num_arrays; ++i) {
-        yagl_gles_array_init(&arrays[i],
-                             i,
-                             &yagl_gles3_array_apply,
-                             ctx);
-    }
-
-    return arrays;
 }
 
 static const GLchar
@@ -470,7 +423,8 @@ static void yagl_gles3_context_draw_elements(struct yagl_gles_context *ctx,
                                              GLenum type,
                                              const GLvoid *indices,
                                              int32_t indices_count,
-                                             GLsizei primcount)
+                                             GLsizei primcount,
+                                             uint32_t max_idx)
 {
     struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
 
@@ -482,7 +436,8 @@ static void yagl_gles3_context_draw_elements(struct yagl_gles_context *ctx,
                                      type,
                                      indices,
                                      indices_count,
-                                     primcount);
+                                     primcount,
+                                     max_idx);
 
     yagl_gles3_context_post_draw(gles3_ctx);
 }
@@ -992,7 +947,7 @@ struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg
 
     gles3_ctx->base.base.base.prepare = &yagl_gles3_context_prepare;
     gles3_ctx->base.base.base.destroy = &yagl_gles3_context_destroy;
-    gles3_ctx->base.base.create_arrays = &yagl_gles3_context_create_arrays;
+    gles3_ctx->base.base.create_arrays = &yagl_gles2_context_create_arrays;
     gles3_ctx->base.base.get_string = &yagl_gles3_context_get_string;
     gles3_ctx->base.base.compressed_tex_image_2d = &yagl_gles2_context_compressed_tex_image_2d;
     gles3_ctx->base.base.compressed_tex_sub_image_2d = &yagl_gles2_context_compressed_tex_sub_image_2d;
@@ -1442,7 +1397,7 @@ void yagl_gles3_context_draw_range_elements(struct yagl_gles3_context *ctx,
                                             int32_t indices_count)
 {
     yagl_gles3_context_pre_draw(ctx);
-    yagl_gles2_context_pre_draw(&ctx->base, mode);
+    yagl_gles2_context_pre_draw(&ctx->base, mode, end + 1);
 
     yagl_host_glDrawRangeElements(mode, start, end, count, type, indices, indices_count);
 

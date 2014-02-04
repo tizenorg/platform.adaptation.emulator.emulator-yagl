@@ -17,6 +17,7 @@
 #include "yagl_host_gles_calls.h"
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #define YAGL_SET_ERR(err) \
     yagl_gles_context_set_error(&ctx->base, err); \
@@ -165,22 +166,49 @@ static void yagl_gles2_context_destroy(struct yagl_client_context *ctx)
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-static struct yagl_gles_array
-    *yagl_gles2_context_create_arrays(struct yagl_gles_context *ctx)
+static void yagl_gles2_array_apply(struct yagl_gles_array *array,
+                                   uint32_t first,
+                                   uint32_t count,
+                                   const GLvoid *ptr,
+                                   void *user_data)
 {
-    GLint i;
-    struct yagl_gles_array *arrays;
+    if (array->integer) {
+        if (array->vbo) {
+            yagl_host_glVertexAttribIPointerOffset(array->index,
+                                                   array->size,
+                                                   array->actual_type,
+                                                   array->actual_stride,
+                                                   array->actual_offset);
+        } else {
+            yagl_host_glVertexAttribIPointerData(array->index,
+                                                 array->size,
+                                                 array->actual_type,
+                                                 array->actual_stride,
+                                                 first,
+                                                 ptr + (first * array->actual_stride),
+                                                 count * array->actual_stride);
+        }
 
-    arrays = yagl_malloc(ctx->num_arrays * sizeof(*arrays));
-
-    for (i = 0; i < ctx->num_arrays; ++i) {
-        yagl_gles_array_init(&arrays[i],
-                             i,
-                             &yagl_gles2_array_apply,
-                             ctx);
+        return;
     }
 
-    return arrays;
+    if (array->vbo) {
+        yagl_host_glVertexAttribPointerOffset(array->index,
+                                              array->size,
+                                              array->actual_type,
+                                              array->normalized,
+                                              array->actual_stride,
+                                              array->actual_offset);
+    } else {
+        yagl_host_glVertexAttribPointerData(array->index,
+                                            array->size,
+                                            array->actual_type,
+                                            array->normalized,
+                                            array->actual_stride,
+                                            first,
+                                            ptr + (first * array->actual_stride),
+                                            count * array->actual_stride);
+    }
 }
 
 static const GLchar
@@ -260,6 +288,8 @@ void yagl_gles2_context_cleanup(struct yagl_gles2_context *ctx)
 {
     yagl_gles2_program_release(ctx->program);
 
+    yagl_gles_buffer_release(ctx->vertex_attrib0.vbo);
+
     yagl_gles_context_cleanup(&ctx->base);
 }
 
@@ -287,6 +317,13 @@ void yagl_gles2_context_prepare(struct yagl_gles2_context *ctx)
     yagl_gles_context_prepare(&ctx->base,
                               num_texture_units,
                               num_arrays);
+
+    ctx->vertex_attrib0.value.f[0] = 0.0f;
+    ctx->vertex_attrib0.value.f[1] = 0.0f;
+    ctx->vertex_attrib0.value.f[2] = 0.0f;
+    ctx->vertex_attrib0.value.f[3] = 1.0f;
+    ctx->vertex_attrib0.type = GL_FLOAT;
+    ctx->vertex_attrib0.vbo = yagl_gles_buffer_create();
 
     conformant = getenv("YAGL_CONFORMANT");
 
@@ -325,8 +362,168 @@ void yagl_gles2_context_prepare(struct yagl_gles2_context *ctx)
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-void yagl_gles2_context_pre_draw(struct yagl_gles2_context *ctx, GLenum mode)
+struct yagl_gles_array
+    *yagl_gles2_context_create_arrays(struct yagl_gles_context *ctx)
 {
+    GLint i;
+    struct yagl_gles_array *arrays;
+
+    arrays = yagl_malloc(ctx->num_arrays * sizeof(*arrays));
+
+    for (i = 0; i < ctx->num_arrays; ++i) {
+        yagl_gles_array_init(&arrays[i],
+                             i,
+                             &yagl_gles2_array_apply,
+                             ctx);
+    }
+
+    return arrays;
+}
+
+void yagl_gles2_context_pre_draw(struct yagl_gles2_context *ctx,
+                                 GLenum mode,
+                                 GLint count)
+{
+    YAGL_LOG_FUNC_SET(yagl_gles2_context_pre_draw);
+
+    assert(count > 0);
+
+    if (count <= 0) {
+        return;
+    }
+
+    if (!ctx->base.vao->arrays[0].enabled) {
+        /*
+         * vertex attribute array 0 not enabled, simulate
+         * vertex attribute array 0.
+         */
+
+        GLint size = count * sizeof(ctx->vertex_attrib0.value);
+        void *tmp, *it;
+
+        if (!ctx->vertex_attrib0.warned) {
+            YAGL_LOG_WARN("vertex attribute array 0 not enabled, simulating");
+
+            ctx->vertex_attrib0.warned = 1;
+        }
+
+        if (ctx->vertex_attrib0.vbo->size < size) {
+            /*
+             * Required buffer size is greater than allocated so far,
+             * we're forced to reallocate. This is slow path, we basically
+             * need to update everything.
+             */
+
+            tmp = it = yagl_get_tmp_buffer2(size);
+
+            while (it < (tmp + size)) {
+                memcpy(it, &ctx->vertex_attrib0.value, sizeof(ctx->vertex_attrib0.value));
+                it += sizeof(ctx->vertex_attrib0.value);
+            }
+
+            yagl_gles_buffer_set_data(ctx->vertex_attrib0.vbo,
+                                      size,
+                                      tmp,
+                                      GL_STREAM_DRAW);
+
+            ctx->vertex_attrib0.count = count;
+        } else {
+            /*
+             * We can fit it in existing buffer.
+             */
+
+            GLint offset = 0;
+
+            tmp = ctx->vertex_attrib0.vbo->data;
+
+            if (memcmp(tmp,
+                       &ctx->vertex_attrib0.value,
+                       sizeof(ctx->vertex_attrib0.value)) == 0) {
+                if (ctx->vertex_attrib0.count < count) {
+                    /*
+                     * vertex attribute 0 didn't change, but we need more than
+                     * 'vertex_attrib0.count' elements, thus, update only part
+                     * of the buffer. This is semi-fast path. We also update
+                     * 'vertex_attrib0.count' here to specify that we now
+                     * have more valid elements in the buffer.
+                     */
+                    offset = sizeof(ctx->vertex_attrib0.value) * ctx->vertex_attrib0.count;
+                    size = sizeof(ctx->vertex_attrib0.value) * (count - ctx->vertex_attrib0.count);
+                    ctx->vertex_attrib0.count = count;
+                } else {
+                    /*
+                     * vertex attribute 0 didn't change and we need less than
+                     * 'vertex_attrib0.count' elements, this is fast-path,
+                     * don't transfer anything. Also, don't update
+                     * 'vertex_attrib0.count' here since elements pass 'count'
+                     * are still equal to vertex attribute 0, thus, they can
+                     * be reused later.
+                     */
+                    size = 0;
+                }
+            } else {
+                /*
+                 * vertex attribute 0 changed, we'll update the buffer
+                 * starting from element 0 and up to 'count' elements.
+                 * Also, we set 'vertex_attrib0.count' to specify that we have
+                 * 'vertex_attrib0.count' elements valid. Note that the buffer
+                 * may still contain elements with outdated vertex attribute 0
+                 * values.
+                 */
+
+                ctx->vertex_attrib0.count = count;
+            }
+
+            tmp = it = yagl_get_tmp_buffer2(size);
+
+            while (it < (tmp + size)) {
+                memcpy(it, &ctx->vertex_attrib0.value, sizeof(ctx->vertex_attrib0.value));
+                it += sizeof(ctx->vertex_attrib0.value);
+            }
+
+            yagl_gles_buffer_update_data(ctx->vertex_attrib0.vbo,
+                                         offset,
+                                         size,
+                                         tmp);
+        }
+
+        yagl_host_glEnableVertexAttribArray(0);
+
+        if (ctx->base.vao->arrays[0].divisor != 0) {
+            yagl_host_glVertexAttribDivisor(0, 0);
+        }
+
+        yagl_gles_buffer_bind(ctx->vertex_attrib0.vbo,
+                              0,
+                              0,
+                              GL_ARRAY_BUFFER);
+        yagl_gles_buffer_transfer(ctx->vertex_attrib0.vbo,
+                                  0,
+                                  GL_ARRAY_BUFFER,
+                                  0);
+        switch (ctx->vertex_attrib0.type) {
+        case GL_INT:
+        case GL_UNSIGNED_INT:
+            yagl_host_glVertexAttribIPointerOffset(0,
+                                                   4,
+                                                   ctx->vertex_attrib0.type,
+                                                   0,
+                                                   0);
+            break;
+        default:
+            assert(0);
+        case GL_FLOAT:
+            yagl_host_glVertexAttribPointerOffset(0,
+                                                  4,
+                                                  ctx->vertex_attrib0.type,
+                                                  GL_FALSE,
+                                                  0,
+                                                  0);
+            break;
+        }
+        yagl_host_glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+
     /*
      * Enable texture generation for GL_POINTS and gl_PointSize shader variable.
      * GLESv2 assumes this is enabled by default, we need to set this
@@ -349,30 +546,24 @@ void yagl_gles2_context_post_draw(struct yagl_gles2_context *ctx, GLenum mode)
             yagl_host_glDisable(GL_POINT_SPRITE);
         }
     }
-}
 
-void yagl_gles2_array_apply(struct yagl_gles_array *array,
-                            uint32_t first,
-                            uint32_t count,
-                            const GLvoid *ptr,
-                            void *user_data)
-{
-    if (array->vbo) {
-        yagl_host_glVertexAttribPointerOffset(array->index,
-                                              array->size,
-                                              array->actual_type,
-                                              array->normalized,
-                                              array->actual_stride,
-                                              array->actual_offset);
-    } else {
-        yagl_host_glVertexAttribPointerData(array->index,
-                                            array->size,
-                                            array->actual_type,
-                                            array->normalized,
-                                            array->actual_stride,
-                                            first,
-                                            ptr + (first * array->actual_stride),
-                                            count * array->actual_stride);
+    if (!ctx->base.vao->arrays[0].enabled) {
+        /*
+         * Restore vertex attribute array 0 pointer.
+         */
+        yagl_gles_array_apply(&ctx->base.vao->arrays[0]);
+
+        if (ctx->base.vao->arrays[0].divisor != 0) {
+            /*
+             * Restore vertex attribute array 0 divisor.
+             */
+            yagl_host_glVertexAttribDivisor(0, ctx->base.vao->arrays[0].divisor);
+        }
+
+        /*
+         * Restore vertex attribute array 0 state.
+         */
+        yagl_host_glDisableVertexAttribArray(0);
     }
 }
 
@@ -900,7 +1091,7 @@ void yagl_gles2_context_draw_arrays(struct yagl_gles_context *ctx,
 {
     struct yagl_gles2_context *gles2_ctx = (struct yagl_gles2_context*)ctx;
 
-    yagl_gles2_context_pre_draw(gles2_ctx, mode);
+    yagl_gles2_context_pre_draw(gles2_ctx, mode, first + count);
 
     if (primcount < 0) {
         yagl_host_glDrawArrays(mode, first, count);
@@ -917,11 +1108,12 @@ void yagl_gles2_context_draw_elements(struct yagl_gles_context *ctx,
                                       GLenum type,
                                       const GLvoid *indices,
                                       int32_t indices_count,
-                                      GLsizei primcount)
+                                      GLsizei primcount,
+                                      uint32_t max_idx)
 {
     struct yagl_gles2_context *gles2_ctx = (struct yagl_gles2_context*)ctx;
 
-    yagl_gles2_context_pre_draw(gles2_ctx, mode);
+    yagl_gles2_context_pre_draw(gles2_ctx, mode, max_idx + 1);
 
     if (primcount < 0) {
         yagl_host_glDrawElements(mode, count, type, indices, indices_count);

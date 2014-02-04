@@ -3,7 +3,6 @@
 
 #include "yagl_gles_context.h"
 
-struct yagl_gles_array;
 struct yagl_gles2_program;
 
 struct yagl_gles2_context
@@ -19,6 +18,42 @@ struct yagl_gles2_context
      * From 'base.base.sg'.
      */
     struct yagl_sharegroup *sg;
+
+    /*
+     * Host OpenGL (version < 3.1) vertex attribute 0 is "magic", it has to be
+     * always enabled as a vertex attribute array. This means we have to
+     * keep some buffer around and on each drawing call:
+     * + Check if vertex attribute array 0 is enabled, if not then
+     * + Resize this buffer to fit the number of elements to draw and
+     *   stuff it with vertex attribute 0 value
+     * + Call glEnableVertexAttribArray + glVertexAttribPointer
+     * + Draw
+     * + Restore everything back to normal.
+     * This is really heavy, but luckily almost everyone uses vertex attribute
+     * array 0, so this code will be triggered on very rare occasions, like
+     * khronos conformance test.
+     * Also, Host OpenGL 3.1+ says that vertex attribute 0
+     * "is not magic anymore", but this is
+     * currently broken in many drivers, so we have to workaround even
+     * when we're running with OpenGL 3.1+ core...
+     */
+    struct
+    {
+        union
+        {
+            /*
+             * We assume that all these arrays
+             * are equal in size.
+             */
+            GLfloat f[4];
+            GLint i[4];
+            GLuint ui[4];
+        } value;
+        GLenum type;
+        GLint count;
+        struct yagl_gles_buffer *vbo;
+        int warned;
+    } vertex_attrib0;
 
     /*
      * Generate program uniform locations ourselves or vmexit
@@ -54,15 +89,15 @@ void yagl_gles2_context_cleanup(struct yagl_gles2_context *ctx);
 
 void yagl_gles2_context_prepare(struct yagl_gles2_context *ctx);
 
-void yagl_gles2_context_pre_draw(struct yagl_gles2_context *ctx, GLenum mode);
+struct yagl_gles_array
+    *yagl_gles2_context_create_arrays(struct yagl_gles_context *ctx);
 
-void yagl_gles2_context_post_draw(struct yagl_gles2_context *ctx, GLenum mode);
+void yagl_gles2_context_pre_draw(struct yagl_gles2_context *ctx,
+                                 GLenum mode,
+                                 GLint count);
 
-void yagl_gles2_array_apply(struct yagl_gles_array *array,
-                            uint32_t first,
-                            uint32_t count,
-                            const GLvoid *ptr,
-                            void *user_data);
+void yagl_gles2_context_post_draw(struct yagl_gles2_context *ctx,
+                                  GLenum mode);
 
 void yagl_gles2_context_compressed_tex_image_2d(struct yagl_gles_context *ctx,
                                                 GLenum target,
@@ -132,7 +167,8 @@ void yagl_gles2_context_draw_elements(struct yagl_gles_context *ctx,
                                       GLenum type,
                                       const GLvoid *indices,
                                       int32_t indices_count,
-                                      GLsizei primcount);
+                                      GLsizei primcount,
+                                      uint32_t max_idx);
 
 int yagl_gles2_context_validate_texture_target(struct yagl_gles_context *ctx,
                                                GLenum target,

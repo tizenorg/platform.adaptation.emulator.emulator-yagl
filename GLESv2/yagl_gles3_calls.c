@@ -1802,6 +1802,36 @@ YAGL_API void glGetVertexAttribIiv(GLuint index, GLenum pname, GLint *params)
 
     YAGL_GET_CTX();
 
+    if ((index == 0) &&
+        (pname == GL_CURRENT_VERTEX_ATTRIB)) {
+        if (params) {
+            switch (ctx->base.vertex_attrib0.type) {
+            case GL_INT:
+                params[0] = ctx->base.vertex_attrib0.value.i[0];
+                params[1] = ctx->base.vertex_attrib0.value.i[1];
+                params[2] = ctx->base.vertex_attrib0.value.i[2];
+                params[3] = ctx->base.vertex_attrib0.value.i[3];
+                break;
+            case GL_UNSIGNED_INT:
+                params[0] = ctx->base.vertex_attrib0.value.ui[0];
+                params[1] = ctx->base.vertex_attrib0.value.ui[1];
+                params[2] = ctx->base.vertex_attrib0.value.ui[2];
+                params[3] = ctx->base.vertex_attrib0.value.ui[3];
+                break;
+            default:
+                assert(0);
+            case GL_FLOAT:
+                params[0] = ctx->base.vertex_attrib0.value.f[0];
+                params[1] = ctx->base.vertex_attrib0.value.f[1];
+                params[2] = ctx->base.vertex_attrib0.value.f[2];
+                params[3] = ctx->base.vertex_attrib0.value.f[3];
+                break;
+            }
+        }
+
+        goto out;
+    }
+
     if (yagl_gles2_context_get_array_param(&ctx->base,
                                            index,
                                            pname,
@@ -1813,6 +1843,7 @@ YAGL_API void glGetVertexAttribIiv(GLuint index, GLenum pname, GLint *params)
         }
     }
 
+out:
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
@@ -1825,6 +1856,36 @@ YAGL_API void glGetVertexAttribIuiv(GLuint index, GLenum pname, GLuint *params)
     YAGL_LOG_FUNC_ENTER_SPLIT3(glGetVertexAttribIuiv, GLuint, GLenum, GLuint*, index, pname, params);
 
     YAGL_GET_CTX();
+
+    if ((index == 0) &&
+        (pname == GL_CURRENT_VERTEX_ATTRIB)) {
+        if (params) {
+            switch (ctx->base.vertex_attrib0.type) {
+            case GL_INT:
+                params[0] = ctx->base.vertex_attrib0.value.i[0];
+                params[1] = ctx->base.vertex_attrib0.value.i[1];
+                params[2] = ctx->base.vertex_attrib0.value.i[2];
+                params[3] = ctx->base.vertex_attrib0.value.i[3];
+                break;
+            case GL_UNSIGNED_INT:
+                params[0] = ctx->base.vertex_attrib0.value.ui[0];
+                params[1] = ctx->base.vertex_attrib0.value.ui[1];
+                params[2] = ctx->base.vertex_attrib0.value.ui[2];
+                params[3] = ctx->base.vertex_attrib0.value.ui[3];
+                break;
+            default:
+                assert(0);
+            case GL_FLOAT:
+                params[0] = ctx->base.vertex_attrib0.value.f[0];
+                params[1] = ctx->base.vertex_attrib0.value.f[1];
+                params[2] = ctx->base.vertex_attrib0.value.f[2];
+                params[3] = ctx->base.vertex_attrib0.value.f[3];
+                break;
+            }
+        }
+
+        goto out;
+    }
 
     if (yagl_gles2_context_get_array_param(&ctx->base,
                                            index,
@@ -1840,23 +1901,83 @@ YAGL_API void glGetVertexAttribIuiv(GLuint index, GLenum pname, GLuint *params)
         }
     }
 
+out:
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-YAGL_IMPLEMENT_API_NORET5(glVertexAttribI4i, GLuint, GLint, GLint, GLint, GLint, index, x, y, z, w)
-YAGL_IMPLEMENT_API_NORET5(glVertexAttribI4ui, GLuint, GLuint, GLuint, GLuint, GLuint, index, x, y, z, w)
+YAGL_API void glVertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT5(glVertexAttribI4i, GLuint, GLint, GLint, GLint, GLint, index, x, y, z, w);
+
+    YAGL_GET_CTX();
+
+    if (index == 0) {
+        ctx->base.vertex_attrib0.value.i[0] = x;
+        ctx->base.vertex_attrib0.value.i[1] = y;
+        ctx->base.vertex_attrib0.value.i[2] = z;
+        ctx->base.vertex_attrib0.value.i[3] = w;
+        ctx->base.vertex_attrib0.type = GL_INT;
+    } else {
+        yagl_host_glVertexAttribI4i(index, x, y, z, w);
+    }
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glVertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT5(glVertexAttribI4ui, GLuint, GLuint, GLuint, GLuint, GLuint, index, x, y, z, w);
+
+    YAGL_GET_CTX();
+
+    if (index == 0) {
+        ctx->base.vertex_attrib0.value.ui[0] = x;
+        ctx->base.vertex_attrib0.value.ui[1] = y;
+        ctx->base.vertex_attrib0.value.ui[2] = z;
+        ctx->base.vertex_attrib0.value.ui[3] = w;
+        ctx->base.vertex_attrib0.type = GL_UNSIGNED_INT;
+    } else {
+        yagl_host_glVertexAttribI4ui(index, x, y, z, w);
+    }
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
 
 YAGL_API void glVertexAttribI4iv(GLuint index, const GLint *v)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT2(glVertexAttribI4iv, GLuint, const GLint*, index, v);
-    yagl_host_glVertexAttribI4iv(index, v, 4);
+
+    YAGL_GET_CTX();
+
+    if (index == 0) {
+        ctx->base.vertex_attrib0.value.i[0] = v[0];
+        ctx->base.vertex_attrib0.value.i[1] = v[1];
+        ctx->base.vertex_attrib0.value.i[2] = v[2];
+        ctx->base.vertex_attrib0.value.i[3] = v[3];
+        ctx->base.vertex_attrib0.type = GL_INT;
+    } else {
+        yagl_host_glVertexAttribI4iv(index, v, 4);
+    }
+
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
 YAGL_API void glVertexAttribI4uiv(GLuint index, const GLuint *v)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT2(glVertexAttribI4uiv, GLuint, const GLuint*, index, v);
-    yagl_host_glVertexAttribI4uiv(index, v, 4);
+
+    YAGL_GET_CTX();
+
+    if (index == 0) {
+        ctx->base.vertex_attrib0.value.ui[0] = v[0];
+        ctx->base.vertex_attrib0.value.ui[1] = v[1];
+        ctx->base.vertex_attrib0.value.ui[2] = v[2];
+        ctx->base.vertex_attrib0.value.ui[3] = v[3];
+        ctx->base.vertex_attrib0.type = GL_UNSIGNED_INT;
+    } else {
+        yagl_host_glVertexAttribI4uiv(index, v, 4);
+    }
+
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 

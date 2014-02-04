@@ -82,7 +82,8 @@ struct yagl_gles_context
                           GLenum /*type*/,
                           const GLvoid */*indices*/,
                           int32_t /*indices_count*/,
-                          GLsizei /*primcount*/);
+                          GLsizei /*primcount*/,
+                          uint32_t /*max_idx*/);
 
     int (*bind_buffer)(struct yagl_gles_context */*ctx*/,
                        GLenum /*target*/,
