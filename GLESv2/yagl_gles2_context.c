@@ -386,13 +386,13 @@ void yagl_gles2_context_pre_draw(struct yagl_gles2_context *ctx,
 {
     YAGL_LOG_FUNC_SET(yagl_gles2_context_pre_draw);
 
-    assert(count > 0);
+    /*
+     * 'count' can be <= 0 in case of integer overflows, this is
+     * typically user problem, just don't simulate vertex attribute array 0
+     * in this case.
+     */
 
-    if (count <= 0) {
-        return;
-    }
-
-    if (!ctx->base.vao->arrays[0].enabled) {
+    if (!ctx->base.vao->arrays[0].enabled && (count > 0)) {
         /*
          * vertex attribute array 0 not enabled, simulate
          * vertex attribute array 0.
@@ -538,7 +538,9 @@ void yagl_gles2_context_pre_draw(struct yagl_gles2_context *ctx,
     }
 }
 
-void yagl_gles2_context_post_draw(struct yagl_gles2_context *ctx, GLenum mode)
+void yagl_gles2_context_post_draw(struct yagl_gles2_context *ctx,
+                                  GLenum mode,
+                                  GLint count)
 {
     if (mode == GL_POINTS) {
         yagl_host_glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
@@ -547,7 +549,7 @@ void yagl_gles2_context_post_draw(struct yagl_gles2_context *ctx, GLenum mode)
         }
     }
 
-    if (!ctx->base.vao->arrays[0].enabled) {
+    if (!ctx->base.vao->arrays[0].enabled && (count > 0)) {
         /*
          * Restore vertex attribute array 0 pointer.
          */
@@ -1099,7 +1101,7 @@ void yagl_gles2_context_draw_arrays(struct yagl_gles_context *ctx,
         yagl_host_glDrawArraysInstanced(mode, first, count, primcount);
     }
 
-    yagl_gles2_context_post_draw(gles2_ctx, mode);
+    yagl_gles2_context_post_draw(gles2_ctx, mode, first + count);
 }
 
 void yagl_gles2_context_draw_elements(struct yagl_gles_context *ctx,
@@ -1121,7 +1123,7 @@ void yagl_gles2_context_draw_elements(struct yagl_gles_context *ctx,
         yagl_host_glDrawElementsInstanced(mode, count, type, indices, indices_count, primcount);
     }
 
-    yagl_gles2_context_post_draw(gles2_ctx, mode);
+    yagl_gles2_context_post_draw(gles2_ctx, mode, max_idx + 1);
 }
 
 int yagl_gles2_context_validate_texture_target(struct yagl_gles_context *ctx,

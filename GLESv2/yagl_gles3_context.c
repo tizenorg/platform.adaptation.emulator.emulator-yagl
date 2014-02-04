@@ -1438,6 +1438,6 @@ void yagl_gles3_context_draw_range_elements(struct yagl_gles3_context *ctx,
 
     yagl_host_glDrawRangeElements(mode, start, end, count, type, indices, indices_count);
 
-    yagl_gles2_context_post_draw(&ctx->base, mode);
+    yagl_gles2_context_post_draw(&ctx->base, mode, end + 1);
     yagl_gles3_context_post_draw(ctx);
 }

@@ -3,12 +3,6 @@
 
 #include "yagl_gles_types.h"
 
-GLsizei yagl_gles_get_stride(const struct yagl_gles_pixelstore* ps,
-                             GLsizei width,
-                             GLsizei height,
-                             GLsizei bpp,
-                             GLsizei *image_stride);
-
 GLsizei yagl_gles_get_offset(const struct yagl_gles_pixelstore* ps,
                              GLsizei width,
                              GLsizei height,
@@ -37,9 +31,10 @@ const GLvoid *yagl_gles_convert_to_host(const struct yagl_gles_pixelstore* ps,
 GLvoid *yagl_gles_convert_from_host_start(const struct yagl_gles_pixelstore* ps,
                                           GLsizei width,
                                           GLsizei height,
-                                          GLenum format,
-                                          GLenum type,
-                                          GLvoid *pixels);
+                                          GLsizei bpp,
+                                          int need_convert,
+                                          GLvoid *pixels,
+                                          GLsizei *stride);
 
 void yagl_gles_convert_from_host_end(const struct yagl_gles_pixelstore* ps,
                                      GLsizei width,

@@ -1870,7 +1870,7 @@ out:
 
 YAGL_API void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels)
 {
-    GLsizei bpp, row_stride, size;
+    GLsizei bpp, row_stride = 0, size;
     int need_convert;
     int using_pbo = 0;
 
@@ -1898,10 +1898,6 @@ YAGL_API void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLen
 
     yagl_render_invalidate(0);
 
-    row_stride = yagl_gles_get_stride(&ctx->pack,
-                                      width, height, bpp,
-                                      NULL);
-
     if ((width != 0) && !yagl_gles_context_pre_pack(ctx, &pixels, need_convert, &using_pbo)) {
         YAGL_SET_ERR(GL_INVALID_OPERATION);
         goto out;
@@ -1922,9 +1918,10 @@ YAGL_API void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLen
         pixels_from = yagl_gles_convert_from_host_start(&ctx->pack,
                                                         width,
                                                         height,
-                                                        format,
-                                                        type,
-                                                        pixels);
+                                                        bpp,
+                                                        need_convert,
+                                                        pixels,
+                                                        &row_stride);
 
         yagl_host_glReadPixelsData(x, y,
                                    width, height,
@@ -1954,7 +1951,7 @@ out:
 
 YAGL_API void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels)
 {
-    GLsizei bpp, row_stride, size;
+    GLsizei bpp, size;
     int need_convert;
     int using_pbo = 0;
 
@@ -1979,10 +1976,6 @@ YAGL_API void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLs
         YAGL_SET_ERR(GL_INVALID_OPERATION);
         goto out;
     }
-
-    row_stride = yagl_gles_get_stride(&ctx->unpack,
-                                      width, height, bpp,
-                                      NULL);
 
     if ((width != 0) && !yagl_gles_context_pre_unpack(ctx, &pixels, need_convert, &using_pbo)) {
         YAGL_SET_ERR(GL_INVALID_OPERATION);
@@ -2047,7 +2040,7 @@ out:
 
 YAGL_API void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels)
 {
-    GLsizei bpp, row_stride, size;
+    GLsizei bpp, size;
     int need_convert;
     int using_pbo = 0;
 
@@ -2072,10 +2065,6 @@ YAGL_API void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint y
         YAGL_SET_ERR(GL_INVALID_OPERATION);
         goto out;
     }
-
-    row_stride = yagl_gles_get_stride(&ctx->unpack,
-                                      width, height, bpp,
-                                      NULL);
 
     if ((width != 0) && !yagl_gles_context_pre_unpack(ctx, &pixels, need_convert, &using_pbo)) {
         YAGL_SET_ERR(GL_INVALID_OPERATION);

@@ -102,7 +102,8 @@ void yagl_gles2_context_pre_draw(struct yagl_gles2_context *ctx,
                                  GLint count);
 
 void yagl_gles2_context_post_draw(struct yagl_gles2_context *ctx,
-                                  GLenum mode);
+                                  GLenum mode,
+                                  GLint count);
 
 void yagl_gles2_context_compressed_tex_image_2d(struct yagl_gles_context *ctx,
                                                 GLenum target,

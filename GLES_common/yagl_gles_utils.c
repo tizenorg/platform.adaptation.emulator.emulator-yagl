@@ -15,11 +15,11 @@
  */
 #define YAGL_HALF_FLOAT_1_0 0x3C00
 
-GLsizei yagl_gles_get_stride(const struct yagl_gles_pixelstore* ps,
-                             GLsizei width,
-                             GLsizei height,
-                             GLsizei bpp,
-                             GLsizei *image_stride)
+static GLsizei yagl_gles_get_stride(const struct yagl_gles_pixelstore* ps,
+                                    GLsizei width,
+                                    GLsizei height,
+                                    GLsizei bpp,
+                                    GLsizei *image_stride)
 {
     GLsizei num_columns = (ps->row_length > 0) ? ps->row_length : width;
     GLsizei row_stride = ((num_columns * bpp) + ps->alignment - 1) & ~(ps->alignment - 1);
@@ -45,11 +45,9 @@ GLsizei yagl_gles_get_offset(const struct yagl_gles_pixelstore* ps,
     row_stride = yagl_gles_get_stride(ps, width, height,
                                       bpp, &image_stride);
 
-    if (size) {
-        *size = (width * bpp) +
-                ((height - 1) * row_stride) +
-                ((depth - 1) * image_stride);
-    }
+    *size = (width * bpp) +
+            ((height - 1) * row_stride) +
+            ((depth - 1) * image_stride);
 
     return (ps->skip_images * image_stride) +
            (ps->skip_rows * row_stride) +
@@ -370,44 +368,18 @@ const GLvoid *yagl_gles_convert_to_host(const struct yagl_gles_pixelstore* ps,
 GLvoid *yagl_gles_convert_from_host_start(const struct yagl_gles_pixelstore* ps,
                                           GLsizei width,
                                           GLsizei height,
-                                          GLenum format,
-                                          GLenum type,
-                                          GLvoid *pixels)
+                                          GLsizei bpp,
+                                          int need_convert,
+                                          GLvoid *pixels,
+                                          GLsizei *stride)
 {
-    int num_components;
-    GLsizei bpp;
+    if (need_convert) {
+        *stride = yagl_gles_get_stride(ps, width, height, bpp, NULL);
 
-    switch (format) {
-    case GL_ALPHA:
-        num_components = 1;
-        break;
-    case GL_LUMINANCE:
-        num_components = 1;
-        break;
-    case GL_LUMINANCE_ALPHA:
-        num_components = 2;
-        break;
-    default:
+        return yagl_get_tmp_buffer(*stride * height);
+    } else {
         return pixels;
     }
-
-    type = yagl_gles_get_actual_type(type);
-
-    switch (type) {
-    case GL_FLOAT:
-        bpp = num_components * 4;
-        break;
-    case GL_HALF_FLOAT:
-        bpp = num_components * 2;
-        break;
-    case GL_UNSIGNED_BYTE:
-    default:
-        bpp = num_components;
-        break;
-    }
-
-    return yagl_get_tmp_buffer(
-        yagl_gles_get_stride(ps, width, height, bpp, NULL) * height);
 }
 
 void yagl_gles_convert_from_host_end(const struct yagl_gles_pixelstore* ps,
