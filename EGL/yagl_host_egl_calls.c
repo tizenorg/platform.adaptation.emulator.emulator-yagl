@@ -12,7 +12,7 @@
 yagl_host_handle yagl_host_eglGetDisplay(uint32_t display_id, EGLint *error)
 {
     struct yagl_transport *t = yagl_get_transport();
-    yagl_host_handle retval;
+    yagl_host_handle retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_egl, 1, 5 * 8, 5 * 8);
     yagl_transport_put_out_uint32_t(t, display_id);
@@ -29,7 +29,7 @@ yagl_host_handle yagl_host_eglGetDisplay(uint32_t display_id, EGLint *error)
 EGLBoolean yagl_host_eglInitialize(yagl_host_handle dpy, EGLint *major, EGLint *minor, EGLint *error)
 {
     struct yagl_transport *t = yagl_get_transport();
-    EGLBoolean retval;
+    EGLBoolean retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_egl, 2, 9 * 8, 9 * 8);
     yagl_transport_put_out_yagl_host_handle(t, dpy);
@@ -48,7 +48,7 @@ EGLBoolean yagl_host_eglInitialize(yagl_host_handle dpy, EGLint *major, EGLint *
 EGLBoolean yagl_host_eglTerminate(yagl_host_handle dpy, EGLint *error)
 {
     struct yagl_transport *t = yagl_get_transport();
-    EGLBoolean retval;
+    EGLBoolean retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_egl, 3, 5 * 8, 5 * 8);
     yagl_transport_put_out_yagl_host_handle(t, dpy);
@@ -65,7 +65,7 @@ EGLBoolean yagl_host_eglTerminate(yagl_host_handle dpy, EGLint *error)
 EGLBoolean yagl_host_eglGetConfigs(yagl_host_handle dpy, yagl_host_handle *configs, int32_t configs_maxcount, int32_t *configs_count, EGLint *error)
 {
     struct yagl_transport *t = yagl_get_transport();
-    EGLBoolean retval;
+    EGLBoolean retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_egl, 4, 7 * 8, 5 * 8 + yagl_transport_array_size(configs, configs_maxcount, sizeof(yagl_host_handle)));
     yagl_transport_put_out_yagl_host_handle(t, dpy);
@@ -83,7 +83,7 @@ EGLBoolean yagl_host_eglGetConfigs(yagl_host_handle dpy, yagl_host_handle *confi
 EGLBoolean yagl_host_eglChooseConfig(yagl_host_handle dpy, const EGLint *attrib_list, int32_t attrib_list_count, yagl_host_handle *configs, int32_t configs_maxcount, int32_t *configs_count, EGLint *error)
 {
     struct yagl_transport *t = yagl_get_transport();
-    EGLBoolean retval;
+    EGLBoolean retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_egl, 5, 9 * 8, 5 * 8 + yagl_transport_array_size(attrib_list, attrib_list_count, sizeof(EGLint)) + yagl_transport_array_size(configs, configs_maxcount, sizeof(yagl_host_handle)));
     yagl_transport_put_out_yagl_host_handle(t, dpy);
@@ -102,7 +102,7 @@ EGLBoolean yagl_host_eglChooseConfig(yagl_host_handle dpy, const EGLint *attrib_
 EGLBoolean yagl_host_eglGetConfigAttrib(yagl_host_handle dpy, yagl_host_handle config, EGLint attribute, EGLint *value, EGLint *error)
 {
     struct yagl_transport *t = yagl_get_transport();
-    EGLBoolean retval;
+    EGLBoolean retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_egl, 6, 9 * 8, 9 * 8);
     yagl_transport_put_out_yagl_host_handle(t, dpy);
@@ -122,7 +122,7 @@ EGLBoolean yagl_host_eglGetConfigAttrib(yagl_host_handle dpy, yagl_host_handle c
 EGLBoolean yagl_host_eglDestroySurface(yagl_host_handle dpy, yagl_host_handle surface, EGLint *error)
 {
     struct yagl_transport *t = yagl_get_transport();
-    EGLBoolean retval;
+    EGLBoolean retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_egl, 7, 6 * 8, 6 * 8);
     yagl_transport_put_out_yagl_host_handle(t, dpy);
@@ -140,7 +140,7 @@ EGLBoolean yagl_host_eglDestroySurface(yagl_host_handle dpy, yagl_host_handle su
 EGLBoolean yagl_host_eglQuerySurface(yagl_host_handle dpy, yagl_host_handle surface, EGLint attribute, EGLint *value, EGLint *error)
 {
     struct yagl_transport *t = yagl_get_transport();
-    EGLBoolean retval;
+    EGLBoolean retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_egl, 8, 9 * 8, 9 * 8);
     yagl_transport_put_out_yagl_host_handle(t, dpy);
@@ -184,7 +184,7 @@ void yagl_host_eglWaitClient()
 EGLBoolean yagl_host_eglReleaseThread(EGLint *error)
 {
     struct yagl_transport *t = yagl_get_transport();
-    EGLBoolean retval;
+    EGLBoolean retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_egl, 11, 4 * 8, 4 * 8);
     yagl_transport_put_in_EGLint(t, error);
@@ -200,7 +200,7 @@ EGLBoolean yagl_host_eglReleaseThread(EGLint *error)
 EGLBoolean yagl_host_eglSurfaceAttrib(yagl_host_handle dpy, yagl_host_handle surface, EGLint attribute, EGLint value, EGLint *error)
 {
     struct yagl_transport *t = yagl_get_transport();
-    EGLBoolean retval;
+    EGLBoolean retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_egl, 12, 8 * 8, 8 * 8);
     yagl_transport_put_out_yagl_host_handle(t, dpy);
@@ -220,7 +220,7 @@ EGLBoolean yagl_host_eglSurfaceAttrib(yagl_host_handle dpy, yagl_host_handle sur
 yagl_host_handle yagl_host_eglCreateContext(yagl_host_handle dpy, yagl_host_handle config, yagl_host_handle share_context, const EGLint *attrib_list, int32_t attrib_list_count, EGLint *error)
 {
     struct yagl_transport *t = yagl_get_transport();
-    yagl_host_handle retval;
+    yagl_host_handle retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_egl, 13, 9 * 8, 7 * 8 + yagl_transport_array_size(attrib_list, attrib_list_count, sizeof(EGLint)));
     yagl_transport_put_out_yagl_host_handle(t, dpy);
@@ -240,7 +240,7 @@ yagl_host_handle yagl_host_eglCreateContext(yagl_host_handle dpy, yagl_host_hand
 EGLBoolean yagl_host_eglDestroyContext(yagl_host_handle dpy, yagl_host_handle ctx, EGLint *error)
 {
     struct yagl_transport *t = yagl_get_transport();
-    EGLBoolean retval;
+    EGLBoolean retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_egl, 14, 6 * 8, 6 * 8);
     yagl_transport_put_out_yagl_host_handle(t, dpy);
@@ -273,7 +273,7 @@ void yagl_host_eglMakeCurrent(yagl_host_handle dpy, yagl_host_handle draw, yagl_
 EGLBoolean yagl_host_eglQueryContext(yagl_host_handle dpy, yagl_host_handle ctx, EGLint attribute, EGLint *value, EGLint *error)
 {
     struct yagl_transport *t = yagl_get_transport();
-    EGLBoolean retval;
+    EGLBoolean retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_egl, 16, 9 * 8, 9 * 8);
     yagl_transport_put_out_yagl_host_handle(t, dpy);
@@ -321,7 +321,7 @@ void yagl_host_eglCopyBuffers(yagl_host_handle dpy, yagl_host_handle surface)
 yagl_host_handle yagl_host_eglCreateWindowSurfaceOffscreenYAGL(yagl_host_handle dpy, yagl_host_handle config, uint32_t width, uint32_t height, uint32_t bpp, void *pixels, const EGLint *attrib_list, int32_t attrib_list_count, EGLint *error)
 {
     struct yagl_transport *t = yagl_get_transport();
-    yagl_host_handle retval;
+    yagl_host_handle retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_egl, 19, 12 * 8, 10 * 8 + yagl_transport_array_size(attrib_list, attrib_list_count, sizeof(EGLint)));
     yagl_transport_put_out_yagl_host_handle(t, dpy);
@@ -344,7 +344,7 @@ yagl_host_handle yagl_host_eglCreateWindowSurfaceOffscreenYAGL(yagl_host_handle 
 yagl_host_handle yagl_host_eglCreatePbufferSurfaceOffscreenYAGL(yagl_host_handle dpy, yagl_host_handle config, uint32_t width, uint32_t height, uint32_t bpp, void *pixels, const EGLint *attrib_list, int32_t attrib_list_count, EGLint *error)
 {
     struct yagl_transport *t = yagl_get_transport();
-    yagl_host_handle retval;
+    yagl_host_handle retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_egl, 20, 12 * 8, 10 * 8 + yagl_transport_array_size(attrib_list, attrib_list_count, sizeof(EGLint)));
     yagl_transport_put_out_yagl_host_handle(t, dpy);
@@ -367,7 +367,7 @@ yagl_host_handle yagl_host_eglCreatePbufferSurfaceOffscreenYAGL(yagl_host_handle
 yagl_host_handle yagl_host_eglCreatePixmapSurfaceOffscreenYAGL(yagl_host_handle dpy, yagl_host_handle config, uint32_t width, uint32_t height, uint32_t bpp, void *pixels, const EGLint *attrib_list, int32_t attrib_list_count, EGLint *error)
 {
     struct yagl_transport *t = yagl_get_transport();
-    yagl_host_handle retval;
+    yagl_host_handle retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_egl, 21, 12 * 8, 10 * 8 + yagl_transport_array_size(attrib_list, attrib_list_count, sizeof(EGLint)));
     yagl_transport_put_out_yagl_host_handle(t, dpy);
@@ -390,7 +390,7 @@ yagl_host_handle yagl_host_eglCreatePixmapSurfaceOffscreenYAGL(yagl_host_handle 
 EGLBoolean yagl_host_eglResizeOffscreenSurfaceYAGL(yagl_host_handle dpy, yagl_host_handle surface, uint32_t width, uint32_t height, uint32_t bpp, void *pixels, EGLint *error)
 {
     struct yagl_transport *t = yagl_get_transport();
-    EGLBoolean retval;
+    EGLBoolean retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_egl, 22, 10 * 8, 10 * 8);
     yagl_transport_put_out_yagl_host_handle(t, dpy);
@@ -412,7 +412,7 @@ EGLBoolean yagl_host_eglResizeOffscreenSurfaceYAGL(yagl_host_handle dpy, yagl_ho
 yagl_host_handle yagl_host_eglCreateWindowSurfaceOnscreenYAGL(yagl_host_handle dpy, yagl_host_handle config, yagl_winsys_id win, const EGLint *attrib_list, int32_t attrib_list_count, EGLint *error)
 {
     struct yagl_transport *t = yagl_get_transport();
-    yagl_host_handle retval;
+    yagl_host_handle retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_egl, 23, 9 * 8, 7 * 8 + yagl_transport_array_size(attrib_list, attrib_list_count, sizeof(EGLint)));
     yagl_transport_put_out_yagl_host_handle(t, dpy);
@@ -432,7 +432,7 @@ yagl_host_handle yagl_host_eglCreateWindowSurfaceOnscreenYAGL(yagl_host_handle d
 yagl_host_handle yagl_host_eglCreatePbufferSurfaceOnscreenYAGL(yagl_host_handle dpy, yagl_host_handle config, yagl_winsys_id buffer, const EGLint *attrib_list, int32_t attrib_list_count, EGLint *error)
 {
     struct yagl_transport *t = yagl_get_transport();
-    yagl_host_handle retval;
+    yagl_host_handle retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_egl, 24, 9 * 8, 7 * 8 + yagl_transport_array_size(attrib_list, attrib_list_count, sizeof(EGLint)));
     yagl_transport_put_out_yagl_host_handle(t, dpy);
@@ -452,7 +452,7 @@ yagl_host_handle yagl_host_eglCreatePbufferSurfaceOnscreenYAGL(yagl_host_handle 
 yagl_host_handle yagl_host_eglCreatePixmapSurfaceOnscreenYAGL(yagl_host_handle dpy, yagl_host_handle config, yagl_winsys_id pixmap, const EGLint *attrib_list, int32_t attrib_list_count, EGLint *error)
 {
     struct yagl_transport *t = yagl_get_transport();
-    yagl_host_handle retval;
+    yagl_host_handle retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_egl, 25, 9 * 8, 7 * 8 + yagl_transport_array_size(attrib_list, attrib_list_count, sizeof(EGLint)));
     yagl_transport_put_out_yagl_host_handle(t, dpy);
@@ -487,7 +487,7 @@ void yagl_host_eglInvalidateOnscreenSurfaceYAGL(yagl_host_handle dpy, yagl_host_
 EGLBoolean yagl_host_eglCreateImageYAGL(uint32_t texture, yagl_host_handle dpy, yagl_winsys_id buffer, EGLint *error)
 {
     struct yagl_transport *t = yagl_get_transport();
-    EGLBoolean retval;
+    EGLBoolean retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_egl, 27, 7 * 8, 7 * 8);
     yagl_transport_put_out_uint32_t(t, texture);

@@ -3,6 +3,7 @@
 #include "yagl_gles3_buffer_binding.h"
 #include "yagl_gles3_transform_feedback.h"
 #include "yagl_gles3_query.h"
+#include "yagl_gles2_program.h"
 #include "yagl_gles2_utils.h"
 #include "yagl_gles_buffer.h"
 #include "yagl_gles_texture_unit.h"
@@ -930,6 +931,41 @@ static char *yagl_gles3_context_shader_patch(struct yagl_gles2_context *ctx,
     }
 }
 
+static int yagl_gles3_context_get_programiv(struct yagl_gles2_context *ctx,
+                                            struct yagl_gles2_program *program,
+                                            GLenum pname,
+                                            GLint *params)
+{
+    if (yagl_gles2_context_get_programiv(ctx, program, pname, params)) {
+        return 1;
+    }
+
+    switch (pname) {
+    case GL_ACTIVE_UNIFORM_BLOCKS:
+        *params = program->num_active_uniform_blocks;
+        break;
+    case GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH:
+        *params = program->max_active_uniform_block_bufsize;
+        break;
+    case GL_PROGRAM_BINARY_RETRIEVABLE_HINT:
+        *params = GL_FALSE;
+        break;
+    case GL_TRANSFORM_FEEDBACK_BUFFER_MODE:
+        *params = program->transform_feedback_info.buffer_mode;
+        break;
+    case GL_TRANSFORM_FEEDBACK_VARYINGS:
+        *params = program->transform_feedback_info.num_varyings;
+        break;
+    case GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH:
+        *params = program->transform_feedback_info.max_varying_bufsize;
+        break;
+    default:
+        return 0;
+    }
+
+    return 1;
+}
+
 struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg)
 {
     struct yagl_gles3_context *gles3_ctx;
@@ -964,6 +1000,7 @@ struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg
     gles3_ctx->base.base.validate_texture_internalformat = &yagl_gles3_context_validate_texture_internalformat;
     gles3_ctx->base.base.validate_format = &yagl_gles3_context_validate_format;
     gles3_ctx->base.shader_patch = &yagl_gles3_context_shader_patch;
+    gles3_ctx->base.get_programiv = &yagl_gles3_context_get_programiv;
 
     YAGL_LOG_FUNC_EXIT("%p", gles3_ctx);
 

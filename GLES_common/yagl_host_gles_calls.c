@@ -1355,7 +1355,7 @@ void yagl_host_glGetActiveUniform(GLuint program, GLuint index, GLint *size, GLe
 int yagl_host_glGetAttribLocation(GLuint program, const GLchar *name, int32_t name_count)
 {
     struct yagl_transport *t = yagl_get_transport();
-    int retval;
+    int retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_gles, 90, 5 * 8, 3 * 8 + yagl_transport_array_size(name, name_count, sizeof(GLchar)));
     yagl_transport_put_out_GLuint(t, program);
@@ -1386,7 +1386,7 @@ void yagl_host_glGetProgramiv(GLuint program, GLenum pname, GLint *param)
 GLboolean yagl_host_glGetProgramInfoLog(GLuint program, GLchar *infolog, int32_t infolog_maxcount, int32_t *infolog_count)
 {
     struct yagl_transport *t = yagl_get_transport();
-    GLboolean retval;
+    GLboolean retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_gles, 92, 5 * 8, 3 * 8 + yagl_transport_array_size(infolog, infolog_maxcount, sizeof(GLchar)));
     yagl_transport_put_out_GLuint(t, program);
@@ -1417,7 +1417,7 @@ void yagl_host_glGetShaderiv(GLuint shader, GLenum pname, GLint *param)
 GLboolean yagl_host_glGetShaderInfoLog(GLuint shader, GLchar *infolog, int32_t infolog_maxcount, int32_t *infolog_count)
 {
     struct yagl_transport *t = yagl_get_transport();
-    GLboolean retval;
+    GLboolean retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_gles, 94, 5 * 8, 3 * 8 + yagl_transport_array_size(infolog, infolog_maxcount, sizeof(GLchar)));
     yagl_transport_put_out_GLuint(t, shader);
@@ -1464,7 +1464,7 @@ void yagl_host_glGetUniformiv(GLboolean tl, GLuint program, uint32_t location, G
 int yagl_host_glGetUniformLocation(GLuint program, const GLchar *name, int32_t name_count)
 {
     struct yagl_transport *t = yagl_get_transport();
-    int retval;
+    int retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_gles, 97, 5 * 8, 3 * 8 + yagl_transport_array_size(name, name_count, sizeof(GLchar)));
     yagl_transport_put_out_GLuint(t, program);
@@ -1965,7 +1965,7 @@ void yagl_host_glGetUniformIndices(GLuint program, const GLchar *uniformNames, i
 GLuint yagl_host_glGetUniformBlockIndex(GLuint program, const GLchar *uniformBlockName, int32_t uniformBlockName_count)
 {
     struct yagl_transport *t = yagl_get_transport();
-    GLuint retval;
+    GLuint retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_gles, 132, 5 * 8, 3 * 8 + yagl_transport_array_size(uniformBlockName, uniformBlockName_count, sizeof(GLchar)));
     yagl_transport_put_out_GLuint(t, program);
@@ -2334,7 +2334,7 @@ void yagl_host_glUniformMatrix4x3fv(GLboolean tl, uint32_t location, GLboolean t
 int yagl_host_glGetFragDataLocation(GLuint program, const GLchar *name, int32_t name_count)
 {
     struct yagl_transport *t = yagl_get_transport();
-    int retval;
+    int retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_gles, 157, 5 * 8, 3 * 8 + yagl_transport_array_size(name, name_count, sizeof(GLchar)));
     yagl_transport_put_out_GLuint(t, program);
@@ -2390,7 +2390,7 @@ void yagl_host_glGetString(GLenum name, GLchar *str, int32_t str_maxcount, int32
 GLboolean yagl_host_glIsEnabled(GLenum cap)
 {
     struct yagl_transport *t = yagl_get_transport();
-    GLboolean retval;
+    GLboolean retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_gles, 161, 3 * 8, 3 * 8);
     yagl_transport_put_out_GLenum(t, cap);
@@ -2541,7 +2541,7 @@ void yagl_host_glEndQuery(GLenum target)
 GLboolean yagl_host_glGetQueryObjectuiv(GLuint id, GLuint *result)
 {
     struct yagl_transport *t = yagl_get_transport();
-    GLboolean retval;
+    GLboolean retval = 0;
 
     yagl_transport_begin(t, yagl_api_id_gles, 173, 5 * 8, 5 * 8);
     yagl_transport_put_out_GLuint(t, id);

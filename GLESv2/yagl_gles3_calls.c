@@ -224,6 +224,11 @@ YAGL_API void glGetUniformIndices(GLuint program, GLsizei uniformCount,
         goto out;
     }
 
+    if (uniformCount < 0) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
     yagl_gles3_program_get_uniform_indices(program_obj,
                                            uniformNames,
                                            uniformCount,

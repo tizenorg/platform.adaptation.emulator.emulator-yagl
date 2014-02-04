@@ -14,6 +14,11 @@ struct yagl_gles2_context
                           int /*len*/,
                           int */*patched_len*/);
 
+    int (*get_programiv)(struct yagl_gles2_context */*ctx*/,
+                         struct yagl_gles2_program */*program*/,
+                         GLenum /*pname*/,
+                         GLint */*params*/);
+
     /*
      * From 'base.base.sg'.
      */
@@ -183,6 +188,11 @@ char *yagl_gles2_context_shader_patch(struct yagl_gles2_context *ctx,
                                       const char *source,
                                       int len,
                                       int *patched_len);
+
+int yagl_gles2_context_get_programiv(struct yagl_gles2_context *ctx,
+                                     struct yagl_gles2_program *program,
+                                     GLenum pname,
+                                     GLint *params);
 
 /*
  * @}

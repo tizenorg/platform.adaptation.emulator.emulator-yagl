@@ -1215,6 +1215,44 @@ char *yagl_gles2_context_shader_patch(struct yagl_gles2_context *ctx,
     return patched_string;
 }
 
+int yagl_gles2_context_get_programiv(struct yagl_gles2_context *ctx,
+                                     struct yagl_gles2_program *program,
+                                     GLenum pname,
+                                     GLint *params)
+{
+    switch (pname) {
+    case GL_ATTACHED_SHADERS:
+        *params = (program->fragment_shader != NULL) ? 1 : 0;
+        *params += (program->vertex_shader != NULL) ? 1 : 0;
+        break;
+    case GL_INFO_LOG_LENGTH:
+        *params = program->info_log_length;
+        break;
+    case GL_ACTIVE_ATTRIBUTES:
+        *params = program->num_active_attribs;
+        break;
+    case GL_ACTIVE_ATTRIBUTE_MAX_LENGTH:
+        *params = program->max_active_attrib_bufsize;
+        break;
+    case GL_ACTIVE_UNIFORMS:
+        *params = program->num_active_uniforms;
+        break;
+    case GL_ACTIVE_UNIFORM_MAX_LENGTH:
+        *params = program->max_active_uniform_bufsize;
+        break;
+    case GL_DELETE_STATUS:
+        *params = GL_FALSE;
+        break;
+    case GL_LINK_STATUS:
+        *params = program->link_status;
+        break;
+    default:
+        return 0;
+    }
+
+    return 1;
+}
+
 struct yagl_client_context *yagl_gles2_context_create(struct yagl_sharegroup *sg)
 {
     struct yagl_gles2_context *gles2_ctx;
@@ -1244,6 +1282,7 @@ struct yagl_client_context *yagl_gles2_context_create(struct yagl_sharegroup *sg
     gles2_ctx->base.validate_texture_internalformat = &yagl_gles2_context_validate_texture_internalformat;
     gles2_ctx->base.validate_format = &yagl_gles2_context_validate_format;
     gles2_ctx->shader_patch = &yagl_gles2_context_shader_patch;
+    gles2_ctx->get_programiv = &yagl_gles2_context_get_programiv;
 
     YAGL_LOG_FUNC_EXIT("%p", gles2_ctx);
 

@@ -455,7 +455,7 @@ int yagl_gles3_program_get_active_uniform_blockiv(struct yagl_gles2_program *pro
     if (pname == GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES) {
         yagl_free(block->active_uniform_indices);
 
-        block->active_uniform_indices = (GLuint*)yagl_get_tmp_buffer(
+        block->active_uniform_indices = yagl_malloc(
             block->num_active_uniform_indices *
             sizeof(block->active_uniform_indices[0]));
 

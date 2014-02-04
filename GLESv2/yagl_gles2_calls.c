@@ -341,23 +341,28 @@ YAGL_API void glDetachShader(GLuint program, GLuint shader)
         goto out;
     }
 
-    shader_obj = (struct yagl_gles2_shader*)yagl_sharegroup_acquire_object(ctx->sg,
-        YAGL_NS_SHADER_PROGRAM, shader);
+    if (program_obj->vertex_shader &&
+        (program_obj->vertex_shader->base.local_name == shader)) {
+        shader_obj = program_obj->vertex_shader;
+        yagl_gles2_shader_acquire(shader_obj);
+    } else if (program_obj->fragment_shader &&
+               (program_obj->fragment_shader->base.local_name == shader)) {
+        shader_obj = program_obj->fragment_shader;
+        yagl_gles2_shader_acquire(shader_obj);
+    } else {
+        shader_obj = (struct yagl_gles2_shader*)yagl_sharegroup_acquire_object(ctx->sg,
+            YAGL_NS_SHADER_PROGRAM, shader);
 
-    if (!shader_obj) {
-        YAGL_SET_ERR(GL_INVALID_VALUE);
+        if (shader_obj) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+        } else {
+            YAGL_SET_ERR(GL_INVALID_VALUE);
+        }
+
         goto out;
     }
 
-    if (!shader_obj->is_shader) {
-        YAGL_SET_ERR(GL_INVALID_OPERATION);
-        goto out;
-    }
-
-    if (!yagl_gles2_program_detach_shader(program_obj, shader_obj)) {
-        YAGL_SET_ERR(GL_INVALID_OPERATION);
-        goto out;
-    }
+    yagl_gles2_program_detach_shader(program_obj, shader_obj);
 
 out:
     yagl_gles2_shader_release(shader_obj);
@@ -589,37 +594,14 @@ YAGL_API void glGetProgramiv(GLuint program, GLenum pname, GLint *params)
         goto out;
     }
 
-    switch (pname) {
-    case GL_ATTACHED_SHADERS:
-        *params = (program_obj->fragment_shader != NULL) ? 1 : 0;
-        *params += (program_obj->vertex_shader != NULL) ? 1 : 0;
-        break;
-    case GL_INFO_LOG_LENGTH:
-        *params = program_obj->info_log_length;
-        break;
-    case GL_ACTIVE_ATTRIBUTES:
-        *params = program_obj->num_active_attribs;
-        break;
-    case GL_ACTIVE_ATTRIBUTE_MAX_LENGTH:
-        *params = program_obj->max_active_attrib_bufsize;
-        break;
-    case GL_ACTIVE_UNIFORMS:
-        *params = program_obj->num_active_uniforms;
-        break;
-    case GL_ACTIVE_UNIFORM_MAX_LENGTH:
-        *params = program_obj->max_active_uniform_bufsize;
-        break;
-    case GL_DELETE_STATUS:
-        *params = GL_FALSE;
-        break;
-    case GL_LINK_STATUS:
-        *params = program_obj->link_status;
-        break;
-    case GL_VALIDATE_STATUS:
-        yagl_host_glGetProgramiv(program_obj->global_name, pname, params);
-        break;
-    default:
-        YAGL_SET_ERR(GL_INVALID_ENUM);
+    if (!ctx->get_programiv(ctx, program_obj, pname, params)) {
+        switch (pname) {
+        case GL_VALIDATE_STATUS:
+            yagl_host_glGetProgramiv(program_obj->global_name, pname, params);
+            break;
+        default:
+            YAGL_SET_ERR(GL_INVALID_ENUM);
+        }
     }
 
 out:
