@@ -10,12 +10,12 @@
 #include "yagl_gles_buffer.h"
 #include "yagl_gles_texture_unit.h"
 #include "yagl_gles_texture.h"
-#include "yagl_gles_utils.h"
 #include "yagl_impl.h"
 #include "yagl_malloc.h"
 #include "yagl_sharegroup.h"
 #include "yagl_transport.h"
 #include "yagl_utils.h"
+#include "yagl_pixel_format.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -2250,8 +2250,9 @@ YAGL_API YAGL_ALIAS(glVertexAttribDivisor, glVertexAttribDivisorEXT);
 YAGL_API void glTexImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const void *pixels)
 {
     yagl_gles_texture_target texture_target;
-    GLsizei bpp, size;
-    int need_convert;
+    struct yagl_gles_texture_target_state *tex_target_state;
+    struct yagl_pixel_format *pf;
+    GLsizei size;
     int using_pbo = 0;
 
     YAGL_LOG_FUNC_ENTER_SPLIT10(glTexImage3D, GLenum, GLint, GLint, GLsizei, GLsizei, GLsizei, GLint, GLenum, GLenum, const void*, target, level, internalformat, width, height, depth, border, format, type, pixels);
@@ -2270,6 +2271,10 @@ YAGL_API void glTexImage3D(GLenum target, GLint level, GLint internalformat, GLs
         goto out;
     }
 
+    tex_target_state =
+        yagl_gles_context_get_active_texture_target_state(&ctx->base,
+                                                          texture_target);
+
     if ((width < 0) || (height < 0) || (depth < 0)) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
         goto out;
@@ -2279,56 +2284,61 @@ YAGL_API void glTexImage3D(GLenum target, GLint level, GLint internalformat, GLs
         width = height = depth = 0;
     }
 
-    if (!yagl_gles_context_validate_format(&ctx->base,
-                                           format,
-                                           type,
-                                           &bpp,
-                                           &need_convert)) {
+    pf = yagl_gles_context_validate_teximage_format(&ctx->base,
+                                                    internalformat,
+                                                    format,
+                                                    type);
+
+    if (!pf) {
         YAGL_SET_ERR(GL_INVALID_OPERATION);
         goto out;
     }
 
-    if ((width != 0) && !yagl_gles_context_pre_unpack(&ctx->base, &pixels, need_convert, &using_pbo)) {
+    if ((width != 0) && !yagl_gles_context_pre_unpack(&ctx->base, &pixels, pf->need_convert, &using_pbo)) {
         YAGL_SET_ERR(GL_INVALID_OPERATION);
         goto out;
     }
 
-    pixels += yagl_gles_get_offset(&ctx->base.unpack,
-                                   width, height, depth, bpp, &size);
+    pixels += yagl_pixel_format_get_info(pf, &ctx->base.unpack,
+                                         width, height, depth, &size);
 
     if (using_pbo) {
         yagl_host_glTexImage3DOffset(target,
                                      level,
-                                     yagl_gles_get_actual_internalformat(internalformat),
+                                     pf->dst_internalformat,
                                      width,
                                      height,
                                      depth,
                                      border,
-                                     yagl_gles_get_actual_format(format),
-                                     yagl_gles_get_actual_type(type),
+                                     pf->dst_format,
+                                     pf->dst_type,
                                      (GLsizei)pixels);
     } else {
         yagl_host_glTexImage3DData(target,
                                    level,
-                                   yagl_gles_get_actual_internalformat(internalformat),
+                                   pf->dst_internalformat,
                                    width,
                                    height,
                                    depth,
                                    border,
-                                   yagl_gles_get_actual_format(format),
-                                   yagl_gles_get_actual_type(type),
-                                   yagl_gles_convert_to_host(&ctx->base.unpack,
-                                                             width,
-                                                             height,
-                                                             depth,
-                                                             format,
-                                                             type,
-                                                             pixels),
+                                   pf->dst_format,
+                                   pf->dst_type,
+                                   yagl_pixel_format_unpack(pf,
+                                                            &ctx->base.unpack,
+                                                            width,
+                                                            height,
+                                                            depth,
+                                                            pixels),
                                    size);
     }
 
     if (width != 0) {
-        yagl_gles_context_post_unpack(&ctx->base, need_convert);
+        yagl_gles_context_post_unpack(&ctx->base, pf->need_convert);
+    }
+
+    if (tex_target_state->texture) {
+        yagl_gles_texture_set_internalformat(tex_target_state->texture,
+                                             internalformat);
     }
 
 out:
@@ -2339,8 +2349,9 @@ YAGL_API YAGL_ALIAS(glTexImage3D, glTexImage3DOES);
 YAGL_API void glTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const void *pixels)
 {
     yagl_gles_texture_target texture_target;
-    GLsizei bpp, size;
-    int need_convert;
+    struct yagl_gles_texture_target_state *tex_target_state;
+    struct yagl_pixel_format *pf;
+    GLsizei size;
     int using_pbo = 0;
 
     YAGL_LOG_FUNC_ENTER_SPLIT11(glTexSubImage3D, GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLenum, const void*, target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, pixels);
@@ -2359,6 +2370,10 @@ YAGL_API void glTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint y
         goto out;
     }
 
+    tex_target_state =
+        yagl_gles_context_get_active_texture_target_state(&ctx->base,
+                                                          texture_target);
+
     if ((width < 0) || (height < 0) || (depth < 0)) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
         goto out;
@@ -2368,22 +2383,26 @@ YAGL_API void glTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint y
         width = height = depth = 0;
     }
 
-    if (!yagl_gles_context_validate_format(&ctx->base,
-                                           format,
-                                           type,
-                                           &bpp,
-                                           &need_convert)) {
+    if (!tex_target_state->texture) {
         YAGL_SET_ERR(GL_INVALID_OPERATION);
         goto out;
     }
 
-    if ((width != 0) && !yagl_gles_context_pre_unpack(&ctx->base, &pixels, need_convert, &using_pbo)) {
+    pf = yagl_gles_context_validate_teximage_format(&ctx->base,
+        tex_target_state->texture->internalformat, format, type);
+
+    if (!pf) {
         YAGL_SET_ERR(GL_INVALID_OPERATION);
         goto out;
     }
 
-    pixels += yagl_gles_get_offset(&ctx->base.unpack,
-                                   width, height, depth, bpp, &size);
+    if ((width != 0) && !yagl_gles_context_pre_unpack(&ctx->base, &pixels, pf->need_convert, &using_pbo)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
+    pixels += yagl_pixel_format_get_info(pf, &ctx->base.unpack,
+                                         width, height, depth, &size);
 
     if (using_pbo) {
         yagl_host_glTexSubImage3DOffset(target,
@@ -2394,8 +2413,8 @@ YAGL_API void glTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint y
                                         width,
                                         height,
                                         depth,
-                                        yagl_gles_get_actual_format(format),
-                                        yagl_gles_get_actual_type(type),
+                                        pf->dst_format,
+                                        pf->dst_type,
                                         (GLsizei)pixels);
     } else {
         yagl_host_glTexSubImage3DData(target,
@@ -2406,20 +2425,19 @@ YAGL_API void glTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint y
                                       width,
                                       height,
                                       depth,
-                                      yagl_gles_get_actual_format(format),
-                                      yagl_gles_get_actual_type(type),
-                                      yagl_gles_convert_to_host(&ctx->base.unpack,
-                                                                width,
-                                                                height,
-                                                                depth,
-                                                                format,
-                                                                type,
-                                                                pixels),
+                                      pf->dst_format,
+                                      pf->dst_type,
+                                      yagl_pixel_format_unpack(pf,
+                                                               &ctx->base.unpack,
+                                                               width,
+                                                               height,
+                                                               depth,
+                                                               pixels),
                                       size);
     }
 
     if (width != 0) {
-        yagl_gles_context_post_unpack(&ctx->base, need_convert);
+        yagl_gles_context_post_unpack(&ctx->base, pf->need_convert);
     }
 
 out:
@@ -2597,7 +2615,7 @@ YAGL_API void glTexStorage3D(GLenum target, GLsizei levels, GLenum internalforma
 {
     yagl_gles_texture_target texture_target;
     struct yagl_gles_texture *texture_obj;
-    GLenum format, type;
+    GLenum actual_internalformat = internalformat, format, type;
     GLsizei i;
 
     YAGL_LOG_FUNC_ENTER_SPLIT6(glTexStorage3D, GLenum, GLsizei, GLenum, GLsizei, GLsizei, GLsizei, target, levels, internalformat, width, height, depth);
@@ -2609,10 +2627,10 @@ YAGL_API void glTexStorage3D(GLenum target, GLsizei levels, GLenum internalforma
         goto out;
     }
 
-    if (!yagl_gles_context_validate_texture_internalformat(&ctx->base,
-                                                           &internalformat,
-                                                           &format,
-                                                           &type)) {
+    if (!yagl_gles_context_validate_texstorage_format(&ctx->base,
+                                                      &actual_internalformat,
+                                                      &format,
+                                                      &type)) {
         YAGL_SET_ERR(GL_INVALID_ENUM);
         goto out;
     }
@@ -2630,14 +2648,10 @@ YAGL_API void glTexStorage3D(GLenum target, GLsizei levels, GLenum internalforma
         goto out;
     }
 
-    internalformat = yagl_gles_get_actual_internalformat(internalformat);
-    format = yagl_gles_get_actual_format(format);
-    type = yagl_gles_get_actual_type(type);
-
     switch (texture_target) {
     case yagl_gles_texture_target_3d:
         for (i = 0; i < levels; ++i) {
-            yagl_host_glTexImage3DData(target, i, internalformat,
+            yagl_host_glTexImage3DData(target, i, actual_internalformat,
                                        width, height, depth, 0, format, type,
                                        NULL, 0);
 
@@ -2659,7 +2673,7 @@ YAGL_API void glTexStorage3D(GLenum target, GLsizei levels, GLenum internalforma
         break;
     case yagl_gles_texture_target_2d_array:
         for (i = 0; i < levels; ++i) {
-            yagl_host_glTexImage3DData(target, i, internalformat,
+            yagl_host_glTexImage3DData(target, i, actual_internalformat,
                                        width, height, depth, 0, format, type,
                                        NULL, 0);
 
@@ -2679,7 +2693,7 @@ YAGL_API void glTexStorage3D(GLenum target, GLsizei levels, GLenum internalforma
         goto out;
     }
 
-    yagl_gles_texture_set_immutable(texture_obj);
+    yagl_gles_texture_set_immutable(texture_obj, internalformat);
 
 out:
     YAGL_LOG_FUNC_EXIT(NULL);

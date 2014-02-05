@@ -17,6 +17,8 @@ struct yagl_gles_texture
 
     GLenum target;
 
+    GLenum internalformat;
+
     GLboolean immutable;
 
     /*
@@ -48,7 +50,11 @@ void yagl_gles_texture_release(struct yagl_gles_texture *texture);
 int yagl_gles_texture_bind(struct yagl_gles_texture *texture,
                            GLenum target);
 
-void yagl_gles_texture_set_immutable(struct yagl_gles_texture *texture);
+void yagl_gles_texture_set_internalformat(struct yagl_gles_texture *texture,
+                                          GLenum internalformat);
+
+void yagl_gles_texture_set_immutable(struct yagl_gles_texture *texture,
+                                     GLenum internalformat);
 
 void yagl_gles_texture_set_image(struct yagl_gles_texture *texture,
                                  struct yagl_gles_image *image);

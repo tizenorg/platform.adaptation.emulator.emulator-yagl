@@ -1311,8 +1311,14 @@ YAGL_API void glRenderbufferStorageMultisample(GLenum target, GLsizei samples, G
 
     YAGL_GET_CTX();
 
+    if (!yagl_gles_context_validate_renderbuffer_format(&ctx->base.base, &internalformat)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
     yagl_host_glRenderbufferStorageMultisample(target, samples, internalformat, width, height);
 
+out:
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 

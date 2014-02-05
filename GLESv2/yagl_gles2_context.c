@@ -267,14 +267,6 @@ static int yagl_gles2_context_acquire_binded_buffer(struct yagl_gles_context *ct
     return 0;
 }
 
-static int yagl_gles2_context_validate_format(struct yagl_gles_context *ctx,
-                                              GLenum format,
-                                              GLenum type,
-                                              GLsizei *bpp)
-{
-    return 0;
-}
-
 void yagl_gles2_context_init(struct yagl_gles2_context *ctx,
                              yagl_client_api client_api,
                              struct yagl_sharegroup *sg)
@@ -1144,10 +1136,33 @@ int yagl_gles2_context_validate_texture_target(struct yagl_gles_context *ctx,
     return 1;
 }
 
-int yagl_gles2_context_validate_texture_internalformat(struct yagl_gles_context *ctx,
-                                                       GLenum *internalformat,
-                                                       GLenum *any_format,
-                                                       GLenum *any_type)
+struct yagl_pixel_format
+    *yagl_gles2_context_validate_teximage_format(struct yagl_gles_context *ctx,
+                                                 GLenum internalformat,
+                                                 GLenum format,
+                                                 GLenum type)
+{
+    return NULL;
+}
+
+struct yagl_pixel_format
+    *yagl_gles2_context_validate_getteximage_format(struct yagl_gles_context *ctx,
+                                                    GLenum format,
+                                                    GLenum type)
+{
+    return NULL;
+}
+
+int yagl_gles2_context_validate_copyteximage_format(struct yagl_gles_context *ctx,
+                                                    GLenum *internalformat)
+{
+    return 0;
+}
+
+int yagl_gles2_context_validate_texstorage_format(struct yagl_gles_context *ctx,
+                                                  GLenum *internalformat,
+                                                  GLenum *any_format,
+                                                  GLenum *any_type)
 {
     struct yagl_texcompress_format *tc_format;
 
@@ -1169,6 +1184,12 @@ int yagl_gles2_context_validate_texture_internalformat(struct yagl_gles_context 
     *any_type = tc_format->dst_type;
 
     return 1;
+}
+
+int yagl_gles2_context_validate_renderbuffer_format(struct yagl_gles_context *ctx,
+                                                    GLenum *internalformat)
+{
+    return 0;
 }
 
 char *yagl_gles2_context_shader_patch(struct yagl_gles2_context *ctx,
@@ -1281,8 +1302,11 @@ struct yagl_client_context *yagl_gles2_context_create(struct yagl_sharegroup *sg
     gles2_ctx->base.unbind_buffer = &yagl_gles2_context_unbind_buffer;
     gles2_ctx->base.acquire_binded_buffer = &yagl_gles2_context_acquire_binded_buffer;
     gles2_ctx->base.validate_texture_target = &yagl_gles2_context_validate_texture_target;
-    gles2_ctx->base.validate_texture_internalformat = &yagl_gles2_context_validate_texture_internalformat;
-    gles2_ctx->base.validate_format = &yagl_gles2_context_validate_format;
+    gles2_ctx->base.validate_teximage_format = &yagl_gles2_context_validate_teximage_format;
+    gles2_ctx->base.validate_getteximage_format = &yagl_gles2_context_validate_getteximage_format;
+    gles2_ctx->base.validate_copyteximage_format = &yagl_gles2_context_validate_copyteximage_format;
+    gles2_ctx->base.validate_texstorage_format = &yagl_gles2_context_validate_texstorage_format;
+    gles2_ctx->base.validate_renderbuffer_format = &yagl_gles2_context_validate_renderbuffer_format;
     gles2_ctx->shader_patch = &yagl_gles2_context_shader_patch;
     gles2_ctx->get_programiv = &yagl_gles2_context_get_programiv;
 

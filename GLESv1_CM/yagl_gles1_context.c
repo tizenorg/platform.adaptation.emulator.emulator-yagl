@@ -1379,10 +1379,33 @@ static int yagl_gles1_context_validate_texture_target(struct yagl_gles_context *
     return 0;
 }
 
-static int yagl_gles1_context_validate_texture_internalformat(struct yagl_gles_context *ctx,
-                                                              GLenum *internalformat,
-                                                              GLenum *any_format,
-                                                              GLenum *any_type)
+static struct yagl_pixel_format
+    *yagl_gles1_context_validate_teximage_format(struct yagl_gles_context *ctx,
+                                                 GLenum internalformat,
+                                                 GLenum format,
+                                                 GLenum type)
+{
+    return NULL;
+}
+
+static struct yagl_pixel_format
+    *yagl_gles1_context_validate_getteximage_format(struct yagl_gles_context *ctx,
+                                                    GLenum format,
+                                                    GLenum type)
+{
+    return NULL;
+}
+
+static int yagl_gles1_context_validate_copyteximage_format(struct yagl_gles_context *ctx,
+                                                           GLenum *internalformat)
+{
+    return 0;
+}
+
+static int yagl_gles1_context_validate_texstorage_format(struct yagl_gles_context *ctx,
+                                                         GLenum *internalformat,
+                                                         GLenum *any_format,
+                                                         GLenum *any_type)
 {
     YaglGles1PalFmtDesc fmt_desc;
 
@@ -1400,10 +1423,8 @@ static int yagl_gles1_context_validate_texture_internalformat(struct yagl_gles_c
     return 1;
 }
 
-static int yagl_gles1_context_validate_format(struct yagl_gles_context *ctx,
-                                              GLenum format,
-                                              GLenum type,
-                                              GLsizei *bpp)
+static int yagl_gles1_context_validate_renderbuffer_format(struct yagl_gles_context *ctx,
+                                                           GLenum *internalformat)
 {
     return 0;
 }
@@ -1436,8 +1457,11 @@ struct yagl_client_context *yagl_gles1_context_create(struct yagl_sharegroup *sg
     gles1_ctx->base.unbind_buffer = &yagl_gles1_context_unbind_buffer;
     gles1_ctx->base.acquire_binded_buffer = &yagl_gles1_context_acquire_binded_buffer;
     gles1_ctx->base.validate_texture_target = &yagl_gles1_context_validate_texture_target;
-    gles1_ctx->base.validate_texture_internalformat = &yagl_gles1_context_validate_texture_internalformat;
-    gles1_ctx->base.validate_format = &yagl_gles1_context_validate_format;
+    gles1_ctx->base.validate_teximage_format = &yagl_gles1_context_validate_teximage_format;
+    gles1_ctx->base.validate_getteximage_format = &yagl_gles1_context_validate_getteximage_format;
+    gles1_ctx->base.validate_copyteximage_format = &yagl_gles1_context_validate_copyteximage_format;
+    gles1_ctx->base.validate_texstorage_format = &yagl_gles1_context_validate_texstorage_format;
+    gles1_ctx->base.validate_renderbuffer_format = &yagl_gles1_context_validate_renderbuffer_format;
 
     YAGL_LOG_FUNC_EXIT("%p", gles1_ctx);
 

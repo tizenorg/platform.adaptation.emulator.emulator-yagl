@@ -1,4 +1,5 @@
 #include "GL/gl.h"
+#include "GL/glext.h"
 #include "yagl_gles_context.h"
 #include "yagl_gles_vertex_array.h"
 #include "yagl_gles_array.h"
@@ -8,6 +9,7 @@
 #include "yagl_gles_framebuffer.h"
 #include "yagl_gles_renderbuffer.h"
 #include "yagl_gles_validate.h"
+#include "yagl_gles_pixel_formats.h"
 #include "yagl_tex_image_binding.h"
 #include "yagl_sharegroup.h"
 #include "yagl_log.h"
@@ -23,10 +25,82 @@
  * We can't include GLES2/gl2ext.h here
  */
 #define GL_HALF_FLOAT_OES 0x8D61
+#define GL_RGB565_OES 0x8D62
 
 #define YAGL_SET_ERR(err) \
     yagl_gles_context_set_error(ctx, err); \
     YAGL_LOG_ERROR("error = 0x%X", err)
+
+static struct yagl_pixel_format
+    *yagl_get_teximage_format(GLenum format, GLenum type)
+{
+    switch (format) {
+    case GL_ALPHA:
+        switch (type) {
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_ALPHA, GL_ALPHA, GL_UNSIGNED_BYTE);
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_ALPHA, GL_ALPHA, GL_FLOAT);
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_ALPHA, GL_ALPHA, GL_HALF_FLOAT);
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_ALPHA, GL_ALPHA, GL_HALF_FLOAT_OES);
+        }
+        break;
+    case GL_RGB:
+        switch (type) {
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE);
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_RGB, GL_RGB, GL_UNSIGNED_SHORT_5_6_5);
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_RGB, GL_RGB, GL_FLOAT);
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_RGB, GL_RGB, GL_HALF_FLOAT);
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_RGB, GL_RGB, GL_HALF_FLOAT_OES);
+        }
+        break;
+    case GL_RGBA:
+        switch (type) {
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_RGBA, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4);
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_RGBA, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1);
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_RGBA, GL_RGBA, GL_FLOAT);
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_RGBA, GL_RGBA, GL_HALF_FLOAT);
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_RGBA, GL_RGBA, GL_HALF_FLOAT_OES);
+        }
+        break;
+    case GL_BGRA:
+        switch (type) {
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_BGRA, GL_BGRA, GL_UNSIGNED_BYTE);
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_BGRA, GL_BGRA, GL_FLOAT);
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_BGRA, GL_BGRA, GL_HALF_FLOAT);
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_BGRA, GL_BGRA, GL_HALF_FLOAT_OES);
+        }
+        break;
+    case GL_LUMINANCE:
+        switch (type) {
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE, GL_LUMINANCE, GL_UNSIGNED_BYTE);
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE, GL_LUMINANCE, GL_FLOAT);
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE, GL_LUMINANCE, GL_HALF_FLOAT);
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE, GL_LUMINANCE, GL_HALF_FLOAT_OES);
+        }
+        break;
+    case GL_LUMINANCE_ALPHA:
+        switch (type) {
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE);
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_FLOAT);
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_HALF_FLOAT);
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_HALF_FLOAT_OES);
+        }
+        break;
+    case GL_DEPTH_COMPONENT:
+        switch (type) {
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT);
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT);
+        }
+        break;
+    case GL_DEPTH_STENCIL:
+        switch (type) {
+        YAGL_PIXEL_FORMAT_CASE(gles, GL_DEPTH_STENCIL, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8);
+        }
+        break;
+    }
+
+    return NULL;
+}
 
 static void yagl_get_minmax_index(const GLvoid *indices,
                                   GLsizei count,
@@ -317,106 +391,6 @@ GLenum yagl_gles_context_get_error(struct yagl_gles_context *ctx)
     return error;
 }
 
-int yagl_gles_context_validate_format(struct yagl_gles_context *ctx,
-                                      GLenum format,
-                                      GLenum type,
-                                      GLsizei *bpp,
-                                      int *need_convert)
-{
-    int num_components = 0;
-
-    *need_convert = 0;
-
-    switch (format) {
-    case GL_ALPHA:
-        num_components = 4; /* This gets converted to BGRA. */
-        *need_convert = 1;
-        break;
-    case GL_RGB:
-        num_components = 3;
-        break;
-    case GL_RGBA:
-        num_components = 4;
-        break;
-    case GL_BGRA_EXT:
-        num_components = 4;
-        break;
-    case GL_LUMINANCE:
-        num_components = 4; /* This gets converted to BGRA. */
-        *need_convert = 1;
-        break;
-    case GL_LUMINANCE_ALPHA:
-        num_components = 4; /* This gets converted to BGRA. */
-        *need_convert = 1;
-        break;
-    case GL_DEPTH_STENCIL_EXT:
-        if ((type != GL_UNSIGNED_INT_24_8_EXT)) {
-            goto fail;
-        }
-        num_components = 1;
-        break;
-    case GL_DEPTH_COMPONENT:
-        if ((type != GL_UNSIGNED_SHORT) && (type != GL_UNSIGNED_INT)) {
-            goto fail;
-        }
-        num_components = 1;
-        break;
-    default:
-        goto fail;
-    }
-
-    switch (type) {
-    case GL_UNSIGNED_BYTE:
-        *bpp = num_components;
-        break;
-    case GL_UNSIGNED_SHORT_5_6_5:
-        if (format != GL_RGB) {
-            goto fail;
-        }
-        *bpp = 2;
-        break;
-    case GL_UNSIGNED_SHORT_4_4_4_4:
-    case GL_UNSIGNED_SHORT_5_5_5_1:
-        if (format != GL_RGBA) {
-            goto fail;
-        }
-        *bpp = 2;
-        break;
-    case GL_UNSIGNED_INT_24_8_EXT:
-        if (format != GL_DEPTH_STENCIL_EXT) {
-            goto fail;
-        }
-        *bpp = num_components * 4;
-        break;
-    case GL_UNSIGNED_SHORT:
-        if (format != GL_DEPTH_COMPONENT) {
-            goto fail;
-        }
-        *bpp = num_components * 2;
-        break;
-    case GL_UNSIGNED_INT:
-        if (format != GL_DEPTH_COMPONENT) {
-            goto fail;
-        }
-        *bpp = num_components * 4;
-        break;
-    case GL_FLOAT:
-        *bpp = num_components * 4;
-        break;
-    case GL_HALF_FLOAT_OES:
-    case GL_HALF_FLOAT:
-        *bpp = num_components * 2;
-        break;
-    default:
-        goto fail;
-    }
-
-    return 1;
-
-fail:
-    return ctx->validate_format(ctx, format, type, bpp);
-}
-
 void yagl_gles_context_bind_vertex_array(struct yagl_gles_context *ctx,
                                          struct yagl_gles_vertex_array *va)
 {
@@ -457,22 +431,119 @@ int yagl_gles_context_validate_texture_target(struct yagl_gles_context *ctx,
     return 1;
 }
 
-int yagl_gles_context_validate_texture_internalformat(struct yagl_gles_context *ctx,
-                                                      GLenum *internalformat,
-                                                      GLenum *any_format,
-                                                      GLenum *any_type)
+struct yagl_pixel_format
+    *yagl_gles_context_validate_teximage_format(struct yagl_gles_context *ctx,
+                                                GLenum internalformat,
+                                                GLenum format,
+                                                GLenum type)
 {
+    struct yagl_pixel_format *pf;
+
+    YAGL_LOG_FUNC_SET(yagl_gles_context_validate_teximage_format);
+
+    if (format == internalformat) {
+        pf = yagl_get_teximage_format(format, type);
+
+        if (pf) {
+            return pf;
+        }
+    }
+
+    pf = ctx->validate_teximage_format(ctx, internalformat, format, type);
+
+    if (!pf) {
+        YAGL_LOG_ERROR("validation error: internalformat = 0x%X, format = 0x%X, type = 0x%X",
+                       internalformat,
+                       format,
+                       type);
+    }
+
+    return pf;
+}
+
+struct yagl_pixel_format
+    *yagl_gles_context_validate_getteximage_format(struct yagl_gles_context *ctx,
+                                                   GLenum format,
+                                                   GLenum type)
+{
+    struct yagl_pixel_format *pf = yagl_get_teximage_format(format, type);
+
+    YAGL_LOG_FUNC_SET(yagl_gles_context_validate_getteximage_format);
+
+    if (pf) {
+        return pf;
+    }
+
+    pf = ctx->validate_getteximage_format(ctx, format, type);
+
+    if (!pf) {
+        YAGL_LOG_ERROR("validation error: format = 0x%X, type = 0x%X",
+                       format,
+                       type);
+    }
+
+    return pf;
+}
+
+int yagl_gles_context_validate_copyteximage_format(struct yagl_gles_context *ctx,
+                                                   GLenum *internalformat)
+{
+    int res = 1;
+
+    YAGL_LOG_FUNC_SET(yagl_gles_context_validate_copyteximage_format);
+
     switch (*internalformat) {
     case GL_ALPHA:
-        *any_format = GL_ALPHA;
+        *internalformat = GL_RGBA;
+        break;
+    case GL_RGB:
+        break;
+    case GL_RGBA:
+        break;
+    case GL_BGRA:
+        *internalformat = GL_RGBA;
+        break;
+    case GL_LUMINANCE:
+        *internalformat = GL_RGBA;
+        break;
+    case GL_LUMINANCE_ALPHA:
+        *internalformat = GL_RGBA;
+        break;
+    default:
+        res = ctx->validate_copyteximage_format(ctx, internalformat);
+    }
+
+    if (!res) {
+        YAGL_LOG_ERROR("validation error: internalformat = 0x%X",
+                       *internalformat);
+    }
+
+    return res;
+}
+
+int yagl_gles_context_validate_texstorage_format(struct yagl_gles_context *ctx,
+                                                 GLenum *internalformat,
+                                                 GLenum *any_format,
+                                                 GLenum *any_type)
+{
+    int res = 1;
+
+    YAGL_LOG_FUNC_SET(yagl_gles_context_validate_texstorage_format);
+
+    switch (*internalformat) {
+    case GL_ALPHA:
+        *internalformat = GL_RGBA;
+        *any_format = GL_BGRA;
         *any_type = GL_UNSIGNED_BYTE;
         break;
     case GL_LUMINANCE:
-        *any_format = GL_LUMINANCE;
+        *internalformat = GL_RGBA;
+        *any_format = GL_BGRA;
         *any_type = GL_UNSIGNED_BYTE;
         break;
     case GL_LUMINANCE_ALPHA:
-        *any_format = GL_LUMINANCE_ALPHA;
+        *internalformat = GL_RGBA;
+        *any_format = GL_BGRA;
         *any_type = GL_UNSIGNED_BYTE;
         break;
     case GL_RGB:
@@ -483,26 +554,61 @@ int yagl_gles_context_validate_texture_internalformat(struct yagl_gles_context *
         *any_format = GL_RGBA;
         *any_type = GL_UNSIGNED_BYTE;
         break;
-    case GL_BGRA_EXT:
-        *any_format = GL_BGRA_EXT;
+    case GL_BGRA:
+        *internalformat = GL_RGBA;
+        *any_format = GL_BGRA;
         *any_type = GL_UNSIGNED_BYTE;
         break;
     case GL_DEPTH_COMPONENT:
         *any_format = GL_DEPTH_COMPONENT;
         *any_type = GL_UNSIGNED_INT;
         break;
-    case GL_DEPTH_STENCIL_EXT:
-        *any_format = GL_DEPTH_STENCIL_EXT;
-        *any_type = GL_UNSIGNED_INT_24_8_EXT;
+    case GL_DEPTH_STENCIL:
+        *any_format = GL_DEPTH_STENCIL;
+        *any_type = GL_UNSIGNED_INT_24_8;
         break;
     default:
-        return ctx->validate_texture_internalformat(ctx,
-                                                    internalformat,
-                                                    any_format,
-                                                    any_type);
+        res = ctx->validate_texstorage_format(ctx,
+                                              internalformat,
+                                              any_format,
+                                              any_type);
     }
 
-    return 1;
+    if (!res) {
+        YAGL_LOG_ERROR("validation error: internalformat = 0x%X",
+                       *internalformat);
+    }
+
+    return res;
+}
+
+int yagl_gles_context_validate_renderbuffer_format(struct yagl_gles_context *ctx,
+                                                   GLenum *internalformat)
+{
+    int res = 1;
+
+    YAGL_LOG_FUNC_SET(yagl_gles_context_validate_renderbuffer_format);
+
+    switch (*internalformat) {
+    case GL_RGBA4:
+    case GL_RGB565_OES:
+    case GL_RGB5_A1:
+    case GL_DEPTH_COMPONENT16:
+    case GL_DEPTH_COMPONENT24:
+    case GL_DEPTH_COMPONENT32:
+    case GL_STENCIL_INDEX8:
+    case GL_DEPTH24_STENCIL8:
+        break;
+    default:
+        res = ctx->validate_renderbuffer_format(ctx, internalformat);
+    }
+
+    if (!res) {
+        YAGL_LOG_ERROR("validation error: internalformat = 0x%X",
+                       *internalformat);
+    }
+
+    return res;
 }
 
 void yagl_gles_context_set_active_texture(struct yagl_gles_context *ctx,

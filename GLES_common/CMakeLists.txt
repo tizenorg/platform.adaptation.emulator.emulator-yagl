@@ -12,8 +12,10 @@ set(SOURCES
     yagl_gles_validate.c
     yagl_gles_calls.c
     yagl_gles_utils.c
+    yagl_gles_pixel_formats.c
     yagl_host_gles_calls.c
     yagl_texcompress_etc1.c
+    yagl_pixel_format.c
 )
 
 include_directories(.)

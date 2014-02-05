@@ -16,6 +16,7 @@ set(SOURCES
     yagl_gles3_transform_feedback.c
     yagl_gles3_query.c
     yagl_gles3_sync.c
+    yagl_gles3_pixel_formats.c
 )
 
 include_directories(${YAGL_SOURCE_DIR}/GLES_common)

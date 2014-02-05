@@ -77,9 +77,17 @@ int yagl_gles_texture_bind(struct yagl_gles_texture *texture,
     return 1;
 }
 
-void yagl_gles_texture_set_immutable(struct yagl_gles_texture *texture)
+void yagl_gles_texture_set_internalformat(struct yagl_gles_texture *texture,
+                                          GLenum internalformat)
+{
+    texture->internalformat = internalformat;
+}
+
+void yagl_gles_texture_set_immutable(struct yagl_gles_texture *texture,
+                                     GLenum internalformat)
 {
     texture->immutable = GL_TRUE;
+    texture->internalformat = internalformat;
 }
 
 void yagl_gles_texture_set_image(struct yagl_gles_texture *texture,

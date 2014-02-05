@@ -5,6 +5,7 @@
 #include "yagl_client_context.h"
 #include "yagl_namespace.h"
 
+struct yagl_pixel_format;
 struct yagl_gles_vertex_array;
 struct yagl_gles_array;
 struct yagl_gles_buffer;
@@ -100,15 +101,25 @@ struct yagl_gles_context
                                    GLenum /*target*/,
                                    yagl_gles_texture_target */*texture_target*/);
 
-    int (*validate_texture_internalformat)(struct yagl_gles_context */*ctx*/,
-                                           GLenum */*internalformat*/,
-                                           GLenum */*any_format*/,
-                                           GLenum */*any_type*/);
+    struct yagl_pixel_format *(*validate_teximage_format)(struct yagl_gles_context */*ctx*/,
+                                                          GLenum /*internalformat*/,
+                                                          GLenum /*format*/,
+                                                          GLenum /*type*/);
 
-    int (*validate_format)(struct yagl_gles_context */*ctx*/,
-                           GLenum /*format*/,
-                           GLenum /*type*/,
-                           GLsizei */*bpp*/);
+    struct yagl_pixel_format *(*validate_getteximage_format)(struct yagl_gles_context */*ctx*/,
+                                                             GLenum /*format*/,
+                                                             GLenum /*type*/);
+
+    int (*validate_copyteximage_format)(struct yagl_gles_context */*ctx*/,
+                                        GLenum */*internalformat*/);
+
+    int (*validate_texstorage_format)(struct yagl_gles_context */*ctx*/,
+                                      GLenum */*internalformat*/,
+                                      GLenum */*any_format*/,
+                                      GLenum */*any_type*/);
+
+    int (*validate_renderbuffer_format)(struct yagl_gles_context */*ctx*/,
+                                        GLenum */*internalformat*/);
 
     struct yagl_namespace framebuffers;
 
@@ -223,12 +234,6 @@ void yagl_gles_context_set_error(struct yagl_gles_context *ctx, GLenum error);
 
 GLenum yagl_gles_context_get_error(struct yagl_gles_context *ctx);
 
-int yagl_gles_context_validate_format(struct yagl_gles_context *ctx,
-                                      GLenum format,
-                                      GLenum type,
-                                      GLsizei *bpp,
-                                      int *need_convert);
-
 void yagl_gles_context_bind_vertex_array(struct yagl_gles_context *ctx,
                                          struct yagl_gles_vertex_array *va);
 
@@ -239,10 +244,27 @@ int yagl_gles_context_validate_texture_target(struct yagl_gles_context *ctx,
                                               GLenum target,
                                               yagl_gles_texture_target *texture_target);
 
-int yagl_gles_context_validate_texture_internalformat(struct yagl_gles_context *ctx,
-                                                      GLenum *internalformat,
-                                                      GLenum *any_format,
-                                                      GLenum *any_type);
+struct yagl_pixel_format
+    *yagl_gles_context_validate_teximage_format(struct yagl_gles_context *ctx,
+                                                GLenum internalformat,
+                                                GLenum format,
+                                                GLenum type);
+
+struct yagl_pixel_format
+    *yagl_gles_context_validate_getteximage_format(struct yagl_gles_context *ctx,
+                                                   GLenum format,
+                                                   GLenum type);
+
+int yagl_gles_context_validate_copyteximage_format(struct yagl_gles_context *ctx,
+                                                   GLenum *internalformat);
+
+int yagl_gles_context_validate_texstorage_format(struct yagl_gles_context *ctx,
+                                                 GLenum *internalformat,
+                                                 GLenum *any_format,
+                                                 GLenum *any_type);
+
+int yagl_gles_context_validate_renderbuffer_format(struct yagl_gles_context *ctx,
+                                                   GLenum *internalformat);
 
 void yagl_gles_context_set_active_texture(struct yagl_gles_context *ctx,
                                           GLenum texture);

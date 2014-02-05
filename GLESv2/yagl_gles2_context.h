@@ -180,10 +180,27 @@ int yagl_gles2_context_validate_texture_target(struct yagl_gles_context *ctx,
                                                GLenum target,
                                                yagl_gles_texture_target *texture_target);
 
-int yagl_gles2_context_validate_texture_internalformat(struct yagl_gles_context *ctx,
-                                                       GLenum *internalformat,
-                                                       GLenum *any_format,
-                                                       GLenum *any_type);
+struct yagl_pixel_format
+    *yagl_gles2_context_validate_teximage_format(struct yagl_gles_context *ctx,
+                                                 GLenum internalformat,
+                                                 GLenum format,
+                                                 GLenum type);
+
+struct yagl_pixel_format
+    *yagl_gles2_context_validate_getteximage_format(struct yagl_gles_context *ctx,
+                                                    GLenum format,
+                                                    GLenum type);
+
+int yagl_gles2_context_validate_copyteximage_format(struct yagl_gles_context *ctx,
+                                                    GLenum *internalformat);
+
+int yagl_gles2_context_validate_texstorage_format(struct yagl_gles_context *ctx,
+                                                  GLenum *internalformat,
+                                                  GLenum *any_format,
+                                                  GLenum *any_type);
+
+int yagl_gles2_context_validate_renderbuffer_format(struct yagl_gles_context *ctx,
+                                                    GLenum *internalformat);
 
 char *yagl_gles2_context_shader_patch(struct yagl_gles2_context *ctx,
                                       const char *source,
