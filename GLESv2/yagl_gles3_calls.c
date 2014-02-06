@@ -1760,6 +1760,17 @@ YAGL_API void glVertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsi
         goto out;
     }
 
+    if ((stride < 0) || (size < 1) || (size > 4)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if (((type == GL_INT_2_10_10_10_REV) || (type == GL_UNSIGNED_INT_2_10_10_10_REV)) &&
+        (size != 4)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
     array = &ctx->base.base.vao->arrays[index];
 
     if (ctx->base.base.vbo) {

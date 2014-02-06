@@ -357,5 +357,13 @@ void yagl_gles_array_transfer(struct yagl_gles_array *array,
         }
 
         array->apply(array, first, count, ptr, array->user_data);
+    } else {
+        /*
+         * Transferring enabled array which has no pointer, typically we should
+         * just crash.
+         */
+
+        assert(0);
+        *((int*)NULL) = 0xDEADBEEF;
     }
 }

@@ -22,6 +22,12 @@
 #include <string.h>
 #include <assert.h>
 
+/*
+ * We can't include GL/gl.h here
+ */
+#define GL_INT_2_10_10_10_REV 0x8D9F
+#define GL_UNSIGNED_INT_2_10_10_10_REV 0x8368
+
 #define YAGL_SET_ERR(err) \
     yagl_gles_context_set_error(&ctx->base, err); \
     YAGL_LOG_ERROR("error = 0x%X", err)
@@ -2112,6 +2118,22 @@ YAGL_API void glVertexAttribPointer(GLuint indx, GLint size, GLenum type, GLbool
     if (indx >= ctx->base.num_arrays) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
         goto out;
+    }
+
+    if ((stride < 0) || (size < 1) || (size > 4)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
+    if ((type == GL_INT_2_10_10_10_REV) ||
+        (type == GL_UNSIGNED_INT_2_10_10_10_REV)) {
+        if (ctx->base.base.client_api == yagl_client_api_gles2) {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
+            goto out;
+        } else if (size != 4) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            goto out;
+        }
     }
 
     array = &ctx->base.vao->arrays[indx];
