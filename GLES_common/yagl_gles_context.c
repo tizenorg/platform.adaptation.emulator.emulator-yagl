@@ -413,6 +413,12 @@ void yagl_gles_context_unbind_vertex_array(struct yagl_gles_context *ctx,
         yagl_gles_vertex_array_acquire(ctx->va_zero);
         yagl_gles_vertex_array_release(ctx->vao);
         ctx->vao = ctx->va_zero;
+
+        /*
+         * And bind vertex array 0, otherwise we'll end up with no
+         * vertex array on host.
+         */
+        yagl_gles_vertex_array_bind(ctx->vao);
     }
 }
 

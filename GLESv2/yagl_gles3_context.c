@@ -23,84 +23,10 @@
  * We can't include GLES2/gl2ext.h here
  */
 #define GL_HALF_FLOAT_OES 0x8D61
-#define GL_BGRA_EXT 0x80E1
 
 #define YAGL_SET_ERR(err) \
     yagl_gles_context_set_error(&ctx->base.base, err); \
     YAGL_LOG_ERROR("error = 0x%X", err)
-
-static const GLchar *egl_image_ext = "GL_OES_EGL_image";
-static const GLchar *depth24_ext = "GL_OES_depth24";
-static const GLchar *depth32_ext = "GL_OES_depth32";
-static const GLchar *texture_float_ext = "GL_OES_texture_float";
-static const GLchar *texture_float_linear_ext = "GL_OES_texture_float_linear";
-static const GLchar *texture_format_bgra8888_ext = "GL_EXT_texture_format_BGRA8888";
-static const GLchar *depth_texture_ext = "GL_OES_depth_texture";
-static const GLchar *compressed_etc1_rgb8_texture_ext = "GL_OES_compressed_ETC1_RGB8_texture";
-static const GLchar *egl_sync_ext = "GL_OES_EGL_sync";
-static const GLchar *packed_depth_stencil_ext = "GL_OES_packed_depth_stencil";
-static const GLchar *texture_npot_ext = "GL_OES_texture_npot";
-static const GLchar *texture_rectangle_ext = "GL_ARB_texture_rectangle";
-static const GLchar *texture_filter_anisotropic_ext = "GL_EXT_texture_filter_anisotropic";
-static const GLchar *texture_half_float_ext = "GL_OES_texture_half_float";
-static const GLchar *texture_half_float_linear_ext = "GL_OES_texture_half_float_linear";
-static const GLchar *vertex_half_float_ext = "GL_OES_vertex_half_float";
-static const GLchar *standard_derivatives_ext = "GL_OES_standard_derivatives";
-
-static const GLchar **yagl_gles3_context_get_extensions(struct yagl_gles3_context *ctx,
-                                                        int *num_extensions)
-{
-    const GLchar **extensions;
-    int i = 0;
-
-    extensions = yagl_malloc(100 * sizeof(*extensions));
-
-    extensions[i++] = egl_image_ext;
-    extensions[i++] = depth24_ext;
-    extensions[i++] = depth32_ext;
-    extensions[i++] = texture_float_ext;
-    extensions[i++] = texture_float_linear_ext;
-    extensions[i++] = texture_format_bgra8888_ext;
-    extensions[i++] = depth_texture_ext;
-    extensions[i++] = compressed_etc1_rgb8_texture_ext;
-
-    if (yagl_egl_fence_supported()) {
-        extensions[i++] = egl_sync_ext;
-    }
-
-    if (ctx->base.base.packed_depth_stencil) {
-        extensions[i++] = packed_depth_stencil_ext;
-    }
-
-    if (ctx->base.base.texture_npot) {
-        extensions[i++] = texture_npot_ext;
-    }
-
-    if (ctx->base.base.texture_rectangle) {
-        extensions[i++] = texture_rectangle_ext;
-    }
-
-    if (ctx->base.base.texture_filter_anisotropic) {
-        extensions[i++] = texture_filter_anisotropic_ext;
-    }
-
-    if (ctx->base.texture_half_float) {
-        extensions[i++] = texture_half_float_ext;
-        extensions[i++] = texture_half_float_linear_ext;
-    }
-
-    if (ctx->base.vertex_half_float) {
-        extensions[i++] = vertex_half_float_ext;
-    }
-
-    if (ctx->base.standard_derivatives) {
-        extensions[i++] = standard_derivatives_ext;
-    }
-
-    *num_extensions = i;
-
-    return extensions;
-}
 
 static inline void yagl_gles3_context_pre_draw(struct yagl_gles3_context *ctx)
 {
@@ -173,7 +99,8 @@ static void yagl_gles3_context_prepare(struct yagl_client_context *ctx)
     yagl_gles3_transform_feedback_acquire(gles3_ctx->tf_zero);
     gles3_ctx->tfo = gles3_ctx->tf_zero;
 
-    extensions = yagl_gles3_context_get_extensions(gles3_ctx, &num_extensions);
+    extensions = yagl_gles2_context_get_extensions(&gles3_ctx->base,
+                                                   &num_extensions);
 
     yagl_gles_context_prepare_end(&gles3_ctx->base.base,
                                   extensions, num_extensions);

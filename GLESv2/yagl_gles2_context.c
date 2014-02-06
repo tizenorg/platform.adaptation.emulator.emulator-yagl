@@ -65,81 +65,6 @@ static const GLchar *vertex_half_float_ext = "GL_OES_vertex_half_float";
 static const GLchar *standard_derivatives_ext = "GL_OES_standard_derivatives";
 static const GLchar *instanced_arrays_ext = "GL_EXT_instanced_arrays";
 
-static const GLchar **yagl_gles2_context_get_extensions(struct yagl_gles2_context *ctx,
-                                                        int *num_extensions)
-{
-    const GLchar **extensions;
-    int i = 0;
-
-    extensions = yagl_malloc(100 * sizeof(*extensions));
-
-    extensions[i++] = egl_image_ext;
-    extensions[i++] = depth24_ext;
-    extensions[i++] = depth32_ext;
-    extensions[i++] = texture_float_ext;
-    extensions[i++] = texture_float_linear_ext;
-    extensions[i++] = texture_format_bgra8888_ext;
-    extensions[i++] = depth_texture_ext;
-    extensions[i++] = framebuffer_blit_ext;
-    extensions[i++] = draw_buffers_ext;
-    extensions[i++] = mapbuffer_ext;
-    extensions[i++] = map_buffer_range_ext;
-    extensions[i++] = element_index_uint_ext;
-    extensions[i++] = texture_3d_ext;
-    extensions[i++] = blend_minmax_ext;
-    extensions[i++] = texture_storage_ext;
-    extensions[i++] = pbo_ext;
-    extensions[i++] = read_buffer_ext;
-    extensions[i++] = compressed_etc1_rgb8_texture_ext;
-    extensions[i++] = pack_subimage_ext;
-    extensions[i++] = unpack_subimage_ext;
-
-    if (yagl_egl_fence_supported()) {
-        extensions[i++] = egl_sync_ext;
-    }
-
-    if (ctx->base.packed_depth_stencil) {
-        extensions[i++] = packed_depth_stencil_ext;
-    }
-
-    if (ctx->base.texture_npot) {
-        extensions[i++] = texture_npot_ext;
-    }
-
-    if (ctx->base.texture_rectangle) {
-        extensions[i++] = texture_rectangle_ext;
-    }
-
-    if (ctx->base.texture_filter_anisotropic) {
-        extensions[i++] = texture_filter_anisotropic_ext;
-    }
-
-    if (ctx->base.vertex_arrays_supported) {
-        extensions[i++] = vertex_array_object_ext;
-    }
-
-    if (ctx->texture_half_float) {
-        extensions[i++] = texture_half_float_ext;
-        extensions[i++] = texture_half_float_linear_ext;
-    }
-
-    if (ctx->vertex_half_float) {
-        extensions[i++] = vertex_half_float_ext;
-    }
-
-    if (ctx->standard_derivatives) {
-        extensions[i++] = standard_derivatives_ext;
-    }
-
-    if (ctx->instanced_arrays) {
-        extensions[i++] = instanced_arrays_ext;
-    }
-
-    *num_extensions = i;
-
-    return extensions;
-}
-
 static void yagl_gles2_context_prepare_internal(struct yagl_client_context *ctx)
 {
     struct yagl_gles2_context *gles2_ctx = (struct yagl_gles2_context*)ctx;
@@ -352,6 +277,81 @@ void yagl_gles2_context_prepare(struct yagl_gles2_context *ctx)
     ctx->instanced_arrays = (yagl_get_host_gl_version() > yagl_gl_2);
 
     YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+const GLchar **yagl_gles2_context_get_extensions(struct yagl_gles2_context *ctx,
+                                                 int *num_extensions)
+{
+    const GLchar **extensions;
+    int i = 0;
+
+    extensions = yagl_malloc(100 * sizeof(*extensions));
+
+    extensions[i++] = egl_image_ext;
+    extensions[i++] = depth24_ext;
+    extensions[i++] = depth32_ext;
+    extensions[i++] = texture_float_ext;
+    extensions[i++] = texture_float_linear_ext;
+    extensions[i++] = texture_format_bgra8888_ext;
+    extensions[i++] = depth_texture_ext;
+    extensions[i++] = framebuffer_blit_ext;
+    extensions[i++] = draw_buffers_ext;
+    extensions[i++] = mapbuffer_ext;
+    extensions[i++] = map_buffer_range_ext;
+    extensions[i++] = element_index_uint_ext;
+    extensions[i++] = texture_3d_ext;
+    extensions[i++] = blend_minmax_ext;
+    extensions[i++] = texture_storage_ext;
+    extensions[i++] = pbo_ext;
+    extensions[i++] = read_buffer_ext;
+    extensions[i++] = compressed_etc1_rgb8_texture_ext;
+    extensions[i++] = pack_subimage_ext;
+    extensions[i++] = unpack_subimage_ext;
+
+    if (yagl_egl_fence_supported()) {
+        extensions[i++] = egl_sync_ext;
+    }
+
+    if (ctx->base.packed_depth_stencil) {
+        extensions[i++] = packed_depth_stencil_ext;
+    }
+
+    if (ctx->base.texture_npot) {
+        extensions[i++] = texture_npot_ext;
+    }
+
+    if (ctx->base.texture_rectangle) {
+        extensions[i++] = texture_rectangle_ext;
+    }
+
+    if (ctx->base.texture_filter_anisotropic) {
+        extensions[i++] = texture_filter_anisotropic_ext;
+    }
+
+    if (ctx->base.vertex_arrays_supported) {
+        extensions[i++] = vertex_array_object_ext;
+    }
+
+    if (ctx->texture_half_float) {
+        extensions[i++] = texture_half_float_ext;
+        extensions[i++] = texture_half_float_linear_ext;
+    }
+
+    if (ctx->vertex_half_float) {
+        extensions[i++] = vertex_half_float_ext;
+    }
+
+    if (ctx->standard_derivatives) {
+        extensions[i++] = standard_derivatives_ext;
+    }
+
+    if (ctx->instanced_arrays) {
+        extensions[i++] = instanced_arrays_ext;
+    }
+
+    *num_extensions = i;
+
+    return extensions;
 }
 
 struct yagl_gles_array

@@ -94,6 +94,9 @@ void yagl_gles2_context_cleanup(struct yagl_gles2_context *ctx);
 
 void yagl_gles2_context_prepare(struct yagl_gles2_context *ctx);
 
+const GLchar **yagl_gles2_context_get_extensions(struct yagl_gles2_context *ctx,
+                                                 int *num_extensions);
+
 struct yagl_gles_array
     *yagl_gles2_context_create_arrays(struct yagl_gles_context *ctx);
 
