@@ -10,6 +10,7 @@
 #include "yagl_gles_renderbuffer.h"
 #include "yagl_gles_validate.h"
 #include "yagl_gles_pixel_formats.h"
+#include "yagl_gles_utils.h"
 #include "yagl_tex_image_binding.h"
 #include "yagl_sharegroup.h"
 #include "yagl_log.h"
@@ -30,77 +31,6 @@
 #define YAGL_SET_ERR(err) \
     yagl_gles_context_set_error(ctx, err); \
     YAGL_LOG_ERROR("error = 0x%X", err)
-
-static struct yagl_pixel_format
-    *yagl_get_teximage_format(GLenum format, GLenum type)
-{
-    switch (format) {
-    case GL_ALPHA:
-        switch (type) {
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_ALPHA, GL_ALPHA, GL_UNSIGNED_BYTE);
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_ALPHA, GL_ALPHA, GL_FLOAT);
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_ALPHA, GL_ALPHA, GL_HALF_FLOAT);
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_ALPHA, GL_ALPHA, GL_HALF_FLOAT_OES);
-        }
-        break;
-    case GL_RGB:
-        switch (type) {
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE);
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_RGB, GL_RGB, GL_UNSIGNED_SHORT_5_6_5);
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_RGB, GL_RGB, GL_FLOAT);
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_RGB, GL_RGB, GL_HALF_FLOAT);
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_RGB, GL_RGB, GL_HALF_FLOAT_OES);
-        }
-        break;
-    case GL_RGBA:
-        switch (type) {
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_RGBA, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4);
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_RGBA, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1);
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_RGBA, GL_RGBA, GL_FLOAT);
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_RGBA, GL_RGBA, GL_HALF_FLOAT);
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_RGBA, GL_RGBA, GL_HALF_FLOAT_OES);
-        }
-        break;
-    case GL_BGRA:
-        switch (type) {
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_BGRA, GL_BGRA, GL_UNSIGNED_BYTE);
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_BGRA, GL_BGRA, GL_FLOAT);
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_BGRA, GL_BGRA, GL_HALF_FLOAT);
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_BGRA, GL_BGRA, GL_HALF_FLOAT_OES);
-        }
-        break;
-    case GL_LUMINANCE:
-        switch (type) {
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE, GL_LUMINANCE, GL_UNSIGNED_BYTE);
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE, GL_LUMINANCE, GL_FLOAT);
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE, GL_LUMINANCE, GL_HALF_FLOAT);
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE, GL_LUMINANCE, GL_HALF_FLOAT_OES);
-        }
-        break;
-    case GL_LUMINANCE_ALPHA:
-        switch (type) {
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE);
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_FLOAT);
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_HALF_FLOAT);
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_HALF_FLOAT_OES);
-        }
-        break;
-    case GL_DEPTH_COMPONENT:
-        switch (type) {
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT);
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT);
-        }
-        break;
-    case GL_DEPTH_STENCIL:
-        switch (type) {
-        YAGL_PIXEL_FORMAT_CASE(gles, GL_DEPTH_STENCIL, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8);
-        }
-        break;
-    }
-
-    return NULL;
-}
 
 static void yagl_get_minmax_index(const GLvoid *indices,
                                   GLsizei count,
@@ -172,6 +102,47 @@ static int yagl_gles_context_bind_tex_image(struct yagl_client_context *ctx,
     binding->cookie = texture_target_state->texture;
 
     return 1;
+}
+
+static int yagl_gles_context_validate_readbuffer(struct yagl_gles_context *ctx,
+                                                 GLenum *internalformat)
+{
+    struct yagl_gles_framebuffer_attachment_state *attachment_state;
+
+    if (ctx->read_buffer == GL_NONE) {
+        return 0;
+    }
+
+    if (!ctx->fbo_read) {
+        *internalformat = GL_RGBA;
+        return 1;
+    }
+
+    if (ctx->read_buffer == GL_BACK) {
+        attachment_state = &ctx->fbo_read->attachment_states[
+            yagl_gles_framebuffer_attachment_color0];
+    } else {
+        attachment_state = &ctx->fbo_read->attachment_states[
+            yagl_gles_framebuffer_attachment_color0 +
+            ctx->read_buffer - GL_COLOR_ATTACHMENT0];
+    }
+
+    switch (attachment_state->type) {
+    case GL_TEXTURE:
+        if (attachment_state->texture) {
+            *internalformat = attachment_state->texture->internalformat;
+            return 1;
+        }
+        break;
+    case GL_RENDERBUFFER:
+        if (attachment_state->rb) {
+            *internalformat = attachment_state->rb->internalformat;
+            return 1;
+        }
+        break;
+    }
+
+    return 0;
 }
 
 void yagl_gles_context_init(struct yagl_gles_context *ctx,
@@ -448,10 +419,63 @@ struct yagl_pixel_format
     YAGL_LOG_FUNC_SET(yagl_gles_context_validate_teximage_format);
 
     if (format == internalformat) {
-        pf = yagl_get_teximage_format(format, type);
-
-        if (pf) {
-            return pf;
+        switch (format) {
+        case GL_ALPHA:
+            switch (type) {
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_ALPHA, GL_ALPHA, GL_UNSIGNED_BYTE);
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_ALPHA, GL_ALPHA, GL_FLOAT);
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_ALPHA, GL_ALPHA, GL_HALF_FLOAT_OES);
+            }
+            break;
+        case GL_RGB:
+            switch (type) {
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE);
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_RGB, GL_RGB, GL_UNSIGNED_SHORT_5_6_5);
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_RGB, GL_RGB, GL_FLOAT);
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_RGB, GL_RGB, GL_HALF_FLOAT_OES);
+            }
+            break;
+        case GL_RGBA:
+            switch (type) {
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_RGBA, GL_RGBA, GL_UNSIGNED_SHORT_4_4_4_4);
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_RGBA, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1);
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_RGBA, GL_RGBA, GL_FLOAT);
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_RGBA, GL_RGBA, GL_HALF_FLOAT_OES);
+            }
+            break;
+        case GL_BGRA:
+            switch (type) {
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_BGRA, GL_BGRA, GL_UNSIGNED_BYTE);
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_BGRA, GL_BGRA, GL_FLOAT);
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_BGRA, GL_BGRA, GL_HALF_FLOAT_OES);
+            }
+            break;
+        case GL_LUMINANCE:
+            switch (type) {
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE, GL_LUMINANCE, GL_UNSIGNED_BYTE);
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE, GL_LUMINANCE, GL_FLOAT);
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE, GL_LUMINANCE, GL_HALF_FLOAT_OES);
+            }
+            break;
+        case GL_LUMINANCE_ALPHA:
+            switch (type) {
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE);
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_FLOAT);
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_HALF_FLOAT_OES);
+            }
+            break;
+        case GL_DEPTH_COMPONENT:
+            switch (type) {
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT);
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT);
+            }
+            break;
+        case GL_DEPTH_STENCIL:
+            switch (type) {
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_DEPTH_STENCIL, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8);
+            }
+            break;
         }
     }
 
@@ -472,18 +496,44 @@ struct yagl_pixel_format
                                                    GLenum format,
                                                    GLenum type)
 {
-    struct yagl_pixel_format *pf = yagl_get_teximage_format(format, type);
+    GLenum readbuffer_internalformat;
+    uint32_t readbuffer_format_flags;
+    struct yagl_pixel_format *pf = NULL;
 
     YAGL_LOG_FUNC_SET(yagl_gles_context_validate_getteximage_format);
 
-    if (pf) {
-        return pf;
+    if (!yagl_gles_context_validate_readbuffer(ctx,
+                                               &readbuffer_internalformat)) {
+        goto out;
     }
 
-    pf = ctx->validate_getteximage_format(ctx, format, type);
+    readbuffer_format_flags =
+        yagl_gles_internalformat_flags(readbuffer_internalformat);
 
+    if ((readbuffer_format_flags & yagl_gles_format_color_renderable) == 0) {
+        goto out;
+    }
+
+    switch (format) {
+    case GL_RGBA:
+        if (((readbuffer_format_flags & (yagl_gles_format_unsigned_integer)) == 0) &&
+            ((readbuffer_format_flags & (yagl_gles_format_signed_integer)) == 0)) {
+            switch (type) {
+            YAGL_PIXEL_FORMAT_CASE(gles, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
+            }
+        }
+        break;
+    }
+
+    pf = ctx->validate_getteximage_format(ctx,
+                                          readbuffer_internalformat,
+                                          format,
+                                          type);
+
+out:
     if (!pf) {
-        YAGL_LOG_ERROR("validation error: format = 0x%X, type = 0x%X",
+        YAGL_LOG_ERROR("validation error: readbuffer_internalformat = 0x%X, format = 0x%X, type = 0x%X",
+                       readbuffer_internalformat,
                        format,
                        type);
     }
@@ -492,35 +542,76 @@ struct yagl_pixel_format
 }
 
 int yagl_gles_context_validate_copyteximage_format(struct yagl_gles_context *ctx,
-                                                   GLenum *internalformat)
+                                                   GLenum *internalformat,
+                                                   int *is_float)
 {
-    int res = 1;
+    GLenum readbuffer_internalformat;
+    uint32_t readbuffer_format_flags = 0;
+    uint32_t readbuffer_format_num_components = 0;
+    uint32_t internalformat_flags = 0;
+    uint32_t internalformat_num_components = 0;
+    int res = 0;
 
     YAGL_LOG_FUNC_SET(yagl_gles_context_validate_copyteximage_format);
 
-    switch (*internalformat) {
-    case GL_ALPHA:
-        *internalformat = GL_RGBA;
-        break;
-    case GL_RGB:
-        break;
-    case GL_RGBA:
-        break;
-    case GL_BGRA:
-        *internalformat = GL_RGBA;
-        break;
-    case GL_LUMINANCE:
-        *internalformat = GL_RGBA;
-        break;
-    case GL_LUMINANCE_ALPHA:
-        *internalformat = GL_RGBA;
-        break;
-    default:
-        res = ctx->validate_copyteximage_format(ctx, internalformat);
+    if (!yagl_gles_context_validate_readbuffer(ctx,
+                                               &readbuffer_internalformat)) {
+        goto out;
     }
 
-    if (!res) {
-        YAGL_LOG_ERROR("validation error: internalformat = 0x%X",
+    readbuffer_format_flags = yagl_gles_internalformat_flags(readbuffer_internalformat);
+    readbuffer_format_num_components = yagl_gles_internalformat_num_components(readbuffer_internalformat);
+
+    internalformat_flags = yagl_gles_internalformat_flags(*internalformat);
+    internalformat_num_components = yagl_gles_internalformat_num_components(*internalformat);
+
+    if ((internalformat_flags & yagl_gles_format_srgb) !=
+        (readbuffer_format_flags & yagl_gles_format_srgb)) {
+        goto out;
+    }
+
+    if (internalformat_num_components > readbuffer_format_num_components) {
+        goto out;
+    }
+
+    if (((readbuffer_format_flags & yagl_gles_format_unsigned_integer) == 0) &&
+        ((readbuffer_format_flags & yagl_gles_format_signed_integer) == 0)) {
+        switch (*internalformat) {
+        case GL_ALPHA:
+        case GL_LUMINANCE_ALPHA:
+            if (readbuffer_format_num_components == 4) {
+                *internalformat = GL_RGBA;
+                res = 1;
+                goto out;
+            }
+            break;
+        case GL_RGB:
+            res = 1;
+            goto out;
+        case GL_RGBA:
+            res = 1;
+            goto out;
+        case GL_BGRA:
+            res = 1;
+            *internalformat = GL_RGBA;
+            goto out;
+        case GL_LUMINANCE:
+            res = 1;
+            *internalformat = GL_RGBA;
+            goto out;
+        }
+    }
+
+    res = ctx->validate_copyteximage_format(ctx,
+                                            readbuffer_internalformat,
+                                            internalformat);
+
+out:
+    if (res) {
+        *is_float = ((readbuffer_format_flags & yagl_gles_format_float) != 0);
+    } else {
+        YAGL_LOG_ERROR("validation error: readbuffer_internalformat = %u, internalformat = 0x%X",
+                       readbuffer_internalformat,
                        *internalformat);
     }
 
@@ -698,6 +789,16 @@ void yagl_gles_context_unbind_texture(struct yagl_gles_context *ctx,
             texture_unit->target_states[i].texture = NULL;
         }
     }
+
+    if (ctx->fbo_draw) {
+        yagl_gles_framebuffer_unbind_texture(ctx->fbo_draw,
+                                             texture_local_name);
+    }
+
+    if (ctx->fbo_read) {
+        yagl_gles_framebuffer_unbind_texture(ctx->fbo_read,
+                                             texture_local_name);
+    }
 }
 
 void yagl_gles_context_bind_buffer(struct yagl_gles_context *ctx,
@@ -805,6 +906,156 @@ void yagl_gles_context_unbind_framebuffer(struct yagl_gles_context *ctx,
     }
 }
 
+GLenum yagl_gles_context_check_framebuffer_status(struct yagl_gles_context *ctx,
+                                                  struct yagl_gles_framebuffer *fb)
+{
+    GLenum res = 0;
+    struct yagl_gles_texture *texture;
+    struct yagl_gles_renderbuffer *rb;
+    uint32_t flags;
+    int i, missing = 1;
+
+    if (!fb) {
+        res = GL_FRAMEBUFFER_COMPLETE;
+        goto out;
+    }
+
+    switch (fb->attachment_states[yagl_gles_framebuffer_attachment_depth].type) {
+    case GL_TEXTURE:
+        missing = 0;
+
+        texture = fb->attachment_states[yagl_gles_framebuffer_attachment_depth].texture;
+
+        if (!texture) {
+            res = GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
+            goto out;
+        }
+
+        flags = yagl_gles_internalformat_flags(texture->internalformat);
+
+        if ((flags & yagl_gles_format_depth_renderable) == 0) {
+            res = GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
+            goto out;
+        }
+
+        break;
+    case GL_RENDERBUFFER:
+        missing = 0;
+
+        rb = fb->attachment_states[yagl_gles_framebuffer_attachment_depth].rb;
+
+        if (!rb) {
+            res = GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
+            goto out;
+        }
+
+        flags = yagl_gles_internalformat_flags(rb->internalformat);
+
+        if ((flags & yagl_gles_format_depth_renderable) == 0) {
+            res = GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
+            goto out;
+        }
+
+        break;
+    }
+
+    switch (fb->attachment_states[yagl_gles_framebuffer_attachment_stencil].type) {
+    case GL_TEXTURE:
+        missing = 0;
+
+        texture = fb->attachment_states[yagl_gles_framebuffer_attachment_stencil].texture;
+
+        if (!texture) {
+            res = GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
+            goto out;
+        }
+
+        flags = yagl_gles_internalformat_flags(texture->internalformat);
+
+        if ((flags & yagl_gles_format_stencil_renderable) == 0) {
+            res = GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
+            goto out;
+        }
+
+        break;
+    case GL_RENDERBUFFER:
+        missing = 0;
+
+        rb = fb->attachment_states[yagl_gles_framebuffer_attachment_stencil].rb;
+
+        if (!rb) {
+            res = GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
+            goto out;
+        }
+
+        flags = yagl_gles_internalformat_flags(rb->internalformat);
+
+        if ((flags & yagl_gles_format_stencil_renderable) == 0) {
+            res = GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
+            goto out;
+        }
+
+        break;
+    }
+
+    for (i = yagl_gles_framebuffer_attachment_color0;
+         i < (yagl_gles_framebuffer_attachment_color0 +
+              ctx->max_color_attachments); ++i) {
+        switch (fb->attachment_states[i].type) {
+        case GL_TEXTURE:
+            missing = 0;
+
+            texture = fb->attachment_states[i].texture;
+
+            if (!texture) {
+                res = GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
+                goto out;
+            }
+
+            flags = yagl_gles_internalformat_flags(texture->internalformat);
+
+            if ((flags & yagl_gles_format_color_renderable) == 0) {
+                res = GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
+                goto out;
+            }
+
+            if (!yagl_gles_texture_color_renderable(texture)) {
+                res = GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
+                goto out;
+            }
+
+            break;
+        case GL_RENDERBUFFER:
+            missing = 0;
+
+            rb = fb->attachment_states[i].rb;
+
+            if (!rb) {
+                res = GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
+                goto out;
+            }
+
+            flags = yagl_gles_internalformat_flags(rb->internalformat);
+
+            if ((flags & yagl_gles_format_color_renderable) == 0) {
+                res = GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
+                goto out;
+            }
+
+            break;
+        }
+    }
+
+    if (missing) {
+        res = GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT;
+    } else {
+        res = GL_FRAMEBUFFER_COMPLETE;
+    }
+
+out:
+    return res;
+}
+
 void yagl_gles_context_bind_renderbuffer(struct yagl_gles_context *ctx,
                                          GLenum target,
                                          struct yagl_gles_renderbuffer *rbo)
@@ -831,6 +1082,16 @@ void yagl_gles_context_unbind_renderbuffer(struct yagl_gles_context *ctx,
     if (ctx->rbo && (ctx->rbo->base.local_name == rbo_local_name)) {
         yagl_gles_renderbuffer_release(ctx->rbo);
         ctx->rbo = NULL;
+    }
+
+    if (ctx->fbo_draw) {
+        yagl_gles_framebuffer_unbind_renderbuffer(ctx->fbo_draw,
+                                                  rbo_local_name);
+    }
+
+    if (ctx->fbo_read) {
+        yagl_gles_framebuffer_unbind_renderbuffer(ctx->fbo_read,
+                                                  rbo_local_name);
     }
 }
 
@@ -875,6 +1136,22 @@ int yagl_gles_context_acquire_binded_framebuffer(struct yagl_gles_context *ctx,
     case GL_READ_FRAMEBUFFER:
         yagl_gles_framebuffer_acquire(ctx->fbo_read);
         *fb = ctx->fbo_read;
+        break;
+    default:
+        return 0;
+    }
+
+    return 1;
+}
+
+int yagl_gles_context_acquire_binded_renderbuffer(struct yagl_gles_context *ctx,
+                                                  GLenum target,
+                                                  struct yagl_gles_renderbuffer **rb)
+{
+    switch (target) {
+    case GL_RENDERBUFFER:
+        yagl_gles_renderbuffer_acquire(ctx->rbo);
+        *rb = ctx->rbo;
         break;
     default:
         return 0;
@@ -985,6 +1262,7 @@ int yagl_gles_context_get_integerv(struct yagl_gles_context *ctx,
 {
     int processed = 1;
     struct yagl_gles_texture_target_state *tts;
+    GLenum internalformat;
 
     switch (pname) {
     case GL_ACTIVE_TEXTURE:
@@ -1113,10 +1391,35 @@ int yagl_gles_context_get_integerv(struct yagl_gles_context *ctx,
         *num_params = 1;
         break;
     case GL_IMPLEMENTATION_COLOR_READ_FORMAT:
+        if (yagl_gles_context_validate_readbuffer(ctx, &internalformat)) {
+            uint32_t flags = yagl_gles_internalformat_flags(internalformat);
+
+            if (((flags & yagl_gles_format_unsigned_integer) != 0) ||
+                ((flags & yagl_gles_format_signed_integer) != 0)) {
+                *params = GL_RGBA_INTEGER;
+                *num_params = 1;
+                break;
+            }
+        }
         *params = GL_RGBA;
         *num_params = 1;
         break;
     case GL_IMPLEMENTATION_COLOR_READ_TYPE:
+        if (yagl_gles_context_validate_readbuffer(ctx, &internalformat)) {
+            uint32_t flags = yagl_gles_internalformat_flags(internalformat);
+
+            if ((flags & yagl_gles_format_unsigned_integer) != 0) {
+                *params = GL_UNSIGNED_INT;
+                *num_params = 1;
+                break;
+            }
+
+            if ((flags & yagl_gles_format_signed_integer) != 0) {
+                *params = GL_INT;
+                *num_params = 1;
+                break;
+            }
+        }
         *params = GL_UNSIGNED_BYTE;
         *num_params = 1;
         break;
@@ -1582,6 +1885,29 @@ void yagl_gles_context_tex_parameterf(struct yagl_gles_context *ctx,
                                       GLenum pname,
                                       GLfloat param)
 {
+    yagl_gles_texture_target texture_target;
+    struct yagl_gles_texture_target_state *tex_target_state;
+
+    YAGL_LOG_FUNC_SET(glTexParameterf);
+
+    if (!yagl_gles_context_validate_texture_target(ctx,
+                                                   target,
+                                                   &texture_target)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        return;
+    }
+
+    tex_target_state =
+        yagl_gles_context_get_active_texture_target_state(ctx, texture_target);
+
+    if (tex_target_state->texture) {
+        if (pname == GL_TEXTURE_MIN_FILTER) {
+            tex_target_state->texture->min_filter = param;
+        } else if (pname == GL_TEXTURE_MAG_FILTER) {
+            tex_target_state->texture->mag_filter = param;
+        }
+    }
+
     yagl_host_glTexParameterf(target, pname, param);
 }
 
@@ -1590,6 +1916,29 @@ void yagl_gles_context_tex_parameterfv(struct yagl_gles_context *ctx,
                                        GLenum pname,
                                        const GLfloat *params)
 {
+    yagl_gles_texture_target texture_target;
+    struct yagl_gles_texture_target_state *tex_target_state;
+
+    YAGL_LOG_FUNC_SET(glTexParameterfv);
+
+    if (!yagl_gles_context_validate_texture_target(ctx,
+                                                   target,
+                                                   &texture_target)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        return;
+    }
+
+    tex_target_state =
+        yagl_gles_context_get_active_texture_target_state(ctx, texture_target);
+
+    if (tex_target_state->texture) {
+        if (pname == GL_TEXTURE_MIN_FILTER) {
+            tex_target_state->texture->min_filter = params[0];
+        } else if (pname == GL_TEXTURE_MAG_FILTER) {
+            tex_target_state->texture->mag_filter = params[0];
+        }
+    }
+
     yagl_host_glTexParameterfv(target, pname, params, 1);
 }
 

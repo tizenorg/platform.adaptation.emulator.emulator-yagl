@@ -24,6 +24,18 @@ typedef enum
 
 #define YAGL_MAX_GLES_FRAMEBUFFER_COLOR_ATTACHMENTS 16
 
+typedef enum
+{
+    yagl_gles_format_color_renderable = (1 << 0),
+    yagl_gles_format_depth_renderable = (1 << 1),
+    yagl_gles_format_stencil_renderable = (1 << 2),
+    yagl_gles_format_sized = (1 << 3),
+    yagl_gles_format_signed_integer = (1 << 4),
+    yagl_gles_format_unsigned_integer = (1 << 5),
+    yagl_gles_format_float = (1 << 6),
+    yagl_gles_format_srgb = (1 << 7)
+} yagl_gles_format_flag;
+
 #define YAGL_MAX_GLES_DRAW_BUFFERS 16
 
 struct yagl_gles_pixelstore

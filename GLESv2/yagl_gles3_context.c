@@ -10,6 +10,7 @@
 #include "yagl_gles_texture_unit.h"
 #include "yagl_gles_texture.h"
 #include "yagl_gles_sampler.h"
+#include "yagl_gles_utils.h"
 #include "yagl_log.h"
 #include "yagl_malloc.h"
 #include "yagl_state.h"
@@ -847,11 +848,14 @@ static struct yagl_pixel_format
 
 static struct yagl_pixel_format
     *yagl_gles3_context_validate_getteximage_format(struct yagl_gles_context *ctx,
+                                                    GLenum readbuffer_internalformat,
                                                     GLenum format,
                                                     GLenum type)
 {
+    uint32_t readbuffer_format_flags;
     struct yagl_pixel_format *pf =
         yagl_gles2_context_validate_getteximage_format(ctx,
+                                                       readbuffer_internalformat,
                                                        format,
                                                        type);
 
@@ -859,87 +863,26 @@ static struct yagl_pixel_format
         return pf;
     }
 
+    readbuffer_format_flags = yagl_gles_internalformat_flags(readbuffer_internalformat);
+
     switch (format) {
-    case GL_RED:
-        switch (type) {
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_R8, GL_RED, GL_UNSIGNED_BYTE);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_R8_SNORM, GL_RED, GL_BYTE);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_R32F, GL_RED, GL_FLOAT);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_R16F, GL_RED, GL_HALF_FLOAT);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_R16F, GL_RED, GL_HALF_FLOAT_OES);
-        }
-        break;
-    case GL_RED_INTEGER:
-        switch (type) {
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_R8UI, GL_RED_INTEGER, GL_UNSIGNED_BYTE);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_R8I, GL_RED_INTEGER, GL_BYTE);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_R16UI, GL_RED_INTEGER, GL_UNSIGNED_SHORT);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_R16I, GL_RED_INTEGER, GL_SHORT);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_R32I, GL_RED_INTEGER, GL_INT);
-        }
-        break;
-    case GL_RG:
-        switch (type) {
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RG8, GL_RG, GL_UNSIGNED_BYTE);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RG8_SNORM, GL_RG, GL_BYTE);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RG32F, GL_RG, GL_FLOAT);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RG16F, GL_RG, GL_HALF_FLOAT);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RG16F, GL_RG, GL_HALF_FLOAT_OES);
-        }
-        break;
-    case GL_RG_INTEGER:
-        switch (type) {
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RG8UI, GL_RG_INTEGER, GL_UNSIGNED_BYTE);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RG8I, GL_RG_INTEGER, GL_BYTE);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RG16UI, GL_RG_INTEGER, GL_UNSIGNED_SHORT);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RG16I, GL_RG_INTEGER, GL_SHORT);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RG32UI, GL_RG_INTEGER, GL_UNSIGNED_INT);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RG32I, GL_RG_INTEGER, GL_INT);
-        }
-        break;
-    case GL_RGB:
-        switch (type) {
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RGB8_SNORM, GL_RGB, GL_BYTE);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_R11F_G11F_B10F, GL_RGB, GL_UNSIGNED_INT_10F_11F_11F_REV);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RGB9_E5, GL_RGB, GL_UNSIGNED_INT_5_9_9_9_REV);
-        }
-        break;
-    case GL_RGB_INTEGER:
-        switch (type) {
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RGB8UI, GL_RGB_INTEGER, GL_UNSIGNED_BYTE);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RGB8I, GL_RGB_INTEGER, GL_BYTE);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RGB16UI, GL_RGB_INTEGER, GL_UNSIGNED_SHORT);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RGB16I, GL_RGB_INTEGER, GL_SHORT);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RGB32UI, GL_RGB_INTEGER, GL_UNSIGNED_INT);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RGB32I, GL_RGB_INTEGER, GL_INT);
-        }
-        break;
     case GL_RGBA:
-        switch (type) {
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RGBA8_SNORM, GL_RGBA, GL_BYTE);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RGB5_A1, GL_RGBA, GL_UNSIGNED_INT_2_10_10_10_REV);
+        if (readbuffer_internalformat == GL_RGB10_A2) {
+            switch (type) {
+            YAGL_PIXEL_FORMAT_CASE(gles3, GL_RGB10_A2, GL_RGBA, GL_UNSIGNED_INT_2_10_10_10_REV);
+            }
         }
         break;
     case GL_RGBA_INTEGER:
-        switch (type) {
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RGBA8UI, GL_RGBA_INTEGER, GL_UNSIGNED_BYTE);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RGBA8I, GL_RGBA_INTEGER, GL_BYTE);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RGBA16UI, GL_RGBA_INTEGER, GL_UNSIGNED_SHORT);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RGBA16I, GL_RGBA_INTEGER, GL_SHORT);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RGBA32UI, GL_RGBA_INTEGER, GL_UNSIGNED_INT);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RGBA32I, GL_RGBA_INTEGER, GL_INT);
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_RGB10_A2UI, GL_RGBA_INTEGER, GL_UNSIGNED_INT_2_10_10_10_REV);
+        if ((readbuffer_format_flags & (yagl_gles_format_unsigned_integer)) != 0) {
+            switch (type) {
+            YAGL_PIXEL_FORMAT_CASE(gles3, GL_RGBA32UI, GL_RGBA_INTEGER, GL_UNSIGNED_INT);
+            }
         }
-        break;
-    case GL_DEPTH_COMPONENT:
-        switch (type) {
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_FLOAT);
-        }
-        break;
-    case GL_DEPTH_STENCIL:
-        switch (type) {
-        YAGL_PIXEL_FORMAT_CASE(gles3, GL_DEPTH32F_STENCIL8, GL_DEPTH_STENCIL, GL_FLOAT_32_UNSIGNED_INT_24_8_REV);
+        if ((readbuffer_format_flags & (yagl_gles_format_signed_integer)) != 0) {
+            switch (type) {
+            YAGL_PIXEL_FORMAT_CASE(gles3, GL_RGBA32I, GL_RGBA_INTEGER, GL_INT);
+            }
         }
         break;
     }
@@ -948,49 +891,82 @@ static struct yagl_pixel_format
 }
 
 static int yagl_gles3_context_validate_copyteximage_format(struct yagl_gles_context *ctx,
+                                                           GLenum readbuffer_internalformat,
                                                            GLenum *internalformat)
 {
+    uint32_t readbuffer_format_flags;
+
     if (yagl_gles2_context_validate_copyteximage_format(ctx,
+                                                        readbuffer_internalformat,
                                                         internalformat)) {
         return 1;
     }
 
-    switch (*internalformat) {
-    case GL_R8:
-    case GL_RG8:
-    case GL_RGB565:
-    case GL_RGB8:
-    case GL_RGBA4:
-    case GL_RGB5_A1:
-    case GL_RGBA8:
-    case GL_RGB10_A2:
-    case GL_SRGB8:
-    case GL_SRGB8_ALPHA8:
-    case GL_R8I:
-    case GL_R8UI:
-    case GL_R16I:
-    case GL_R16UI:
-    case GL_R32I:
-    case GL_R32UI:
-    case GL_RG8I:
-    case GL_RG8UI:
-    case GL_RG16I:
-    case GL_RG16UI:
-    case GL_RG32I:
-    case GL_RG32UI:
-    case GL_RGBA8I:
-    case GL_RGBA8UI:
-    case GL_RGB10_A2UI:
-    case GL_RGBA16I:
-    case GL_RGBA16UI:
-    case GL_RGBA32I:
-    case GL_RGBA32UI:
-        break;
-    default:
-        return 0;
+    readbuffer_format_flags = yagl_gles_internalformat_flags(readbuffer_internalformat);
+
+    if ((readbuffer_format_flags & yagl_gles_format_unsigned_integer) != 0) {
+        switch (*internalformat) {
+        case GL_R8UI:
+        case GL_R16UI:
+        case GL_R32UI:
+        case GL_RG8UI:
+        case GL_RG16UI:
+        case GL_RG32UI:
+        case GL_RGBA8UI:
+        case GL_RGB10_A2UI:
+        case GL_RGBA16UI:
+        case GL_RGBA32UI:
+        case GL_RGB8UI:
+        case GL_RGB16UI:
+        case GL_RGB32UI:
+            return 1;
+        }
+    } else if ((readbuffer_format_flags & yagl_gles_format_signed_integer) != 0) {
+        switch (*internalformat) {
+        case GL_R8I:
+        case GL_R16I:
+        case GL_R32I:
+        case GL_RG8I:
+        case GL_RG16I:
+        case GL_RG32I:
+        case GL_RGBA8I:
+        case GL_RGBA16I:
+        case GL_RGBA32I:
+        case GL_RGB8I:
+        case GL_RGB16I:
+        case GL_RGB32I:
+            return 1;
+        }
+    } else {
+        switch (*internalformat) {
+        case GL_R16F:
+        case GL_R32F:
+        case GL_RG16F:
+        case GL_RG32F:
+        case GL_R11F_G11F_B10F:
+        case GL_RGB16F:
+        case GL_RGB32F:
+        case GL_RGBA16F:
+        case GL_RGBA32F:
+        case GL_R8:
+        case GL_RG8:
+        case GL_RGB565:
+        case GL_RGB8:
+        case GL_RGBA4:
+        case GL_RGB5_A1:
+        case GL_RGBA8:
+        case GL_RGB10_A2:
+        case GL_SRGB8_ALPHA8:
+        case GL_R8_SNORM:
+        case GL_RG8_SNORM:
+        case GL_RGB8_SNORM:
+        case GL_RGBA8_SNORM:
+        case GL_SRGB8:
+            return 1;
+        }
     }
 
-    return 1;
+    return 0;
 }
 
 static int yagl_gles3_context_validate_texstorage_format(struct yagl_gles_context *ctx,

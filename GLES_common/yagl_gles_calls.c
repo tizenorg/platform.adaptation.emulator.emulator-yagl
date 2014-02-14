@@ -74,18 +74,34 @@ YAGL_API void glPolygonOffset(GLfloat factor, GLfloat units)
 
 void glRenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height)
 {
+    GLenum actual_internalformat = internalformat;
+    struct yagl_gles_renderbuffer *renderbuffer_obj = NULL;
+
     YAGL_LOG_FUNC_ENTER_SPLIT4(glRenderbufferStorage, GLenum, GLenum, GLsizei, GLsizei, target, internalformat, width, height);
 
     YAGL_GET_CTX();
 
-    if (!yagl_gles_context_validate_renderbuffer_format(ctx, &internalformat)) {
+    if (!yagl_gles_context_validate_renderbuffer_format(ctx, &actual_internalformat)) {
         YAGL_SET_ERR(GL_INVALID_ENUM);
         goto out;
     }
 
-    yagl_host_glRenderbufferStorage(target, internalformat, width, height);
+    if (!yagl_gles_context_acquire_binded_renderbuffer(ctx, target, &renderbuffer_obj)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if (!renderbuffer_obj) {
+        goto out;
+    }
+
+    yagl_gles_renderbuffer_set_internalformat(renderbuffer_obj, internalformat);
+
+    yagl_host_glRenderbufferStorage(target, actual_internalformat, width, height);
 
 out:
+    yagl_gles_renderbuffer_release(renderbuffer_obj);
+
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
@@ -134,12 +150,69 @@ YAGL_API void glTexParameterfv(GLenum target, GLenum pname, const GLfloat *param
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-YAGL_IMPLEMENT_API_NORET3(glTexParameteri, GLenum, GLenum, GLint, target, pname, param)
+YAGL_API void glTexParameteri(GLenum target, GLenum pname, GLint param)
+{
+    yagl_gles_texture_target texture_target;
+    struct yagl_gles_texture_target_state *tex_target_state;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glTexParameteri, GLenum, GLenum, GLint, target, pname, param);
+
+    YAGL_GET_CTX();
+
+    if (!yagl_gles_context_validate_texture_target(ctx,
+                                                   target,
+                                                   &texture_target)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    tex_target_state =
+        yagl_gles_context_get_active_texture_target_state(ctx, texture_target);
+
+    if (tex_target_state->texture) {
+        if (pname == GL_TEXTURE_MIN_FILTER) {
+            tex_target_state->texture->min_filter = param;
+        } else if (pname == GL_TEXTURE_MAG_FILTER) {
+            tex_target_state->texture->mag_filter = param;
+        }
+    }
+
+    yagl_host_glTexParameteri(target, pname, param);
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
 
 YAGL_API void glTexParameteriv(GLenum target, GLenum pname, const GLint *params)
 {
+    yagl_gles_texture_target texture_target;
+    struct yagl_gles_texture_target_state *tex_target_state;
+
     YAGL_LOG_FUNC_ENTER_SPLIT3(glTexParameteriv, GLenum, GLenum, const GLint*, target, pname, params);
+
+    YAGL_GET_CTX();
+
+    if (!yagl_gles_context_validate_texture_target(ctx,
+                                                   target,
+                                                   &texture_target)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    tex_target_state =
+        yagl_gles_context_get_active_texture_target_state(ctx, texture_target);
+
+    if (tex_target_state->texture) {
+        if (pname == GL_TEXTURE_MIN_FILTER) {
+            tex_target_state->texture->min_filter = params[0];
+        } else if (pname == GL_TEXTURE_MAG_FILTER) {
+            tex_target_state->texture->mag_filter = params[0];
+        }
+    }
+
     yagl_host_glTexParameteriv(target, pname, params, 1);
+
+out:
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
@@ -514,9 +587,6 @@ GLenum glCheckFramebufferStatus(GLenum target)
 {
     GLenum res = 0;
     struct yagl_gles_framebuffer *framebuffer_obj = NULL;
-    struct yagl_gles_texture *texture_obj = NULL;
-    struct yagl_gles_renderbuffer *renderbuffer_obj = NULL;
-    int i, missing = 1;
 
     YAGL_LOG_FUNC_ENTER_SPLIT1(glCheckFramebufferStatus, GLenum, target);
 
@@ -527,57 +597,7 @@ GLenum glCheckFramebufferStatus(GLenum target)
         goto out;
     }
 
-    if (!framebuffer_obj) {
-        res = GL_FRAMEBUFFER_COMPLETE;
-        goto out;
-    }
-
-    for (i = 0; i < (yagl_gles_framebuffer_attachment_color0 +
-                     ctx->max_color_attachments); ++i) {
-        if (framebuffer_obj->attachment_states[i].type != GL_NONE) {
-            missing = 0;
-            break;
-        }
-    }
-
-    if (missing) {
-        res = GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT;
-        goto out;
-    }
-
-    for (i = 0; i < (yagl_gles_framebuffer_attachment_color0 +
-                     ctx->max_color_attachments); ++i) {
-        switch (framebuffer_obj->attachment_states[i].type) {
-        case GL_TEXTURE:
-            texture_obj = (struct yagl_gles_texture*)yagl_sharegroup_acquire_object(ctx->base.sg,
-                YAGL_NS_TEXTURE, framebuffer_obj->attachment_states[i].local_name);
-
-            if (!texture_obj) {
-                res = GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
-            }
-
-            yagl_gles_texture_release(texture_obj);
-            break;
-        case GL_RENDERBUFFER:
-            renderbuffer_obj = (struct yagl_gles_renderbuffer*)yagl_sharegroup_acquire_object(ctx->base.sg,
-                YAGL_NS_RENDERBUFFER, framebuffer_obj->attachment_states[i].local_name);
-
-            if (!renderbuffer_obj) {
-                res = GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
-            }
-
-            yagl_gles_renderbuffer_release(renderbuffer_obj);
-            break;
-        default:
-            break;
-        }
-    }
-
-    if (res != 0) {
-        goto out;
-    }
-
-    res = GL_FRAMEBUFFER_COMPLETE;
+    res = yagl_gles_context_check_framebuffer_status(ctx, framebuffer_obj);
 
 out:
     yagl_gles_framebuffer_release(framebuffer_obj);
@@ -758,22 +778,39 @@ YAGL_API void glCopyTexImage2D(GLenum target,
                                GLsizei height,
                                GLint border)
 {
+    GLenum actual_internalformat = internalformat;
+    GLenum squashed_target;
+    yagl_gles_texture_target texture_target;
+    struct yagl_gles_texture_target_state *tex_target_state;
+    int is_float;
+
     YAGL_LOG_FUNC_ENTER_SPLIT8(glCopyTexImage2D, GLenum, GLint, GLenum, GLint, GLint, GLsizei, GLsizei, GLint, target, level, internalformat, x, y, width, height, border);
 
     YAGL_GET_CTX();
-
-    if ((ctx->base.client_api == yagl_client_api_gles1) &&
-        (target != GL_TEXTURE_2D)) {
-        YAGL_SET_ERR(GL_INVALID_ENUM);
-        goto out;
-    }
 
     if (border != 0) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
         goto out;
     }
 
-    if (!yagl_gles_context_validate_copyteximage_format(ctx, &internalformat)) {
+    if (!yagl_gles_validate_texture_target_squash(target, &squashed_target)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if (!yagl_gles_context_validate_texture_target(ctx,
+                                                   squashed_target,
+                                                   &texture_target)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    tex_target_state =
+        yagl_gles_context_get_active_texture_target_state(ctx, texture_target);
+
+    if (!yagl_gles_context_validate_copyteximage_format(ctx,
+                                                        &actual_internalformat,
+                                                        &is_float)) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
         goto out;
     }
@@ -792,12 +829,18 @@ YAGL_API void glCopyTexImage2D(GLenum target,
 
     yagl_host_glCopyTexImage2D(target,
                                level,
-                               internalformat,
+                               actual_internalformat,
                                x,
                                y,
                                width,
                                height,
                                border);
+
+    if (tex_target_state->texture) {
+        yagl_gles_texture_set_internalformat(tex_target_state->texture,
+                                             internalformat,
+                                             (is_float ? GL_FLOAT : 0));
+    }
 
 out:
     YAGL_LOG_FUNC_EXIT(NULL);
@@ -2050,7 +2093,8 @@ YAGL_API void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLs
 
     if (tex_target_state->texture) {
         yagl_gles_texture_set_internalformat(tex_target_state->texture,
-                                             internalformat);
+                                             internalformat,
+                                             type);
     }
 
 out:
@@ -2852,7 +2896,7 @@ YAGL_API void glTexStorage2D(GLenum target, GLsizei levels, GLenum internalforma
         goto out;
     }
 
-    yagl_gles_texture_set_immutable(texture_obj, internalformat);
+    yagl_gles_texture_set_immutable(texture_obj, internalformat, type);
 
 out:
     YAGL_LOG_FUNC_EXIT(NULL);

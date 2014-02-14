@@ -2316,6 +2316,13 @@ YAGL_API void glTexImage3D(GLenum target, GLint level, GLint internalformat, GLs
         goto out;
     }
 
+    if ((texture_target == yagl_gles_texture_target_3d) &&
+        ((pf->src_format == GL_DEPTH_COMPONENT) ||
+         (pf->src_format == GL_DEPTH_STENCIL_OES))) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
     if ((width != 0) && !yagl_gles_context_pre_unpack(&ctx->base, &pixels, pf->need_convert, &using_pbo)) {
         YAGL_SET_ERR(GL_INVALID_OPERATION);
         goto out;
@@ -2360,7 +2367,8 @@ YAGL_API void glTexImage3D(GLenum target, GLint level, GLint internalformat, GLs
 
     if (tex_target_state->texture) {
         yagl_gles_texture_set_internalformat(tex_target_state->texture,
-                                             internalformat);
+                                             internalformat,
+                                             type);
     }
 
 out:
@@ -2670,6 +2678,13 @@ YAGL_API void glTexStorage3D(GLenum target, GLsizei levels, GLenum internalforma
         goto out;
     }
 
+    if ((texture_target == yagl_gles_texture_target_3d) &&
+        ((format == GL_DEPTH_COMPONENT) ||
+         (format == GL_DEPTH_STENCIL_OES))) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
     switch (texture_target) {
     case yagl_gles_texture_target_3d:
         for (i = 0; i < levels; ++i) {
@@ -2715,7 +2730,7 @@ YAGL_API void glTexStorage3D(GLenum target, GLsizei levels, GLenum internalforma
         goto out;
     }
 
-    yagl_gles_texture_set_immutable(texture_obj, internalformat);
+    yagl_gles_texture_set_immutable(texture_obj, internalformat, type);
 
 out:
     YAGL_LOG_FUNC_EXIT(NULL);

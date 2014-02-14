@@ -191,10 +191,12 @@ struct yagl_pixel_format
 
 struct yagl_pixel_format
     *yagl_gles2_context_validate_getteximage_format(struct yagl_gles_context *ctx,
+                                                    GLenum readbuffer_internalformat,
                                                     GLenum format,
                                                     GLenum type);
 
 int yagl_gles2_context_validate_copyteximage_format(struct yagl_gles_context *ctx,
+                                                    GLenum readbuffer_internalformat,
                                                     GLenum *internalformat);
 
 int yagl_gles2_context_validate_texstorage_format(struct yagl_gles_context *ctx,

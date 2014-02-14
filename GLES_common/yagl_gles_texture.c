@@ -7,6 +7,11 @@
 #include "yagl_host_gles_calls.h"
 #include <assert.h>
 
+/*
+ * We can't include GLES2/gl2ext.h here
+ */
+#define GL_HALF_FLOAT_OES 0x8D61
+
 static void yagl_gles_texture_destroy(struct yagl_ref *ref)
 {
     struct yagl_gles_texture *texture = (struct yagl_gles_texture*)ref;
@@ -37,7 +42,8 @@ struct yagl_gles_texture *yagl_gles_texture_create(void)
     yagl_object_init(&texture->base, &yagl_gles_texture_destroy);
 
     texture->global_name = yagl_get_global_name();
-    texture->target = 0;
+    texture->min_filter = GL_NEAREST_MIPMAP_LINEAR;
+    texture->mag_filter = GL_LINEAR;
 
     yagl_host_glGenTextures(&texture->global_name, 1);
 
@@ -78,16 +84,64 @@ int yagl_gles_texture_bind(struct yagl_gles_texture *texture,
 }
 
 void yagl_gles_texture_set_internalformat(struct yagl_gles_texture *texture,
-                                          GLenum internalformat)
+                                          GLenum internalformat,
+                                          GLenum type)
 {
     texture->internalformat = internalformat;
+
+    switch (type) {
+    case GL_FLOAT:
+    case GL_HALF_FLOAT:
+    case GL_HALF_FLOAT_OES:
+        texture->is_float = 1;
+        break;
+    default:
+        texture->is_float = 0;
+        break;
+    }
 }
 
 void yagl_gles_texture_set_immutable(struct yagl_gles_texture *texture,
-                                     GLenum internalformat)
+                                     GLenum internalformat,
+                                     GLenum type)
 {
     texture->immutable = GL_TRUE;
     texture->internalformat = internalformat;
+
+    switch (type) {
+    case GL_FLOAT:
+    case GL_HALF_FLOAT:
+    case GL_HALF_FLOAT_OES:
+        texture->is_float = 1;
+        break;
+    default:
+        texture->is_float = 0;
+        break;
+    }
+}
+
+int yagl_gles_texture_color_renderable(struct yagl_gles_texture *texture)
+{
+    if (!texture->is_float) {
+        return 1;
+    }
+
+    switch (texture->min_filter) {
+    case GL_NEAREST:
+    case GL_NEAREST_MIPMAP_NEAREST:
+        break;
+    default:
+        return 0;
+    }
+
+    switch (texture->mag_filter) {
+    case GL_NEAREST:
+        break;
+    default:
+        return 0;
+    }
+
+    return 1;
 }
 
 void yagl_gles_texture_set_image(struct yagl_gles_texture *texture,

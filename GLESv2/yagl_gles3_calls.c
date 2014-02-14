@@ -12,6 +12,7 @@
 #include "yagl_gles_buffer.h"
 #include "yagl_gles_texture.h"
 #include "yagl_gles_framebuffer.h"
+#include "yagl_gles_renderbuffer.h"
 #include "yagl_gles_sampler.h"
 #include "yagl_gles_vertex_array.h"
 #include "yagl_gles_array.h"
@@ -1307,18 +1308,34 @@ out:
 
 YAGL_API void glRenderbufferStorageMultisample(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height)
 {
+    GLenum actual_internalformat = internalformat;
+    struct yagl_gles_renderbuffer *renderbuffer_obj = NULL;
+
     YAGL_LOG_FUNC_ENTER_SPLIT5(glRenderbufferStorageMultisample, GLenum, GLsizei, GLenum, GLsizei, GLsizei, target, samples, internalformat, width, height);
 
     YAGL_GET_CTX();
 
-    if (!yagl_gles_context_validate_renderbuffer_format(&ctx->base.base, &internalformat)) {
+    if (!yagl_gles_context_validate_renderbuffer_format(&ctx->base.base, &actual_internalformat)) {
         YAGL_SET_ERR(GL_INVALID_ENUM);
         goto out;
     }
 
-    yagl_host_glRenderbufferStorageMultisample(target, samples, internalformat, width, height);
+    if (!yagl_gles_context_acquire_binded_renderbuffer(&ctx->base.base, target, &renderbuffer_obj)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if (!renderbuffer_obj) {
+        goto out;
+    }
+
+    yagl_gles_renderbuffer_set_internalformat(renderbuffer_obj, internalformat);
+
+    yagl_host_glRenderbufferStorageMultisample(target, samples, actual_internalformat, width, height);
 
 out:
+    yagl_gles_renderbuffer_release(renderbuffer_obj);
+
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 

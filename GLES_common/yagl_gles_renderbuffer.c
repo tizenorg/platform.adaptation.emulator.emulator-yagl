@@ -57,6 +57,12 @@ void yagl_gles_renderbuffer_bind(struct yagl_gles_renderbuffer *rb,
     rb->was_bound = 1;
 }
 
+void yagl_gles_renderbuffer_set_internalformat(struct yagl_gles_renderbuffer *rb,
+                                               GLenum internalformat)
+{
+    rb->internalformat = internalformat;
+}
+
 int yagl_gles_renderbuffer_was_bound(struct yagl_gles_renderbuffer *rb)
 {
     return rb->was_bound;

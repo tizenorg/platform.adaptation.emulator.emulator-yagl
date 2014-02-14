@@ -13,6 +13,13 @@ struct yagl_gles_framebuffer_attachment_state
 
     yagl_object_name local_name;
 
+    union
+    {
+        struct yagl_object *obj;
+        struct yagl_gles_texture *texture;
+        struct yagl_gles_renderbuffer *rb;
+    };
+
     GLenum textarget;
 
     GLint layer;
@@ -73,5 +80,11 @@ void yagl_gles_framebuffer_bind(struct yagl_gles_framebuffer *fb,
                                 GLenum target);
 
 int yagl_gles_framebuffer_was_bound(struct yagl_gles_framebuffer *fb);
+
+void yagl_gles_framebuffer_unbind_texture(struct yagl_gles_framebuffer *fb,
+                                          yagl_object_name texture_local_name);
+
+void yagl_gles_framebuffer_unbind_renderbuffer(struct yagl_gles_framebuffer *fb,
+                                               yagl_object_name rb_local_name);
 
 #endif

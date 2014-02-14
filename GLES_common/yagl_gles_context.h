@@ -107,10 +107,12 @@ struct yagl_gles_context
                                                           GLenum /*type*/);
 
     struct yagl_pixel_format *(*validate_getteximage_format)(struct yagl_gles_context */*ctx*/,
+                                                             GLenum /*readbuffer_internalformat*/,
                                                              GLenum /*format*/,
                                                              GLenum /*type*/);
 
     int (*validate_copyteximage_format)(struct yagl_gles_context */*ctx*/,
+                                        GLenum /*readbuffer_internalformat*/,
                                         GLenum */*internalformat*/);
 
     int (*validate_texstorage_format)(struct yagl_gles_context */*ctx*/,
@@ -256,7 +258,8 @@ struct yagl_pixel_format
                                                    GLenum type);
 
 int yagl_gles_context_validate_copyteximage_format(struct yagl_gles_context *ctx,
-                                                   GLenum *internalformat);
+                                                   GLenum *internalformat,
+                                                   int *is_float);
 
 int yagl_gles_context_validate_texstorage_format(struct yagl_gles_context *ctx,
                                                  GLenum *internalformat,
@@ -300,6 +303,9 @@ void yagl_gles_context_bind_framebuffer(struct yagl_gles_context *ctx,
 void yagl_gles_context_unbind_framebuffer(struct yagl_gles_context *ctx,
                                           yagl_object_name fbo_local_name);
 
+GLenum yagl_gles_context_check_framebuffer_status(struct yagl_gles_context *ctx,
+                                                  struct yagl_gles_framebuffer *fb);
+
 void yagl_gles_context_bind_renderbuffer(struct yagl_gles_context *ctx,
                                          GLenum target,
                                          struct yagl_gles_renderbuffer *rbo);
@@ -314,6 +320,10 @@ int yagl_gles_context_acquire_binded_buffer(struct yagl_gles_context *ctx,
 int yagl_gles_context_acquire_binded_framebuffer(struct yagl_gles_context *ctx,
                                                  GLenum target,
                                                  struct yagl_gles_framebuffer **fb);
+
+int yagl_gles_context_acquire_binded_renderbuffer(struct yagl_gles_context *ctx,
+                                                  GLenum target,
+                                                  struct yagl_gles_renderbuffer **rb);
 
 void yagl_gles_context_enable(struct yagl_gles_context *ctx,
                               GLenum cap,
