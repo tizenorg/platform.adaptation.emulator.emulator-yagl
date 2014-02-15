@@ -563,6 +563,7 @@ void yagl_gles2_context_post_draw(struct yagl_gles2_context *ctx,
 
 void yagl_gles2_context_compressed_tex_image_2d(struct yagl_gles_context *gles_ctx,
                                                 GLenum target,
+                                                struct yagl_gles_texture *texture,
                                                 GLint level,
                                                 GLenum internalformat,
                                                 GLsizei width,
@@ -610,6 +611,10 @@ void yagl_gles2_context_compressed_tex_image_2d(struct yagl_gles_context *gles_c
                                    NULL,
                                    dst_size);
 
+        yagl_gles_texture_set_internalformat(texture,
+                                             tc_format->dst_internalformat,
+                                             tc_format->dst_type);
+
         return;
     }
 
@@ -637,6 +642,10 @@ void yagl_gles2_context_compressed_tex_image_2d(struct yagl_gles_context *gles_c
                                dst_size);
 
     yagl_gles_set_unpack(&gles_ctx->unpack);
+
+    yagl_gles_texture_set_internalformat(texture,
+                                         tc_format->dst_internalformat,
+                                         tc_format->dst_type);
 }
 
 void yagl_gles2_context_compressed_tex_sub_image_2d(struct yagl_gles_context *gles_ctx,
@@ -730,6 +739,7 @@ void yagl_gles2_context_compressed_tex_sub_image_2d(struct yagl_gles_context *gl
 
 void yagl_gles2_context_compressed_tex_image_3d(struct yagl_gles2_context *ctx,
                                                 GLenum target,
+                                                struct yagl_gles_texture *texture,
                                                 GLint level,
                                                 GLenum internalformat,
                                                 GLsizei width,
@@ -784,6 +794,10 @@ void yagl_gles2_context_compressed_tex_image_3d(struct yagl_gles2_context *ctx,
                                    NULL,
                                    dst_size * depth);
 
+        yagl_gles_texture_set_internalformat(texture,
+                                             tc_format->dst_internalformat,
+                                             tc_format->dst_type);
+
         return;
     }
 
@@ -816,6 +830,10 @@ void yagl_gles2_context_compressed_tex_image_3d(struct yagl_gles2_context *ctx,
                                dst_size * depth);
 
     yagl_gles_set_unpack(&ctx->base.unpack);
+
+    yagl_gles_texture_set_internalformat(texture,
+                                         tc_format->dst_internalformat,
+                                         tc_format->dst_type);
 }
 
 void yagl_gles2_context_compressed_tex_sub_image_3d(struct yagl_gles2_context *ctx,
@@ -1163,6 +1181,7 @@ int yagl_gles2_context_validate_copyteximage_format(struct yagl_gles_context *ct
 
 int yagl_gles2_context_validate_texstorage_format(struct yagl_gles_context *ctx,
                                                   GLenum *internalformat,
+                                                  GLenum *base_internalformat,
                                                   GLenum *any_format,
                                                   GLenum *any_type)
 {
@@ -1182,6 +1201,7 @@ int yagl_gles2_context_validate_texstorage_format(struct yagl_gles_context *ctx,
     }
 
     *internalformat = tc_format->dst_internalformat;
+    *base_internalformat = tc_format->dst_internalformat;
     *any_format = tc_format->dst_format;
     *any_type = tc_format->dst_type;
 

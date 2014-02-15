@@ -12,6 +12,33 @@
  */
 #define GL_HALF_FLOAT_OES 0x8D61
 
+static void yagl_gles_texture_set_swizzle(struct yagl_gles_texture *texture,
+                                          GLenum internalformat)
+{
+    if (yagl_get_host_gl_version() > yagl_gl_2) {
+        switch (internalformat) {
+        case GL_ALPHA:
+            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_R, GL_ONE);
+            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_G, GL_ONE);
+            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_B, GL_ONE);
+            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_A, GL_ALPHA);
+            break;
+        case GL_LUMINANCE:
+            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_R, GL_RED);
+            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_G, GL_RED);
+            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_B, GL_RED);
+            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_A, GL_ONE);
+            break;
+        case GL_LUMINANCE_ALPHA:
+            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_R, GL_RED);
+            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_G, GL_RED);
+            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_B, GL_RED);
+            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_A, GL_ALPHA);
+            break;
+        }
+    }
+}
+
 static void yagl_gles_texture_destroy(struct yagl_ref *ref)
 {
     struct yagl_gles_texture *texture = (struct yagl_gles_texture*)ref;
@@ -94,6 +121,8 @@ void yagl_gles_texture_set_internalformat(struct yagl_gles_texture *texture,
         texture->is_float = 0;
         break;
     }
+
+    yagl_gles_texture_set_swizzle(texture, internalformat);
 }
 
 void yagl_gles_texture_set_immutable(struct yagl_gles_texture *texture,
@@ -113,6 +142,8 @@ void yagl_gles_texture_set_immutable(struct yagl_gles_texture *texture,
         texture->is_float = 0;
         break;
     }
+
+    yagl_gles_texture_set_swizzle(texture, internalformat);
 }
 
 int yagl_gles_texture_color_renderable(struct yagl_gles_texture *texture)

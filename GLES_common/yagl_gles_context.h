@@ -25,6 +25,7 @@ struct yagl_gles_context
 
     void (*compressed_tex_image_2d)(struct yagl_gles_context */*ctx*/,
                                     GLenum /*target*/,
+                                    struct yagl_gles_texture */*texture*/,
                                     GLint /*level*/,
                                     GLenum /*internalformat*/,
                                     GLsizei /*width*/,
@@ -117,6 +118,7 @@ struct yagl_gles_context
 
     int (*validate_texstorage_format)(struct yagl_gles_context */*ctx*/,
                                       GLenum */*internalformat*/,
+                                      GLenum */*base_internalformat*/,
                                       GLenum */*any_format*/,
                                       GLenum */*any_type*/);
 
@@ -263,6 +265,7 @@ int yagl_gles_context_validate_copyteximage_format(struct yagl_gles_context *ctx
 
 int yagl_gles_context_validate_texstorage_format(struct yagl_gles_context *ctx,
                                                  GLenum *internalformat,
+                                                 GLenum *base_internalformat,
                                                  GLenum *any_format,
                                                  GLenum *any_type);
 

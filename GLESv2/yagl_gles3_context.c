@@ -978,11 +978,13 @@ static int yagl_gles3_context_validate_copyteximage_format(struct yagl_gles_cont
 
 static int yagl_gles3_context_validate_texstorage_format(struct yagl_gles_context *ctx,
                                                          GLenum *internalformat,
+                                                         GLenum *base_internalformat,
                                                          GLenum *any_format,
                                                          GLenum *any_type)
 {
     if (yagl_gles2_context_validate_texstorage_format(ctx,
                                                       internalformat,
+                                                      base_internalformat,
                                                       any_format,
                                                       any_type)) {
         return 1;
@@ -1172,6 +1174,8 @@ static int yagl_gles3_context_validate_texstorage_format(struct yagl_gles_contex
     default:
         return 0;
     }
+
+    *base_internalformat = *internalformat;
 
     return 1;
 }

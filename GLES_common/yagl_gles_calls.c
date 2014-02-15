@@ -666,6 +666,9 @@ YAGL_API void glColorMask(GLboolean red,
 
 YAGL_API void glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid *data)
 {
+    GLenum squashed_target;
+    yagl_gles_texture_target texture_target;
+    struct yagl_gles_texture_target_state *tex_target_state;
     int using_pbo = 0;
 
     YAGL_LOG_FUNC_ENTER_SPLIT8(glCompressedTexImage2D, GLenum, GLint, GLenum, GLsizei, GLsizei, GLint, GLsizei, const GLvoid*, target, level, internalformat, width, height, border, imageSize, data);
@@ -676,6 +679,21 @@ YAGL_API void glCompressedTexImage2D(GLenum target, GLint level, GLenum internal
         YAGL_SET_ERR(GL_INVALID_VALUE);
         goto out;
     }
+
+    if (!yagl_gles_validate_texture_target_squash(target, &squashed_target)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if (!yagl_gles_context_validate_texture_target(ctx,
+                                                   squashed_target,
+                                                   &texture_target)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    tex_target_state =
+        yagl_gles_context_get_active_texture_target_state(ctx, texture_target);
 
     if ((width == 0) || (height == 0)) {
         width = height = 0;
@@ -689,9 +707,6 @@ YAGL_API void glCompressedTexImage2D(GLenum target, GLint level, GLenum internal
     assert(!using_pbo);
 
     if (target == GL_TEXTURE_2D) {
-        struct yagl_gles_texture_target_state *tex_target_state =
-            yagl_gles_context_get_active_texture_target_state(ctx,
-                                                              yagl_gles_texture_target_2d);
         if (tex_target_state->texture != tex_target_state->texture_zero) {
             /*
              * This operation should orphan EGLImage according
@@ -706,6 +721,7 @@ YAGL_API void glCompressedTexImage2D(GLenum target, GLint level, GLenum internal
 
     ctx->compressed_tex_image_2d(ctx,
                                  target,
+                                 tex_target_state->texture,
                                  level,
                                  internalformat,
                                  width,
@@ -810,18 +826,6 @@ YAGL_API void glCopyTexImage2D(GLenum target,
         YAGL_SET_ERR(GL_INVALID_VALUE);
         goto out;
     }
-
-    /*
-     * TODO: Passing internalformat here is not correct since
-     * it may be unsupported in OpenGL 3.1 core profile
-     * (such as GL_ALPHA). Simply changing it to GL_RGBA
-     * is no good either since in that case the texture will
-     * contain more information than it actually supposed to,
-     * thus, leading to incorrect rendering. Perhaps we need to
-     * glReadPixels here, convert unsupported formats and then
-     * glTexImage2D. m.b. do it on host since it won't incur
-     * extra vmexit.
-     */
 
     yagl_host_glCopyTexImage2D(target,
                                level,
@@ -2797,7 +2801,7 @@ YAGL_API void glTexStorage2D(GLenum target, GLsizei levels, GLenum internalforma
 {
     yagl_gles_texture_target texture_target;
     struct yagl_gles_texture_target_state *tex_target_state;
-    GLenum actual_internalformat = internalformat, format, type;
+    GLenum base_internalformat, format, type;
     GLsizei i, j;
     GLenum cubemap_targets[] =
     {
@@ -2819,7 +2823,8 @@ YAGL_API void glTexStorage2D(GLenum target, GLsizei levels, GLenum internalforma
     }
 
     if (!yagl_gles_context_validate_texstorage_format(ctx,
-                                                      &actual_internalformat,
+                                                      &internalformat,
+                                                      &base_internalformat,
                                                       &format,
                                                       &type)) {
         YAGL_SET_ERR(GL_INVALID_ENUM);
@@ -2843,7 +2848,7 @@ YAGL_API void glTexStorage2D(GLenum target, GLsizei levels, GLenum internalforma
     switch (texture_target) {
     case yagl_gles_texture_target_2d:
         for (i = 0; i < levels; ++i) {
-            yagl_host_glTexImage2DData(target, i, actual_internalformat,
+            yagl_host_glTexImage2DData(target, i, internalformat,
                                        width, height, 0, format, type,
                                        NULL, 0);
 
@@ -2863,7 +2868,7 @@ YAGL_API void glTexStorage2D(GLenum target, GLsizei levels, GLenum internalforma
             for (j = 0;
                  j < sizeof(cubemap_targets)/sizeof(cubemap_targets[0]);
                  ++j) {
-                yagl_host_glTexImage2DData(cubemap_targets[j], i, actual_internalformat,
+                yagl_host_glTexImage2DData(cubemap_targets[j], i, internalformat,
                                            width, height, 0, format, type,
                                            NULL, 0);
             }
@@ -2884,7 +2889,7 @@ YAGL_API void glTexStorage2D(GLenum target, GLsizei levels, GLenum internalforma
         goto out;
     }
 
-    yagl_gles_texture_set_immutable(tex_target_state->texture, internalformat, type);
+    yagl_gles_texture_set_immutable(tex_target_state->texture, base_internalformat, type);
 
 out:
     YAGL_LOG_FUNC_EXIT(NULL);

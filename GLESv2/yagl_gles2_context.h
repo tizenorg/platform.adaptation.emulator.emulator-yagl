@@ -110,6 +110,7 @@ void yagl_gles2_context_post_draw(struct yagl_gles2_context *ctx,
 
 void yagl_gles2_context_compressed_tex_image_2d(struct yagl_gles_context *ctx,
                                                 GLenum target,
+                                                struct yagl_gles_texture *texture,
                                                 GLint level,
                                                 GLenum internalformat,
                                                 GLsizei width,
@@ -131,6 +132,7 @@ void yagl_gles2_context_compressed_tex_sub_image_2d(struct yagl_gles_context *ct
 
 void yagl_gles2_context_compressed_tex_image_3d(struct yagl_gles2_context *ctx,
                                                 GLenum target,
+                                                struct yagl_gles_texture *texture,
                                                 GLint level,
                                                 GLenum internalformat,
                                                 GLsizei width,
@@ -201,6 +203,7 @@ int yagl_gles2_context_validate_copyteximage_format(struct yagl_gles_context *ct
 
 int yagl_gles2_context_validate_texstorage_format(struct yagl_gles_context *ctx,
                                                   GLenum *internalformat,
+                                                  GLenum *base_internalformat,
                                                   GLenum *any_format,
                                                   GLenum *any_type);
 

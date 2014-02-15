@@ -420,13 +420,6 @@ struct yagl_pixel_format
 
     if (format == internalformat) {
         switch (format) {
-        case GL_ALPHA:
-            switch (type) {
-            YAGL_PIXEL_FORMAT_CASE(gles, GL_ALPHA, GL_ALPHA, GL_UNSIGNED_BYTE);
-            YAGL_PIXEL_FORMAT_CASE(gles, GL_ALPHA, GL_ALPHA, GL_FLOAT);
-            YAGL_PIXEL_FORMAT_CASE(gles, GL_ALPHA, GL_ALPHA, GL_HALF_FLOAT_OES);
-            }
-            break;
         case GL_RGB:
             switch (type) {
             YAGL_PIXEL_FORMAT_CASE(gles, GL_RGB, GL_RGB, GL_UNSIGNED_BYTE);
@@ -451,20 +444,6 @@ struct yagl_pixel_format
             YAGL_PIXEL_FORMAT_CASE(gles, GL_BGRA, GL_BGRA, GL_HALF_FLOAT_OES);
             }
             break;
-        case GL_LUMINANCE:
-            switch (type) {
-            YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE, GL_LUMINANCE, GL_UNSIGNED_BYTE);
-            YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE, GL_LUMINANCE, GL_FLOAT);
-            YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE, GL_LUMINANCE, GL_HALF_FLOAT_OES);
-            }
-            break;
-        case GL_LUMINANCE_ALPHA:
-            switch (type) {
-            YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE);
-            YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_FLOAT);
-            YAGL_PIXEL_FORMAT_CASE(gles, GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_HALF_FLOAT_OES);
-            }
-            break;
         case GL_DEPTH_COMPONENT:
             switch (type) {
             YAGL_PIXEL_FORMAT_CASE(gles, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT);
@@ -476,6 +455,56 @@ struct yagl_pixel_format
             YAGL_PIXEL_FORMAT_CASE(gles, GL_DEPTH_STENCIL, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8);
             }
             break;
+        }
+
+        if (yagl_get_host_gl_version() <= yagl_gl_2) {
+            switch (format) {
+            case GL_ALPHA:
+                switch (type) {
+                YAGL_PIXEL_FORMAT_CASE(gles_gl2, GL_ALPHA, GL_ALPHA, GL_UNSIGNED_BYTE);
+                YAGL_PIXEL_FORMAT_CASE(gles_gl2, GL_ALPHA, GL_ALPHA, GL_FLOAT);
+                YAGL_PIXEL_FORMAT_CASE(gles_gl2, GL_ALPHA, GL_ALPHA, GL_HALF_FLOAT_OES);
+                }
+                break;
+            case GL_LUMINANCE:
+                switch (type) {
+                YAGL_PIXEL_FORMAT_CASE(gles_gl2, GL_LUMINANCE, GL_LUMINANCE, GL_UNSIGNED_BYTE);
+                YAGL_PIXEL_FORMAT_CASE(gles_gl2, GL_LUMINANCE, GL_LUMINANCE, GL_FLOAT);
+                YAGL_PIXEL_FORMAT_CASE(gles_gl2, GL_LUMINANCE, GL_LUMINANCE, GL_HALF_FLOAT_OES);
+                }
+                break;
+            case GL_LUMINANCE_ALPHA:
+                switch (type) {
+                YAGL_PIXEL_FORMAT_CASE(gles_gl2, GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE);
+                YAGL_PIXEL_FORMAT_CASE(gles_gl2, GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_FLOAT);
+                YAGL_PIXEL_FORMAT_CASE(gles_gl2, GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_HALF_FLOAT_OES);
+                }
+                break;
+            }
+        } else {
+            switch (format) {
+            case GL_ALPHA:
+                switch (type) {
+                YAGL_PIXEL_FORMAT_CASE(gles_gl3, GL_ALPHA, GL_ALPHA, GL_UNSIGNED_BYTE);
+                YAGL_PIXEL_FORMAT_CASE(gles_gl3, GL_ALPHA, GL_ALPHA, GL_FLOAT);
+                YAGL_PIXEL_FORMAT_CASE(gles_gl3, GL_ALPHA, GL_ALPHA, GL_HALF_FLOAT_OES);
+                }
+                break;
+            case GL_LUMINANCE:
+                switch (type) {
+                YAGL_PIXEL_FORMAT_CASE(gles_gl3, GL_LUMINANCE, GL_LUMINANCE, GL_UNSIGNED_BYTE);
+                YAGL_PIXEL_FORMAT_CASE(gles_gl3, GL_LUMINANCE, GL_LUMINANCE, GL_FLOAT);
+                YAGL_PIXEL_FORMAT_CASE(gles_gl3, GL_LUMINANCE, GL_LUMINANCE, GL_HALF_FLOAT_OES);
+                }
+                break;
+            case GL_LUMINANCE_ALPHA:
+                switch (type) {
+                YAGL_PIXEL_FORMAT_CASE(gles_gl3, GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE);
+                YAGL_PIXEL_FORMAT_CASE(gles_gl3, GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_FLOAT);
+                YAGL_PIXEL_FORMAT_CASE(gles_gl3, GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_HALF_FLOAT_OES);
+                }
+                break;
+            }
         }
     }
 
@@ -577,14 +606,6 @@ int yagl_gles_context_validate_copyteximage_format(struct yagl_gles_context *ctx
     if (((readbuffer_format_flags & yagl_gles_format_unsigned_integer) == 0) &&
         ((readbuffer_format_flags & yagl_gles_format_signed_integer) == 0)) {
         switch (*internalformat) {
-        case GL_ALPHA:
-        case GL_LUMINANCE_ALPHA:
-            if (readbuffer_format_num_components == 4) {
-                *internalformat = GL_RGBA;
-                res = 1;
-                goto out;
-            }
-            break;
         case GL_RGB:
             res = 1;
             goto out;
@@ -595,10 +616,36 @@ int yagl_gles_context_validate_copyteximage_format(struct yagl_gles_context *ctx
             res = 1;
             *internalformat = GL_RGBA;
             goto out;
-        case GL_LUMINANCE:
-            res = 1;
-            *internalformat = GL_RGBA;
-            goto out;
+        }
+
+        if (yagl_get_host_gl_version() <= yagl_gl_2) {
+            switch (*internalformat) {
+            case GL_ALPHA:
+            case GL_LUMINANCE_ALPHA:
+                if (readbuffer_format_num_components == 4) {
+                    res = 1;
+                    goto out;
+                }
+                break;
+            case GL_LUMINANCE:
+                res = 1;
+                goto out;
+            }
+        } else {
+            switch (*internalformat) {
+            case GL_ALPHA:
+            case GL_LUMINANCE_ALPHA:
+                if (readbuffer_format_num_components == 4) {
+                    *internalformat = GL_RGBA;
+                    res = 1;
+                    goto out;
+                }
+                break;
+            case GL_LUMINANCE:
+                res = 1;
+                *internalformat = GL_RGBA;
+                goto out;
+            }
         }
     }
 
@@ -620,6 +667,7 @@ out:
 
 int yagl_gles_context_validate_texstorage_format(struct yagl_gles_context *ctx,
                                                  GLenum *internalformat,
+                                                 GLenum *base_internalformat,
                                                  GLenum *any_format,
                                                  GLenum *any_type)
 {
@@ -628,47 +676,85 @@ int yagl_gles_context_validate_texstorage_format(struct yagl_gles_context *ctx,
     YAGL_LOG_FUNC_SET(yagl_gles_context_validate_texstorage_format);
 
     switch (*internalformat) {
-    case GL_ALPHA:
-        *internalformat = GL_RGBA;
-        *any_format = GL_BGRA;
-        *any_type = GL_UNSIGNED_BYTE;
-        break;
-    case GL_LUMINANCE:
-        *internalformat = GL_RGBA;
-        *any_format = GL_BGRA;
-        *any_type = GL_UNSIGNED_BYTE;
-        break;
-    case GL_LUMINANCE_ALPHA:
-        *internalformat = GL_RGBA;
-        *any_format = GL_BGRA;
-        *any_type = GL_UNSIGNED_BYTE;
-        break;
     case GL_RGB:
+        *base_internalformat = GL_RGB;
         *any_format = GL_RGB;
         *any_type = GL_UNSIGNED_BYTE;
-        break;
+        goto out;
     case GL_RGBA:
+        *base_internalformat = GL_RGBA;
         *any_format = GL_RGBA;
         *any_type = GL_UNSIGNED_BYTE;
-        break;
+        goto out;
     case GL_BGRA:
+        *base_internalformat = GL_RGBA;
         *internalformat = GL_RGBA;
         *any_format = GL_BGRA;
         *any_type = GL_UNSIGNED_BYTE;
-        break;
+        goto out;
     case GL_DEPTH_COMPONENT:
+        *base_internalformat = GL_DEPTH_COMPONENT;
         *any_format = GL_DEPTH_COMPONENT;
         *any_type = GL_UNSIGNED_INT;
-        break;
+        goto out;
     case GL_DEPTH_STENCIL:
+        *base_internalformat = GL_DEPTH_STENCIL;
         *any_format = GL_DEPTH_STENCIL;
         *any_type = GL_UNSIGNED_INT_24_8;
-        break;
-    default:
-        res = ctx->validate_texstorage_format(ctx,
-                                              internalformat,
-                                              any_format,
-                                              any_type);
+        goto out;
+    }
+
+    if (yagl_get_host_gl_version() <= yagl_gl_2) {
+        switch (*internalformat) {
+        case GL_ALPHA:
+            *base_internalformat = GL_ALPHA;
+            *any_format = GL_ALPHA;
+            *any_type = GL_UNSIGNED_BYTE;
+            break;
+        case GL_LUMINANCE:
+            *base_internalformat = GL_LUMINANCE;
+            *any_format = GL_LUMINANCE;
+            *any_type = GL_UNSIGNED_BYTE;
+            break;
+        case GL_LUMINANCE_ALPHA:
+            *base_internalformat = GL_LUMINANCE_ALPHA;
+            *any_format = GL_LUMINANCE_ALPHA;
+            *any_type = GL_UNSIGNED_BYTE;
+            break;
+        default:
+            res = ctx->validate_texstorage_format(ctx,
+                                                  internalformat,
+                                                  base_internalformat,
+                                                  any_format,
+                                                  any_type);
+        }
+    } else {
+        switch (*internalformat) {
+        case GL_ALPHA:
+            *internalformat = GL_RGBA;
+            *base_internalformat = GL_ALPHA;
+            *any_format = GL_BGRA;
+            *any_type = GL_UNSIGNED_BYTE;
+            break;
+        case GL_LUMINANCE:
+            *internalformat = GL_RGBA;
+            *base_internalformat = GL_LUMINANCE;
+            *any_format = GL_BGRA;
+            *any_type = GL_UNSIGNED_BYTE;
+            break;
+        case GL_LUMINANCE_ALPHA:
+            *internalformat = GL_RGBA;
+            *base_internalformat = GL_LUMINANCE_ALPHA;
+            *any_format = GL_BGRA;
+            *any_type = GL_UNSIGNED_BYTE;
+            break;
+        default:
+            res = ctx->validate_texstorage_format(ctx,
+                                                  internalformat,
+                                                  base_internalformat,
+                                                  any_format,
+                                                  any_type);
+        }
     }
 
     if (!res) {
@@ -676,6 +762,7 @@ int yagl_gles_context_validate_texstorage_format(struct yagl_gles_context *ctx,
                        *internalformat);
     }
 
+out:
     return res;
 }
 

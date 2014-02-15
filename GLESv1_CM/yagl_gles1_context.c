@@ -557,6 +557,7 @@ static GLsizei yagl_gles1_cpal_tex_size(YaglGles1PalFmtDesc *fmt_desc,
 }
 
 static void yagl_gles1_cpal_tex_uncomp_and_apply(struct yagl_gles_context *ctx,
+                                                 struct yagl_gles_texture *texture,
                                                  YaglGles1PalFmtDesc *fmt_desc,
                                                  unsigned max_level,
                                                  unsigned width,
@@ -590,6 +591,10 @@ static void yagl_gles1_cpal_tex_uncomp_and_apply(struct yagl_gles_context *ctx,
                 height = 1;
             }
         }
+
+        yagl_gles_texture_set_internalformat(texture,
+                                             fmt_desc->uncomp_format,
+                                             fmt_desc->pixel_type);
 
         return;
     }
@@ -661,9 +666,14 @@ static void yagl_gles1_cpal_tex_uncomp_and_apply(struct yagl_gles_context *ctx,
     yagl_free(tex_img_data);
 
     yagl_gles_set_unpack(&ctx->unpack);
+
+    yagl_gles_texture_set_internalformat(texture,
+                                         fmt_desc->uncomp_format,
+                                         fmt_desc->pixel_type);
 }
 
 static void yagl_gles1_etc1_rgb8_uncomp_and_apply(struct yagl_gles_context *ctx,
+                                                  struct yagl_gles_texture *texture,
                                                   GLint level,
                                                   GLsizei width,
                                                   GLsizei height,
@@ -694,6 +704,10 @@ static void yagl_gles1_etc1_rgb8_uncomp_and_apply(struct yagl_gles_context *ctx,
                                    NULL,
                                    width * height * 4);
 
+        yagl_gles_texture_set_internalformat(texture,
+                                             GL_RGBA8,
+                                             GL_UNSIGNED_BYTE);
+
         return;
     }
 
@@ -720,10 +734,15 @@ static void yagl_gles1_etc1_rgb8_uncomp_and_apply(struct yagl_gles_context *ctx,
                                width * height * 4);
 
     yagl_gles_set_unpack(&ctx->unpack);
+
+    yagl_gles_texture_set_internalformat(texture,
+                                         GL_RGBA8,
+                                         GL_UNSIGNED_BYTE);
 }
 
 static void yagl_gles1_context_compressed_tex_image_2d(struct yagl_gles_context *ctx,
                                                        GLenum target,
+                                                       struct yagl_gles_texture *texture,
                                                        GLint level,
                                                        GLenum internalformat,
                                                        GLsizei width,
@@ -755,6 +774,7 @@ static void yagl_gles1_context_compressed_tex_image_2d(struct yagl_gles_context 
         }
 
         yagl_gles1_cpal_tex_uncomp_and_apply(ctx,
+                                             texture,
                                              &fmt_desc,
                                              -level,
                                              width,
@@ -762,8 +782,8 @@ static void yagl_gles1_context_compressed_tex_image_2d(struct yagl_gles_context 
                                              data);
         break;
     case GL_ETC1_RGB8_OES:
-        yagl_gles1_etc1_rgb8_uncomp_and_apply(ctx, level, width, height, border,
-                                              imageSize, data);
+        yagl_gles1_etc1_rgb8_uncomp_and_apply(ctx, texture, level, width, height,
+                                              border, imageSize, data);
         break;
     default:
         YAGL_SET_ERR(GL_INVALID_ENUM);
@@ -1406,6 +1426,7 @@ static int yagl_gles1_context_validate_copyteximage_format(struct yagl_gles_cont
 
 static int yagl_gles1_context_validate_texstorage_format(struct yagl_gles_context *ctx,
                                                          GLenum *internalformat,
+                                                         GLenum *base_internalformat,
                                                          GLenum *any_format,
                                                          GLenum *any_type)
 {
@@ -1415,6 +1436,7 @@ static int yagl_gles1_context_validate_texstorage_format(struct yagl_gles_contex
     case GL_PALETTE4_RGB8_OES ... GL_PALETTE8_RGB5_A1_OES:
         yagl_gles1_cpal_format_get_descr(*internalformat, &fmt_desc);
         *internalformat = fmt_desc.uncomp_format;
+        *base_internalformat = fmt_desc.uncomp_format;
         *any_format = fmt_desc.uncomp_format;
         *any_type = fmt_desc.pixel_type;
         break;

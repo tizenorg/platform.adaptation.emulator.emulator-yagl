@@ -50,6 +50,8 @@ uint32_t yagl_gles_internalformat_flags(GLenum internalformat)
     case GL_LUMINANCE:
     case GL_LUMINANCE_ALPHA:
         return 0;
+    case GL_RED:
+    case GL_RG:
     case GL_RGB:
     case GL_RGBA:
     case GL_BGRA_EXT:
@@ -136,6 +138,7 @@ uint32_t yagl_gles_internalformat_num_components(GLenum internalformat)
     switch (internalformat) {
     case GL_ALPHA:
     case GL_LUMINANCE:
+    case GL_RED:
     case GL_R8_SNORM:
     case GL_R8:
     case GL_R8UI:
@@ -154,6 +157,7 @@ uint32_t yagl_gles_internalformat_num_components(GLenum internalformat)
     case GL_DEPTH_COMPONENT32F:
         return 1;
     case GL_LUMINANCE_ALPHA:
+    case GL_RG:
     case GL_RG8_SNORM:
     case GL_RG8:
     case GL_RG8UI:

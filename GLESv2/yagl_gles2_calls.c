@@ -2506,6 +2506,7 @@ YAGL_API YAGL_ALIAS(glCopyTexSubImage3D, glCopyTexSubImage3DOES);
 YAGL_API void glCompressedTexImage3D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLsizei imageSize, const void *data)
 {
     yagl_gles_texture_target texture_target;
+    struct yagl_gles_texture_target_state *tex_target_state;
     int using_pbo = 0;
 
     YAGL_LOG_FUNC_ENTER_SPLIT9(glCompressedTexImage3D, GLenum, GLint, GLenum, GLsizei, GLsizei, GLsizei, GLint, GLsizei, const GLvoid*, target, level, internalformat, width, height, depth, border, imageSize, data);
@@ -2523,6 +2524,10 @@ YAGL_API void glCompressedTexImage3D(GLenum target, GLint level, GLenum internal
         YAGL_SET_ERR(GL_INVALID_ENUM);
         goto out;
     }
+
+    tex_target_state =
+        yagl_gles_context_get_active_texture_target_state(&ctx->base,
+                                                          texture_target);
 
     if ((width < 0) || (height < 0) || (depth < 0)) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
@@ -2542,6 +2547,7 @@ YAGL_API void glCompressedTexImage3D(GLenum target, GLint level, GLenum internal
 
     yagl_gles2_context_compressed_tex_image_3d(ctx,
                                                target,
+                                               tex_target_state->texture,
                                                level,
                                                internalformat,
                                                width,
@@ -2638,7 +2644,7 @@ YAGL_API void glTexStorage3D(GLenum target, GLsizei levels, GLenum internalforma
 {
     yagl_gles_texture_target texture_target;
     struct yagl_gles_texture_target_state *tex_target_state;
-    GLenum actual_internalformat = internalformat, format, type;
+    GLenum base_internalformat, format, type;
     GLsizei i;
 
     YAGL_LOG_FUNC_ENTER_SPLIT6(glTexStorage3D, GLenum, GLsizei, GLenum, GLsizei, GLsizei, GLsizei, target, levels, internalformat, width, height, depth);
@@ -2651,7 +2657,8 @@ YAGL_API void glTexStorage3D(GLenum target, GLsizei levels, GLenum internalforma
     }
 
     if (!yagl_gles_context_validate_texstorage_format(&ctx->base,
-                                                      &actual_internalformat,
+                                                      &internalformat,
+                                                      &base_internalformat,
                                                       &format,
                                                       &type)) {
         YAGL_SET_ERR(GL_INVALID_ENUM);
@@ -2682,7 +2689,7 @@ YAGL_API void glTexStorage3D(GLenum target, GLsizei levels, GLenum internalforma
     switch (texture_target) {
     case yagl_gles_texture_target_3d:
         for (i = 0; i < levels; ++i) {
-            yagl_host_glTexImage3DData(target, i, actual_internalformat,
+            yagl_host_glTexImage3DData(target, i, internalformat,
                                        width, height, depth, 0, format, type,
                                        NULL, 0);
 
@@ -2704,7 +2711,7 @@ YAGL_API void glTexStorage3D(GLenum target, GLsizei levels, GLenum internalforma
         break;
     case yagl_gles_texture_target_2d_array:
         for (i = 0; i < levels; ++i) {
-            yagl_host_glTexImage3DData(target, i, actual_internalformat,
+            yagl_host_glTexImage3DData(target, i, internalformat,
                                        width, height, depth, 0, format, type,
                                        NULL, 0);
 
@@ -2724,7 +2731,7 @@ YAGL_API void glTexStorage3D(GLenum target, GLsizei levels, GLenum internalforma
         goto out;
     }
 
-    yagl_gles_texture_set_immutable(tex_target_state->texture, internalformat, type);
+    yagl_gles_texture_set_immutable(tex_target_state->texture, base_internalformat, type);
 
 out:
     YAGL_LOG_FUNC_EXIT(NULL);
