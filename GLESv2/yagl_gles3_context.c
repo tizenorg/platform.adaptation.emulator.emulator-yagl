@@ -25,6 +25,11 @@
  */
 #define GL_HALF_FLOAT_OES 0x8D61
 
+/*
+ * We can't include GL/glext.h here
+ */
+#define GL_FRAMEBUFFER_SRGB 0x8DB9
+
 #define YAGL_SET_ERR(err) \
     yagl_gles_context_set_error(&ctx->base.base, err); \
     YAGL_LOG_ERROR("error = 0x%X", err)
@@ -61,6 +66,8 @@ static void yagl_gles3_context_prepare(struct yagl_client_context *ctx)
     GLuint i;
     const GLchar **extensions;
     int num_extensions;
+
+    yagl_host_glEnable(GL_FRAMEBUFFER_SRGB);
 
     yagl_gles2_context_prepare(&gles3_ctx->base);
 
