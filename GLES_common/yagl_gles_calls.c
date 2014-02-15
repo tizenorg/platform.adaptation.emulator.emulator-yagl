@@ -169,12 +169,10 @@ YAGL_API void glTexParameteri(GLenum target, GLenum pname, GLint param)
     tex_target_state =
         yagl_gles_context_get_active_texture_target_state(ctx, texture_target);
 
-    if (tex_target_state->texture) {
-        if (pname == GL_TEXTURE_MIN_FILTER) {
-            tex_target_state->texture->min_filter = param;
-        } else if (pname == GL_TEXTURE_MAG_FILTER) {
-            tex_target_state->texture->mag_filter = param;
-        }
+    if (pname == GL_TEXTURE_MIN_FILTER) {
+        tex_target_state->texture->min_filter = param;
+    } else if (pname == GL_TEXTURE_MAG_FILTER) {
+        tex_target_state->texture->mag_filter = param;
     }
 
     yagl_host_glTexParameteri(target, pname, param);
@@ -202,12 +200,10 @@ YAGL_API void glTexParameteriv(GLenum target, GLenum pname, const GLint *params)
     tex_target_state =
         yagl_gles_context_get_active_texture_target_state(ctx, texture_target);
 
-    if (tex_target_state->texture) {
-        if (pname == GL_TEXTURE_MIN_FILTER) {
-            tex_target_state->texture->min_filter = params[0];
-        } else if (pname == GL_TEXTURE_MAG_FILTER) {
-            tex_target_state->texture->mag_filter = params[0];
-        }
+    if (pname == GL_TEXTURE_MIN_FILTER) {
+        tex_target_state->texture->min_filter = params[0];
+    } else if (pname == GL_TEXTURE_MAG_FILTER) {
+        tex_target_state->texture->mag_filter = params[0];
     }
 
     yagl_host_glTexParameteriv(target, pname, params, 1);
@@ -696,7 +692,7 @@ YAGL_API void glCompressedTexImage2D(GLenum target, GLint level, GLenum internal
         struct yagl_gles_texture_target_state *tex_target_state =
             yagl_gles_context_get_active_texture_target_state(ctx,
                                                               yagl_gles_texture_target_2d);
-        if (tex_target_state->texture) {
+        if (tex_target_state->texture != tex_target_state->texture_zero) {
             /*
              * This operation should orphan EGLImage according
              * to OES_EGL_image specs.
@@ -836,11 +832,9 @@ YAGL_API void glCopyTexImage2D(GLenum target,
                                height,
                                border);
 
-    if (tex_target_state->texture) {
-        yagl_gles_texture_set_internalformat(tex_target_state->texture,
-                                             internalformat,
-                                             (is_float ? GL_FLOAT : 0));
-    }
+    yagl_gles_texture_set_internalformat(tex_target_state->texture,
+                                         internalformat,
+                                         (is_float ? GL_FLOAT : 0));
 
 out:
     YAGL_LOG_FUNC_EXIT(NULL);
@@ -2045,7 +2039,7 @@ YAGL_API void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLs
     }
 
     if (target == GL_TEXTURE_2D) {
-        if (tex_target_state->texture) {
+        if (tex_target_state->texture != tex_target_state->texture_zero) {
             /*
              * This operation should orphan EGLImage according
              * to OES_EGL_image specs.
@@ -2091,11 +2085,9 @@ YAGL_API void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLs
         yagl_gles_context_post_unpack(ctx, pf->need_convert);
     }
 
-    if (tex_target_state->texture) {
-        yagl_gles_texture_set_internalformat(tex_target_state->texture,
-                                             internalformat,
-                                             type);
-    }
+    yagl_gles_texture_set_internalformat(tex_target_state->texture,
+                                         internalformat,
+                                         type);
 
 out:
     YAGL_LOG_FUNC_EXIT(NULL);
@@ -2136,11 +2128,6 @@ YAGL_API void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint y
 
     if ((width == 0) || (height == 0)) {
         width = height = 0;
-    }
-
-    if (!tex_target_state->texture) {
-        YAGL_SET_ERR(GL_INVALID_OPERATION);
-        goto out;
     }
 
     pf = yagl_gles_context_validate_teximage_format(ctx,
@@ -2219,7 +2206,7 @@ YAGL_API void glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOES image)
         yagl_gles_context_get_active_texture_target_state(ctx,
                                                           yagl_gles_texture_target_2d);
 
-    if (!tex_target_state->texture) {
+    if (tex_target_state->texture == tex_target_state->texture_zero) {
         YAGL_SET_ERR(GL_INVALID_OPERATION);
         goto out;
     }
@@ -2809,7 +2796,7 @@ YAGL_API YAGL_ALIAS(glFlushMappedBufferRange, glFlushMappedBufferRangeEXT);
 YAGL_API void glTexStorage2D(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height)
 {
     yagl_gles_texture_target texture_target;
-    struct yagl_gles_texture *texture_obj;
+    struct yagl_gles_texture_target_state *tex_target_state;
     GLenum actual_internalformat = internalformat, format, type;
     GLsizei i, j;
     GLenum cubemap_targets[] =
@@ -2844,10 +2831,11 @@ YAGL_API void glTexStorage2D(GLenum target, GLsizei levels, GLenum internalforma
         goto out;
     }
 
-    texture_obj = yagl_gles_context_get_active_texture_target_state(ctx,
-                                                                    texture_target)->texture;
+    tex_target_state = yagl_gles_context_get_active_texture_target_state(ctx,
+                                                                         texture_target);
 
-    if (!texture_obj || texture_obj->immutable) {
+    if ((tex_target_state->texture == tex_target_state->texture_zero) ||
+        tex_target_state->texture->immutable) {
         YAGL_SET_ERR(GL_INVALID_OPERATION);
         goto out;
     }
@@ -2896,7 +2884,7 @@ YAGL_API void glTexStorage2D(GLenum target, GLsizei levels, GLenum internalforma
         goto out;
     }
 
-    yagl_gles_texture_set_immutable(texture_obj, internalformat, type);
+    yagl_gles_texture_set_immutable(tex_target_state->texture, internalformat, type);
 
 out:
     YAGL_LOG_FUNC_EXIT(NULL);

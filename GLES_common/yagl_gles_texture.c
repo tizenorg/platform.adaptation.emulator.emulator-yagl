@@ -67,11 +67,6 @@ void yagl_gles_texture_release(struct yagl_gles_texture *texture)
 int yagl_gles_texture_bind(struct yagl_gles_texture *texture,
                            GLenum target)
 {
-    if (!texture) {
-        yagl_host_glBindTexture(target, 0);
-        return 1;
-    }
-
     if (texture->target && (texture->target != target)) {
         return 0;
     }

@@ -13,8 +13,6 @@ typedef enum
     yagl_gles_texture_target_cubemap = 3
 } yagl_gles_texture_target;
 
-#define YAGL_NUM_GLES_TEXTURE_TARGETS 4
-
 typedef enum
 {
     yagl_gles_framebuffer_attachment_depth = 0,

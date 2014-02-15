@@ -91,7 +91,7 @@ static int yagl_gles_context_bind_tex_image(struct yagl_client_context *ctx,
         yagl_gles_context_get_active_texture_target_state(gles_ctx,
                                                           yagl_gles_texture_target_2d);
 
-    if (!texture_target_state->texture) {
+    if (texture_target_state->texture == texture_target_state->texture_zero) {
         return 0;
     }
 
@@ -223,7 +223,7 @@ void yagl_gles_context_prepare(struct yagl_gles_context *ctx,
         yagl_malloc(ctx->num_texture_units * sizeof(*ctx->texture_units));
 
     for (i = 0; i < ctx->num_texture_units; ++i) {
-        yagl_gles_texture_unit_init(&ctx->texture_units[i]);
+        yagl_gles_texture_unit_init(&ctx->texture_units[i], ctx->base.sg);
     }
 
     ctx->num_arrays = num_arrays;
@@ -762,13 +762,17 @@ void yagl_gles_context_bind_texture(struct yagl_gles_context *ctx,
         return;
     }
 
+    texture_target_state =
+        yagl_gles_context_get_active_texture_target_state(ctx, texture_target);
+
+    if (!texture) {
+        texture = texture_target_state->texture_zero;
+    }
+
     if (!yagl_gles_texture_bind(texture, target)) {
         YAGL_SET_ERR(GL_INVALID_OPERATION);
         return;
     }
-
-    texture_target_state =
-        yagl_gles_context_get_active_texture_target_state(ctx, texture_target);
 
     yagl_gles_texture_acquire(texture);
     yagl_gles_texture_release(texture_target_state->texture);
@@ -782,11 +786,20 @@ void yagl_gles_context_unbind_texture(struct yagl_gles_context *ctx,
     struct yagl_gles_texture_unit *texture_unit =
         yagl_gles_context_get_active_texture_unit(ctx);
 
-    for (i = 0; i < YAGL_NUM_GLES_TEXTURE_TARGETS; ++i) {
-        if (texture_unit->target_states[i].texture &&
+    for (i = 0; i < YAGL_NUM_TEXTURE_TARGETS; ++i) {
+        if ((texture_unit->target_states[i].texture != texture_unit->target_states[i].texture_zero) &&
             (texture_unit->target_states[i].texture->base.local_name == texture_local_name)) {
+            yagl_gles_texture_acquire(texture_unit->target_states[i].texture_zero);
             yagl_gles_texture_release(texture_unit->target_states[i].texture);
-            texture_unit->target_states[i].texture = NULL;
+            texture_unit->target_states[i].texture =
+                texture_unit->target_states[i].texture_zero;
+
+            /*
+             * And bind texture 0, otherwise we'll end up using
+             * real texture 0 on host.
+             */
+            yagl_gles_texture_bind(texture_unit->target_states[i].texture,
+                                   texture_unit->target_states[i].texture->target);
         }
     }
 
@@ -1272,7 +1285,7 @@ int yagl_gles_context_get_integerv(struct yagl_gles_context *ctx,
     case GL_TEXTURE_BINDING_2D:
         tts = yagl_gles_context_get_active_texture_target_state(ctx,
             yagl_gles_texture_target_2d);
-        *params = tts->texture ? tts->texture->base.local_name : 0;
+        *params = tts->texture->base.local_name;
         *num_params = 1;
         break;
     case GL_ARRAY_BUFFER_BINDING:
@@ -1900,12 +1913,10 @@ void yagl_gles_context_tex_parameterf(struct yagl_gles_context *ctx,
     tex_target_state =
         yagl_gles_context_get_active_texture_target_state(ctx, texture_target);
 
-    if (tex_target_state->texture) {
-        if (pname == GL_TEXTURE_MIN_FILTER) {
-            tex_target_state->texture->min_filter = param;
-        } else if (pname == GL_TEXTURE_MAG_FILTER) {
-            tex_target_state->texture->mag_filter = param;
-        }
+    if (pname == GL_TEXTURE_MIN_FILTER) {
+        tex_target_state->texture->min_filter = param;
+    } else if (pname == GL_TEXTURE_MAG_FILTER) {
+        tex_target_state->texture->mag_filter = param;
     }
 
     yagl_host_glTexParameterf(target, pname, param);
@@ -1931,12 +1942,10 @@ void yagl_gles_context_tex_parameterfv(struct yagl_gles_context *ctx,
     tex_target_state =
         yagl_gles_context_get_active_texture_target_state(ctx, texture_target);
 
-    if (tex_target_state->texture) {
-        if (pname == GL_TEXTURE_MIN_FILTER) {
-            tex_target_state->texture->min_filter = params[0];
-        } else if (pname == GL_TEXTURE_MAG_FILTER) {
-            tex_target_state->texture->mag_filter = params[0];
-        }
+    if (pname == GL_TEXTURE_MIN_FILTER) {
+        tex_target_state->texture->min_filter = params[0];
+    } else if (pname == GL_TEXTURE_MAG_FILTER) {
+        tex_target_state->texture->mag_filter = params[0];
     }
 
     yagl_host_glTexParameterfv(target, pname, params, 1);
@@ -1959,7 +1968,7 @@ int yagl_gles_context_get_tex_parameterfv(struct yagl_gles_context *ctx,
 
     switch (pname) {
     case GL_TEXTURE_IMMUTABLE_FORMAT:
-        params[0] = texture_obj ? texture_obj->immutable : GL_FALSE;
+        params[0] = texture_obj->immutable;
         return 1;
     default:
         break;
@@ -1987,7 +1996,7 @@ int yagl_gles_context_get_tex_parameteriv(struct yagl_gles_context *ctx,
 
     switch (pname) {
     case GL_TEXTURE_IMMUTABLE_FORMAT:
-        params[0] = texture_obj ? texture_obj->immutable : GL_FALSE;
+        params[0] = texture_obj->immutable;
         return 1;
     default:
         break;

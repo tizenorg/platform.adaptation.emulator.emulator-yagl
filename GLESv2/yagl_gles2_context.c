@@ -943,13 +943,13 @@ int yagl_gles2_context_get_integerv(struct yagl_gles_context *ctx,
     case GL_TEXTURE_BINDING_CUBE_MAP:
         tts = yagl_gles_context_get_active_texture_target_state(ctx,
             yagl_gles_texture_target_cubemap);
-        *params = tts->texture ? tts->texture->base.local_name : 0;
+        *params = tts->texture->base.local_name;
         *num_params = 1;
         break;
     case GL_TEXTURE_BINDING_3D_OES:
         tts = yagl_gles_context_get_active_texture_target_state(ctx,
             yagl_gles_texture_target_3d);
-        *params = tts->texture ? tts->texture->base.local_name : 0;
+        *params = tts->texture->base.local_name;
         *num_params = 1;
         break;
     case GL_CURRENT_PROGRAM:

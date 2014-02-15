@@ -265,7 +265,7 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
     case GL_TEXTURE_BINDING_2D_ARRAY:
         tts = yagl_gles_context_get_active_texture_target_state(ctx,
             yagl_gles_texture_target_2d_array);
-        *params = tts->texture ? tts->texture->base.local_name : 0;
+        *params = tts->texture->base.local_name;
         *num_params = 1;
         break;
     case GL_COPY_READ_BUFFER_BINDING:

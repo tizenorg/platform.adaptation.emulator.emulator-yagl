@@ -2365,11 +2365,9 @@ YAGL_API void glTexImage3D(GLenum target, GLint level, GLint internalformat, GLs
         yagl_gles_context_post_unpack(&ctx->base, pf->need_convert);
     }
 
-    if (tex_target_state->texture) {
-        yagl_gles_texture_set_internalformat(tex_target_state->texture,
-                                             internalformat,
-                                             type);
-    }
+    yagl_gles_texture_set_internalformat(tex_target_state->texture,
+                                         internalformat,
+                                         type);
 
 out:
     YAGL_LOG_FUNC_EXIT(NULL);
@@ -2411,11 +2409,6 @@ YAGL_API void glTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint y
 
     if ((width == 0) || (height == 0) || (depth == 0)) {
         width = height = depth = 0;
-    }
-
-    if (!tex_target_state->texture) {
-        YAGL_SET_ERR(GL_INVALID_OPERATION);
-        goto out;
     }
 
     pf = yagl_gles_context_validate_teximage_format(&ctx->base,
@@ -2644,7 +2637,7 @@ YAGL_API YAGL_ALIAS(glFramebufferTexture3D, glFramebufferTexture3DOES);
 YAGL_API void glTexStorage3D(GLenum target, GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth)
 {
     yagl_gles_texture_target texture_target;
-    struct yagl_gles_texture *texture_obj;
+    struct yagl_gles_texture_target_state *tex_target_state;
     GLenum actual_internalformat = internalformat, format, type;
     GLsizei i;
 
@@ -2670,10 +2663,11 @@ YAGL_API void glTexStorage3D(GLenum target, GLsizei levels, GLenum internalforma
         goto out;
     }
 
-    texture_obj = yagl_gles_context_get_active_texture_target_state(&ctx->base,
-                                                                    texture_target)->texture;
+    tex_target_state = yagl_gles_context_get_active_texture_target_state(&ctx->base,
+                                                                         texture_target);
 
-    if (!texture_obj || texture_obj->immutable) {
+    if ((tex_target_state->texture == tex_target_state->texture_zero) ||
+        tex_target_state->texture->immutable) {
         YAGL_SET_ERR(GL_INVALID_OPERATION);
         goto out;
     }
@@ -2730,7 +2724,7 @@ YAGL_API void glTexStorage3D(GLenum target, GLsizei levels, GLenum internalforma
         goto out;
     }
 
-    yagl_gles_texture_set_immutable(texture_obj, internalformat, type);
+    yagl_gles_texture_set_immutable(tex_target_state->texture, internalformat, type);
 
 out:
     YAGL_LOG_FUNC_EXIT(NULL);
