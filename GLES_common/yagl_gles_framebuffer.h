@@ -35,6 +35,9 @@ struct yagl_gles_framebuffer
         attachment_states[yagl_gles_framebuffer_attachment_color0 +
                           YAGL_MAX_GLES_FRAMEBUFFER_COLOR_ATTACHMENTS];
 
+    GLenum draw_buffers[YAGL_MAX_GLES_FRAMEBUFFER_COLOR_ATTACHMENTS];
+    GLenum read_buffer;
+
     int was_bound;
 };
 

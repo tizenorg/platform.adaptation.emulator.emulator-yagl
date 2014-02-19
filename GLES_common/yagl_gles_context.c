@@ -107,36 +107,33 @@ static int yagl_gles_context_bind_tex_image(struct yagl_client_context *ctx,
 static int yagl_gles_context_validate_readbuffer(struct yagl_gles_context *ctx,
                                                  GLenum *internalformat)
 {
-    struct yagl_gles_framebuffer_attachment_state *attachment_state;
+    if (ctx->fbo_read) {
+        struct yagl_gles_framebuffer_attachment_state *attachment_state;
 
-    if (ctx->read_buffer == GL_NONE) {
-        return 0;
-    }
+        if (ctx->fbo_read->read_buffer == GL_NONE) {
+            return 0;
+        }
 
-    if (!ctx->fbo_read) {
+        attachment_state = &ctx->fbo_read->attachment_states[
+            yagl_gles_framebuffer_attachment_color0 +
+            ctx->fbo_read->read_buffer - GL_COLOR_ATTACHMENT0];
+
+        return yagl_gles_framebuffer_attachment_internalformat(attachment_state,
+                                                               internalformat);
+    } else {
+        if (ctx->fb0_read_buffer == GL_NONE) {
+            return 0;
+        }
+
         *internalformat = GL_RGBA;
         return 1;
     }
-
-    if (ctx->read_buffer == GL_BACK) {
-        attachment_state = &ctx->fbo_read->attachment_states[
-            yagl_gles_framebuffer_attachment_color0];
-    } else {
-        attachment_state = &ctx->fbo_read->attachment_states[
-            yagl_gles_framebuffer_attachment_color0 +
-            ctx->read_buffer - GL_COLOR_ATTACHMENT0];
-    }
-
-    return yagl_gles_framebuffer_attachment_internalformat(attachment_state,
-                                                           internalformat);
 }
 
 void yagl_gles_context_init(struct yagl_gles_context *ctx,
                             yagl_client_api client_api,
                             struct yagl_sharegroup *sg)
 {
-    int i;
-
     yagl_sharegroup_acquire(sg);
 
     yagl_namespace_init(&ctx->framebuffers);
@@ -179,11 +176,8 @@ void yagl_gles_context_init(struct yagl_gles_context *ctx,
 
     ctx->front_face_mode = GL_CCW;
 
-    ctx->draw_buffers[0] = GL_BACK;
-    for (i = 1; i < YAGL_MAX_GLES_DRAW_BUFFERS; ++i) {
-        ctx->draw_buffers[i] = GL_NONE;
-    }
-    ctx->read_buffer = GL_BACK;
+    ctx->fb0_draw_buffer = GL_BACK;
+    ctx->fb0_read_buffer = GL_BACK;
 
     ctx->dither_enabled = GL_TRUE;
 }
@@ -249,8 +243,8 @@ void yagl_gles_context_prepare(struct yagl_gles_context *ctx,
         ctx->max_draw_buffers = 1;
     }
 
-    if (ctx->max_draw_buffers > YAGL_MAX_GLES_DRAW_BUFFERS) {
-        ctx->max_draw_buffers = YAGL_MAX_GLES_DRAW_BUFFERS;
+    if (ctx->max_draw_buffers > YAGL_MAX_GLES_FRAMEBUFFER_COLOR_ATTACHMENTS) {
+        ctx->max_draw_buffers = YAGL_MAX_GLES_FRAMEBUFFER_COLOR_ATTACHMENTS;
     }
 
     ctx->vertex_arrays_supported = (yagl_get_host_gl_version() > yagl_gl_2);
@@ -511,7 +505,7 @@ struct yagl_pixel_format
                                                    GLenum format,
                                                    GLenum type)
 {
-    GLenum readbuffer_internalformat;
+    GLenum readbuffer_internalformat = 0;
     uint32_t readbuffer_format_flags;
     struct yagl_pixel_format *pf = NULL;
 
@@ -547,7 +541,7 @@ struct yagl_pixel_format
 
 out:
     if (!pf) {
-        YAGL_LOG_ERROR("validation error: readbuffer_internalformat = 0x%X, format = 0x%X, type = 0x%X",
+        YAGL_LOG_ERROR("validation error: readbuffer_internalformat = %u, format = 0x%X, type = 0x%X",
                        readbuffer_internalformat,
                        format,
                        type);
@@ -560,7 +554,7 @@ int yagl_gles_context_validate_copyteximage_format(struct yagl_gles_context *ctx
                                                    GLenum *internalformat,
                                                    int *is_float)
 {
-    GLenum readbuffer_internalformat;
+    GLenum readbuffer_internalformat = 0;
     uint32_t readbuffer_format_flags = 0;
     uint32_t readbuffer_format_num_components = 0;
     uint32_t internalformat_flags = 0;
@@ -1545,14 +1539,22 @@ int yagl_gles_context_get_integerv(struct yagl_gles_context *ctx,
         *num_params = 1;
         break;
     case GL_READ_BUFFER:
-        *params = ctx->read_buffer;
+        *params = ctx->fbo_read ? ctx->fbo_read->read_buffer : ctx->fb0_read_buffer;
         *num_params = 1;
         break;
     default:
         if ((pname >= GL_DRAW_BUFFER0) &&
             (pname <= (GL_DRAW_BUFFER0 + ctx->max_draw_buffers - 1))) {
-            *params = ctx->draw_buffers[pname - GL_DRAW_BUFFER0];
-            *num_params = 1;
+            if (ctx->fbo_draw) {
+                *params = ctx->fbo_draw->draw_buffers[pname - GL_DRAW_BUFFER0];
+                *num_params = 1;
+            } else if (pname == GL_DRAW_BUFFER0) {
+                *params = ctx->fb0_draw_buffer;
+                *num_params = 1;
+            } else {
+                *params = GL_NONE;
+                *num_params = 1;
+            }
             break;
         }
 

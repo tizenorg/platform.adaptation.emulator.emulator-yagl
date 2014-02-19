@@ -74,6 +74,12 @@ struct yagl_gles_framebuffer *yagl_gles_framebuffer_create(void)
         fb->attachment_states[i].type = GL_NONE;
     }
 
+    fb->draw_buffers[0] = GL_COLOR_ATTACHMENT0;
+    for (i = 1; i < YAGL_MAX_GLES_FRAMEBUFFER_COLOR_ATTACHMENTS; ++i) {
+        fb->draw_buffers[i] = GL_NONE;
+    }
+    fb->read_buffer = GL_COLOR_ATTACHMENT0;
+
     yagl_host_glGenFramebuffers(&fb->global_name, 1);
 
     return fb;

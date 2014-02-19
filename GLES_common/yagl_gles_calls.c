@@ -824,7 +824,7 @@ YAGL_API void glCopyTexImage2D(GLenum target,
     if (!yagl_gles_context_validate_copyteximage_format(ctx,
                                                         &actual_internalformat,
                                                         &is_float)) {
-        YAGL_SET_ERR(GL_INVALID_VALUE);
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
         goto out;
     }
 
@@ -1617,7 +1617,7 @@ void glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLe
         (attachment == GL_DEPTH_STENCIL_ATTACHMENT)) {
         if (memcmp(&framebuffer_obj->attachment_states[yagl_gles_framebuffer_attachment_depth],
                    &framebuffer_obj->attachment_states[yagl_gles_framebuffer_attachment_stencil],
-                   sizeof(struct yagl_gles_framebuffer_attachment_state)) == 0) {
+                   sizeof(struct yagl_gles_framebuffer_attachment_state)) != 0) {
             YAGL_SET_ERR(GL_INVALID_OPERATION);
             goto out;
         }
@@ -2552,15 +2552,19 @@ YAGL_API void glDrawBuffers(GLsizei n, const GLenum *bufs)
                 goto out;
             }
         }
-    } else if ((n != 1) || ((bufs[0] != GL_NONE) && (bufs[0] != GL_BACK))) {
-        YAGL_SET_ERR(GL_INVALID_OPERATION);
-        goto out;
-    }
 
-    memcpy(&ctx->draw_buffers[0], bufs, n * sizeof(bufs[0]));
+        memcpy(&ctx->fbo_draw->draw_buffers[0], bufs, n * sizeof(bufs[0]));
 
-    for (i = n; i < ctx->max_draw_buffers; ++i) {
-        ctx->draw_buffers[i] = GL_NONE;
+        for (i = n; i < ctx->max_draw_buffers; ++i) {
+            ctx->fbo_draw->draw_buffers[i] = GL_NONE;
+        }
+    } else {
+        if ((n != 1) || ((bufs[0] != GL_NONE) && (bufs[0] != GL_BACK))) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            goto out;
+        }
+
+        ctx->fb0_draw_buffer = bufs[0];
     }
 
     yagl_host_glDrawBuffers(bufs, n);
@@ -2593,12 +2597,16 @@ YAGL_API void glReadBuffer(GLenum mode)
                 goto out;
             }
         }
-    } else if ((mode != GL_NONE) && (mode != GL_BACK)) {
-        YAGL_SET_ERR(GL_INVALID_OPERATION);
-        goto out;
-    }
 
-    ctx->read_buffer = mode;
+        ctx->fbo_read->read_buffer = mode;
+    } else {
+        if ((mode != GL_NONE) && (mode != GL_BACK)) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            goto out;
+        }
+
+        ctx->fb0_read_buffer = mode;
+    }
 
     yagl_host_glReadBuffer(mode);
 

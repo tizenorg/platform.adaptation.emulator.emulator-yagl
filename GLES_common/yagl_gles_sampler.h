@@ -38,8 +38,6 @@ void yagl_gles_sampler_release(struct yagl_gles_sampler *sampler);
 void yagl_gles_sampler_bind(struct yagl_gles_sampler *sampler,
                             GLuint unit);
 
-int yagl_gles_sampler_was_bound(struct yagl_gles_sampler *sampler);
-
 int yagl_gles_sampler_set_parameteriv(struct yagl_gles_sampler *sampler,
                                       GLenum pname, const GLint *param);
 

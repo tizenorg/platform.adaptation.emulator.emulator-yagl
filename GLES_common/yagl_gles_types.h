@@ -34,8 +34,6 @@ typedef enum
     yagl_gles_format_srgb = (1 << 7)
 } yagl_gles_format_flag;
 
-#define YAGL_MAX_GLES_DRAW_BUFFERS 16
-
 struct yagl_gles_pixelstore
 {
     GLint alignment;
