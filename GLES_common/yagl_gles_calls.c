@@ -2350,6 +2350,16 @@ YAGL_API void glBlitFramebuffer(GLint srcX0, GLint srcY0,
 
     yagl_render_invalidate(0);
 
+    if ((abs(dstX0 - dstX1) != abs(srcX0 - srcX1)) ||
+        (abs(dstY0 - dstY1) != abs(srcY0 - srcY1))) {
+        /*
+         * Minifying/magnifying blits cause crashes with some host OpenGL
+         * drivers, so disable them for now.
+         */
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
     yagl_host_glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
 
 out:
