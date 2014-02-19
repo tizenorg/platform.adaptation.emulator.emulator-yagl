@@ -1162,6 +1162,10 @@ YAGL_API void glLinkProgram(GLuint program)
         goto out;
     }
 
+    if (!ctx->pre_link_program(ctx, program_obj)) {
+        goto out;
+    }
+
     yagl_gles2_program_link(program_obj);
 
 out:
@@ -1916,6 +1920,10 @@ YAGL_API void glUseProgram(GLuint program)
             YAGL_SET_ERR(GL_INVALID_OPERATION);
             goto out;
         }
+    }
+
+    if (!ctx->pre_use_program(ctx, program_obj)) {
+        goto out;
     }
 
     yagl_gles2_context_use_program(ctx, program_obj);

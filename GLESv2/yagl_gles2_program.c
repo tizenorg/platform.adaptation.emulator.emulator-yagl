@@ -12,6 +12,11 @@
 #include <stdlib.h>
 #include <pthread.h>
 
+/*
+ * We don't want to include GLES3/gl3.h here
+ */
+#define GL_INTERLEAVED_ATTRIBS 0x8C8C
+
 struct yagl_gles2_location_v
 {
     GLchar *name;
@@ -221,6 +226,8 @@ struct yagl_gles2_program *yagl_gles2_program_create(int gen_locations)
 
     yagl_list_init(&program->attrib_locations);
     yagl_list_init(&program->frag_data_locations);
+
+    program->transform_feedback_info.buffer_mode = GL_INTERLEAVED_ATTRIBS;
 
     yagl_host_glCreateProgram(program->global_name);
 

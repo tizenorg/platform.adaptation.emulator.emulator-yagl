@@ -19,6 +19,12 @@ struct yagl_gles2_context
                          GLenum /*pname*/,
                          GLint */*params*/);
 
+    int (*pre_use_program)(struct yagl_gles2_context */*ctx*/,
+                           struct yagl_gles2_program */*program*/);
+
+    int (*pre_link_program)(struct yagl_gles2_context */*ctx*/,
+                            struct yagl_gles2_program */*program*/);
+
     /*
      * From 'base.base.sg'.
      */

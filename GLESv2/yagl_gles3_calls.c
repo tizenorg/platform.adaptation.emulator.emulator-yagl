@@ -602,6 +602,15 @@ YAGL_API void glDeleteTransformFeedbacks(GLsizei n, const GLuint *ids)
     }
 
     if (ids) {
+        if (ctx->tfo->active) {
+            for (i = 0; i < n; ++i) {
+                if (ids[i] && (ctx->tfo->base.local_name == ids[i])) {
+                    YAGL_SET_ERR(GL_INVALID_OPERATION);
+                    goto out;
+                }
+            }
+        }
+
         for (i = 0; i < n; ++i) {
             yagl_namespace_remove(&ctx->transform_feedbacks, ids[i]);
         }

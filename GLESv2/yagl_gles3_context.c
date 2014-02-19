@@ -339,22 +339,31 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
     return 1;
 }
 
-static void yagl_gles3_context_draw_arrays(struct yagl_gles_context *ctx,
+static void yagl_gles3_context_draw_arrays(struct yagl_gles_context *gles_ctx,
                                            GLenum mode,
                                            GLint first,
                                            GLsizei count,
                                            GLsizei primcount)
 {
-    struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
+    struct yagl_gles3_context *ctx = (struct yagl_gles3_context*)gles_ctx;
 
-    yagl_gles3_context_pre_draw(gles3_ctx);
+    YAGL_LOG_FUNC_SET(yagl_gles3_context_draw_arrays);
 
-    yagl_gles2_context_draw_arrays(ctx, mode, first, count, primcount);
+    if (ctx->tfo->active &&
+        !ctx->tfo->paused &&
+        (mode != ctx->tf_primitive_mode)) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        return;
+    }
 
-    yagl_gles3_context_post_draw(gles3_ctx);
+    yagl_gles3_context_pre_draw(ctx);
+
+    yagl_gles2_context_draw_arrays(gles_ctx, mode, first, count, primcount);
+
+    yagl_gles3_context_post_draw(ctx);
 }
 
-static void yagl_gles3_context_draw_elements(struct yagl_gles_context *ctx,
+static void yagl_gles3_context_draw_elements(struct yagl_gles_context *gles_ctx,
                                              GLenum mode,
                                              GLsizei count,
                                              GLenum type,
@@ -363,11 +372,18 @@ static void yagl_gles3_context_draw_elements(struct yagl_gles_context *ctx,
                                              GLsizei primcount,
                                              uint32_t max_idx)
 {
-    struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
+    struct yagl_gles3_context *ctx = (struct yagl_gles3_context*)gles_ctx;
 
-    yagl_gles3_context_pre_draw(gles3_ctx);
+    YAGL_LOG_FUNC_SET(yagl_gles3_context_draw_elements);
 
-    yagl_gles2_context_draw_elements(ctx,
+    if (ctx->tfo->active && !ctx->tfo->paused) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        return;
+    }
+
+    yagl_gles3_context_pre_draw(ctx);
+
+    yagl_gles2_context_draw_elements(gles_ctx,
                                      mode,
                                      count,
                                      type,
@@ -376,7 +392,7 @@ static void yagl_gles3_context_draw_elements(struct yagl_gles_context *ctx,
                                      primcount,
                                      max_idx);
 
-    yagl_gles3_context_post_draw(gles3_ctx);
+    yagl_gles3_context_post_draw(ctx);
 }
 
 static int yagl_gles3_context_bind_buffer(struct yagl_gles_context *ctx,
@@ -1302,6 +1318,36 @@ static int yagl_gles3_context_get_programiv(struct yagl_gles2_context *ctx,
     return 1;
 }
 
+static int yagl_gles3_context_pre_use_program(struct yagl_gles2_context *gles_ctx,
+                                              struct yagl_gles2_program *program)
+{
+    struct yagl_gles3_context *ctx = (struct yagl_gles3_context*)gles_ctx;
+
+    YAGL_LOG_FUNC_SET(glUseProgram);
+
+    if (ctx->tfo->active && !ctx->tfo->paused) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
+static int yagl_gles3_context_pre_link_program(struct yagl_gles2_context *gles_ctx,
+                                               struct yagl_gles2_program *program)
+{
+    struct yagl_gles3_context *ctx = (struct yagl_gles3_context*)gles_ctx;
+
+    YAGL_LOG_FUNC_SET(glLinkProgram);
+
+    if (ctx->tfo->active) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
 struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg)
 {
     struct yagl_gles3_context *gles3_ctx;
@@ -1340,6 +1386,8 @@ struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg
     gles3_ctx->base.base.validate_renderbuffer_format = &yagl_gles3_context_validate_renderbuffer_format;
     gles3_ctx->base.shader_patch = &yagl_gles3_context_shader_patch;
     gles3_ctx->base.get_programiv = &yagl_gles3_context_get_programiv;
+    gles3_ctx->base.pre_use_program = &yagl_gles3_context_pre_use_program;
+    gles3_ctx->base.pre_link_program = &yagl_gles3_context_pre_link_program;
 
     YAGL_LOG_FUNC_EXIT("%p", gles3_ctx);
 
@@ -1690,7 +1738,7 @@ int yagl_gles3_context_get_integerv_indexed(struct yagl_gles3_context *ctx,
         }
 
         if (ctx->tfo->buffer_bindings[index].entire) {
-            *params = ctx->tfo->buffer_bindings[index].buffer->size;
+            *params = 0;
         } else {
             *params = ctx->tfo->buffer_bindings[index].size;
         }
@@ -1718,7 +1766,7 @@ int yagl_gles3_context_get_integerv_indexed(struct yagl_gles3_context *ctx,
         }
 
         if (ctx->uniform_buffer_bindings[index].entire) {
-            *params = ctx->uniform_buffer_bindings[index].buffer->size;
+            *params = 0;
         } else {
             *params = ctx->uniform_buffer_bindings[index].size;
         }
@@ -1772,6 +1820,13 @@ void yagl_gles3_context_draw_range_elements(struct yagl_gles3_context *ctx,
                                             const GLvoid *indices,
                                             int32_t indices_count)
 {
+    YAGL_LOG_FUNC_SET(yagl_gles3_context_draw_range_elements);
+
+    if (ctx->tfo->active && !ctx->tfo->paused) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        return;
+    }
+
     yagl_gles3_context_pre_draw(ctx);
     yagl_gles2_context_pre_draw(&ctx->base, mode, end + 1);
 

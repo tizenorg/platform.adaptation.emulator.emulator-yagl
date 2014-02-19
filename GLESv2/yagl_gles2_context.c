@@ -192,6 +192,18 @@ static int yagl_gles2_context_acquire_binded_buffer(struct yagl_gles_context *ct
     return 0;
 }
 
+static int yagl_gles2_context_pre_use_program(struct yagl_gles2_context *ctx,
+                                              struct yagl_gles2_program *program)
+{
+    return 1;
+}
+
+static int yagl_gles2_context_pre_link_program(struct yagl_gles2_context *ctx,
+                                               struct yagl_gles2_program *program)
+{
+    return 1;
+}
+
 void yagl_gles2_context_init(struct yagl_gles2_context *ctx,
                              yagl_client_api client_api,
                              struct yagl_sharegroup *sg)
@@ -1331,6 +1343,8 @@ struct yagl_client_context *yagl_gles2_context_create(struct yagl_sharegroup *sg
     gles2_ctx->base.validate_renderbuffer_format = &yagl_gles2_context_validate_renderbuffer_format;
     gles2_ctx->shader_patch = &yagl_gles2_context_shader_patch;
     gles2_ctx->get_programiv = &yagl_gles2_context_get_programiv;
+    gles2_ctx->pre_use_program = &yagl_gles2_context_pre_use_program;
+    gles2_ctx->pre_link_program = &yagl_gles2_context_pre_link_program;
 
     YAGL_LOG_FUNC_EXIT("%p", gles2_ctx);
 
