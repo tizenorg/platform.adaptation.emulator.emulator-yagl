@@ -36,6 +36,27 @@ static void yagl_gles_framebuffer_destroy(struct yagl_ref *ref)
     yagl_free(fb);
 }
 
+int yagl_gles_framebuffer_attachment_internalformat(struct yagl_gles_framebuffer_attachment_state *attachment_state,
+                                                    GLenum *internalformat)
+{
+    switch (attachment_state->type) {
+    case GL_TEXTURE:
+        if (attachment_state->texture) {
+            *internalformat = attachment_state->texture->internalformat;
+            return 1;
+        }
+        break;
+    case GL_RENDERBUFFER:
+        if (attachment_state->rb) {
+            *internalformat = attachment_state->rb->internalformat;
+            return 1;
+        }
+        break;
+    }
+
+    return 0;
+}
+
 struct yagl_gles_framebuffer *yagl_gles_framebuffer_create(void)
 {
     struct yagl_gles_framebuffer *fb;

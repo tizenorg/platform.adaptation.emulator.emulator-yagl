@@ -38,6 +38,9 @@ struct yagl_gles_framebuffer
     int was_bound;
 };
 
+int yagl_gles_framebuffer_attachment_internalformat(struct yagl_gles_framebuffer_attachment_state *attachment_state,
+                                                    GLenum *internalformat);
+
 struct yagl_gles_framebuffer *yagl_gles_framebuffer_create(void);
 
 /*

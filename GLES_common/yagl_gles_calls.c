@@ -19,6 +19,7 @@
 #include "yagl_gles_image.h"
 #include "yagl_gles_array.h"
 #include "yagl_gles_validate.h"
+#include "yagl_gles_utils.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1568,7 +1569,47 @@ void glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLe
     }
 
     if (!framebuffer_obj) {
-        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        /*
+         * Default framebuffer, special handling.
+         */
+
+        switch (attachment) {
+        case GL_BACK:
+        case GL_DEPTH:
+        case GL_STENCIL:
+            break;
+        default:
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            goto out;
+        }
+
+        switch (pname) {
+        case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE:
+            *params = GL_FRAMEBUFFER_DEFAULT;
+            break;
+        case GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME:
+            *params = 0;
+            break;
+        case GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE:
+        case GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE:
+        case GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE:
+        case GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE:
+        case GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE:
+        case GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE:
+        case GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE:
+            /*
+             * TODO: implement.
+             */
+            *params = 0;
+            break;
+        case GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING:
+            *params = GL_LINEAR;
+            break;
+        default:
+            YAGL_SET_ERR(GL_INVALID_ENUM);
+            break;
+        }
+
         goto out;
     }
 
@@ -1600,7 +1641,6 @@ void glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLe
             *params = 0;
         } else {
             YAGL_SET_ERR(GL_INVALID_ENUM);
-            goto out;
         }
         break;
     case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE:
@@ -1610,12 +1650,51 @@ void glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLe
                 ? 0 : framebuffer_obj->attachment_states[framebuffer_attachment].textarget;
         } else {
             YAGL_SET_ERR(GL_INVALID_ENUM);
-            goto out;
+        }
+        break;
+    case GL_FRAMEBUFFER_ATTACHMENT_TEXTURE_LAYER:
+        if (framebuffer_obj->attachment_states[framebuffer_attachment].type == GL_TEXTURE) {
+            *params = framebuffer_obj->attachment_states[framebuffer_attachment].layer;
+        } else {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
         break;
     default:
-        YAGL_SET_ERR(GL_INVALID_ENUM);
-        goto out;
+        if (framebuffer_obj->attachment_states[framebuffer_attachment].type != GL_NONE) {
+            GLenum internalformat = 0;
+            uint32_t format_flags;
+
+            yagl_gles_framebuffer_attachment_internalformat(
+                &framebuffer_obj->attachment_states[framebuffer_attachment],
+                &internalformat);
+
+            format_flags = yagl_gles_internalformat_flags(internalformat);
+
+            switch (pname) {
+            case GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE:
+            case GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE:
+            case GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE:
+            case GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE:
+            case GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE:
+            case GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE:
+            case GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE:
+                /*
+                 * TODO: implement.
+                 */
+                *params = 0;
+                break;
+            case GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING:
+                *params = ((format_flags & yagl_gles_format_srgb) != 0) ?
+                          GL_SRGB : GL_LINEAR;
+                break;
+            default:
+                YAGL_SET_ERR(GL_INVALID_ENUM);
+                break;
+            }
+        } else {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
+        }
+        break;
     }
 
 out:

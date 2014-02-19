@@ -127,22 +127,8 @@ static int yagl_gles_context_validate_readbuffer(struct yagl_gles_context *ctx,
             ctx->read_buffer - GL_COLOR_ATTACHMENT0];
     }
 
-    switch (attachment_state->type) {
-    case GL_TEXTURE:
-        if (attachment_state->texture) {
-            *internalformat = attachment_state->texture->internalformat;
-            return 1;
-        }
-        break;
-    case GL_RENDERBUFFER:
-        if (attachment_state->rb) {
-            *internalformat = attachment_state->rb->internalformat;
-            return 1;
-        }
-        break;
-    }
-
-    return 0;
+    return yagl_gles_framebuffer_attachment_internalformat(attachment_state,
+                                                           internalformat);
 }
 
 void yagl_gles_context_init(struct yagl_gles_context *ctx,
