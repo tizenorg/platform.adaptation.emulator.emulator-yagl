@@ -398,7 +398,7 @@ struct yagl_pixel_format
 
     YAGL_LOG_FUNC_SET(yagl_gles_context_validate_teximage_format);
 
-    if (format == internalformat) {
+    if ((format == internalformat) || (internalformat == GL_BGRA)) {
         switch (format) {
         case GL_RGB:
             switch (type) {
