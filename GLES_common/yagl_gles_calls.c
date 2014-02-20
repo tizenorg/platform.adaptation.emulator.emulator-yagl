@@ -2318,6 +2318,8 @@ YAGL_API void glBlitFramebuffer(GLint srcX0, GLint srcY0,
                                 GLint dstX1, GLint dstY1,
                                 GLbitfield mask, GLenum filter)
 {
+    GLenum read_status, draw_status;
+
     YAGL_LOG_FUNC_ENTER_SPLIT10(glBlitFramebuffer, GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLbitfield, GLenum, srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
 
     YAGL_GET_CTX();
@@ -2344,11 +2346,21 @@ YAGL_API void glBlitFramebuffer(GLint srcX0, GLint srcY0,
         goto out;
     }
 
-    if (!ctx->fbo_draw || !ctx->fbo_read) {
+    read_status = yagl_gles_context_check_framebuffer_status(ctx,
+                                                             ctx->fbo_read);
+
+    if (read_status != GL_FRAMEBUFFER_COMPLETE) {
+        YAGL_SET_ERR(GL_INVALID_FRAMEBUFFER_OPERATION);
         goto out;
     }
 
-    yagl_render_invalidate(0);
+    draw_status = yagl_gles_context_check_framebuffer_status(ctx,
+                                                             ctx->fbo_draw);
+
+    if (draw_status != GL_FRAMEBUFFER_COMPLETE) {
+        YAGL_SET_ERR(GL_INVALID_FRAMEBUFFER_OPERATION);
+        goto out;
+    }
 
     if ((abs(dstX0 - dstX1) != abs(srcX0 - srcX1)) ||
         (abs(dstY0 - dstY1) != abs(srcY0 - srcY1))) {
@@ -2359,6 +2371,8 @@ YAGL_API void glBlitFramebuffer(GLint srcX0, GLint srcY0,
         YAGL_SET_ERR(GL_INVALID_OPERATION);
         goto out;
     }
+
+    yagl_render_invalidate(0);
 
     yagl_host_glBlitFramebuffer(srcX0, srcY0, srcX1, srcY1, dstX0, dstY0, dstX1, dstY1, mask, filter);
 
