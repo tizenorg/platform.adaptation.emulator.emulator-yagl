@@ -9,11 +9,6 @@ struct yagl_gles2_context
 {
     struct yagl_gles_context base;
 
-    char *(*shader_patch)(struct yagl_gles2_context */*ctx*/,
-                          const char */*source*/,
-                          int /*len*/,
-                          int */*patched_len*/);
-
     int (*get_programiv)(struct yagl_gles2_context */*ctx*/,
                          struct yagl_gles2_program */*program*/,
                          GLenum /*pname*/,
@@ -215,11 +210,6 @@ int yagl_gles2_context_validate_texstorage_format(struct yagl_gles_context *ctx,
 
 int yagl_gles2_context_validate_renderbuffer_format(struct yagl_gles_context *ctx,
                                                     GLenum *internalformat);
-
-char *yagl_gles2_context_shader_patch(struct yagl_gles2_context *ctx,
-                                      const char *source,
-                                      int len,
-                                      int *patched_len);
 
 int yagl_gles2_context_get_programiv(struct yagl_gles2_context *ctx,
                                      struct yagl_gles2_program *program,

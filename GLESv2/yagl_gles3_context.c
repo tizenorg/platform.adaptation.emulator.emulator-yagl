@@ -1240,49 +1240,6 @@ static int yagl_gles3_context_validate_renderbuffer_format(struct yagl_gles_cont
     return 1;
 }
 
-static char *yagl_gles3_context_shader_patch(struct yagl_gles2_context *ctx,
-                                             const char *source,
-                                             int len,
-                                             int *patched_len)
-{
-    char *patched;
-    int is_es3 = 0;
-    yagl_gl_version gl_version;
-
-    if (!yagl_gles2_shader_has_version(source, &is_es3) || !is_es3) {
-        /*
-         * It's not a ES3 shader, process as GLESv2 shader.
-         */
-        return yagl_gles2_context_shader_patch(ctx,
-                                               source,
-                                               len,
-                                               patched_len);
-    }
-
-    patched = yagl_gles2_shader_fix_extensions(source,
-                                               len,
-                                               ctx->base.extensions,
-                                               ctx->base.num_extensions,
-                                               patched_len);
-
-    gl_version = yagl_get_host_gl_version();
-
-    switch (gl_version) {
-    case yagl_gl_3_1_es3:
-        /*
-         * GL_ARB_ES3_compatibility includes full ES 3.00 shader
-         * support, no patching is required.
-         */
-        return patched;
-    case yagl_gl_3_2:
-    default:
-        /*
-         * TODO: Patch shader to run with GLSL 1.50
-         */
-        return patched;
-    }
-}
-
 static int yagl_gles3_context_get_programiv(struct yagl_gles2_context *ctx,
                                             struct yagl_gles2_program *program,
                                             GLenum pname,
@@ -1384,7 +1341,6 @@ struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg
     gles3_ctx->base.base.validate_copyteximage_format = &yagl_gles3_context_validate_copyteximage_format;
     gles3_ctx->base.base.validate_texstorage_format = &yagl_gles3_context_validate_texstorage_format;
     gles3_ctx->base.base.validate_renderbuffer_format = &yagl_gles3_context_validate_renderbuffer_format;
-    gles3_ctx->base.shader_patch = &yagl_gles3_context_shader_patch;
     gles3_ctx->base.get_programiv = &yagl_gles3_context_get_programiv;
     gles3_ctx->base.pre_use_program = &yagl_gles3_context_pre_use_program;
     gles3_ctx->base.pre_link_program = &yagl_gles3_context_pre_link_program;

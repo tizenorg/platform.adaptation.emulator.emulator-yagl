@@ -15,6 +15,8 @@ BuildRequires:  pkgconfig(x11-xcb)
 BuildRequires:  pkgconfig(xext)
 BuildRequires:  pkgconfig(dri2proto)
 BuildRequires:  pkgconfig(libdrm)
+BuildRequires:  flex
+BuildRequires:  bison
 %if %{with wayland}
 BuildRequires:  pkgconfig(gbm)
 BuildRequires:  pkgconfig(libudev)

@@ -16,6 +16,7 @@
 #include "yagl_transport.h"
 #include "yagl_utils.h"
 #include "yagl_pixel_format.h"
+#include "yagl_glsl_state.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1245,6 +1246,8 @@ YAGL_API void glShaderSource(GLuint shader, GLsizei count, const GLchar * const 
 
     if (have_strings) {
         uint8_t *tmp_buff;
+        struct yagl_glsl_state glsl_state;
+        int ret;
         int patched_len = 0;
         char *patched_source;
 
@@ -1265,12 +1268,20 @@ YAGL_API void glShaderSource(GLuint shader, GLsizei count, const GLchar * const 
 
         YAGL_LOG_TRACE("orig source = %s", tmp_buff);
 
-        patched_source = ctx->shader_patch(ctx,
-                                           (char*)tmp_buff,
-                                           total_length,
-                                           &patched_len);
+        yagl_glsl_state_init(&glsl_state,
+                             shader_obj->type,
+                             (char*)tmp_buff,
+                             total_length,
+                             ctx->base.extensions,
+                             ctx->base.num_extensions,
+                             (ctx->base.base.client_api == yagl_client_api_gles3));
 
-        if (patched_source) {
+        ret = yagl_glsl_parse(&glsl_state);
+
+        if ((ret == 0) && !glsl_state.have_error) {
+            patched_source = yagl_glsl_state_get_output(&glsl_state,
+                                                        &patched_len);
+
             YAGL_LOG_TRACE("patched source = %s", patched_source);
 
             yagl_gles2_shader_source(shader_obj,
@@ -1280,11 +1291,16 @@ YAGL_API void glShaderSource(GLuint shader, GLsizei count, const GLchar * const 
 
             yagl_free(patched_source);
         } else {
+            /*
+             * Unable to parse source, pass as-is.
+             */
             yagl_gles2_shader_source(shader_obj,
                                      (GLchar*)tmp_buff,
                                      (GLchar*)tmp_buff,
                                      total_length);
         }
+
+        yagl_glsl_state_cleanup(&glsl_state);
     }
 
 out:

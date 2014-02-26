@@ -1226,52 +1226,6 @@ int yagl_gles2_context_validate_renderbuffer_format(struct yagl_gles_context *ct
     return 0;
 }
 
-char *yagl_gles2_context_shader_patch(struct yagl_gles2_context *ctx,
-                                      const char *source,
-                                      int len,
-                                      int *patched_len)
-{
-    char *tmp;
-    int tmp_len;
-
-    char *patched_string = yagl_gles2_shader_patch(source,
-                                                   len,
-                                                   patched_len);
-
-    tmp = yagl_gles2_shader_fix_extensions(patched_string,
-                                           *patched_len,
-                                           ctx->base.extensions,
-                                           ctx->base.num_extensions,
-                                           &tmp_len);
-
-    if (tmp) {
-        yagl_free(patched_string);
-        patched_string = tmp;
-        *patched_len = tmp_len;
-    }
-
-    /*
-     * On some GPUs (like Ivybridge Desktop) it's necessary to add
-     * "#version" directive as the first line of the shader, otherwise
-     * some of the features might not be available to the shader.
-     *
-     * For example, on Ivybridge Desktop, if we don't add the "#version"
-     * line to the fragment shader then "gl_PointCoord"
-     * won't be available.
-     */
-
-    if (!yagl_gles2_shader_has_version(patched_string, NULL)) {
-        *patched_len += sizeof("#version 120\n\n") - 1;
-        char *tmp = yagl_malloc(*patched_len + 1);
-        strcpy(tmp, "#version 120\n\n");
-        strcat(tmp, patched_string);
-        yagl_free(patched_string);
-        patched_string = tmp;
-    }
-
-    return patched_string;
-}
-
 int yagl_gles2_context_get_programiv(struct yagl_gles2_context *ctx,
                                      struct yagl_gles2_program *program,
                                      GLenum pname,
@@ -1341,7 +1295,6 @@ struct yagl_client_context *yagl_gles2_context_create(struct yagl_sharegroup *sg
     gles2_ctx->base.validate_copyteximage_format = &yagl_gles2_context_validate_copyteximage_format;
     gles2_ctx->base.validate_texstorage_format = &yagl_gles2_context_validate_texstorage_format;
     gles2_ctx->base.validate_renderbuffer_format = &yagl_gles2_context_validate_renderbuffer_format;
-    gles2_ctx->shader_patch = &yagl_gles2_context_shader_patch;
     gles2_ctx->get_programiv = &yagl_gles2_context_get_programiv;
     gles2_ctx->pre_use_program = &yagl_gles2_context_pre_use_program;
     gles2_ctx->pre_link_program = &yagl_gles2_context_pre_link_program;
