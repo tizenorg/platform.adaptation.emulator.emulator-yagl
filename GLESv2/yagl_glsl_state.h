@@ -57,6 +57,20 @@ struct yagl_glsl_state
     int have_extensions;
 
     int frag_color_declared;
+    int texture1d_declared;
+    int texture1dproj_declared;
+    int texture1dlod_declared;
+    int texture1dprojlod_declared;
+    int texture2d_declared;
+    int texture2dproj_declared;
+    int texture2dlod_declared;
+    int texture2dprojlod_declared;
+    int texture3d_declared;
+    int texture3dproj_declared;
+    int texture3dlod_declared;
+    int texture3dprojlod_declared;
+    int texturecube_declared;
+    int texturecubelod_declared;
 
     // Each token is assigned an index.
     int token_index;

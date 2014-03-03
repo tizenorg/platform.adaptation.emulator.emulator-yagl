@@ -101,85 +101,85 @@ STRING [^ \r\t\v\f\n()\[\]{},;?:/%*&|^!+\-=<>\.]+
 "texture1DProjLod" {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     yagl_glsl_state_new_str_token(state, yylval, yytext);
-    return TOK_TEXTUREPROJLOD;
+    return TOK_TEXTURE1DPROJLOD;
 }
 
 "texture1DProj" {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     yagl_glsl_state_new_str_token(state, yylval, yytext);
-    return TOK_TEXTUREPROJ;
+    return TOK_TEXTURE1DPROJ;
 }
 
 "texture1DLod" {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     yagl_glsl_state_new_str_token(state, yylval, yytext);
-    return TOK_TEXTURELOD;
+    return TOK_TEXTURE1DLOD;
 }
 
 "texture1D" {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     yagl_glsl_state_new_str_token(state, yylval, yytext);
-    return TOK_TEXTURE;
+    return TOK_TEXTURE1D;
 }
 
 "texture2DProjLod" {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     yagl_glsl_state_new_str_token(state, yylval, yytext);
-    return TOK_TEXTUREPROJLOD;
+    return TOK_TEXTURE2DPROJLOD;
 }
 
 "texture2DLod" {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     yagl_glsl_state_new_str_token(state, yylval, yytext);
-    return TOK_TEXTURELOD;
+    return TOK_TEXTURE2DLOD;
 }
 
 "texture2DProj" {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     yagl_glsl_state_new_str_token(state, yylval, yytext);
-    return TOK_TEXTUREPROJ;
+    return TOK_TEXTURE2DPROJ;
 }
 
 "texture2D" {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     yagl_glsl_state_new_str_token(state, yylval, yytext);
-    return TOK_TEXTURE;
+    return TOK_TEXTURE2D;
 }
 
 "texture3DProjLod" {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     yagl_glsl_state_new_str_token(state, yylval, yytext);
-    return TOK_TEXTUREPROJLOD;
+    return TOK_TEXTURE3DPROJLOD;
 }
 
 "texture3DLod" {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     yagl_glsl_state_new_str_token(state, yylval, yytext);
-    return TOK_TEXTURELOD;
+    return TOK_TEXTURE3DLOD;
 }
 
 "texture3DProj" {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     yagl_glsl_state_new_str_token(state, yylval, yytext);
-    return TOK_TEXTUREPROJ;
+    return TOK_TEXTURE3DPROJ;
 }
 
 "texture3D" {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     yagl_glsl_state_new_str_token(state, yylval, yytext);
-    return TOK_TEXTURE;
+    return TOK_TEXTURE3D;
 }
 
 "textureCubeLod" {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     yagl_glsl_state_new_str_token(state, yylval, yytext);
-    return TOK_TEXTURELOD;
+    return TOK_TEXTURECUBELOD;
 }
 
 "textureCube" {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     yagl_glsl_state_new_str_token(state, yylval, yytext);
-    return TOK_TEXTURE;
+    return TOK_TEXTURECUBE;
 }
 
 "gl_FragColor" {

@@ -54,10 +54,20 @@ static int yagl_glsl_lex(union YYSTYPE *val, struct yagl_glsl_state *state)
 %token <str> TOK_MAXVARYINGFLOATS
 %token <str> TOK_ATTRIBUTE
 %token <str> TOK_VARYING
-%token <str> TOK_TEXTURE
-%token <str> TOK_TEXTUREPROJ
-%token <str> TOK_TEXTURELOD
-%token <str> TOK_TEXTUREPROJLOD
+%token <str> TOK_TEXTURE1D
+%token <str> TOK_TEXTURE1DPROJ
+%token <str> TOK_TEXTURE1DLOD
+%token <str> TOK_TEXTURE1DPROJLOD
+%token <str> TOK_TEXTURE2D
+%token <str> TOK_TEXTURE2DPROJ
+%token <str> TOK_TEXTURE2DLOD
+%token <str> TOK_TEXTURE2DPROJLOD
+%token <str> TOK_TEXTURE3D
+%token <str> TOK_TEXTURE3DPROJ
+%token <str> TOK_TEXTURE3DLOD
+%token <str> TOK_TEXTURE3DPROJLOD
+%token <str> TOK_TEXTURECUBE
+%token <str> TOK_TEXTURECUBELOD
 %token <str> TOK_GLFRAGCOLOR
 
 %%
@@ -320,44 +330,239 @@ expression
         yagl_glsl_state_append_output(state, $1.value);
     }
 }
-| TOK_TEXTURE
+| TOK_TEXTURE1D
 {
     yagl_glsl_state_flush_pending(state, $1.index);
+    yagl_glsl_state_append_output(state, $1.value);
 
     if (state->patch_gl2) {
-        yagl_glsl_state_append_output(state, "texture");
-    } else {
-        yagl_glsl_state_append_output(state, $1.value);
+        if (!state->texture1d_declared) {
+            yagl_glsl_state_append_header(state, "vec4 texture1D(sampler1D sampler, float coord, float bias) {\n");
+            yagl_glsl_state_append_header(state, "    return texture(sampler, coord, bias);\n");
+            yagl_glsl_state_append_header(state, "}\n");
+            yagl_glsl_state_append_header(state, "vec4 texture1D(sampler1D sampler, float coord) {\n");
+            yagl_glsl_state_append_header(state, "    return texture(sampler, coord);\n");
+            yagl_glsl_state_append_header(state, "}\n");
+            state->texture1d_declared = 1;
+        }        
+    }        
+}
+| TOK_TEXTURE1DPROJ
+{
+    yagl_glsl_state_flush_pending(state, $1.index);
+    yagl_glsl_state_append_output(state, $1.value);
+
+    if (state->patch_gl2) {
+        if (!state->texture1dproj_declared) {
+            yagl_glsl_state_append_header(state, "vec4 texture1DProj(sampler1D sampler, vec2 coord, float bias) {\n");
+            yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord, bias);\n");
+            yagl_glsl_state_append_header(state, "}\n");
+            yagl_glsl_state_append_header(state, "vec4 texture1DProj(sampler1D sampler, vec2 coord) {\n");
+            yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord);\n");
+            yagl_glsl_state_append_header(state, "}\n");
+            yagl_glsl_state_append_header(state, "vec4 texture1DProj(sampler1D sampler, vec4 coord, float bias) {\n");
+            yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord, bias);\n");
+            yagl_glsl_state_append_header(state, "}\n");
+            yagl_glsl_state_append_header(state, "vec4 texture1DProj(sampler1D sampler, vec4 coord) {\n");
+            yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord);\n");
+            yagl_glsl_state_append_header(state, "}\n");
+            state->texture1dproj_declared = 1;
+        }        
     }
 }
-| TOK_TEXTUREPROJ
+| TOK_TEXTURE1DLOD
 {
     yagl_glsl_state_flush_pending(state, $1.index);
+    yagl_glsl_state_append_output(state, $1.value);
 
     if (state->patch_gl2) {
-        yagl_glsl_state_append_output(state, "textureProj");
-    } else {
-        yagl_glsl_state_append_output(state, $1.value);
+        if (!state->texture1dlod_declared) {
+            yagl_glsl_state_append_header(state, "vec4 texture1DLod(sampler1D sampler, float coord, float lod) {\n");
+            yagl_glsl_state_append_header(state, "    return textureLod(sampler, coord, lod);\n");
+            yagl_glsl_state_append_header(state, "}\n");            
+            state->texture1dlod_declared = 1;
+        }        
     }
 }
-| TOK_TEXTURELOD
+| TOK_TEXTURE1DPROJLOD
 {
     yagl_glsl_state_flush_pending(state, $1.index);
-
+    yagl_glsl_state_append_output(state, $1.value);
+    
     if (state->patch_gl2) {
-        yagl_glsl_state_append_output(state, "textureLod");
-    } else {
-        yagl_glsl_state_append_output(state, $1.value);
+        if (!state->texture1dprojlod_declared) {
+            yagl_glsl_state_append_header(state, "vec4 texture1DProjLod(sampler1D sampler, vec2 coord, float lod) {\n");
+            yagl_glsl_state_append_header(state, "    return textureProjLod(sampler, coord, lod);\n");
+            yagl_glsl_state_append_header(state, "}\n");
+            yagl_glsl_state_append_header(state, "vec4 texture1DProjLod(sampler1D sampler, vec4 coord, float lod) {\n");
+            yagl_glsl_state_append_header(state, "    return textureProjLod(sampler, coord, lod);\n");
+            yagl_glsl_state_append_header(state, "}\n");            
+            state->texture1dprojlod_declared = 1;
+        }        
     }
 }
-| TOK_TEXTUREPROJLOD
+| TOK_TEXTURE2D
 {
     yagl_glsl_state_flush_pending(state, $1.index);
+    yagl_glsl_state_append_output(state, $1.value);
 
     if (state->patch_gl2) {
-        yagl_glsl_state_append_output(state, "textureProjLod");
-    } else {
-        yagl_glsl_state_append_output(state, $1.value);
+        if (!state->texture2d_declared) {
+            yagl_glsl_state_append_header(state, "vec4 texture2D(sampler2D sampler, vec2 coord, float bias) {\n");
+            yagl_glsl_state_append_header(state, "    return texture(sampler, coord, bias);\n");
+            yagl_glsl_state_append_header(state, "}\n");
+            yagl_glsl_state_append_header(state, "vec4 texture2D(sampler2D sampler, vec2 coord) {\n");
+            yagl_glsl_state_append_header(state, "    return texture(sampler, coord);\n");
+            yagl_glsl_state_append_header(state, "}\n");
+            state->texture2d_declared = 1;
+        }        
+    }        
+}
+| TOK_TEXTURE2DPROJ
+{
+    yagl_glsl_state_flush_pending(state, $1.index);
+    yagl_glsl_state_append_output(state, $1.value);
+
+    if (state->patch_gl2) {
+        if (!state->texture2dproj_declared) {
+            yagl_glsl_state_append_header(state, "vec4 texture2DProj(sampler2D sampler, vec3 coord, float bias) {\n");
+            yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord, bias);\n");
+            yagl_glsl_state_append_header(state, "}\n");
+            yagl_glsl_state_append_header(state, "vec4 texture2DProj(sampler2D sampler, vec3 coord) {\n");
+            yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord);\n");
+            yagl_glsl_state_append_header(state, "}\n");
+            yagl_glsl_state_append_header(state, "vec4 texture2DProj(sampler2D sampler, vec4 coord, float bias) {\n");
+            yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord, bias);\n");
+            yagl_glsl_state_append_header(state, "}\n");
+            yagl_glsl_state_append_header(state, "vec4 texture2DProj(sampler2D sampler, vec4 coord) {\n");
+            yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord);\n");
+            yagl_glsl_state_append_header(state, "}\n");
+            state->texture2dproj_declared = 1;
+        }        
+    }
+}
+| TOK_TEXTURE2DLOD
+{
+    yagl_glsl_state_flush_pending(state, $1.index);
+    yagl_glsl_state_append_output(state, $1.value);
+
+    if (state->patch_gl2) {
+        if (!state->texture2dlod_declared) {
+            yagl_glsl_state_append_header(state, "vec4 texture2DLod(sampler2D sampler, vec2 coord, float lod) {\n");
+            yagl_glsl_state_append_header(state, "    return textureLod(sampler, coord, lod);\n");
+            yagl_glsl_state_append_header(state, "}\n");            
+            state->texture2dlod_declared = 1;
+        }        
+    }
+}
+| TOK_TEXTURE2DPROJLOD
+{
+    yagl_glsl_state_flush_pending(state, $1.index);
+    yagl_glsl_state_append_output(state, $1.value);
+    
+    if (state->patch_gl2) {
+        if (!state->texture2dprojlod_declared) {
+            yagl_glsl_state_append_header(state, "vec4 texture2DProjLod(sampler2D sampler, vec3 coord, float lod) {\n");
+            yagl_glsl_state_append_header(state, "    return textureProjLod(sampler, coord, lod);\n");
+            yagl_glsl_state_append_header(state, "}\n");
+            yagl_glsl_state_append_header(state, "vec4 texture2DProjLod(sampler2D sampler, vec4 coord, float lod) {\n");
+            yagl_glsl_state_append_header(state, "    return textureProjLod(sampler, coord, lod);\n");
+            yagl_glsl_state_append_header(state, "}\n");            
+            state->texture2dprojlod_declared = 1;
+        }        
+    }
+}
+| TOK_TEXTURE3D
+{
+    yagl_glsl_state_flush_pending(state, $1.index);
+    yagl_glsl_state_append_output(state, $1.value);
+
+    if (state->patch_gl2) {
+        if (!state->texture3d_declared) {
+            yagl_glsl_state_append_header(state, "vec4 texture3D(sampler3D sampler, vec3 coord, float bias) {\n");
+            yagl_glsl_state_append_header(state, "    return texture(sampler, coord, bias);\n");
+            yagl_glsl_state_append_header(state, "}\n");
+            yagl_glsl_state_append_header(state, "vec4 texture3D(sampler3D sampler, vec3 coord) {\n");
+            yagl_glsl_state_append_header(state, "    return texture(sampler, coord);\n");
+            yagl_glsl_state_append_header(state, "}\n");
+            state->texture3d_declared = 1;
+        }        
+    }        
+}
+| TOK_TEXTURE3DPROJ
+{
+    yagl_glsl_state_flush_pending(state, $1.index);
+    yagl_glsl_state_append_output(state, $1.value);
+
+    if (state->patch_gl2) {
+        if (!state->texture3dproj_declared) {            
+            yagl_glsl_state_append_header(state, "vec4 texture3DProj(sampler3D sampler, vec4 coord, float bias) {\n");
+            yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord, bias);\n");
+            yagl_glsl_state_append_header(state, "}\n");
+            yagl_glsl_state_append_header(state, "vec4 texture3DProj(sampler3D sampler, vec4 coord) {\n");
+            yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord);\n");
+            yagl_glsl_state_append_header(state, "}\n");
+            state->texture3dproj_declared = 1;
+        }        
+    }
+}
+| TOK_TEXTURE3DLOD
+{
+    yagl_glsl_state_flush_pending(state, $1.index);
+    yagl_glsl_state_append_output(state, $1.value);
+
+    if (state->patch_gl2) {
+        if (!state->texture3dlod_declared) {
+            yagl_glsl_state_append_header(state, "vec4 texture3DLod(sampler3D sampler, vec3 coord, float lod) {\n");
+            yagl_glsl_state_append_header(state, "    return textureLod(sampler, coord, lod);\n");
+            yagl_glsl_state_append_header(state, "}\n");            
+            state->texture3dlod_declared = 1;
+        }        
+    }
+}
+| TOK_TEXTURE3DPROJLOD
+{
+    yagl_glsl_state_flush_pending(state, $1.index);
+    yagl_glsl_state_append_output(state, $1.value);
+    
+    if (state->patch_gl2) {
+        if (!state->texture3dprojlod_declared) {            
+            yagl_glsl_state_append_header(state, "vec4 texture3DProjLod(sampler3D sampler, vec4 coord, float lod) {\n");
+            yagl_glsl_state_append_header(state, "    return textureProjLod(sampler, coord, lod);\n");
+            yagl_glsl_state_append_header(state, "}\n");            
+            state->texture3dprojlod_declared = 1;
+        }        
+    }
+}
+| TOK_TEXTURECUBE
+{
+    yagl_glsl_state_flush_pending(state, $1.index);
+    yagl_glsl_state_append_output(state, $1.value);
+
+    if (state->patch_gl2) {
+        if (!state->texturecube_declared) {
+            yagl_glsl_state_append_header(state, "vec4 textureCube(samplerCube sampler, vec3 coord, float bias) {\n");
+            yagl_glsl_state_append_header(state, "    return texture(sampler, coord, bias);\n");
+            yagl_glsl_state_append_header(state, "}\n");
+            yagl_glsl_state_append_header(state, "vec4 textureCube(samplerCube sampler, vec3 coord) {\n");
+            yagl_glsl_state_append_header(state, "    return texture(sampler, coord);\n");
+            yagl_glsl_state_append_header(state, "}\n");
+            state->texturecube_declared = 1;
+        }        
+    }        
+}
+| TOK_TEXTURECUBELOD
+{
+    yagl_glsl_state_flush_pending(state, $1.index);
+    yagl_glsl_state_append_output(state, $1.value);
+
+    if (state->patch_gl2) {
+        if (!state->texturecubelod_declared) {
+            yagl_glsl_state_append_header(state, "vec4 textureCubeLod(samplerCube sampler, vec3 coord, float lod) {\n");
+            yagl_glsl_state_append_header(state, "    return textureLod(sampler, coord, lod);\n");
+            yagl_glsl_state_append_header(state, "}\n");            
+            state->texturecubelod_declared = 1;
+        }        
     }
 }
 | TOK_GLFRAGCOLOR
