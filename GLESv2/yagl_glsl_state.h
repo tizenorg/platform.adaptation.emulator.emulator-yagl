@@ -48,6 +48,7 @@ struct yagl_glsl_state
     int patch_precision;
     int patch_builtins;
     int patch_gl2;
+    int patch_max_varying_floats;
 
     int have_error;
 

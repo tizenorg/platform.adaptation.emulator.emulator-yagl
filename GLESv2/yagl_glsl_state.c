@@ -86,10 +86,12 @@ void yagl_glsl_state_set_version(struct yagl_glsl_state *state,
         case yagl_gl_2:
             state->patch_version = yagl_glsl_120;
             state->patch_gl2 = 0;
+            state->patch_max_varying_floats = 0;
             break;
         default:
             state->patch_version = yagl_glsl_140;
             state->patch_gl2 = 1;
+            state->patch_max_varying_floats = 1;
             break;
         }
     } else if ((version == 300) && is_es && state->es3_supported) {
@@ -109,11 +111,13 @@ void yagl_glsl_state_set_version(struct yagl_glsl_state *state,
             state->patch_version = yagl_glsl_asis;
             state->patch_precision = 0;
             state->patch_builtins = 0;
+            state->patch_max_varying_floats = 0;
             break;
         default:
             state->patch_version = yagl_glsl_150;
             state->patch_precision = 1;
             state->patch_builtins = 1;
+            state->patch_max_varying_floats = 1;
             break;
         }
     } else {
@@ -125,6 +129,7 @@ void yagl_glsl_state_set_version(struct yagl_glsl_state *state,
         state->patch_precision = 0;
         state->patch_builtins = 0;
         state->patch_gl2 = 0;
+        state->patch_max_varying_floats = 0;
     }
 }
 

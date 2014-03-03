@@ -7,7 +7,7 @@
 
 #define YY_INPUT(buf, result, max_size) \
     result = string_input(buf, max_size, yyscanner);
-    
+
 static yy_size_t string_input(char *buf, yy_size_t max_size, yyscan_t yyscanner);
 %}
 
@@ -41,14 +41,14 @@ STRING [^ \r\t\v\f\n()\[\]{},;?:/%*&|^!+\-=<>\.]+
 ^{WS}*#{WS}*version {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     BEGIN(PP);
-    yagl_glsl_state_new_str_token(state, yylval, yytext);    
+    yagl_glsl_state_new_str_token(state, yylval, yytext);
     return TOK_VERSION;
 }
 
 ^{WS}*#{WS}*define {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     BEGIN(PP);
-    yagl_glsl_state_new_str_token(state, yylval, yytext);    
+    yagl_glsl_state_new_str_token(state, yylval, yytext);
     return TOK_DEFINE;
 }
 
@@ -80,6 +80,12 @@ STRING [^ \r\t\v\f\n()\[\]{},;?:/%*&|^!+\-=<>\.]+
     return TOK_MAXVARYINGVECTORS;
 }
 
+"gl_MaxVaryingFloats" {
+    struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
+    yagl_glsl_state_new_str_token(state, yylval, yytext);
+    return TOK_MAXVARYINGFLOATS;
+}
+
 "attribute" {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     yagl_glsl_state_new_str_token(state, yylval, yytext);
@@ -92,10 +98,46 @@ STRING [^ \r\t\v\f\n()\[\]{},;?:/%*&|^!+\-=<>\.]+
     return TOK_VARYING;
 }
 
+"texture1DProjLod" {
+    struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
+    yagl_glsl_state_new_str_token(state, yylval, yytext);
+    return TOK_TEXTUREPROJLOD;
+}
+
+"texture1DProj" {
+    struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
+    yagl_glsl_state_new_str_token(state, yylval, yytext);
+    return TOK_TEXTUREPROJ;
+}
+
+"texture1DLod" {
+    struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
+    yagl_glsl_state_new_str_token(state, yylval, yytext);
+    return TOK_TEXTURELOD;
+}
+
 "texture1D" {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     yagl_glsl_state_new_str_token(state, yylval, yytext);
     return TOK_TEXTURE;
+}
+
+"texture2DProjLod" {
+    struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
+    yagl_glsl_state_new_str_token(state, yylval, yytext);
+    return TOK_TEXTUREPROJLOD;
+}
+
+"texture2DLod" {
+    struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
+    yagl_glsl_state_new_str_token(state, yylval, yytext);
+    return TOK_TEXTURELOD;
+}
+
+"texture2DProj" {
+    struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
+    yagl_glsl_state_new_str_token(state, yylval, yytext);
+    return TOK_TEXTUREPROJ;
 }
 
 "texture2D" {
@@ -104,10 +146,34 @@ STRING [^ \r\t\v\f\n()\[\]{},;?:/%*&|^!+\-=<>\.]+
     return TOK_TEXTURE;
 }
 
+"texture3DProjLod" {
+    struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
+    yagl_glsl_state_new_str_token(state, yylval, yytext);
+    return TOK_TEXTUREPROJLOD;
+}
+
+"texture3DLod" {
+    struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
+    yagl_glsl_state_new_str_token(state, yylval, yytext);
+    return TOK_TEXTURELOD;
+}
+
+"texture3DProj" {
+    struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
+    yagl_glsl_state_new_str_token(state, yylval, yytext);
+    return TOK_TEXTUREPROJ;
+}
+
 "texture3D" {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     yagl_glsl_state_new_str_token(state, yylval, yytext);
     return TOK_TEXTURE;
+}
+
+"textureCubeLod" {
+    struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
+    yagl_glsl_state_new_str_token(state, yylval, yytext);
+    return TOK_TEXTURELOD;
 }
 
 "textureCube" {
@@ -136,7 +202,7 @@ STRING [^ \r\t\v\f\n()\[\]{},;?:/%*&|^!+\-=<>\.]+
 
 {CONTROL} {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
-    yagl_glsl_state_new_pending(state, yytext);    
+    yagl_glsl_state_new_pending(state, yytext);
 }
 
 {STRING} {
@@ -157,7 +223,7 @@ STRING [^ \r\t\v\f\n()\[\]{},;?:/%*&|^!+\-=<>\.]+
 }
 
 <PP>[1-9][0-9]* {
-    struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);    
+    struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     yagl_glsl_state_new_integer_token(state, yylval, strtol(yytext, NULL, 10));
     return TOK_INTEGER;
 }
@@ -189,7 +255,7 @@ STRING [^ \r\t\v\f\n()\[\]{},;?:/%*&|^!+\-=<>\.]+
 <PP>{STRING} {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     yagl_glsl_state_new_str_token(state, yylval, yytext);
-    return TOK_STRING;    
+    return TOK_STRING;
 }
 
 <COMMENT>[^*\n]* {
@@ -219,7 +285,7 @@ STRING [^ \r\t\v\f\n()\[\]{},;?:/%*&|^!+\-=<>\.]+
     BEGIN(INITIAL);
     yagl_glsl_state_new_comment(state, strlen(yytext));
 }
-     
+
 %%
 
 static yy_size_t string_input(char *buf, yy_size_t max_size, yyscan_t yyscanner)
@@ -227,11 +293,11 @@ static yy_size_t string_input(char *buf, yy_size_t max_size, yyscan_t yyscanner)
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     int rem = state->source_len - state->source_pos;
     int num_read = (rem < max_size) ? rem : max_size;
-           
+
     memcpy(buf, state->source + state->source_pos, num_read);
-    
+
     state->source_pos += num_read;
-                    
+
     return num_read;
 }
 
@@ -244,34 +310,34 @@ int yagl_glsl_state_init(struct yagl_glsl_state *state,
                          const char **extensions,
                          int num_extensions,
                          int es3_supported)
-{    
+{
     yyscan_t scanner = NULL;
-    
+
     memset(state, 0, sizeof(*state));
-        
+
     //yagl_glsl_debug = 1;
-    
+
     if (yagl_glsl_lexer_lex_init_extra(state, &scanner)) {
         return 0;
     }
-    
+
     state->shader_type = shader_type;
     state->source = source;
-    state->source_len = source_len;    
+    state->source_len = source_len;
     state->extensions = extensions;
     state->num_extensions = num_extensions;
     state->es3_supported = es3_supported;
-    state->scanner = scanner;        
+    state->scanner = scanner;
     state->token_index = 1;
-    
+
     yagl_glsl_state_set_version(state, 120, 0);
-    
+
     yagl_vector_init(&state->header, sizeof(char), 0);
     yagl_vector_init(&state->output, sizeof(char), 0);
     yagl_list_init(&state->pending_list);
     yagl_vector_init(&state->pending, sizeof(char), 0);
     yagl_vector_init(&state->strings, sizeof(char*), 0);
-           
+
     return 1;
 }
 
@@ -281,28 +347,28 @@ void yagl_glsl_state_cleanup(struct yagl_glsl_state *state)
     int i;
     char **tmp;
     struct yagl_glsl_pending *it, *tmp_it;
-    
+
     tmp = yagl_vector_data(&state->strings);
-    
+
     for (i = 0; i < yagl_vector_size(&state->strings); ++i) {
         free(*(tmp + i));
     }
-    
+
     yagl_vector_cleanup(&state->strings);
-    
+
     yagl_vector_cleanup(&state->pending);
-    
+
     yagl_list_for_each_safe(struct yagl_glsl_pending,
                             it,
                             tmp_it,
                             &state->pending_list, list) {
-        yagl_list_remove(&it->list);        
+        yagl_list_remove(&it->list);
         yagl_free(it);
     }
-                 
+
     yagl_vector_cleanup(&state->output);
-    
+
     yagl_vector_cleanup(&state->header);
-                  
-    yagl_glsl_lexer_lex_destroy(scanner);    
+
+    yagl_glsl_lexer_lex_destroy(scanner);
 }
