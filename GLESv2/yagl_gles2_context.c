@@ -226,7 +226,7 @@ void yagl_gles2_context_prepare(struct yagl_gles2_context *ctx)
 {
     GLint num_texture_units = 0;
     int32_t size = 0;
-    char *extensions, *conformant;
+    char *extensions, *nonconformant;
     int num_arrays = 1;
 
     YAGL_LOG_FUNC_ENTER(yagl_gles2_context_prepare, "%p", ctx);
@@ -254,18 +254,29 @@ void yagl_gles2_context_prepare(struct yagl_gles2_context *ctx)
     ctx->vertex_attrib0.type = GL_FLOAT;
     ctx->vertex_attrib0.vbo = yagl_gles_buffer_create();
 
-    conformant = getenv("YAGL_CONFORMANT");
+    nonconformant = getenv("YAGL_NONCONFORMANT");
 
-    if (conformant && atoi(conformant)) {
-        /*
-         * Generating variable locations on target is faster, but
-         * it's not conformant (will not pass some khronos tests)
-         * since we can't know if variable with a given name exists or not,
-         * so we just assume it exists.
-         */
-        ctx->gen_locations = 0;
-    } else {
+    /*
+     * Generating variable locations on target is faster, but
+     * it's not conformant (will not pass some khronos tests)
+     * since we can't know if variable with a given name exists or not,
+     * so we just assume it exists.
+     *
+     * We used to set 'gen_locations' to 1 by default, but that's bad,
+     * since app may do something like this:
+     * if (glGetUniformLocation(p, "my_uniform") == -1) {
+     *     // do logic when 'my_uniform' is not in the shader
+     * } else {
+     *     // do logic when 'my_uniform' is in the shader
+     * }
+     * i.e. 'gen_locations == 1' will break this logic, thus, we
+     * now set gen_locations to 0 by default.
+     */
+
+    if (nonconformant && atoi(nonconformant)) {
         ctx->gen_locations = 1;
+    } else {
+        ctx->gen_locations = 0;
     }
 
     /*
