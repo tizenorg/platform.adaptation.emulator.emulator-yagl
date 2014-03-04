@@ -343,9 +343,11 @@ expression
 
     if (state->patch_gl2) {
         if (!state->texture1d_declared) {
-            yagl_glsl_state_append_header(state, "vec4 texture1D(sampler1D sampler, float coord, float bias) {\n");
-            yagl_glsl_state_append_header(state, "    return texture(sampler, coord, bias);\n");
-            yagl_glsl_state_append_header(state, "}\n");
+            if (state->shader_type == GL_FRAGMENT_SHADER) {
+                yagl_glsl_state_append_header(state, "vec4 texture1D(sampler1D sampler, float coord, float bias) {\n");
+                yagl_glsl_state_append_header(state, "    return texture(sampler, coord, bias);\n");
+                yagl_glsl_state_append_header(state, "}\n");
+            }
             yagl_glsl_state_append_header(state, "vec4 texture1D(sampler1D sampler, float coord) {\n");
             yagl_glsl_state_append_header(state, "    return texture(sampler, coord);\n");
             yagl_glsl_state_append_header(state, "}\n");
@@ -360,14 +362,16 @@ expression
 
     if (state->patch_gl2) {
         if (!state->texture1dproj_declared) {
-            yagl_glsl_state_append_header(state, "vec4 texture1DProj(sampler1D sampler, vec2 coord, float bias) {\n");
-            yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord, bias);\n");
-            yagl_glsl_state_append_header(state, "}\n");
+            if (state->shader_type == GL_FRAGMENT_SHADER) {
+                yagl_glsl_state_append_header(state, "vec4 texture1DProj(sampler1D sampler, vec2 coord, float bias) {\n");
+                yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord, bias);\n");
+                yagl_glsl_state_append_header(state, "}\n");
+                yagl_glsl_state_append_header(state, "vec4 texture1DProj(sampler1D sampler, vec4 coord, float bias) {\n");
+                yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord, bias);\n");
+                yagl_glsl_state_append_header(state, "}\n");
+            }
             yagl_glsl_state_append_header(state, "vec4 texture1DProj(sampler1D sampler, vec2 coord) {\n");
             yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord);\n");
-            yagl_glsl_state_append_header(state, "}\n");
-            yagl_glsl_state_append_header(state, "vec4 texture1DProj(sampler1D sampler, vec4 coord, float bias) {\n");
-            yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord, bias);\n");
             yagl_glsl_state_append_header(state, "}\n");
             yagl_glsl_state_append_header(state, "vec4 texture1DProj(sampler1D sampler, vec4 coord) {\n");
             yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord);\n");
@@ -414,9 +418,11 @@ expression
 
     if (state->patch_gl2) {
         if (!state->texture2d_declared) {
-            yagl_glsl_state_append_header(state, "vec4 texture2D(sampler2D sampler, vec2 coord, float bias) {\n");
-            yagl_glsl_state_append_header(state, "    return texture(sampler, coord, bias);\n");
-            yagl_glsl_state_append_header(state, "}\n");
+            if (state->shader_type == GL_FRAGMENT_SHADER) {
+                yagl_glsl_state_append_header(state, "vec4 texture2D(sampler2D sampler, vec2 coord, float bias) {\n");
+                yagl_glsl_state_append_header(state, "    return texture(sampler, coord, bias);\n");
+                yagl_glsl_state_append_header(state, "}\n");
+            }
             yagl_glsl_state_append_header(state, "vec4 texture2D(sampler2D sampler, vec2 coord) {\n");
             yagl_glsl_state_append_header(state, "    return texture(sampler, coord);\n");
             yagl_glsl_state_append_header(state, "}\n");
@@ -431,14 +437,16 @@ expression
 
     if (state->patch_gl2) {
         if (!state->texture2dproj_declared) {
-            yagl_glsl_state_append_header(state, "vec4 texture2DProj(sampler2D sampler, vec3 coord, float bias) {\n");
-            yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord, bias);\n");
-            yagl_glsl_state_append_header(state, "}\n");
+            if (state->shader_type == GL_FRAGMENT_SHADER) {
+                yagl_glsl_state_append_header(state, "vec4 texture2DProj(sampler2D sampler, vec3 coord, float bias) {\n");
+                yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord, bias);\n");
+                yagl_glsl_state_append_header(state, "}\n");
+                yagl_glsl_state_append_header(state, "vec4 texture2DProj(sampler2D sampler, vec4 coord, float bias) {\n");
+                yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord, bias);\n");
+                yagl_glsl_state_append_header(state, "}\n");
+            }
             yagl_glsl_state_append_header(state, "vec4 texture2DProj(sampler2D sampler, vec3 coord) {\n");
             yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord);\n");
-            yagl_glsl_state_append_header(state, "}\n");
-            yagl_glsl_state_append_header(state, "vec4 texture2DProj(sampler2D sampler, vec4 coord, float bias) {\n");
-            yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord, bias);\n");
             yagl_glsl_state_append_header(state, "}\n");
             yagl_glsl_state_append_header(state, "vec4 texture2DProj(sampler2D sampler, vec4 coord) {\n");
             yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord);\n");
@@ -485,9 +493,11 @@ expression
 
     if (state->patch_gl2) {
         if (!state->texture3d_declared) {
-            yagl_glsl_state_append_header(state, "vec4 texture3D(sampler3D sampler, vec3 coord, float bias) {\n");
-            yagl_glsl_state_append_header(state, "    return texture(sampler, coord, bias);\n");
-            yagl_glsl_state_append_header(state, "}\n");
+            if (state->shader_type == GL_FRAGMENT_SHADER) {
+                yagl_glsl_state_append_header(state, "vec4 texture3D(sampler3D sampler, vec3 coord, float bias) {\n");
+                yagl_glsl_state_append_header(state, "    return texture(sampler, coord, bias);\n");
+                yagl_glsl_state_append_header(state, "}\n");
+            }
             yagl_glsl_state_append_header(state, "vec4 texture3D(sampler3D sampler, vec3 coord) {\n");
             yagl_glsl_state_append_header(state, "    return texture(sampler, coord);\n");
             yagl_glsl_state_append_header(state, "}\n");
@@ -502,9 +512,11 @@ expression
 
     if (state->patch_gl2) {
         if (!state->texture3dproj_declared) {
-            yagl_glsl_state_append_header(state, "vec4 texture3DProj(sampler3D sampler, vec4 coord, float bias) {\n");
-            yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord, bias);\n");
-            yagl_glsl_state_append_header(state, "}\n");
+            if (state->shader_type == GL_FRAGMENT_SHADER) {
+                yagl_glsl_state_append_header(state, "vec4 texture3DProj(sampler3D sampler, vec4 coord, float bias) {\n");
+                yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord, bias);\n");
+                yagl_glsl_state_append_header(state, "}\n");
+            }
             yagl_glsl_state_append_header(state, "vec4 texture3DProj(sampler3D sampler, vec4 coord) {\n");
             yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord);\n");
             yagl_glsl_state_append_header(state, "}\n");
@@ -547,9 +559,11 @@ expression
 
     if (state->patch_gl2) {
         if (!state->texturecube_declared) {
-            yagl_glsl_state_append_header(state, "vec4 textureCube(samplerCube sampler, vec3 coord, float bias) {\n");
-            yagl_glsl_state_append_header(state, "    return texture(sampler, coord, bias);\n");
-            yagl_glsl_state_append_header(state, "}\n");
+            if (state->shader_type == GL_FRAGMENT_SHADER) {
+                yagl_glsl_state_append_header(state, "vec4 textureCube(samplerCube sampler, vec3 coord, float bias) {\n");
+                yagl_glsl_state_append_header(state, "    return texture(sampler, coord, bias);\n");
+                yagl_glsl_state_append_header(state, "}\n");
+            }
             yagl_glsl_state_append_header(state, "vec4 textureCube(samplerCube sampler, vec3 coord) {\n");
             yagl_glsl_state_append_header(state, "    return texture(sampler, coord);\n");
             yagl_glsl_state_append_header(state, "}\n");
