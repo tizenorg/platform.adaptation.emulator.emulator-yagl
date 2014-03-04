@@ -52,6 +52,12 @@ STRING [^ \r\t\v\f\n()\[\]{},;?:/%*&|^!+\-=<>\.]+
     return TOK_DEFINE;
 }
 
+^{WS}*#{WS}*extension[^\n]*\n {
+    struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
+    yagl_glsl_state_new_str_token(state, yylval, yytext);
+    return TOK_EXTENSION;
+}
+
 [\n]+ {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     yagl_glsl_state_new_pending(state, yytext);

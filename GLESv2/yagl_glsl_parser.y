@@ -43,6 +43,7 @@ static int yagl_glsl_lex(union YYSTYPE *val, struct yagl_glsl_state *state)
 %token <str> TOK_EOL
 %token <str> TOK_VERSION
 %token <str> TOK_DEFINE
+%token <str> TOK_EXTENSION
 %token <str> TOK_STRING
 %token <str> TOK_GLEXT
 %token <integer> TOK_INTEGER
@@ -188,6 +189,11 @@ expression
 {
     yagl_glsl_state_flush_pending(state, $1.index);
     yagl_glsl_state_append_output(state, $1.value);
+}
+| TOK_EXTENSION
+{
+    yagl_glsl_state_flush_pending(state, $1.index);
+    yagl_glsl_state_append_header(state, $1.value);
 }
 | TOK_PRECISION
 {
@@ -344,8 +350,8 @@ expression
             yagl_glsl_state_append_header(state, "    return texture(sampler, coord);\n");
             yagl_glsl_state_append_header(state, "}\n");
             state->texture1d_declared = 1;
-        }        
-    }        
+        }
+    }
 }
 | TOK_TEXTURE1DPROJ
 {
@@ -367,7 +373,7 @@ expression
             yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord);\n");
             yagl_glsl_state_append_header(state, "}\n");
             state->texture1dproj_declared = 1;
-        }        
+        }
     }
 }
 | TOK_TEXTURE1DLOD
@@ -379,16 +385,16 @@ expression
         if (!state->texture1dlod_declared) {
             yagl_glsl_state_append_header(state, "vec4 texture1DLod(sampler1D sampler, float coord, float lod) {\n");
             yagl_glsl_state_append_header(state, "    return textureLod(sampler, coord, lod);\n");
-            yagl_glsl_state_append_header(state, "}\n");            
+            yagl_glsl_state_append_header(state, "}\n");
             state->texture1dlod_declared = 1;
-        }        
+        }
     }
 }
 | TOK_TEXTURE1DPROJLOD
 {
     yagl_glsl_state_flush_pending(state, $1.index);
     yagl_glsl_state_append_output(state, $1.value);
-    
+
     if (state->patch_gl2) {
         if (!state->texture1dprojlod_declared) {
             yagl_glsl_state_append_header(state, "vec4 texture1DProjLod(sampler1D sampler, vec2 coord, float lod) {\n");
@@ -396,9 +402,9 @@ expression
             yagl_glsl_state_append_header(state, "}\n");
             yagl_glsl_state_append_header(state, "vec4 texture1DProjLod(sampler1D sampler, vec4 coord, float lod) {\n");
             yagl_glsl_state_append_header(state, "    return textureProjLod(sampler, coord, lod);\n");
-            yagl_glsl_state_append_header(state, "}\n");            
+            yagl_glsl_state_append_header(state, "}\n");
             state->texture1dprojlod_declared = 1;
-        }        
+        }
     }
 }
 | TOK_TEXTURE2D
@@ -415,8 +421,8 @@ expression
             yagl_glsl_state_append_header(state, "    return texture(sampler, coord);\n");
             yagl_glsl_state_append_header(state, "}\n");
             state->texture2d_declared = 1;
-        }        
-    }        
+        }
+    }
 }
 | TOK_TEXTURE2DPROJ
 {
@@ -438,7 +444,7 @@ expression
             yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord);\n");
             yagl_glsl_state_append_header(state, "}\n");
             state->texture2dproj_declared = 1;
-        }        
+        }
     }
 }
 | TOK_TEXTURE2DLOD
@@ -450,16 +456,16 @@ expression
         if (!state->texture2dlod_declared) {
             yagl_glsl_state_append_header(state, "vec4 texture2DLod(sampler2D sampler, vec2 coord, float lod) {\n");
             yagl_glsl_state_append_header(state, "    return textureLod(sampler, coord, lod);\n");
-            yagl_glsl_state_append_header(state, "}\n");            
+            yagl_glsl_state_append_header(state, "}\n");
             state->texture2dlod_declared = 1;
-        }        
+        }
     }
 }
 | TOK_TEXTURE2DPROJLOD
 {
     yagl_glsl_state_flush_pending(state, $1.index);
     yagl_glsl_state_append_output(state, $1.value);
-    
+
     if (state->patch_gl2) {
         if (!state->texture2dprojlod_declared) {
             yagl_glsl_state_append_header(state, "vec4 texture2DProjLod(sampler2D sampler, vec3 coord, float lod) {\n");
@@ -467,9 +473,9 @@ expression
             yagl_glsl_state_append_header(state, "}\n");
             yagl_glsl_state_append_header(state, "vec4 texture2DProjLod(sampler2D sampler, vec4 coord, float lod) {\n");
             yagl_glsl_state_append_header(state, "    return textureProjLod(sampler, coord, lod);\n");
-            yagl_glsl_state_append_header(state, "}\n");            
+            yagl_glsl_state_append_header(state, "}\n");
             state->texture2dprojlod_declared = 1;
-        }        
+        }
     }
 }
 | TOK_TEXTURE3D
@@ -486,8 +492,8 @@ expression
             yagl_glsl_state_append_header(state, "    return texture(sampler, coord);\n");
             yagl_glsl_state_append_header(state, "}\n");
             state->texture3d_declared = 1;
-        }        
-    }        
+        }
+    }
 }
 | TOK_TEXTURE3DPROJ
 {
@@ -495,7 +501,7 @@ expression
     yagl_glsl_state_append_output(state, $1.value);
 
     if (state->patch_gl2) {
-        if (!state->texture3dproj_declared) {            
+        if (!state->texture3dproj_declared) {
             yagl_glsl_state_append_header(state, "vec4 texture3DProj(sampler3D sampler, vec4 coord, float bias) {\n");
             yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord, bias);\n");
             yagl_glsl_state_append_header(state, "}\n");
@@ -503,7 +509,7 @@ expression
             yagl_glsl_state_append_header(state, "    return textureProj(sampler, coord);\n");
             yagl_glsl_state_append_header(state, "}\n");
             state->texture3dproj_declared = 1;
-        }        
+        }
     }
 }
 | TOK_TEXTURE3DLOD
@@ -515,23 +521,23 @@ expression
         if (!state->texture3dlod_declared) {
             yagl_glsl_state_append_header(state, "vec4 texture3DLod(sampler3D sampler, vec3 coord, float lod) {\n");
             yagl_glsl_state_append_header(state, "    return textureLod(sampler, coord, lod);\n");
-            yagl_glsl_state_append_header(state, "}\n");            
+            yagl_glsl_state_append_header(state, "}\n");
             state->texture3dlod_declared = 1;
-        }        
+        }
     }
 }
 | TOK_TEXTURE3DPROJLOD
 {
     yagl_glsl_state_flush_pending(state, $1.index);
     yagl_glsl_state_append_output(state, $1.value);
-    
+
     if (state->patch_gl2) {
-        if (!state->texture3dprojlod_declared) {            
+        if (!state->texture3dprojlod_declared) {
             yagl_glsl_state_append_header(state, "vec4 texture3DProjLod(sampler3D sampler, vec4 coord, float lod) {\n");
             yagl_glsl_state_append_header(state, "    return textureProjLod(sampler, coord, lod);\n");
-            yagl_glsl_state_append_header(state, "}\n");            
+            yagl_glsl_state_append_header(state, "}\n");
             state->texture3dprojlod_declared = 1;
-        }        
+        }
     }
 }
 | TOK_TEXTURECUBE
@@ -548,8 +554,8 @@ expression
             yagl_glsl_state_append_header(state, "    return texture(sampler, coord);\n");
             yagl_glsl_state_append_header(state, "}\n");
             state->texturecube_declared = 1;
-        }        
-    }        
+        }
+    }
 }
 | TOK_TEXTURECUBELOD
 {
@@ -560,9 +566,9 @@ expression
         if (!state->texturecubelod_declared) {
             yagl_glsl_state_append_header(state, "vec4 textureCubeLod(samplerCube sampler, vec3 coord, float lod) {\n");
             yagl_glsl_state_append_header(state, "    return textureLod(sampler, coord, lod);\n");
-            yagl_glsl_state_append_header(state, "}\n");            
+            yagl_glsl_state_append_header(state, "}\n");
             state->texturecubelod_declared = 1;
-        }        
+        }
     }
 }
 | TOK_GLFRAGCOLOR
