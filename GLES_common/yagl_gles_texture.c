@@ -12,30 +12,28 @@
  */
 #define GL_HALF_FLOAT_OES 0x8D61
 
-static void yagl_gles_texture_set_swizzle(struct yagl_gles_texture *texture,
-                                          GLenum internalformat)
+static void yagl_gles_texture_swizzle(struct yagl_gles_texture *texture,
+                                      GLenum internalformat)
 {
-    if (yagl_get_host_gl_version() > yagl_gl_2) {
-        switch (internalformat) {
-        case GL_ALPHA:
-            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_R, GL_ONE);
-            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_G, GL_ONE);
-            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_B, GL_ONE);
-            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_A, GL_ALPHA);
-            break;
-        case GL_LUMINANCE:
-            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_R, GL_RED);
-            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_G, GL_RED);
-            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_B, GL_RED);
-            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_A, GL_ONE);
-            break;
-        case GL_LUMINANCE_ALPHA:
-            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_R, GL_RED);
-            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_G, GL_RED);
-            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_B, GL_RED);
-            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_A, GL_ALPHA);
-            break;
-        }
+    switch (internalformat) {
+    case GL_ALPHA:
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_R, GL_ZERO);
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_G, GL_ZERO);
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_B, GL_ZERO);
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_A, GL_ALPHA);
+        break;
+    case GL_LUMINANCE:
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_R, GL_RED);
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_G, GL_RED);
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_B, GL_RED);
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_A, GL_ONE);
+        break;
+    case GL_LUMINANCE_ALPHA:
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_R, GL_RED);
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_G, GL_RED);
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_B, GL_RED);
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_A, GL_ALPHA);
+        break;
     }
 }
 
@@ -107,7 +105,8 @@ int yagl_gles_texture_bind(struct yagl_gles_texture *texture,
 
 void yagl_gles_texture_set_internalformat(struct yagl_gles_texture *texture,
                                           GLenum internalformat,
-                                          GLenum type)
+                                          GLenum type,
+                                          int swizzle)
 {
     texture->internalformat = internalformat;
 
@@ -122,12 +121,15 @@ void yagl_gles_texture_set_internalformat(struct yagl_gles_texture *texture,
         break;
     }
 
-    yagl_gles_texture_set_swizzle(texture, internalformat);
+    if (swizzle) {
+        yagl_gles_texture_swizzle(texture, internalformat);
+    }
 }
 
 void yagl_gles_texture_set_immutable(struct yagl_gles_texture *texture,
                                      GLenum internalformat,
-                                     GLenum type)
+                                     GLenum type,
+                                     int swizzle)
 {
     texture->immutable = GL_TRUE;
     texture->internalformat = internalformat;
@@ -143,7 +145,9 @@ void yagl_gles_texture_set_immutable(struct yagl_gles_texture *texture,
         break;
     }
 
-    yagl_gles_texture_set_swizzle(texture, internalformat);
+    if (swizzle) {
+        yagl_gles_texture_swizzle(texture, internalformat);
+    }
 }
 
 int yagl_gles_texture_color_renderable(struct yagl_gles_texture *texture)

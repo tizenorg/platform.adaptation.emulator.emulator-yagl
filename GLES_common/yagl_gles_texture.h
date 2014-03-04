@@ -56,11 +56,13 @@ int yagl_gles_texture_bind(struct yagl_gles_texture *texture,
 
 void yagl_gles_texture_set_internalformat(struct yagl_gles_texture *texture,
                                           GLenum internalformat,
-                                          GLenum type);
+                                          GLenum type,
+                                          int swizzle);
 
 void yagl_gles_texture_set_immutable(struct yagl_gles_texture *texture,
                                      GLenum internalformat,
-                                     GLenum type);
+                                     GLenum type,
+                                     int swizzle);
 
 int yagl_gles_texture_color_renderable(struct yagl_gles_texture *texture);
 

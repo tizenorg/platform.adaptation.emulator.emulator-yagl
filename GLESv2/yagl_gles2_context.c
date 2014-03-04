@@ -636,7 +636,8 @@ void yagl_gles2_context_compressed_tex_image_2d(struct yagl_gles_context *gles_c
 
         yagl_gles_texture_set_internalformat(texture,
                                              tc_format->dst_internalformat,
-                                             tc_format->dst_type);
+                                             tc_format->dst_type,
+                                             yagl_gles_context_convert_textures(gles_ctx));
 
         return;
     }
@@ -668,7 +669,8 @@ void yagl_gles2_context_compressed_tex_image_2d(struct yagl_gles_context *gles_c
 
     yagl_gles_texture_set_internalformat(texture,
                                          tc_format->dst_internalformat,
-                                         tc_format->dst_type);
+                                         tc_format->dst_type,
+                                         yagl_gles_context_convert_textures(gles_ctx));
 }
 
 void yagl_gles2_context_compressed_tex_sub_image_2d(struct yagl_gles_context *gles_ctx,
@@ -819,7 +821,8 @@ void yagl_gles2_context_compressed_tex_image_3d(struct yagl_gles2_context *ctx,
 
         yagl_gles_texture_set_internalformat(texture,
                                              tc_format->dst_internalformat,
-                                             tc_format->dst_type);
+                                             tc_format->dst_type,
+                                             yagl_gles_context_convert_textures(&ctx->base));
 
         return;
     }
@@ -856,7 +859,8 @@ void yagl_gles2_context_compressed_tex_image_3d(struct yagl_gles2_context *ctx,
 
     yagl_gles_texture_set_internalformat(texture,
                                          tc_format->dst_internalformat,
-                                         tc_format->dst_type);
+                                         tc_format->dst_type,
+                                         yagl_gles_context_convert_textures(&ctx->base));
 }
 
 void yagl_gles2_context_compressed_tex_sub_image_3d(struct yagl_gles2_context *ctx,

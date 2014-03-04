@@ -594,7 +594,8 @@ static void yagl_gles1_cpal_tex_uncomp_and_apply(struct yagl_gles_context *ctx,
 
         yagl_gles_texture_set_internalformat(texture,
                                              fmt_desc->uncomp_format,
-                                             fmt_desc->pixel_type);
+                                             fmt_desc->pixel_type,
+                                             yagl_gles_context_convert_textures(ctx));
 
         return;
     }
@@ -669,7 +670,8 @@ static void yagl_gles1_cpal_tex_uncomp_and_apply(struct yagl_gles_context *ctx,
 
     yagl_gles_texture_set_internalformat(texture,
                                          fmt_desc->uncomp_format,
-                                         fmt_desc->pixel_type);
+                                         fmt_desc->pixel_type,
+                                         yagl_gles_context_convert_textures(ctx));
 }
 
 static void yagl_gles1_etc1_rgb8_uncomp_and_apply(struct yagl_gles_context *ctx,
@@ -706,7 +708,8 @@ static void yagl_gles1_etc1_rgb8_uncomp_and_apply(struct yagl_gles_context *ctx,
 
         yagl_gles_texture_set_internalformat(texture,
                                              GL_RGBA8,
-                                             GL_UNSIGNED_BYTE);
+                                             GL_UNSIGNED_BYTE,
+                                             yagl_gles_context_convert_textures(ctx));
 
         return;
     }
@@ -737,7 +740,8 @@ static void yagl_gles1_etc1_rgb8_uncomp_and_apply(struct yagl_gles_context *ctx,
 
     yagl_gles_texture_set_internalformat(texture,
                                          GL_RGBA8,
-                                         GL_UNSIGNED_BYTE);
+                                         GL_UNSIGNED_BYTE,
+                                         yagl_gles_context_convert_textures(ctx));
 }
 
 static void yagl_gles1_context_compressed_tex_image_2d(struct yagl_gles_context *ctx,

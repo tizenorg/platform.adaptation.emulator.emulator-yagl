@@ -244,6 +244,8 @@ void yagl_gles_context_bind_vertex_array(struct yagl_gles_context *ctx,
 void yagl_gles_context_unbind_vertex_array(struct yagl_gles_context *ctx,
                                            yagl_object_name va_local_name);
 
+int yagl_gles_context_convert_textures(struct yagl_gles_context *ctx);
+
 int yagl_gles_context_validate_texture_target(struct yagl_gles_context *ctx,
                                               GLenum target,
                                               yagl_gles_texture_target *texture_target);

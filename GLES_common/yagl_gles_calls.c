@@ -839,7 +839,8 @@ YAGL_API void glCopyTexImage2D(GLenum target,
 
     yagl_gles_texture_set_internalformat(tex_target_state->texture,
                                          internalformat,
-                                         (is_float ? GL_FLOAT : 0));
+                                         (is_float ? GL_FLOAT : 0),
+                                         yagl_gles_context_convert_textures(ctx));
 
 out:
     YAGL_LOG_FUNC_EXIT(NULL);
@@ -2170,7 +2171,8 @@ YAGL_API void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLs
 
     yagl_gles_texture_set_internalformat(tex_target_state->texture,
                                          internalformat,
-                                         type);
+                                         type,
+                                         yagl_gles_context_convert_textures(ctx));
 
 out:
     YAGL_LOG_FUNC_EXIT(NULL);
@@ -3000,7 +3002,10 @@ YAGL_API void glTexStorage2D(GLenum target, GLsizei levels, GLenum internalforma
         goto out;
     }
 
-    yagl_gles_texture_set_immutable(tex_target_state->texture, base_internalformat, type);
+    yagl_gles_texture_set_immutable(tex_target_state->texture,
+                                    base_internalformat,
+                                    type,
+                                    yagl_gles_context_convert_textures(ctx));
 
 out:
     YAGL_LOG_FUNC_EXIT(NULL);

@@ -23,7 +23,7 @@ static void yagl_convert_alpha_ub_bgra_ub(const GLvoid *src,
 
     for (i = 0; i < height; ++i) {
         for (j = 0; j < width; ++j) {
-            *(uint32_t*)(dst + j * 4) = ((uint32_t)(*(uint8_t*)(src + j)) << 24) | 0xFFFFFF;
+            *(uint32_t*)(dst + j * 4) = ((uint32_t)(*(uint8_t*)(src + j)) << 24);
         }
         src += src_stride;
         dst += dst_stride;
@@ -59,9 +59,9 @@ static void yagl_convert_alpha_f_bgra_f(const GLvoid *src,
 
     for (i = 0; i < height; ++i) {
         for (j = 0; j < width; ++j) {
-            *(GLfloat*)(dst + j * 16 + 0) = 1.0f;
-            *(GLfloat*)(dst + j * 16 + 4) = 1.0f;
-            *(GLfloat*)(dst + j * 16 + 8) = 1.0f;
+            *(GLfloat*)(dst + j * 16 + 0) = 0.0f;
+            *(GLfloat*)(dst + j * 16 + 4) = 0.0f;
+            *(GLfloat*)(dst + j * 16 + 8) = 0.0f;
             *(uint32_t*)(dst + j * 16 + 12) = *(uint32_t*)(src + j * 4);
         }
         src += src_stride;
@@ -98,9 +98,9 @@ static void yagl_convert_alpha_hf_bgra_hf(const GLvoid *src,
 
     for (i = 0; i < height; ++i) {
         for (j = 0; j < width; ++j) {
-            *(uint16_t*)(dst + j * 8 + 0) = YAGL_HALF_FLOAT_1_0;
-            *(uint16_t*)(dst + j * 8 + 2) = YAGL_HALF_FLOAT_1_0;
-            *(uint16_t*)(dst + j * 8 + 4) = YAGL_HALF_FLOAT_1_0;
+            *(uint16_t*)(dst + j * 8 + 0) = 0;
+            *(uint16_t*)(dst + j * 8 + 2) = 0;
+            *(uint16_t*)(dst + j * 8 + 4) = 0;
             *(uint16_t*)(dst + j * 8 + 6) = *(uint16_t*)(src + j * 2);
         }
         src += src_stride;
