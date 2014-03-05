@@ -45,7 +45,6 @@ static int yagl_glsl_lex(union YYSTYPE *val, struct yagl_glsl_state *state)
 %token <str> TOK_DEFINE
 %token <str> TOK_EXTENSION
 %token <str> TOK_STRING
-%token <str> TOK_GLEXT
 %token <integer> TOK_INTEGER
 %token <str> TOK_ES
 %token <str> TOK_PRECISION
@@ -192,8 +191,42 @@ expression
 }
 | TOK_EXTENSION
 {
+    /*
+     * Always strip #extension constructs. The reasons are:
+     *
+     * 1. Pretty useless, host GLSL already includes
+     *    most of the extensions as core features. Extension naming
+     *    on real hardware and host OpenGL is
+     *    different, so #extension constructs can fail.
+     *
+     *    e.g. GLSL ES shader can contain something like this:
+     *
+     *    #ifdef GL_ARB_draw_instanced
+     *    #extension GL_ARB_draw_instanced : require
+     *    #endif
+     *
+     *    On real hardware GL_ARB_draw_instanced is not defined, so the code
+     *    inside won't compile. In emulated environment when host GPU
+     *    is used GL_ARB_draw_instanced will be defined and #extension inside
+     *    will be compiled when it shouldn't.
+     *
+     *    Another e.g. GLSL ES 2.0 shader can contain:
+     *
+     *    #extension GL_OES_texture_3D : enable
+     *
+     *    Useless, host GLSL already has 3D textures and they're
+     *    called GL_EXT_texture_3D, so this code can either be ignored
+     *    or fail.
+     *
+     * 2. Some host OpenGL drivers like mesa only allow #extension constructs
+     *    after #version. Many real hardware allow #extension anywhere. Also,
+     *    when we patch shaders we need to add some of our own #extension
+     *    constructs, functions, variables right after #version. If such shader
+     *    contains #extension constructs of its own it'll fail to compile with
+     *    mesa.
+     */
+
     yagl_glsl_state_flush_pending(state, $1.index);
-    yagl_glsl_state_append_header(state, $1.value);
 }
 | TOK_PRECISION
 {
@@ -266,48 +299,6 @@ expression
         yagl_glsl_state_append_output(state, "64");
     } else {
         yagl_glsl_state_append_output(state, $1.value);
-    }
-}
-| TOK_GLEXT
-{
-    int i, found = 0;
-
-    /*
-     * GLSL ES shader can contain something like this:
-     *
-     * #ifdef GL_ARB_draw_instanced
-     * #extension GL_ARB_draw_instanced : require
-     * #endif
-     *
-     * On real hardware GL_ARB_draw_instanced is not defined, so the code
-     * inside won't compile. In emulated environment when host GPU
-     * is used GL_ARB_draw_instanced will be defined and code inside
-     * will be compiled when it shouldn't.
-     *
-     * A workaround for this is to find all "GL_" tokens and unless
-     * this is some supported OpenGL ES extension, replace it with
-     * something else that's not defined in host preprocessor for sure.
-     */
-
-    for (i = 0; i < state->num_extensions; ++i) {
-        if (strcmp(state->extensions[i], $1.value) == 0) {
-            found = 1;
-            break;
-        }
-    }
-
-    yagl_glsl_state_flush_pending(state, $1.index);
-
-    if (found) {
-        yagl_glsl_state_append_output(state, $1.value);
-    } else {
-        /*
-         * Replace "GL_" with "ND_" to make
-         * sure it's not defined in preprocessor.
-         */
-
-        yagl_glsl_state_append_output(state, "ND_");
-        yagl_glsl_state_append_output(state, $1.value + 3);
     }
 }
 | TOK_ATTRIBUTE

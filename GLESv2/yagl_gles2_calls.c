@@ -1272,8 +1272,6 @@ YAGL_API void glShaderSource(GLuint shader, GLsizei count, const GLchar * const 
                              shader_obj->type,
                              (char*)tmp_buff,
                              total_length,
-                             ctx->base.extensions,
-                             ctx->base.num_extensions,
                              (ctx->base.base.client_api == yagl_client_api_gles3));
 
         ret = yagl_glsl_parse(&glsl_state);

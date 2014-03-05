@@ -32,9 +32,6 @@ struct yagl_glsl_state
     int source_len;
     int source_pos;
 
-    const char **extensions;
-    int num_extensions;
-
     int es3_supported;
 
     void *scanner;
@@ -100,8 +97,6 @@ int yagl_glsl_state_init(struct yagl_glsl_state *state,
                          GLenum shader_type,
                          const char *source,
                          int source_len,
-                         const char **extensions,
-                         int num_extensions,
                          int es3_supported);
 
 void yagl_glsl_state_cleanup(struct yagl_glsl_state *state);

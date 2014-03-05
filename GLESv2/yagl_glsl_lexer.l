@@ -21,7 +21,6 @@ static yy_size_t string_input(char *buf, yy_size_t max_size, yyscan_t yyscanner)
 
 WS [ \r\t\v\f]
 PRECISION "lowp"|"mediump"|"highp"|"precision"[^;\n]+;?
-GLEXT "GL_"[0-9a-zA-Z]+"_"[0-9a-zA-Z_]+
 CONTROL [()\[\]{},;?:/%*&|^!+\-=<>\.]
 STRING [^ \r\t\v\f\n()\[\]{},;?:/%*&|^!+\-=<>\.]+
 
@@ -52,7 +51,7 @@ STRING [^ \r\t\v\f\n()\[\]{},;?:/%*&|^!+\-=<>\.]+
     return TOK_DEFINE;
 }
 
-^{WS}*#{WS}*extension[^\n]*\n {
+^{WS}*#{WS}*extension[^\n]* {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     yagl_glsl_state_new_str_token(state, yylval, yytext);
     return TOK_EXTENSION;
@@ -194,12 +193,6 @@ STRING [^ \r\t\v\f\n()\[\]{},;?:/%*&|^!+\-=<>\.]+
     return TOK_GLFRAGCOLOR;
 }
 
-{GLEXT} {
-    struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
-    yagl_glsl_state_new_str_token(state, yylval, yytext);
-    return TOK_GLEXT;
-}
-
 {PRECISION} {
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     yagl_glsl_state_new_str_token(state, yylval, yytext);
@@ -238,12 +231,6 @@ STRING [^ \r\t\v\f\n()\[\]{},;?:/%*&|^!+\-=<>\.]+
     struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
     yagl_glsl_state_new_str_token(state, yylval, yytext);
     return TOK_ES;
-}
-
-<PP>{GLEXT} {
-    struct yagl_glsl_state *state = yagl_glsl_lexer_get_extra(yyscanner);
-    yagl_glsl_state_new_str_token(state, yylval, yytext);
-    return TOK_GLEXT;
 }
 
 <PP>{PRECISION} {
@@ -313,8 +300,6 @@ int yagl_glsl_state_init(struct yagl_glsl_state *state,
                          GLenum shader_type,
                          const char *source,
                          int source_len,
-                         const char **extensions,
-                         int num_extensions,
                          int es3_supported)
 {
     yyscan_t scanner = NULL;
@@ -330,8 +315,6 @@ int yagl_glsl_state_init(struct yagl_glsl_state *state,
     state->shader_type = shader_type;
     state->source = source;
     state->source_len = source_len;
-    state->extensions = extensions;
-    state->num_extensions = num_extensions;
     state->es3_supported = es3_supported;
     state->scanner = scanner;
     state->token_index = 1;
