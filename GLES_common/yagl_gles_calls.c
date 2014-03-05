@@ -1663,21 +1663,33 @@ void glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLe
     default:
         if (framebuffer_obj->attachment_states[framebuffer_attachment].type != GL_NONE) {
             GLenum internalformat = 0;
-            uint32_t format_flags;
+            const struct yagl_gles_format_info *format_info;
 
             yagl_gles_framebuffer_attachment_internalformat(
                 &framebuffer_obj->attachment_states[framebuffer_attachment],
                 &internalformat);
 
-            format_flags = yagl_gles_internalformat_flags(internalformat);
+            format_info = yagl_gles_internalformat_info(internalformat);
 
             switch (pname) {
             case GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE:
+                *params = format_info->red_size;
+                break;
             case GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE:
+                *params = format_info->green_size;
+                break;
             case GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE:
+                *params = format_info->blue_size;
+                break;
             case GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE:
+                *params = format_info->alpha_size;
+                break;
             case GL_FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE:
+                *params = format_info->depth_size;
+                break;
             case GL_FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE:
+                *params = format_info->stencil_size;
+                break;
             case GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE:
                 /*
                  * TODO: implement.
@@ -1685,7 +1697,7 @@ void glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLe
                 *params = 0;
                 break;
             case GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING:
-                *params = ((format_flags & yagl_gles_format_srgb) != 0) ?
+                *params = ((format_info->flags & yagl_gles_format_srgb) != 0) ?
                           GL_SRGB : GL_LINEAR;
                 break;
             default:

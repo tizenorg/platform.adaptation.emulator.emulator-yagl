@@ -45,4 +45,16 @@ struct yagl_gles_pixelstore
     struct yagl_gles_buffer *pbo;
 };
 
+struct yagl_gles_format_info
+{
+    uint32_t flags;
+    uint32_t num_components;
+    uint32_t red_size;
+    uint32_t green_size;
+    uint32_t blue_size;
+    uint32_t alpha_size;
+    uint32_t depth_size;
+    uint32_t stencil_size;
+};
+
 #endif

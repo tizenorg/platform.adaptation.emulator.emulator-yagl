@@ -875,7 +875,7 @@ static struct yagl_pixel_format
                                                     GLenum format,
                                                     GLenum type)
 {
-    uint32_t readbuffer_format_flags;
+    const struct yagl_gles_format_info *readbuffer_format_info;
     struct yagl_pixel_format *pf =
         yagl_gles2_context_validate_getteximage_format(ctx,
                                                        readbuffer_internalformat,
@@ -886,7 +886,7 @@ static struct yagl_pixel_format
         return pf;
     }
 
-    readbuffer_format_flags = yagl_gles_internalformat_flags(readbuffer_internalformat);
+    readbuffer_format_info = yagl_gles_internalformat_info(readbuffer_internalformat);
 
     switch (format) {
     case GL_RGBA:
@@ -897,12 +897,12 @@ static struct yagl_pixel_format
         }
         break;
     case GL_RGBA_INTEGER:
-        if ((readbuffer_format_flags & (yagl_gles_format_unsigned_integer)) != 0) {
+        if ((readbuffer_format_info->flags & (yagl_gles_format_unsigned_integer)) != 0) {
             switch (type) {
             YAGL_PIXEL_FORMAT_CASE(gles3, GL_RGBA32UI, GL_RGBA_INTEGER, GL_UNSIGNED_INT);
             }
         }
-        if ((readbuffer_format_flags & (yagl_gles_format_signed_integer)) != 0) {
+        if ((readbuffer_format_info->flags & (yagl_gles_format_signed_integer)) != 0) {
             switch (type) {
             YAGL_PIXEL_FORMAT_CASE(gles3, GL_RGBA32I, GL_RGBA_INTEGER, GL_INT);
             }
@@ -917,7 +917,7 @@ static int yagl_gles3_context_validate_copyteximage_format(struct yagl_gles_cont
                                                            GLenum readbuffer_internalformat,
                                                            GLenum *internalformat)
 {
-    uint32_t readbuffer_format_flags;
+    const struct yagl_gles_format_info *readbuffer_format_info;
 
     if (yagl_gles2_context_validate_copyteximage_format(ctx,
                                                         readbuffer_internalformat,
@@ -925,9 +925,9 @@ static int yagl_gles3_context_validate_copyteximage_format(struct yagl_gles_cont
         return 1;
     }
 
-    readbuffer_format_flags = yagl_gles_internalformat_flags(readbuffer_internalformat);
+    readbuffer_format_info = yagl_gles_internalformat_info(readbuffer_internalformat);
 
-    if ((readbuffer_format_flags & yagl_gles_format_unsigned_integer) != 0) {
+    if ((readbuffer_format_info->flags & yagl_gles_format_unsigned_integer) != 0) {
         switch (*internalformat) {
         case GL_R8UI:
         case GL_R16UI:
@@ -944,7 +944,7 @@ static int yagl_gles3_context_validate_copyteximage_format(struct yagl_gles_cont
         case GL_RGB32UI:
             return 1;
         }
-    } else if ((readbuffer_format_flags & yagl_gles_format_signed_integer) != 0) {
+    } else if ((readbuffer_format_info->flags & yagl_gles_format_signed_integer) != 0) {
         switch (*internalformat) {
         case GL_R8I:
         case GL_R16I:
