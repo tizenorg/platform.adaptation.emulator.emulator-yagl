@@ -291,6 +291,7 @@ struct yagl_client_interface *yagl_get_client_interface(yagl_client_api client_a
         }
         return state->gles1_iface;
     case yagl_client_api_gles2:
+    case yagl_client_api_gles3:
         if (!state->gles2_iface) {
             state->gles2_iface = yagl_get_gles1_sym("yagl_gles2_interface");
         }
@@ -298,4 +299,16 @@ struct yagl_client_interface *yagl_get_client_interface(yagl_client_api client_a
     default:
         return NULL;
     }
+}
+
+struct yagl_client_interface *yagl_get_any_client_interface()
+{
+    struct yagl_client_interface *iface;
+
+    iface = yagl_get_client_interface(yagl_client_api_gles2);
+    if (!iface) {
+        iface = yagl_get_client_interface(yagl_client_api_gles1);
+    }
+
+    return iface;
 }

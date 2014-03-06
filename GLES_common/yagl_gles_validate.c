@@ -1,21 +1,16 @@
 #include "GL/gl.h"
 #include "yagl_gles_validate.h"
 
-int yagl_gles_is_buffer_target_valid(GLenum target)
+int yagl_gles_is_draw_mode_valid(GLenum mode)
 {
-    switch (target) {
-    case GL_ARRAY_BUFFER:
-    case GL_ELEMENT_ARRAY_BUFFER:
-        return 1;
-    default:
-        return 0;
-    }
-}
-
-int yagl_gles_is_framebuffer_target_valid(GLenum target)
-{
-    switch (target) {
-    case GL_FRAMEBUFFER:
+    switch (mode) {
+    case GL_POINTS:
+    case GL_LINE_STRIP:
+    case GL_LINE_LOOP:
+    case GL_LINES:
+    case GL_TRIANGLE_STRIP:
+    case GL_TRIANGLE_FAN:
+    case GL_TRIANGLES:
         return 1;
     default:
         return 0;
@@ -26,8 +21,14 @@ int yagl_gles_is_buffer_usage_valid(GLenum usage)
 {
     switch (usage) {
     case GL_STREAM_DRAW:
+    case GL_STREAM_READ:
+    case GL_STREAM_COPY:
     case GL_STATIC_DRAW:
+    case GL_STATIC_READ:
+    case GL_STATIC_COPY:
     case GL_DYNAMIC_DRAW:
+    case GL_DYNAMIC_READ:
+    case GL_DYNAMIC_COPY:
         return 1;
     default:
         return 0;
@@ -40,6 +41,8 @@ int yagl_gles_is_blend_equation_valid(GLenum mode)
     case GL_FUNC_ADD:
     case GL_FUNC_SUBTRACT:
     case GL_FUNC_REVERSE_SUBTRACT:
+    case GL_MIN:
+    case GL_MAX:
         return 1;
     default:
         return 0;
@@ -132,50 +135,20 @@ int yagl_gles_get_index_size(GLenum type, int *index_size)
     case GL_UNSIGNED_SHORT:
         *index_size = 2;
         break;
-    default:
-        return 0;
-    }
-    return 1;
-}
-
-int yagl_gles_buffer_target_to_binding(GLenum target, GLenum *binding)
-{
-    switch (target) {
-    case GL_ARRAY_BUFFER:
-        *binding = GL_ARRAY_BUFFER_BINDING;
-        return 1;
-    case GL_ELEMENT_ARRAY_BUFFER:
-        *binding = GL_ELEMENT_ARRAY_BUFFER_BINDING;
-        return 1;
-    default:
-        return 0;
-    }
-}
-
-int yagl_gles_validate_texture_target(GLenum target,
-    yagl_gles_texture_target *texture_target)
-{
-    switch (target) {
-    case GL_TEXTURE_2D:
-        *texture_target = yagl_gles_texture_target_2d;
-        break;
-    case GL_TEXTURE_CUBE_MAP:
-        *texture_target = yagl_gles_texture_target_cubemap;
+    case GL_UNSIGNED_INT:
+        *index_size = 4;
         break;
     default:
         return 0;
     }
-
     return 1;
 }
 
 int yagl_gles_validate_framebuffer_attachment(GLenum attachment,
+    int num_color_attachments,
     yagl_gles_framebuffer_attachment *framebuffer_attachment)
 {
     switch (attachment) {
-    case GL_COLOR_ATTACHMENT0:
-        *framebuffer_attachment = yagl_gles_framebuffer_attachment_color0;
-        break;
     case GL_DEPTH_ATTACHMENT:
         *framebuffer_attachment = yagl_gles_framebuffer_attachment_depth;
         break;
@@ -183,6 +156,12 @@ int yagl_gles_validate_framebuffer_attachment(GLenum attachment,
         *framebuffer_attachment = yagl_gles_framebuffer_attachment_stencil;
         break;
     default:
+        if ((attachment >= GL_COLOR_ATTACHMENT0) &&
+            (attachment <= (GL_COLOR_ATTACHMENT0 + num_color_attachments - 1))) {
+            *framebuffer_attachment = yagl_gles_framebuffer_attachment_color0 +
+                                      (attachment - GL_COLOR_ATTACHMENT0);
+            break;
+        }
         return 0;
     }
 

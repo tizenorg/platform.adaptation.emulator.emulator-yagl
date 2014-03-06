@@ -67,7 +67,8 @@ static struct
     { "GLchar", "%" PRIi8 },
     { "GLintptr", "%ld" },
     { "GLsizeiptr", "%ld" },
-    { "GLeglImageOES", "%p" }
+    { "GLeglImageOES", "%p" },
+    { "GLsync", "%p" }
 };
 
 static pthread_once_t g_log_init = PTHREAD_ONCE_INIT;

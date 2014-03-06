@@ -4,13 +4,15 @@
 #include "yagl_types.h"
 #include "yagl_object.h"
 
-#define YAGL_NS_RENDERBUFFER 3
+#define YAGL_NS_RENDERBUFFER 2
 
 struct yagl_gles_renderbuffer
 {
     struct yagl_object base;
 
     yagl_object_name global_name;
+
+    GLenum internalformat;
 
     int was_bound;
 };
@@ -32,6 +34,9 @@ void yagl_gles_renderbuffer_release(struct yagl_gles_renderbuffer *rb);
  */
 void yagl_gles_renderbuffer_bind(struct yagl_gles_renderbuffer *rb,
                                  GLenum target);
+
+void yagl_gles_renderbuffer_set_internalformat(struct yagl_gles_renderbuffer *rb,
+                                               GLenum internalformat);
 
 int yagl_gles_renderbuffer_was_bound(struct yagl_gles_renderbuffer *rb);
 

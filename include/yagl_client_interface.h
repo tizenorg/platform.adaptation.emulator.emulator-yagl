@@ -10,6 +10,7 @@ struct yagl_sharegroup;
 struct yagl_client_interface
 {
     struct yagl_client_context *(*create_ctx)(struct yagl_client_interface */*iface*/,
+                                              yagl_client_api /*client_api*/,
                                               struct yagl_sharegroup */*sg*/);
 
     struct yagl_client_image

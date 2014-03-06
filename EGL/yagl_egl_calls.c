@@ -3,10 +3,12 @@
 #include "yagl_display.h"
 #include "yagl_log.h"
 #include "yagl_egl_state.h"
+#include "yagl_state.h"
 #include "yagl_malloc.h"
 #include "yagl_surface.h"
 #include "yagl_context.h"
 #include "yagl_image.h"
+#include "yagl_fence.h"
 #include "yagl_backend.h"
 #include "yagl_render.h"
 #include "yagl_native_platform.h"
@@ -21,7 +23,7 @@
 #ifdef YAGL_PLATFORM_X11
 #include "x11/yagl_x11_platform.h"
 #endif
-#include "EGL/eglext.h"
+#include "EGL/eglmesaext.h"
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
@@ -52,6 +54,8 @@ static int yagl_get_client_api(const EGLint *attrib_list, yagl_client_api *clien
                         *client_api = yagl_client_api_gles1;
                     } else if (attrib_list[i + 1] == 2) {
                         *client_api = yagl_client_api_gles2;
+                    } else if (attrib_list[i + 1] == 3) {
+                        *client_api = yagl_client_api_gles3;
                     } else {
                         return 0;
                     }
@@ -137,6 +141,22 @@ static __inline int yagl_validate_image(struct yagl_display *dpy,
     *image = yagl_display_image_acquire(dpy, image_);
 
     if (!*image) {
+        YAGL_SET_ERR(EGL_BAD_PARAMETER);
+        return 0;
+    }
+
+    return 1;
+}
+
+static __inline int yagl_validate_fence(struct yagl_display *dpy,
+                                        EGLSyncKHR sync_,
+                                        struct yagl_fence **fence)
+{
+    YAGL_LOG_FUNC_SET(yagl_validate_fence);
+
+    *fence = yagl_display_fence_acquire(dpy, sync_);
+
+    if (!*fence) {
         YAGL_SET_ERR(EGL_BAD_PARAMETER);
         return 0;
     }
@@ -871,10 +891,7 @@ YAGL_API EGLBoolean eglBindTexImage(EGLDisplay dpy_,
                         surface_,
                         buffer);
 
-    iface = yagl_get_client_interface(yagl_client_api_gles2);
-    if (!iface) {
-        iface = yagl_get_client_interface(yagl_client_api_gles1);
-    }
+    iface = yagl_get_any_client_interface();
 
     if (!iface) {
         YAGL_SET_ERR(EGL_BAD_ALLOC);
@@ -1052,6 +1069,12 @@ YAGL_API EGLContext eglCreateContext(EGLDisplay dpy_,
         goto out;
     }
 
+    if ((client_api == yagl_client_api_gles3) &&
+        (yagl_get_host_gl_version() < yagl_gl_3_1_es3)) {
+        YAGL_SET_ERR(EGL_BAD_ATTRIBUTE);
+        goto out;
+    }
+
     iface = yagl_get_client_interface(client_api);
 
     if (!iface) {
@@ -1072,7 +1095,7 @@ YAGL_API EGLContext eglCreateContext(EGLDisplay dpy_,
         goto out;
     }
 
-    client_ctx = iface->create_ctx(iface, sg);
+    client_ctx = iface->create_ctx(iface, client_api, sg);
 
     ctx = yagl_context_create(host_context, dpy, client_ctx);
     assert(ctx);
@@ -1341,6 +1364,7 @@ YAGL_API EGLBoolean eglQueryContext(EGLDisplay dpy_,
         switch (ctx->client_ctx->client_api) {
         case yagl_client_api_gles1:
         case yagl_client_api_gles2:
+        case yagl_client_api_gles3:
             if (value) {
                 *value = EGL_OPENGL_ES_API;
             }
@@ -1372,6 +1396,11 @@ YAGL_API EGLBoolean eglQueryContext(EGLDisplay dpy_,
         case yagl_client_api_gles2:
             if (value) {
                 *value = 2;
+            }
+            break;
+        case yagl_client_api_gles3:
+            if (value) {
+                *value = 3;
             }
             break;
         case yagl_client_api_ogl:
@@ -1582,10 +1611,7 @@ YAGL_API EGLImageKHR eglCreateImageKHR(EGLDisplay dpy_,
                         target,
                         buffer);
 
-    iface = yagl_get_client_interface(yagl_client_api_gles2);
-    if (!iface) {
-        iface = yagl_get_client_interface(yagl_client_api_gles1);
-    }
+    iface = yagl_get_any_client_interface();
 
     if (!iface) {
         YAGL_SET_ERR(EGL_BAD_ALLOC);
@@ -1824,6 +1850,173 @@ out:
     return res;
 }
 
+YAGL_API EGLSyncKHR eglCreateSyncKHR(EGLDisplay dpy_, EGLenum type, const EGLint *attrib_list)
+{
+    EGLSyncKHR ret = EGL_NO_SYNC_KHR;
+    struct yagl_display *dpy = NULL;
+    struct yagl_fence *fence = NULL;
+
+    YAGL_LOG_FUNC_ENTER(eglCreateSyncKHR, "dpy = %u, type = %u",
+                        (yagl_host_handle)dpy_, type);
+
+    if (type != EGL_SYNC_FENCE_KHR) {
+        YAGL_SET_ERR(EGL_BAD_ATTRIBUTE);
+        goto out;
+    }
+
+    if (attrib_list && (attrib_list[0] != EGL_NONE)) {
+        YAGL_SET_ERR(EGL_BAD_ATTRIBUTE);
+        goto out;
+    }
+
+    if (!yagl_validate_display(dpy_, &dpy)) {
+        goto out;
+    }
+
+    fence = yagl_get_backend()->create_fence(dpy);
+
+    if (!fence) {
+        YAGL_SET_ERR(EGL_BAD_ACCESS);
+        goto out;
+    }
+
+    yagl_display_fence_add(dpy, fence);
+
+    yagl_transport_flush(yagl_get_transport(), &fence->base);
+
+    ret = fence;
+
+out:
+    yagl_fence_release(fence);
+
+    YAGL_LOG_FUNC_EXIT("%p", ret);
+
+    return ret;
+}
+
+YAGL_API EGLBoolean eglDestroySyncKHR(EGLDisplay dpy_, EGLSyncKHR sync_)
+{
+    EGLBoolean res = EGL_FALSE;
+    struct yagl_display *dpy = NULL;
+    struct yagl_fence *fence = NULL;
+
+    YAGL_LOG_FUNC_ENTER(eglDestroySyncKHR, "dpy = %u, sync = %p",
+                        (yagl_host_handle)dpy_, sync_);
+
+    if (!yagl_validate_display(dpy_, &dpy)) {
+        goto out;
+    }
+
+    if (!yagl_validate_fence(dpy, sync_, &fence)) {
+        goto out;
+    }
+
+    if (!yagl_display_fence_remove(dpy, sync_)) {
+        YAGL_LOG_ERROR("we're the one who destroy the fence, but it isn't there!");
+        YAGL_SET_ERR(EGL_BAD_PARAMETER);
+        goto out;
+    }
+
+    res = EGL_TRUE;
+
+out:
+    yagl_fence_release(fence);
+
+    YAGL_LOG_FUNC_EXIT("%d", res);
+
+    return res;
+}
+
+YAGL_API EGLint eglClientWaitSyncKHR(EGLDisplay dpy_, EGLSyncKHR sync_, EGLint flags, EGLTimeKHR timeout)
+{
+    EGLint res = EGL_FALSE;
+    struct yagl_display *dpy = NULL;
+    struct yagl_fence *fence = NULL;
+
+    YAGL_LOG_FUNC_ENTER(eglClientWaitSyncKHR, "dpy = %u, sync = %p, flags = 0x%X, timeout = %u",
+                        (yagl_host_handle)dpy_, sync_, flags, (uint32_t)timeout);
+
+    if (!yagl_validate_display(dpy_, &dpy)) {
+        goto out;
+    }
+
+    if (!yagl_validate_fence(dpy, sync_, &fence)) {
+        goto out;
+    }
+
+    if (timeout == 0) {
+        res = fence->base.signaled(&fence->base) ? EGL_CONDITION_SATISFIED_KHR
+                                                 : EGL_TIMEOUT_EXPIRED_KHR;
+    } else if (fence->base.wait(&fence->base)) {
+        res = EGL_CONDITION_SATISFIED_KHR;
+    } else {
+        YAGL_SET_ERR(EGL_BAD_ACCESS);
+    }
+
+out:
+    yagl_fence_release(fence);
+
+    YAGL_LOG_FUNC_EXIT("%d", res);
+
+    return res;
+}
+
+YAGL_API EGLBoolean eglSignalSyncKHR(EGLDisplay dpy_, EGLSyncKHR sync_, EGLenum mode)
+{
+    YAGL_LOG_FUNC_ENTER(eglSignalSyncKHR, "dpy = %u, sync = %p, mode = 0x%X",
+                        (yagl_host_handle)dpy_, sync_, mode);
+
+    YAGL_SET_ERR(EGL_BAD_MATCH);
+
+    YAGL_LOG_FUNC_EXIT("%d", EGL_FALSE);
+
+    return EGL_FALSE;
+}
+
+YAGL_API EGLBoolean eglGetSyncAttribKHR(EGLDisplay dpy_, EGLSyncKHR sync_, EGLint attribute, EGLint *value)
+{
+    EGLBoolean res = EGL_FALSE;
+    struct yagl_display *dpy = NULL;
+    struct yagl_fence *fence = NULL;
+
+    YAGL_LOG_FUNC_ENTER(eglGetSyncAttribKHR, "dpy = %u, sync = %p, attribute = 0x%X",
+                        (yagl_host_handle)dpy_, sync_, attribute);
+
+    if (!yagl_validate_display(dpy_, &dpy)) {
+        goto out;
+    }
+
+    if (!yagl_validate_fence(dpy, sync_, &fence)) {
+        goto out;
+    }
+
+    switch (attribute) {
+    case EGL_SYNC_TYPE_KHR:
+        *value = EGL_SYNC_FENCE_KHR;
+        res = EGL_TRUE;
+        break;
+    case EGL_SYNC_STATUS_KHR:
+        *value = fence->base.signaled(&fence->base) ? EGL_SIGNALED_KHR
+                                                    : EGL_UNSIGNALED_KHR;
+        res = EGL_TRUE;
+        break;
+    case EGL_SYNC_CONDITION_KHR:
+        *value = EGL_SYNC_PRIOR_COMMANDS_COMPLETE_KHR;
+        res = EGL_TRUE;
+        break;
+    default:
+        YAGL_SET_ERR(EGL_BAD_ATTRIBUTE);
+        break;
+    }
+
+out:
+    yagl_fence_release(fence);
+
+    YAGL_LOG_FUNC_EXIT("%d", res);
+
+    return res;
+}
+
 #ifdef YAGL_PLATFORM_WAYLAND
 struct wl_display;
 struct wl_resource;
@@ -1951,6 +2144,7 @@ YAGL_API __eglMustCastToProperFunctionPointerType eglGetProcAddress(const char* 
                     ret = yagl_get_gles1_sym(procname);
                     break;
                 case yagl_client_api_gles2:
+                case yagl_client_api_gles3:
                     ret = yagl_get_gles2_sym(procname);
                     break;
                 default:

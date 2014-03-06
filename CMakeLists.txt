@@ -57,6 +57,8 @@ include_directories(${CMAKE_FIND_ROOT_PATH}/usr/include)
 
 find_package(Threads)
 find_package(PkgConfig)
+find_package(FLEX)
+find_package(BISON)
 
 pkg_check_modules(LIBDRM REQUIRED libdrm)
 add_definitions(${LIBDRM_CFLAGS})

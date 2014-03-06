@@ -12,8 +12,10 @@
  * We can't include GL/glext.h here
  */
 #define GL_HALF_FLOAT 0x140B
+#define GL_INT_2_10_10_10_REV 0x8D9F
 
 static __inline int yagl_get_el_size(GLenum type,
+                                     int integer,
                                      int *el_size,
                                      GLenum *actual_type)
 {
@@ -24,20 +26,36 @@ static __inline int yagl_get_el_size(GLenum type,
     switch (type) {
     case GL_BYTE:
         *el_size = 1;
-        break;
+        return 1;
     case GL_UNSIGNED_BYTE:
         *el_size = 1;
-        break;
+        return 1;
     case GL_SHORT:
         *el_size = 2;
-        break;
+        return 1;
     case GL_UNSIGNED_SHORT:
         *el_size = 2;
+        return 1;
+    case GL_INT:
+        *el_size = 4;
+        return 1;
+    case GL_UNSIGNED_INT:
+        *el_size = 4;
+        return 1;
+    default:
         break;
+    }
+
+    if (integer) {
+        return 0;
+    }
+
+    switch (type) {
     case GL_FLOAT:
         *el_size = 4;
         break;
     case GL_HALF_FLOAT_OES:
+    case GL_HALF_FLOAT:
         *el_size = 2;
         if (actual_type) {
             *actual_type = GL_HALF_FLOAT;
@@ -46,9 +64,14 @@ static __inline int yagl_get_el_size(GLenum type,
     case GL_FIXED:
         *el_size = 4;
         break;
+    case GL_INT_2_10_10_10_REV:
+    case GL_UNSIGNED_INT_2_10_10_10_REV_EXT:
+        *el_size = 4;
+        break;
     default:
         return 0;
     }
+
     return 1;
 }
 
@@ -178,9 +201,10 @@ int yagl_gles_array_update(struct yagl_gles_array *array,
                            int need_convert,
                            GLboolean normalized,
                            GLsizei stride,
-                           const GLvoid *ptr)
+                           const GLvoid *ptr,
+                           int integer)
 {
-    if (!yagl_get_el_size(type, &array->el_size, &type)) {
+    if (!yagl_get_el_size(type, integer, &array->el_size, &type)) {
         return 0;
     }
 
@@ -191,7 +215,7 @@ int yagl_gles_array_update(struct yagl_gles_array *array,
                     &array->actual_stride,
                     NULL);
 
-    yagl_get_el_size(array->actual_type, &array->actual_el_size, NULL);
+    yagl_get_el_size(array->actual_type, integer, &array->actual_el_size, NULL);
 
     array->size = size;
     array->type = type;
@@ -206,6 +230,8 @@ int yagl_gles_array_update(struct yagl_gles_array *array,
     if (!array->actual_stride) {
         array->actual_stride = array->size * array->actual_el_size;
     }
+
+    array->integer = integer;
 
     array->ptr = ptr;
 
@@ -223,9 +249,10 @@ int yagl_gles_array_update_vbo(struct yagl_gles_array *array,
                                GLboolean normalized,
                                GLsizei stride,
                                struct yagl_gles_buffer *vbo,
-                               GLint offset)
+                               GLint offset,
+                               int integer)
 {
-    if (!yagl_get_el_size(type, &array->el_size, &type)) {
+    if (!yagl_get_el_size(type, integer, &array->el_size, &type)) {
         return 0;
     }
 
@@ -238,7 +265,7 @@ int yagl_gles_array_update_vbo(struct yagl_gles_array *array,
                     &array->actual_stride,
                     &array->actual_offset);
 
-    yagl_get_el_size(array->actual_type, &array->actual_el_size, NULL);
+    yagl_get_el_size(array->actual_type, integer, &array->actual_el_size, NULL);
 
     array->size = size;
     array->type = type;
@@ -254,6 +281,8 @@ int yagl_gles_array_update_vbo(struct yagl_gles_array *array,
         array->actual_stride = array->size * array->actual_el_size;
     }
 
+    array->integer = integer;
+
     array->vbo = vbo;
     array->offset = offset;
 
@@ -261,28 +290,43 @@ int yagl_gles_array_update_vbo(struct yagl_gles_array *array,
         assert(type == GL_FIXED || type == GL_BYTE);
     }
 
-    yagl_gles_buffer_bind(array->vbo,
-                          array->type,
-                          array->need_convert,
-                          GL_ARRAY_BUFFER);
-    array->apply(array, 0, 0, NULL, array->user_data);
-    yagl_host_glBindBuffer(GL_ARRAY_BUFFER, 0);
+    yagl_gles_array_apply(array);
 
     return 1;
 }
 
+void yagl_gles_array_apply(struct yagl_gles_array *array)
+{
+    if (array->vbo) {
+        yagl_gles_buffer_bind(array->vbo,
+                              array->type,
+                              array->need_convert,
+                              GL_ARRAY_BUFFER);
+        array->apply(array, 0, 0, NULL, array->user_data);
+        yagl_host_glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+}
+
+void yagl_gles_array_set_divisor(struct yagl_gles_array *array, GLuint divisor)
+{
+    array->divisor = divisor;
+
+    yagl_host_glVertexAttribDivisor(array->index, divisor);
+}
+
 void yagl_gles_array_transfer(struct yagl_gles_array *array,
                               uint32_t first,
-                              uint32_t count)
+                              uint32_t count,
+                              GLsizei primcount)
 {
     if (!array->enabled) {
         return;
     }
 
     if (array->vbo) {
-        if (yagl_gles_buffer_is_dirty(array->vbo,
-                                      array->type,
-                                      array->need_convert)) {
+        if (yagl_gles_buffer_is_cpu_dirty(array->vbo,
+                                          array->type,
+                                          array->need_convert)) {
             yagl_gles_buffer_bind(array->vbo,
                                   array->type,
                                   array->need_convert,
@@ -296,6 +340,11 @@ void yagl_gles_array_transfer(struct yagl_gles_array *array,
     } else if (array->ptr) {
         const GLvoid *ptr = array->ptr;
 
+        if ((array->divisor > 0) && (primcount >= 0)) {
+            first = 0;
+            count = ((primcount - 1) / array->divisor) + 1;
+        }
+
         if (array->need_convert) {
             switch (array->type) {
             case GL_BYTE:
@@ -308,5 +357,13 @@ void yagl_gles_array_transfer(struct yagl_gles_array *array,
         }
 
         array->apply(array, first, count, ptr, array->user_data);
+    } else {
+        /*
+         * Transferring enabled array which has no pointer, typically we should
+         * just crash.
+         */
+
+        assert(0);
+        *((int*)NULL) = 0xDEADBEEF;
     }
 }

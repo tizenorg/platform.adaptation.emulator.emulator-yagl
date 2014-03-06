@@ -36,6 +36,8 @@ void yagl_reset_state();
 
 struct yagl_client_interface *yagl_get_client_interface(yagl_client_api client_api);
 
+struct yagl_client_interface *yagl_get_any_client_interface();
+
 /*
  * @}
  */

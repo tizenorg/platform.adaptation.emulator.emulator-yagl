@@ -259,7 +259,7 @@ def generateTargetSource(output_file, api, includes, entries):
         out += "    struct yagl_transport *t = yagl_get_transport();\n"
 
         if (entry["ret"] != "void"):
-            out += "    " + entry["ret"] + " retval;\n\n"
+            out += "    " + entry["ret"] + " retval = 0;\n\n"
         else:
             out += "\n"
 

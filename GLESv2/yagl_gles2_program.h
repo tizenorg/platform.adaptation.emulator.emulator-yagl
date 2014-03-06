@@ -8,6 +8,153 @@
 
 struct yagl_gles2_shader;
 
+struct yagl_gles2_location_l
+{
+    struct yagl_list list;
+
+    int location;
+
+    GLchar *name;
+};
+
+struct yagl_gles2_attrib_variable
+{
+    int fetched;
+
+    GLchar *name;
+
+    GLint name_size;
+
+    GLenum type;
+    GLint size;
+};
+
+struct yagl_gles2_uniform_variable
+{
+    int name_fetched;
+    int generic_fetched;
+    int extended_fetched;
+
+    /*
+     * Common parameters, present when
+     * 'name_fetched', 'generic_fetched' or 'extended_fetched' is true.
+     * @{
+     */
+    GLint name_size;
+    /*
+     * @}
+     */
+
+    /*
+     * Common parameters, present when
+     * 'generic_fetched' or 'extended_fetched' is true.
+     * @{
+     */
+    GLenum type;
+    GLint size;
+    /*
+     * @}
+     */
+
+    /*
+     * 'name_fetched' or 'generic_fetched'.
+     * @{
+     */
+    GLchar *name;
+    /*
+     * @}
+     */
+
+    /*
+     * 'extended_fetched'.
+     * @{
+     */
+    GLint block_index;
+    GLint block_offset;
+    GLint array_stride;
+    GLint matrix_stride;
+    GLint is_row_major;
+    /*
+     * @}
+     */
+};
+
+struct yagl_gles2_uniform_block
+{
+    int name_fetched;
+    int params_fetched;
+
+    GLuint binding;
+
+    /*
+     * Present when 'name_fetched' or 'params_fetched' is true.
+     * @{
+     */
+    GLint name_size;
+    /*
+     * @}
+     */
+
+    /*
+     * 'name_fetched'.
+     * @{
+     */
+    GLchar *name;
+    /*
+     * @}
+     */
+
+    /*
+     * 'params_fetched'.
+     * @{
+     */
+    GLuint num_active_uniform_indices;
+    GLint data_size;
+    GLint referenced_by_vertex_shader;
+    GLint referenced_by_fragment_shader;
+    /*
+     * @}
+     */
+
+    GLuint *active_uniform_indices;
+};
+
+struct yagl_gles2_transform_feedback_varying
+{
+    /*
+     * Valid when struct yagl_gles2_transform_feedback_info::fetched is true.
+     * @{
+     */
+
+    /*
+     * These will be set on link and
+     * updated on fetch.
+     * @{
+     */
+    GLchar *name;
+    GLint name_size;
+    /*
+     * @}
+     */
+
+    GLenum type;
+    GLint size;
+
+    /*
+     * @}
+     */
+};
+
+struct yagl_gles2_transform_feedback_info
+{
+    int fetched;
+
+    struct yagl_gles2_transform_feedback_varying *varyings;
+    GLuint num_varyings;
+    GLenum buffer_mode;
+    GLint max_varying_bufsize;
+};
+
 struct yagl_gles2_program
 {
     /*
@@ -41,11 +188,42 @@ struct yagl_gles2_program
 
     struct yagl_list attrib_locations;
 
-    struct yagl_vector active_uniforms;
-    struct yagl_vector active_attribs;
+    struct yagl_list frag_data_locations;
+
+    struct yagl_gles2_attrib_variable *active_attribs;
+    GLuint num_active_attribs;
+    GLint max_active_attrib_bufsize;
+
+    struct yagl_gles2_uniform_variable *active_uniforms;
+    GLuint num_active_uniforms;
+    GLint max_active_uniform_bufsize;
+
+    struct yagl_gles2_uniform_block *active_uniform_blocks;
+    GLuint num_active_uniform_blocks;
+    GLint max_active_uniform_block_bufsize;
+
+    /*
+     * Transform feedback info specified via glTransformFeedbackVaryings.
+     */
+    struct yagl_gles2_transform_feedback_info transform_feedback_info;
+
+    /*
+     * Actual transform feedback info after program link.
+     */
+    struct yagl_gles2_transform_feedback_info linked_transform_feedback_info;
 
     int linked;
+
+    GLint link_status;
+    GLint info_log_length;
 };
+
+int yagl_gles2_program_translate_location(struct yagl_gles2_program *program,
+                                          GLint location,
+                                          uint32_t *global_location);
+
+void yagl_gles2_transform_feedback_info_reset(
+    struct yagl_gles2_transform_feedback_info *transform_feedback_info);
 
 struct yagl_gles2_program *yagl_gles2_program_create(int gen_locations);
 
@@ -63,21 +241,21 @@ int yagl_gles2_program_get_uniform_location(struct yagl_gles2_program *program,
 int yagl_gles2_program_get_attrib_location(struct yagl_gles2_program *program,
                                            const GLchar *name);
 
-int yagl_gles2_program_get_active_uniform(struct yagl_gles2_program *program,
+void yagl_gles2_program_get_active_uniform(struct yagl_gles2_program *program,
+                                           GLuint index,
+                                           GLsizei bufsize,
+                                           GLsizei *length,
+                                           GLint *size,
+                                           GLenum *type,
+                                           GLchar *name);
+
+void yagl_gles2_program_get_active_attrib(struct yagl_gles2_program *program,
                                           GLuint index,
                                           GLsizei bufsize,
                                           GLsizei *length,
                                           GLint *size,
                                           GLenum *type,
                                           GLchar *name);
-
-int yagl_gles2_program_get_active_attrib(struct yagl_gles2_program *program,
-                                         GLuint index,
-                                         GLsizei bufsize,
-                                         GLsizei *length,
-                                         GLint *size,
-                                         GLenum *type,
-                                         GLchar *name);
 
 int yagl_gles2_program_get_uniformfv(struct yagl_gles2_program *program,
                                      GLint location,

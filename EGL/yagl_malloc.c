@@ -2,11 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 void *yagl_malloc(size_t size)
 {
     void *tmp = malloc(size);
     if (!tmp) {
+        assert(0);
         fprintf( stderr,
                  "Critical error! Unable to allocate %u bytes!\n",
                  (unsigned int)size );

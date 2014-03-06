@@ -37,9 +37,9 @@ void yagl_host_glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLv
 }
 
 /*
- * glReadPixels wrapper. id = 3
+ * glReadPixelsData wrapper. id = 3
  */
-void yagl_host_glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels, int32_t pixels_maxcount, int32_t *pixels_count)
+void yagl_host_glReadPixelsData(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels, int32_t pixels_maxcount, int32_t *pixels_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
@@ -55,37 +55,127 @@ void yagl_host_glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLe
 }
 
 /*
- * glDisableVertexAttribArray wrapper. id = 4
+ * glReadPixelsOffset wrapper. id = 4
+ */
+void yagl_host_glReadPixelsOffset(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei pixels)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 4, 7 * 8, 7 * 8);
+    yagl_transport_put_out_GLint(t, x);
+    yagl_transport_put_out_GLint(t, y);
+    yagl_transport_put_out_GLsizei(t, width);
+    yagl_transport_put_out_GLsizei(t, height);
+    yagl_transport_put_out_GLenum(t, format);
+    yagl_transport_put_out_GLenum(t, type);
+    yagl_transport_put_out_GLsizei(t, pixels);
+    yagl_transport_end(t);
+}
+
+/*
+ * glDrawArraysInstanced wrapper. id = 5
+ */
+void yagl_host_glDrawArraysInstanced(GLenum mode, GLint start, GLsizei count, GLsizei primcount)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 5, 4 * 8, 4 * 8);
+    yagl_transport_put_out_GLenum(t, mode);
+    yagl_transport_put_out_GLint(t, start);
+    yagl_transport_put_out_GLsizei(t, count);
+    yagl_transport_put_out_GLsizei(t, primcount);
+    yagl_transport_end(t);
+}
+
+/*
+ * glDrawElementsInstanced wrapper. id = 6
+ */
+void yagl_host_glDrawElementsInstanced(GLenum mode, GLsizei count, GLenum type, const void *indices, int32_t indices_count, GLsizei primcount)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 6, 6 * 8, 4 * 8 + yagl_transport_array_size(indices, indices_count, 1));
+    yagl_transport_put_out_GLenum(t, mode);
+    yagl_transport_put_out_GLsizei(t, count);
+    yagl_transport_put_out_GLenum(t, type);
+    yagl_transport_put_out_array(t, indices, indices_count, 1);
+    yagl_transport_put_out_GLsizei(t, primcount);
+    yagl_transport_end(t);
+}
+
+/*
+ * glDrawRangeElements wrapper. id = 7
+ */
+void yagl_host_glDrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid *indices, int32_t indices_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 7, 7 * 8, 5 * 8 + yagl_transport_array_size(indices, indices_count, 1));
+    yagl_transport_put_out_GLenum(t, mode);
+    yagl_transport_put_out_GLuint(t, start);
+    yagl_transport_put_out_GLuint(t, end);
+    yagl_transport_put_out_GLsizei(t, count);
+    yagl_transport_put_out_GLenum(t, type);
+    yagl_transport_put_out_array(t, indices, indices_count, 1);
+    yagl_transport_end(t);
+}
+
+/*
+ * glGenVertexArrays wrapper. id = 8
+ */
+void yagl_host_glGenVertexArrays(const GLuint *arrays, int32_t arrays_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 8, 2 * 8, 0 * 8 + yagl_transport_array_size(arrays, arrays_count, sizeof(GLuint)));
+    yagl_transport_put_out_array(t, arrays, arrays_count, sizeof(GLuint));
+    yagl_transport_end(t);
+}
+
+/*
+ * glBindVertexArray wrapper. id = 9
+ */
+void yagl_host_glBindVertexArray(GLuint array)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 9, 1 * 8, 1 * 8);
+    yagl_transport_put_out_GLuint(t, array);
+    yagl_transport_end(t);
+}
+
+/*
+ * glDisableVertexAttribArray wrapper. id = 10
  */
 void yagl_host_glDisableVertexAttribArray(GLuint index)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 4, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 10, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLuint(t, index);
     yagl_transport_end(t);
 }
 
 /*
- * glEnableVertexAttribArray wrapper. id = 5
+ * glEnableVertexAttribArray wrapper. id = 11
  */
 void yagl_host_glEnableVertexAttribArray(GLuint index)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 5, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 11, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLuint(t, index);
     yagl_transport_end(t);
 }
 
 /*
- * glVertexAttribPointerData wrapper. id = 6
+ * glVertexAttribPointerData wrapper. id = 12
  */
 void yagl_host_glVertexAttribPointerData(GLuint indx, GLint size, GLenum type, GLboolean normalized, GLsizei stride, GLint first, const GLvoid *data, int32_t data_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 6, 8 * 8, 6 * 8 + yagl_transport_array_size(data, data_count, 1));
+    yagl_transport_begin(t, yagl_api_id_gles, 12, 8 * 8, 6 * 8 + yagl_transport_array_size(data, data_count, 1));
     yagl_transport_put_out_GLuint(t, indx);
     yagl_transport_put_out_GLint(t, size);
     yagl_transport_put_out_GLenum(t, type);
@@ -97,13 +187,13 @@ void yagl_host_glVertexAttribPointerData(GLuint indx, GLint size, GLenum type, G
 }
 
 /*
- * glVertexAttribPointerOffset wrapper. id = 7
+ * glVertexAttribPointerOffset wrapper. id = 13
  */
 void yagl_host_glVertexAttribPointerOffset(GLuint indx, GLint size, GLenum type, GLboolean normalized, GLsizei stride, GLsizei offset)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 7, 6 * 8, 6 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 13, 6 * 8, 6 * 8);
     yagl_transport_put_out_GLuint(t, indx);
     yagl_transport_put_out_GLint(t, size);
     yagl_transport_put_out_GLenum(t, type);
@@ -114,13 +204,13 @@ void yagl_host_glVertexAttribPointerOffset(GLuint indx, GLint size, GLenum type,
 }
 
 /*
- * glVertexPointerData wrapper. id = 8
+ * glVertexPointerData wrapper. id = 14
  */
 void yagl_host_glVertexPointerData(GLint size, GLenum type, GLsizei stride, GLint first, const GLvoid *data, int32_t data_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 8, 6 * 8, 4 * 8 + yagl_transport_array_size(data, data_count, 1));
+    yagl_transport_begin(t, yagl_api_id_gles, 14, 6 * 8, 4 * 8 + yagl_transport_array_size(data, data_count, 1));
     yagl_transport_put_out_GLint(t, size);
     yagl_transport_put_out_GLenum(t, type);
     yagl_transport_put_out_GLsizei(t, stride);
@@ -130,101 +220,9 @@ void yagl_host_glVertexPointerData(GLint size, GLenum type, GLsizei stride, GLin
 }
 
 /*
- * glVertexPointerOffset wrapper. id = 9
+ * glVertexPointerOffset wrapper. id = 15
  */
 void yagl_host_glVertexPointerOffset(GLint size, GLenum type, GLsizei stride, GLsizei offset)
-{
-    struct yagl_transport *t = yagl_get_transport();
-
-    yagl_transport_begin(t, yagl_api_id_gles, 9, 4 * 8, 4 * 8);
-    yagl_transport_put_out_GLint(t, size);
-    yagl_transport_put_out_GLenum(t, type);
-    yagl_transport_put_out_GLsizei(t, stride);
-    yagl_transport_put_out_GLsizei(t, offset);
-    yagl_transport_end(t);
-}
-
-/*
- * glNormalPointerData wrapper. id = 10
- */
-void yagl_host_glNormalPointerData(GLenum type, GLsizei stride, GLint first, const GLvoid *data, int32_t data_count)
-{
-    struct yagl_transport *t = yagl_get_transport();
-
-    yagl_transport_begin(t, yagl_api_id_gles, 10, 5 * 8, 3 * 8 + yagl_transport_array_size(data, data_count, 1));
-    yagl_transport_put_out_GLenum(t, type);
-    yagl_transport_put_out_GLsizei(t, stride);
-    yagl_transport_put_out_GLint(t, first);
-    yagl_transport_put_out_array(t, data, data_count, 1);
-    yagl_transport_end(t);
-}
-
-/*
- * glNormalPointerOffset wrapper. id = 11
- */
-void yagl_host_glNormalPointerOffset(GLenum type, GLsizei stride, GLsizei offset)
-{
-    struct yagl_transport *t = yagl_get_transport();
-
-    yagl_transport_begin(t, yagl_api_id_gles, 11, 3 * 8, 3 * 8);
-    yagl_transport_put_out_GLenum(t, type);
-    yagl_transport_put_out_GLsizei(t, stride);
-    yagl_transport_put_out_GLsizei(t, offset);
-    yagl_transport_end(t);
-}
-
-/*
- * glColorPointerData wrapper. id = 12
- */
-void yagl_host_glColorPointerData(GLint size, GLenum type, GLsizei stride, GLint first, const GLvoid *data, int32_t data_count)
-{
-    struct yagl_transport *t = yagl_get_transport();
-
-    yagl_transport_begin(t, yagl_api_id_gles, 12, 6 * 8, 4 * 8 + yagl_transport_array_size(data, data_count, 1));
-    yagl_transport_put_out_GLint(t, size);
-    yagl_transport_put_out_GLenum(t, type);
-    yagl_transport_put_out_GLsizei(t, stride);
-    yagl_transport_put_out_GLint(t, first);
-    yagl_transport_put_out_array(t, data, data_count, 1);
-    yagl_transport_end(t);
-}
-
-/*
- * glColorPointerOffset wrapper. id = 13
- */
-void yagl_host_glColorPointerOffset(GLint size, GLenum type, GLsizei stride, GLsizei offset)
-{
-    struct yagl_transport *t = yagl_get_transport();
-
-    yagl_transport_begin(t, yagl_api_id_gles, 13, 4 * 8, 4 * 8);
-    yagl_transport_put_out_GLint(t, size);
-    yagl_transport_put_out_GLenum(t, type);
-    yagl_transport_put_out_GLsizei(t, stride);
-    yagl_transport_put_out_GLsizei(t, offset);
-    yagl_transport_end(t);
-}
-
-/*
- * glTexCoordPointerData wrapper. id = 14
- */
-void yagl_host_glTexCoordPointerData(GLint tex_id, GLint size, GLenum type, GLsizei stride, GLint first, const GLvoid *data, int32_t data_count)
-{
-    struct yagl_transport *t = yagl_get_transport();
-
-    yagl_transport_begin(t, yagl_api_id_gles, 14, 7 * 8, 5 * 8 + yagl_transport_array_size(data, data_count, 1));
-    yagl_transport_put_out_GLint(t, tex_id);
-    yagl_transport_put_out_GLint(t, size);
-    yagl_transport_put_out_GLenum(t, type);
-    yagl_transport_put_out_GLsizei(t, stride);
-    yagl_transport_put_out_GLint(t, first);
-    yagl_transport_put_out_array(t, data, data_count, 1);
-    yagl_transport_end(t);
-}
-
-/*
- * glTexCoordPointerOffset wrapper. id = 15
- */
-void yagl_host_glTexCoordPointerOffset(GLint size, GLenum type, GLsizei stride, GLsizei offset)
 {
     struct yagl_transport *t = yagl_get_transport();
 
@@ -237,62 +235,200 @@ void yagl_host_glTexCoordPointerOffset(GLint size, GLenum type, GLsizei stride, 
 }
 
 /*
- * glDisableClientState wrapper. id = 16
+ * glNormalPointerData wrapper. id = 16
+ */
+void yagl_host_glNormalPointerData(GLenum type, GLsizei stride, GLint first, const GLvoid *data, int32_t data_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 16, 5 * 8, 3 * 8 + yagl_transport_array_size(data, data_count, 1));
+    yagl_transport_put_out_GLenum(t, type);
+    yagl_transport_put_out_GLsizei(t, stride);
+    yagl_transport_put_out_GLint(t, first);
+    yagl_transport_put_out_array(t, data, data_count, 1);
+    yagl_transport_end(t);
+}
+
+/*
+ * glNormalPointerOffset wrapper. id = 17
+ */
+void yagl_host_glNormalPointerOffset(GLenum type, GLsizei stride, GLsizei offset)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 17, 3 * 8, 3 * 8);
+    yagl_transport_put_out_GLenum(t, type);
+    yagl_transport_put_out_GLsizei(t, stride);
+    yagl_transport_put_out_GLsizei(t, offset);
+    yagl_transport_end(t);
+}
+
+/*
+ * glColorPointerData wrapper. id = 18
+ */
+void yagl_host_glColorPointerData(GLint size, GLenum type, GLsizei stride, GLint first, const GLvoid *data, int32_t data_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 18, 6 * 8, 4 * 8 + yagl_transport_array_size(data, data_count, 1));
+    yagl_transport_put_out_GLint(t, size);
+    yagl_transport_put_out_GLenum(t, type);
+    yagl_transport_put_out_GLsizei(t, stride);
+    yagl_transport_put_out_GLint(t, first);
+    yagl_transport_put_out_array(t, data, data_count, 1);
+    yagl_transport_end(t);
+}
+
+/*
+ * glColorPointerOffset wrapper. id = 19
+ */
+void yagl_host_glColorPointerOffset(GLint size, GLenum type, GLsizei stride, GLsizei offset)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 19, 4 * 8, 4 * 8);
+    yagl_transport_put_out_GLint(t, size);
+    yagl_transport_put_out_GLenum(t, type);
+    yagl_transport_put_out_GLsizei(t, stride);
+    yagl_transport_put_out_GLsizei(t, offset);
+    yagl_transport_end(t);
+}
+
+/*
+ * glTexCoordPointerData wrapper. id = 20
+ */
+void yagl_host_glTexCoordPointerData(GLint tex_id, GLint size, GLenum type, GLsizei stride, GLint first, const GLvoid *data, int32_t data_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 20, 7 * 8, 5 * 8 + yagl_transport_array_size(data, data_count, 1));
+    yagl_transport_put_out_GLint(t, tex_id);
+    yagl_transport_put_out_GLint(t, size);
+    yagl_transport_put_out_GLenum(t, type);
+    yagl_transport_put_out_GLsizei(t, stride);
+    yagl_transport_put_out_GLint(t, first);
+    yagl_transport_put_out_array(t, data, data_count, 1);
+    yagl_transport_end(t);
+}
+
+/*
+ * glTexCoordPointerOffset wrapper. id = 21
+ */
+void yagl_host_glTexCoordPointerOffset(GLint size, GLenum type, GLsizei stride, GLsizei offset)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 21, 4 * 8, 4 * 8);
+    yagl_transport_put_out_GLint(t, size);
+    yagl_transport_put_out_GLenum(t, type);
+    yagl_transport_put_out_GLsizei(t, stride);
+    yagl_transport_put_out_GLsizei(t, offset);
+    yagl_transport_end(t);
+}
+
+/*
+ * glDisableClientState wrapper. id = 22
  */
 void yagl_host_glDisableClientState(GLenum array)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 16, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 22, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLenum(t, array);
     yagl_transport_end(t);
 }
 
 /*
- * glEnableClientState wrapper. id = 17
+ * glEnableClientState wrapper. id = 23
  */
 void yagl_host_glEnableClientState(GLenum array)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 17, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 23, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLenum(t, array);
     yagl_transport_end(t);
 }
 
 /*
- * glGenBuffers wrapper. id = 18
+ * glVertexAttribDivisor wrapper. id = 24
+ */
+void yagl_host_glVertexAttribDivisor(GLuint index, GLuint divisor)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 24, 2 * 8, 2 * 8);
+    yagl_transport_put_out_GLuint(t, index);
+    yagl_transport_put_out_GLuint(t, divisor);
+    yagl_transport_end(t);
+}
+
+/*
+ * glVertexAttribIPointerData wrapper. id = 25
+ */
+void yagl_host_glVertexAttribIPointerData(GLuint index, GLint size, GLenum type, GLsizei stride, GLint first, const GLvoid *data, int32_t data_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 25, 7 * 8, 5 * 8 + yagl_transport_array_size(data, data_count, 1));
+    yagl_transport_put_out_GLuint(t, index);
+    yagl_transport_put_out_GLint(t, size);
+    yagl_transport_put_out_GLenum(t, type);
+    yagl_transport_put_out_GLsizei(t, stride);
+    yagl_transport_put_out_GLint(t, first);
+    yagl_transport_put_out_array(t, data, data_count, 1);
+    yagl_transport_end(t);
+}
+
+/*
+ * glVertexAttribIPointerOffset wrapper. id = 26
+ */
+void yagl_host_glVertexAttribIPointerOffset(GLuint index, GLint size, GLenum type, GLsizei stride, GLsizei offset)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 26, 5 * 8, 5 * 8);
+    yagl_transport_put_out_GLuint(t, index);
+    yagl_transport_put_out_GLint(t, size);
+    yagl_transport_put_out_GLenum(t, type);
+    yagl_transport_put_out_GLsizei(t, stride);
+    yagl_transport_put_out_GLsizei(t, offset);
+    yagl_transport_end(t);
+}
+
+/*
+ * glGenBuffers wrapper. id = 27
  */
 void yagl_host_glGenBuffers(const GLuint *buffers, int32_t buffers_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 18, 2 * 8, 0 * 8 + yagl_transport_array_size(buffers, buffers_count, sizeof(GLuint)));
+    yagl_transport_begin(t, yagl_api_id_gles, 27, 2 * 8, 0 * 8 + yagl_transport_array_size(buffers, buffers_count, sizeof(GLuint)));
     yagl_transport_put_out_array(t, buffers, buffers_count, sizeof(GLuint));
     yagl_transport_end(t);
 }
 
 /*
- * glBindBuffer wrapper. id = 19
+ * glBindBuffer wrapper. id = 28
  */
 void yagl_host_glBindBuffer(GLenum target, GLuint buffer)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 19, 2 * 8, 2 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 28, 2 * 8, 2 * 8);
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLuint(t, buffer);
     yagl_transport_end(t);
 }
 
 /*
- * glBufferData wrapper. id = 20
+ * glBufferData wrapper. id = 29
  */
 void yagl_host_glBufferData(GLenum target, const GLvoid *data, int32_t data_count, GLenum usage)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 20, 4 * 8, 2 * 8 + yagl_transport_array_size(data, data_count, 1));
+    yagl_transport_begin(t, yagl_api_id_gles, 29, 4 * 8, 2 * 8 + yagl_transport_array_size(data, data_count, 1));
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_array(t, data, data_count, 1);
     yagl_transport_put_out_GLenum(t, usage);
@@ -300,13 +436,13 @@ void yagl_host_glBufferData(GLenum target, const GLvoid *data, int32_t data_coun
 }
 
 /*
- * glBufferSubData wrapper. id = 21
+ * glBufferSubData wrapper. id = 30
  */
 void yagl_host_glBufferSubData(GLenum target, GLsizei offset, const GLvoid *data, int32_t data_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 21, 4 * 8, 2 * 8 + yagl_transport_array_size(data, data_count, 1));
+    yagl_transport_begin(t, yagl_api_id_gles, 30, 4 * 8, 2 * 8 + yagl_transport_array_size(data, data_count, 1));
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLsizei(t, offset);
     yagl_transport_put_out_array(t, data, data_count, 1);
@@ -314,87 +450,110 @@ void yagl_host_glBufferSubData(GLenum target, GLsizei offset, const GLvoid *data
 }
 
 /*
- * glGenTextures wrapper. id = 22
+ * glBindBufferBase wrapper. id = 31
+ */
+void yagl_host_glBindBufferBase(GLenum target, GLuint index, GLuint buffer)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 31, 3 * 8, 3 * 8);
+    yagl_transport_put_out_GLenum(t, target);
+    yagl_transport_put_out_GLuint(t, index);
+    yagl_transport_put_out_GLuint(t, buffer);
+    yagl_transport_end(t);
+}
+
+/*
+ * glBindBufferRange wrapper. id = 32
+ */
+void yagl_host_glBindBufferRange(GLenum target, GLuint index, GLuint buffer, GLint offset, GLsizei size)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 32, 5 * 8, 5 * 8);
+    yagl_transport_put_out_GLenum(t, target);
+    yagl_transport_put_out_GLuint(t, index);
+    yagl_transport_put_out_GLuint(t, buffer);
+    yagl_transport_put_out_GLint(t, offset);
+    yagl_transport_put_out_GLsizei(t, size);
+    yagl_transport_end(t);
+}
+
+/*
+ * glMapBuffer wrapper. id = 33
+ */
+void yagl_host_glMapBuffer(GLuint buffer, const GLuint *ranges, int32_t ranges_count, GLvoid *data, int32_t data_maxcount, int32_t *data_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 33, 5 * 8, 1 * 8 + yagl_transport_array_size(ranges, ranges_count, sizeof(GLuint)) + yagl_transport_array_size(data, data_maxcount, 1));
+    yagl_transport_put_out_GLuint(t, buffer);
+    yagl_transport_put_out_array(t, ranges, ranges_count, sizeof(GLuint));
+    yagl_transport_put_in_array(t, data, data_maxcount, data_count, 1);
+    yagl_transport_end(t);
+}
+
+/*
+ * glCopyBufferSubData wrapper. id = 34
+ */
+void yagl_host_glCopyBufferSubData(GLenum readTarget, GLenum writeTarget, GLint readOffset, GLint writeOffset, GLsizei size)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 34, 5 * 8, 5 * 8);
+    yagl_transport_put_out_GLenum(t, readTarget);
+    yagl_transport_put_out_GLenum(t, writeTarget);
+    yagl_transport_put_out_GLint(t, readOffset);
+    yagl_transport_put_out_GLint(t, writeOffset);
+    yagl_transport_put_out_GLsizei(t, size);
+    yagl_transport_end(t);
+}
+
+/*
+ * glGenTextures wrapper. id = 35
  */
 void yagl_host_glGenTextures(const GLuint *textures, int32_t textures_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 22, 2 * 8, 0 * 8 + yagl_transport_array_size(textures, textures_count, sizeof(GLuint)));
+    yagl_transport_begin(t, yagl_api_id_gles, 35, 2 * 8, 0 * 8 + yagl_transport_array_size(textures, textures_count, sizeof(GLuint)));
     yagl_transport_put_out_array(t, textures, textures_count, sizeof(GLuint));
     yagl_transport_end(t);
 }
 
 /*
- * glBindTexture wrapper. id = 23
+ * glBindTexture wrapper. id = 36
  */
 void yagl_host_glBindTexture(GLenum target, GLuint texture)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 23, 2 * 8, 2 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 36, 2 * 8, 2 * 8);
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLuint(t, texture);
     yagl_transport_end(t);
 }
 
 /*
- * glActiveTexture wrapper. id = 24
+ * glActiveTexture wrapper. id = 37
  */
 void yagl_host_glActiveTexture(GLenum texture)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 24, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 37, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLenum(t, texture);
     yagl_transport_end(t);
 }
 
 /*
- * glCompressedTexImage2D wrapper. id = 25
- */
-void yagl_host_glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, const GLvoid *data, int32_t data_count)
-{
-    struct yagl_transport *t = yagl_get_transport();
-
-    yagl_transport_begin(t, yagl_api_id_gles, 25, 8 * 8, 6 * 8 + yagl_transport_array_size(data, data_count, 1));
-    yagl_transport_put_out_GLenum(t, target);
-    yagl_transport_put_out_GLint(t, level);
-    yagl_transport_put_out_GLenum(t, internalformat);
-    yagl_transport_put_out_GLsizei(t, width);
-    yagl_transport_put_out_GLsizei(t, height);
-    yagl_transport_put_out_GLint(t, border);
-    yagl_transport_put_out_array(t, data, data_count, 1);
-    yagl_transport_end(t);
-}
-
-/*
- * glCompressedTexSubImage2D wrapper. id = 26
- */
-void yagl_host_glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, const GLvoid *data, int32_t data_count)
-{
-    struct yagl_transport *t = yagl_get_transport();
-
-    yagl_transport_begin(t, yagl_api_id_gles, 26, 9 * 8, 7 * 8 + yagl_transport_array_size(data, data_count, 1));
-    yagl_transport_put_out_GLenum(t, target);
-    yagl_transport_put_out_GLint(t, level);
-    yagl_transport_put_out_GLint(t, xoffset);
-    yagl_transport_put_out_GLint(t, yoffset);
-    yagl_transport_put_out_GLsizei(t, width);
-    yagl_transport_put_out_GLsizei(t, height);
-    yagl_transport_put_out_GLenum(t, format);
-    yagl_transport_put_out_array(t, data, data_count, 1);
-    yagl_transport_end(t);
-}
-
-/*
- * glCopyTexImage2D wrapper. id = 27
+ * glCopyTexImage2D wrapper. id = 38
  */
 void yagl_host_glCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 27, 8 * 8, 8 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 38, 8 * 8, 8 * 8);
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLint(t, level);
     yagl_transport_put_out_GLenum(t, internalformat);
@@ -407,13 +566,13 @@ void yagl_host_glCopyTexImage2D(GLenum target, GLint level, GLenum internalforma
 }
 
 /*
- * glCopyTexSubImage2D wrapper. id = 28
+ * glCopyTexSubImage2D wrapper. id = 39
  */
 void yagl_host_glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 28, 8 * 8, 8 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 39, 8 * 8, 8 * 8);
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLint(t, level);
     yagl_transport_put_out_GLint(t, xoffset);
@@ -426,13 +585,13 @@ void yagl_host_glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GL
 }
 
 /*
- * glGetTexParameterfv wrapper. id = 29
+ * glGetTexParameterfv wrapper. id = 40
  */
 void yagl_host_glGetTexParameterfv(GLenum target, GLenum pname, GLfloat *param)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 29, 4 * 8, 4 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 40, 4 * 8, 4 * 8);
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_GLfloat(t, param);
@@ -440,13 +599,13 @@ void yagl_host_glGetTexParameterfv(GLenum target, GLenum pname, GLfloat *param)
 }
 
 /*
- * glGetTexParameteriv wrapper. id = 30
+ * glGetTexParameteriv wrapper. id = 41
  */
 void yagl_host_glGetTexParameteriv(GLenum target, GLenum pname, GLint *param)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 30, 4 * 8, 4 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 41, 4 * 8, 4 * 8);
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_GLint(t, param);
@@ -454,13 +613,13 @@ void yagl_host_glGetTexParameteriv(GLenum target, GLenum pname, GLint *param)
 }
 
 /*
- * glTexImage2D wrapper. id = 31
+ * glTexImage2DData wrapper. id = 42
  */
-void yagl_host_glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels, int32_t pixels_count)
+void yagl_host_glTexImage2DData(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels, int32_t pixels_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 31, 10 * 8, 8 * 8 + yagl_transport_array_size(pixels, pixels_count, 1));
+    yagl_transport_begin(t, yagl_api_id_gles, 42, 10 * 8, 8 * 8 + yagl_transport_array_size(pixels, pixels_count, 1));
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLint(t, level);
     yagl_transport_put_out_GLint(t, internalformat);
@@ -474,13 +633,33 @@ void yagl_host_glTexImage2D(GLenum target, GLint level, GLint internalformat, GL
 }
 
 /*
- * glTexParameterf wrapper. id = 32
+ * glTexImage2DOffset wrapper. id = 43
+ */
+void yagl_host_glTexImage2DOffset(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, GLsizei pixels)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 43, 9 * 8, 9 * 8);
+    yagl_transport_put_out_GLenum(t, target);
+    yagl_transport_put_out_GLint(t, level);
+    yagl_transport_put_out_GLint(t, internalformat);
+    yagl_transport_put_out_GLsizei(t, width);
+    yagl_transport_put_out_GLsizei(t, height);
+    yagl_transport_put_out_GLint(t, border);
+    yagl_transport_put_out_GLenum(t, format);
+    yagl_transport_put_out_GLenum(t, type);
+    yagl_transport_put_out_GLsizei(t, pixels);
+    yagl_transport_end(t);
+}
+
+/*
+ * glTexParameterf wrapper. id = 44
  */
 void yagl_host_glTexParameterf(GLenum target, GLenum pname, GLfloat param)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 32, 3 * 8, 3 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 44, 3 * 8, 3 * 8);
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_GLfloat(t, param);
@@ -488,13 +667,13 @@ void yagl_host_glTexParameterf(GLenum target, GLenum pname, GLfloat param)
 }
 
 /*
- * glTexParameterfv wrapper. id = 33
+ * glTexParameterfv wrapper. id = 45
  */
 void yagl_host_glTexParameterfv(GLenum target, GLenum pname, const GLfloat *params, int32_t params_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 33, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_count, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 45, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_array(t, params, params_count, sizeof(GLfloat));
@@ -502,13 +681,13 @@ void yagl_host_glTexParameterfv(GLenum target, GLenum pname, const GLfloat *para
 }
 
 /*
- * glTexParameteri wrapper. id = 34
+ * glTexParameteri wrapper. id = 46
  */
 void yagl_host_glTexParameteri(GLenum target, GLenum pname, GLint param)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 34, 3 * 8, 3 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 46, 3 * 8, 3 * 8);
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_GLint(t, param);
@@ -516,13 +695,13 @@ void yagl_host_glTexParameteri(GLenum target, GLenum pname, GLint param)
 }
 
 /*
- * glTexParameteriv wrapper. id = 35
+ * glTexParameteriv wrapper. id = 47
  */
 void yagl_host_glTexParameteriv(GLenum target, GLenum pname, const GLint *params, int32_t params_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 35, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_count, sizeof(GLint)));
+    yagl_transport_begin(t, yagl_api_id_gles, 47, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_count, sizeof(GLint)));
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_array(t, params, params_count, sizeof(GLint));
@@ -530,13 +709,13 @@ void yagl_host_glTexParameteriv(GLenum target, GLenum pname, const GLint *params
 }
 
 /*
- * glTexSubImage2D wrapper. id = 36
+ * glTexSubImage2DData wrapper. id = 48
  */
-void yagl_host_glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels, int32_t pixels_count)
+void yagl_host_glTexSubImage2DData(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels, int32_t pixels_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 36, 10 * 8, 8 * 8 + yagl_transport_array_size(pixels, pixels_count, 1));
+    yagl_transport_begin(t, yagl_api_id_gles, 48, 10 * 8, 8 * 8 + yagl_transport_array_size(pixels, pixels_count, 1));
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLint(t, level);
     yagl_transport_put_out_GLint(t, xoffset);
@@ -550,25 +729,45 @@ void yagl_host_glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint 
 }
 
 /*
- * glClientActiveTexture wrapper. id = 37
+ * glTexSubImage2DOffset wrapper. id = 49
+ */
+void yagl_host_glTexSubImage2DOffset(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei pixels)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 49, 9 * 8, 9 * 8);
+    yagl_transport_put_out_GLenum(t, target);
+    yagl_transport_put_out_GLint(t, level);
+    yagl_transport_put_out_GLint(t, xoffset);
+    yagl_transport_put_out_GLint(t, yoffset);
+    yagl_transport_put_out_GLsizei(t, width);
+    yagl_transport_put_out_GLsizei(t, height);
+    yagl_transport_put_out_GLenum(t, format);
+    yagl_transport_put_out_GLenum(t, type);
+    yagl_transport_put_out_GLsizei(t, pixels);
+    yagl_transport_end(t);
+}
+
+/*
+ * glClientActiveTexture wrapper. id = 50
  */
 void yagl_host_glClientActiveTexture(GLenum texture)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 37, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 50, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLenum(t, texture);
     yagl_transport_end(t);
 }
 
 /*
- * glTexEnvi wrapper. id = 38
+ * glTexEnvi wrapper. id = 51
  */
 void yagl_host_glTexEnvi(GLenum target, GLenum pname, GLint param)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 38, 3 * 8, 3 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 51, 3 * 8, 3 * 8);
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_GLint(t, param);
@@ -576,13 +775,13 @@ void yagl_host_glTexEnvi(GLenum target, GLenum pname, GLint param)
 }
 
 /*
- * glTexEnvf wrapper. id = 39
+ * glTexEnvf wrapper. id = 52
  */
 void yagl_host_glTexEnvf(GLenum target, GLenum pname, GLfloat param)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 39, 3 * 8, 3 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 52, 3 * 8, 3 * 8);
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_GLfloat(t, param);
@@ -590,13 +789,13 @@ void yagl_host_glTexEnvf(GLenum target, GLenum pname, GLfloat param)
 }
 
 /*
- * glMultiTexCoord4f wrapper. id = 40
+ * glMultiTexCoord4f wrapper. id = 53
  */
 void yagl_host_glMultiTexCoord4f(GLenum target, GLfloat s, GLfloat tt, GLfloat r, GLfloat q)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 40, 5 * 8, 5 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 53, 5 * 8, 5 * 8);
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLfloat(t, s);
     yagl_transport_put_out_GLfloat(t, tt);
@@ -606,13 +805,13 @@ void yagl_host_glMultiTexCoord4f(GLenum target, GLfloat s, GLfloat tt, GLfloat r
 }
 
 /*
- * glTexEnviv wrapper. id = 41
+ * glTexEnviv wrapper. id = 54
  */
 void yagl_host_glTexEnviv(GLenum target, GLenum pname, const GLint *params, int32_t params_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 41, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_count, sizeof(GLint)));
+    yagl_transport_begin(t, yagl_api_id_gles, 54, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_count, sizeof(GLint)));
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_array(t, params, params_count, sizeof(GLint));
@@ -620,13 +819,13 @@ void yagl_host_glTexEnviv(GLenum target, GLenum pname, const GLint *params, int3
 }
 
 /*
- * glTexEnvfv wrapper. id = 42
+ * glTexEnvfv wrapper. id = 55
  */
 void yagl_host_glTexEnvfv(GLenum target, GLenum pname, const GLfloat *params, int32_t params_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 42, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_count, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 55, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_array(t, params, params_count, sizeof(GLfloat));
@@ -634,13 +833,13 @@ void yagl_host_glTexEnvfv(GLenum target, GLenum pname, const GLfloat *params, in
 }
 
 /*
- * glGetTexEnviv wrapper. id = 43
+ * glGetTexEnviv wrapper. id = 56
  */
 void yagl_host_glGetTexEnviv(GLenum env, GLenum pname, GLint *params, int32_t params_maxcount, int32_t *params_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 43, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLint)));
+    yagl_transport_begin(t, yagl_api_id_gles, 56, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLint)));
     yagl_transport_put_out_GLenum(t, env);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLint));
@@ -648,13 +847,13 @@ void yagl_host_glGetTexEnviv(GLenum env, GLenum pname, GLint *params, int32_t pa
 }
 
 /*
- * glGetTexEnvfv wrapper. id = 44
+ * glGetTexEnvfv wrapper. id = 57
  */
 void yagl_host_glGetTexEnvfv(GLenum env, GLenum pname, GLfloat *params, int32_t params_maxcount, int32_t *params_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 44, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 57, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLfloat)));
     yagl_transport_put_out_GLenum(t, env);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLfloat));
@@ -662,38 +861,144 @@ void yagl_host_glGetTexEnvfv(GLenum env, GLenum pname, GLfloat *params, int32_t 
 }
 
 /*
- * glGenFramebuffers wrapper. id = 45
+ * glTexImage3DData wrapper. id = 58
+ */
+void yagl_host_glTexImage3DData(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const void *pixels, int32_t pixels_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 58, 11 * 8, 9 * 8 + yagl_transport_array_size(pixels, pixels_count, 1));
+    yagl_transport_put_out_GLenum(t, target);
+    yagl_transport_put_out_GLint(t, level);
+    yagl_transport_put_out_GLint(t, internalformat);
+    yagl_transport_put_out_GLsizei(t, width);
+    yagl_transport_put_out_GLsizei(t, height);
+    yagl_transport_put_out_GLsizei(t, depth);
+    yagl_transport_put_out_GLint(t, border);
+    yagl_transport_put_out_GLenum(t, format);
+    yagl_transport_put_out_GLenum(t, type);
+    yagl_transport_put_out_array(t, pixels, pixels_count, 1);
+    yagl_transport_end(t);
+}
+
+/*
+ * glTexImage3DOffset wrapper. id = 59
+ */
+void yagl_host_glTexImage3DOffset(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, GLsizei pixels)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 59, 10 * 8, 10 * 8);
+    yagl_transport_put_out_GLenum(t, target);
+    yagl_transport_put_out_GLint(t, level);
+    yagl_transport_put_out_GLint(t, internalformat);
+    yagl_transport_put_out_GLsizei(t, width);
+    yagl_transport_put_out_GLsizei(t, height);
+    yagl_transport_put_out_GLsizei(t, depth);
+    yagl_transport_put_out_GLint(t, border);
+    yagl_transport_put_out_GLenum(t, format);
+    yagl_transport_put_out_GLenum(t, type);
+    yagl_transport_put_out_GLsizei(t, pixels);
+    yagl_transport_end(t);
+}
+
+/*
+ * glTexSubImage3DData wrapper. id = 60
+ */
+void yagl_host_glTexSubImage3DData(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const void *pixels, int32_t pixels_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 60, 12 * 8, 10 * 8 + yagl_transport_array_size(pixels, pixels_count, 1));
+    yagl_transport_put_out_GLenum(t, target);
+    yagl_transport_put_out_GLint(t, level);
+    yagl_transport_put_out_GLint(t, xoffset);
+    yagl_transport_put_out_GLint(t, yoffset);
+    yagl_transport_put_out_GLint(t, zoffset);
+    yagl_transport_put_out_GLsizei(t, width);
+    yagl_transport_put_out_GLsizei(t, height);
+    yagl_transport_put_out_GLsizei(t, depth);
+    yagl_transport_put_out_GLenum(t, format);
+    yagl_transport_put_out_GLenum(t, type);
+    yagl_transport_put_out_array(t, pixels, pixels_count, 1);
+    yagl_transport_end(t);
+}
+
+/*
+ * glTexSubImage3DOffset wrapper. id = 61
+ */
+void yagl_host_glTexSubImage3DOffset(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, GLsizei pixels)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 61, 11 * 8, 11 * 8);
+    yagl_transport_put_out_GLenum(t, target);
+    yagl_transport_put_out_GLint(t, level);
+    yagl_transport_put_out_GLint(t, xoffset);
+    yagl_transport_put_out_GLint(t, yoffset);
+    yagl_transport_put_out_GLint(t, zoffset);
+    yagl_transport_put_out_GLsizei(t, width);
+    yagl_transport_put_out_GLsizei(t, height);
+    yagl_transport_put_out_GLsizei(t, depth);
+    yagl_transport_put_out_GLenum(t, format);
+    yagl_transport_put_out_GLenum(t, type);
+    yagl_transport_put_out_GLsizei(t, pixels);
+    yagl_transport_end(t);
+}
+
+/*
+ * glCopyTexSubImage3D wrapper. id = 62
+ */
+void yagl_host_glCopyTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 62, 9 * 8, 9 * 8);
+    yagl_transport_put_out_GLenum(t, target);
+    yagl_transport_put_out_GLint(t, level);
+    yagl_transport_put_out_GLint(t, xoffset);
+    yagl_transport_put_out_GLint(t, yoffset);
+    yagl_transport_put_out_GLint(t, zoffset);
+    yagl_transport_put_out_GLint(t, x);
+    yagl_transport_put_out_GLint(t, y);
+    yagl_transport_put_out_GLsizei(t, width);
+    yagl_transport_put_out_GLsizei(t, height);
+    yagl_transport_end(t);
+}
+
+/*
+ * glGenFramebuffers wrapper. id = 63
  */
 void yagl_host_glGenFramebuffers(const GLuint *framebuffers, int32_t framebuffers_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 45, 2 * 8, 0 * 8 + yagl_transport_array_size(framebuffers, framebuffers_count, sizeof(GLuint)));
+    yagl_transport_begin(t, yagl_api_id_gles, 63, 2 * 8, 0 * 8 + yagl_transport_array_size(framebuffers, framebuffers_count, sizeof(GLuint)));
     yagl_transport_put_out_array(t, framebuffers, framebuffers_count, sizeof(GLuint));
     yagl_transport_end(t);
 }
 
 /*
- * glBindFramebuffer wrapper. id = 46
+ * glBindFramebuffer wrapper. id = 64
  */
 void yagl_host_glBindFramebuffer(GLenum target, GLuint framebuffer)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 46, 2 * 8, 2 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 64, 2 * 8, 2 * 8);
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLuint(t, framebuffer);
     yagl_transport_end(t);
 }
 
 /*
- * glFramebufferTexture2D wrapper. id = 47
+ * glFramebufferTexture2D wrapper. id = 65
  */
 void yagl_host_glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 47, 5 * 8, 5 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 65, 5 * 8, 5 * 8);
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLenum(t, attachment);
     yagl_transport_put_out_GLenum(t, textarget);
@@ -703,13 +1008,13 @@ void yagl_host_glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum t
 }
 
 /*
- * glFramebufferRenderbuffer wrapper. id = 48
+ * glFramebufferRenderbuffer wrapper. id = 66
  */
 void yagl_host_glFramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 48, 4 * 8, 4 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 66, 4 * 8, 4 * 8);
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLenum(t, attachment);
     yagl_transport_put_out_GLenum(t, renderbuffertarget);
@@ -718,38 +1023,173 @@ void yagl_host_glFramebufferRenderbuffer(GLenum target, GLenum attachment, GLenu
 }
 
 /*
- * glGenRenderbuffers wrapper. id = 49
+ * glBlitFramebuffer wrapper. id = 67
+ */
+void yagl_host_glBlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 67, 10 * 8, 10 * 8);
+    yagl_transport_put_out_GLint(t, srcX0);
+    yagl_transport_put_out_GLint(t, srcY0);
+    yagl_transport_put_out_GLint(t, srcX1);
+    yagl_transport_put_out_GLint(t, srcY1);
+    yagl_transport_put_out_GLint(t, dstX0);
+    yagl_transport_put_out_GLint(t, dstY0);
+    yagl_transport_put_out_GLint(t, dstX1);
+    yagl_transport_put_out_GLint(t, dstY1);
+    yagl_transport_put_out_GLbitfield(t, mask);
+    yagl_transport_put_out_GLenum(t, filter);
+    yagl_transport_end(t);
+}
+
+/*
+ * glDrawBuffers wrapper. id = 68
+ */
+void yagl_host_glDrawBuffers(const GLenum *bufs, int32_t bufs_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 68, 2 * 8, 0 * 8 + yagl_transport_array_size(bufs, bufs_count, sizeof(GLenum)));
+    yagl_transport_put_out_array(t, bufs, bufs_count, sizeof(GLenum));
+    yagl_transport_end(t);
+}
+
+/*
+ * glReadBuffer wrapper. id = 69
+ */
+void yagl_host_glReadBuffer(GLenum mode)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 69, 1 * 8, 1 * 8);
+    yagl_transport_put_out_GLenum(t, mode);
+    yagl_transport_end(t);
+}
+
+/*
+ * glFramebufferTexture3D wrapper. id = 70
+ */
+void yagl_host_glFramebufferTexture3D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLint zoffset)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 70, 6 * 8, 6 * 8);
+    yagl_transport_put_out_GLenum(t, target);
+    yagl_transport_put_out_GLenum(t, attachment);
+    yagl_transport_put_out_GLenum(t, textarget);
+    yagl_transport_put_out_GLuint(t, texture);
+    yagl_transport_put_out_GLint(t, level);
+    yagl_transport_put_out_GLint(t, zoffset);
+    yagl_transport_end(t);
+}
+
+/*
+ * glFramebufferTextureLayer wrapper. id = 71
+ */
+void yagl_host_glFramebufferTextureLayer(GLenum target, GLenum attachment, GLuint texture, GLint level, GLint layer)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 71, 5 * 8, 5 * 8);
+    yagl_transport_put_out_GLenum(t, target);
+    yagl_transport_put_out_GLenum(t, attachment);
+    yagl_transport_put_out_GLuint(t, texture);
+    yagl_transport_put_out_GLint(t, level);
+    yagl_transport_put_out_GLint(t, layer);
+    yagl_transport_end(t);
+}
+
+/*
+ * glClearBufferiv wrapper. id = 72
+ */
+void yagl_host_glClearBufferiv(GLenum buffer, GLint drawbuffer, const GLint *value, int32_t value_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 72, 4 * 8, 2 * 8 + yagl_transport_array_size(value, value_count, sizeof(GLint)));
+    yagl_transport_put_out_GLenum(t, buffer);
+    yagl_transport_put_out_GLint(t, drawbuffer);
+    yagl_transport_put_out_array(t, value, value_count, sizeof(GLint));
+    yagl_transport_end(t);
+}
+
+/*
+ * glClearBufferuiv wrapper. id = 73
+ */
+void yagl_host_glClearBufferuiv(GLenum buffer, GLint drawbuffer, const GLuint *value, int32_t value_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 73, 4 * 8, 2 * 8 + yagl_transport_array_size(value, value_count, sizeof(GLuint)));
+    yagl_transport_put_out_GLenum(t, buffer);
+    yagl_transport_put_out_GLint(t, drawbuffer);
+    yagl_transport_put_out_array(t, value, value_count, sizeof(GLuint));
+    yagl_transport_end(t);
+}
+
+/*
+ * glClearBufferfi wrapper. id = 74
+ */
+void yagl_host_glClearBufferfi(GLenum buffer, GLint drawbuffer, GLfloat depth, GLint stencil)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 74, 4 * 8, 4 * 8);
+    yagl_transport_put_out_GLenum(t, buffer);
+    yagl_transport_put_out_GLint(t, drawbuffer);
+    yagl_transport_put_out_GLfloat(t, depth);
+    yagl_transport_put_out_GLint(t, stencil);
+    yagl_transport_end(t);
+}
+
+/*
+ * glClearBufferfv wrapper. id = 75
+ */
+void yagl_host_glClearBufferfv(GLenum buffer, GLint drawbuffer, const GLfloat *value, int32_t value_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 75, 4 * 8, 2 * 8 + yagl_transport_array_size(value, value_count, sizeof(GLfloat)));
+    yagl_transport_put_out_GLenum(t, buffer);
+    yagl_transport_put_out_GLint(t, drawbuffer);
+    yagl_transport_put_out_array(t, value, value_count, sizeof(GLfloat));
+    yagl_transport_end(t);
+}
+
+/*
+ * glGenRenderbuffers wrapper. id = 76
  */
 void yagl_host_glGenRenderbuffers(const GLuint *renderbuffers, int32_t renderbuffers_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 49, 2 * 8, 0 * 8 + yagl_transport_array_size(renderbuffers, renderbuffers_count, sizeof(GLuint)));
+    yagl_transport_begin(t, yagl_api_id_gles, 76, 2 * 8, 0 * 8 + yagl_transport_array_size(renderbuffers, renderbuffers_count, sizeof(GLuint)));
     yagl_transport_put_out_array(t, renderbuffers, renderbuffers_count, sizeof(GLuint));
     yagl_transport_end(t);
 }
 
 /*
- * glBindRenderbuffer wrapper. id = 50
+ * glBindRenderbuffer wrapper. id = 77
  */
 void yagl_host_glBindRenderbuffer(GLenum target, GLuint renderbuffer)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 50, 2 * 8, 2 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 77, 2 * 8, 2 * 8);
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLuint(t, renderbuffer);
     yagl_transport_end(t);
 }
 
 /*
- * glRenderbufferStorage wrapper. id = 51
+ * glRenderbufferStorage wrapper. id = 78
  */
 void yagl_host_glRenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 51, 4 * 8, 4 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 78, 4 * 8, 4 * 8);
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLenum(t, internalformat);
     yagl_transport_put_out_GLsizei(t, width);
@@ -758,13 +1198,13 @@ void yagl_host_glRenderbufferStorage(GLenum target, GLenum internalformat, GLsiz
 }
 
 /*
- * glGetRenderbufferParameteriv wrapper. id = 52
+ * glGetRenderbufferParameteriv wrapper. id = 79
  */
 void yagl_host_glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint *param)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 52, 4 * 8, 4 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 79, 4 * 8, 4 * 8);
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_GLint(t, param);
@@ -772,89 +1212,105 @@ void yagl_host_glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint *
 }
 
 /*
- * glCreateProgram wrapper. id = 53
+ * glRenderbufferStorageMultisample wrapper. id = 80
+ */
+void yagl_host_glRenderbufferStorageMultisample(GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 80, 5 * 8, 5 * 8);
+    yagl_transport_put_out_GLenum(t, target);
+    yagl_transport_put_out_GLsizei(t, samples);
+    yagl_transport_put_out_GLenum(t, internalformat);
+    yagl_transport_put_out_GLsizei(t, width);
+    yagl_transport_put_out_GLsizei(t, height);
+    yagl_transport_end(t);
+}
+
+/*
+ * glCreateProgram wrapper. id = 81
  */
 void yagl_host_glCreateProgram(GLuint program)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 53, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 81, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_end(t);
 }
 
 /*
- * glCreateShader wrapper. id = 54
+ * glCreateShader wrapper. id = 82
  */
 void yagl_host_glCreateShader(GLuint shader, GLenum type)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 54, 2 * 8, 2 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 82, 2 * 8, 2 * 8);
     yagl_transport_put_out_GLuint(t, shader);
     yagl_transport_put_out_GLenum(t, type);
     yagl_transport_end(t);
 }
 
 /*
- * glShaderSource wrapper. id = 55
+ * glShaderSource wrapper. id = 83
  */
 void yagl_host_glShaderSource(GLuint shader, const GLchar *string, int32_t string_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 55, 3 * 8, 1 * 8 + yagl_transport_array_size(string, string_count, sizeof(GLchar)));
+    yagl_transport_begin(t, yagl_api_id_gles, 83, 3 * 8, 1 * 8 + yagl_transport_array_size(string, string_count, sizeof(GLchar)));
     yagl_transport_put_out_GLuint(t, shader);
     yagl_transport_put_out_array(t, string, string_count, sizeof(GLchar));
     yagl_transport_end(t);
 }
 
 /*
- * glAttachShader wrapper. id = 56
+ * glAttachShader wrapper. id = 84
  */
 void yagl_host_glAttachShader(GLuint program, GLuint shader)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 56, 2 * 8, 2 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 84, 2 * 8, 2 * 8);
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_put_out_GLuint(t, shader);
     yagl_transport_end(t);
 }
 
 /*
- * glDetachShader wrapper. id = 57
+ * glDetachShader wrapper. id = 85
  */
 void yagl_host_glDetachShader(GLuint program, GLuint shader)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 57, 2 * 8, 2 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 85, 2 * 8, 2 * 8);
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_put_out_GLuint(t, shader);
     yagl_transport_end(t);
 }
 
 /*
- * glCompileShader wrapper. id = 58
+ * glCompileShader wrapper. id = 86
  */
 void yagl_host_glCompileShader(GLuint shader)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 58, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 86, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLuint(t, shader);
     yagl_transport_end(t);
 }
 
 /*
- * glBindAttribLocation wrapper. id = 59
+ * glBindAttribLocation wrapper. id = 87
  */
 void yagl_host_glBindAttribLocation(GLuint program, GLuint index, const GLchar *name, int32_t name_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 59, 4 * 8, 2 * 8 + yagl_transport_array_size(name, name_count, sizeof(GLchar)));
+    yagl_transport_begin(t, yagl_api_id_gles, 87, 4 * 8, 2 * 8 + yagl_transport_array_size(name, name_count, sizeof(GLchar)));
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_put_out_GLuint(t, index);
     yagl_transport_put_out_array(t, name, name_count, sizeof(GLchar));
@@ -862,54 +1318,46 @@ void yagl_host_glBindAttribLocation(GLuint program, GLuint index, const GLchar *
 }
 
 /*
- * glGetActiveAttrib wrapper. id = 60
+ * glGetActiveAttrib wrapper. id = 88
  */
-GLboolean yagl_host_glGetActiveAttrib(GLuint program, GLuint index, GLint *size, GLenum *type, GLchar *name, int32_t name_maxcount, int32_t *name_count)
+void yagl_host_glGetActiveAttrib(GLuint program, GLuint index, GLint *size, GLenum *type, GLchar *name, int32_t name_maxcount, int32_t *name_count)
 {
     struct yagl_transport *t = yagl_get_transport();
-    GLboolean retval;
 
-    yagl_transport_begin(t, yagl_api_id_gles, 60, 10 * 8, 8 * 8 + yagl_transport_array_size(name, name_maxcount, sizeof(GLchar)));
+    yagl_transport_begin(t, yagl_api_id_gles, 88, 8 * 8, 6 * 8 + yagl_transport_array_size(name, name_maxcount, sizeof(GLchar)));
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_put_out_GLuint(t, index);
     yagl_transport_put_in_GLint(t, size);
     yagl_transport_put_in_GLenum(t, type);
     yagl_transport_put_in_array(t, name, name_maxcount, name_count, sizeof(GLchar));
-    yagl_transport_put_in_GLboolean(t, &retval);
     yagl_transport_end(t);
-
-    return retval;
 }
 
 /*
- * glGetActiveUniform wrapper. id = 61
+ * glGetActiveUniform wrapper. id = 89
  */
-GLboolean yagl_host_glGetActiveUniform(GLuint program, GLuint index, GLint *size, GLenum *type, GLchar *name, int32_t name_maxcount, int32_t *name_count)
+void yagl_host_glGetActiveUniform(GLuint program, GLuint index, GLint *size, GLenum *type, GLchar *name, int32_t name_maxcount, int32_t *name_count)
 {
     struct yagl_transport *t = yagl_get_transport();
-    GLboolean retval;
 
-    yagl_transport_begin(t, yagl_api_id_gles, 61, 10 * 8, 8 * 8 + yagl_transport_array_size(name, name_maxcount, sizeof(GLchar)));
+    yagl_transport_begin(t, yagl_api_id_gles, 89, 8 * 8, 6 * 8 + yagl_transport_array_size(name, name_maxcount, sizeof(GLchar)));
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_put_out_GLuint(t, index);
     yagl_transport_put_in_GLint(t, size);
     yagl_transport_put_in_GLenum(t, type);
     yagl_transport_put_in_array(t, name, name_maxcount, name_count, sizeof(GLchar));
-    yagl_transport_put_in_GLboolean(t, &retval);
     yagl_transport_end(t);
-
-    return retval;
 }
 
 /*
- * glGetAttribLocation wrapper. id = 62
+ * glGetAttribLocation wrapper. id = 90
  */
 int yagl_host_glGetAttribLocation(GLuint program, const GLchar *name, int32_t name_count)
 {
     struct yagl_transport *t = yagl_get_transport();
-    int retval;
+    int retval = 0;
 
-    yagl_transport_begin(t, yagl_api_id_gles, 62, 5 * 8, 3 * 8 + yagl_transport_array_size(name, name_count, sizeof(GLchar)));
+    yagl_transport_begin(t, yagl_api_id_gles, 90, 5 * 8, 3 * 8 + yagl_transport_array_size(name, name_count, sizeof(GLchar)));
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_put_out_array(t, name, name_count, sizeof(GLchar));
     yagl_transport_put_in_int(t, &retval);
@@ -919,13 +1367,13 @@ int yagl_host_glGetAttribLocation(GLuint program, const GLchar *name, int32_t na
 }
 
 /*
- * glGetProgramiv wrapper. id = 63
+ * glGetProgramiv wrapper. id = 91
  */
 void yagl_host_glGetProgramiv(GLuint program, GLenum pname, GLint *param)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 63, 4 * 8, 4 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 91, 4 * 8, 4 * 8);
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_GLint(t, param);
@@ -933,14 +1381,14 @@ void yagl_host_glGetProgramiv(GLuint program, GLenum pname, GLint *param)
 }
 
 /*
- * glGetProgramInfoLog wrapper. id = 64
+ * glGetProgramInfoLog wrapper. id = 92
  */
 GLboolean yagl_host_glGetProgramInfoLog(GLuint program, GLchar *infolog, int32_t infolog_maxcount, int32_t *infolog_count)
 {
     struct yagl_transport *t = yagl_get_transport();
-    GLboolean retval;
+    GLboolean retval = 0;
 
-    yagl_transport_begin(t, yagl_api_id_gles, 64, 5 * 8, 3 * 8 + yagl_transport_array_size(infolog, infolog_maxcount, sizeof(GLchar)));
+    yagl_transport_begin(t, yagl_api_id_gles, 92, 5 * 8, 3 * 8 + yagl_transport_array_size(infolog, infolog_maxcount, sizeof(GLchar)));
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_put_in_array(t, infolog, infolog_maxcount, infolog_count, sizeof(GLchar));
     yagl_transport_put_in_GLboolean(t, &retval);
@@ -950,13 +1398,13 @@ GLboolean yagl_host_glGetProgramInfoLog(GLuint program, GLchar *infolog, int32_t
 }
 
 /*
- * glGetShaderiv wrapper. id = 65
+ * glGetShaderiv wrapper. id = 93
  */
 void yagl_host_glGetShaderiv(GLuint shader, GLenum pname, GLint *param)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 65, 4 * 8, 4 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 93, 4 * 8, 4 * 8);
     yagl_transport_put_out_GLuint(t, shader);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_GLint(t, param);
@@ -964,14 +1412,14 @@ void yagl_host_glGetShaderiv(GLuint shader, GLenum pname, GLint *param)
 }
 
 /*
- * glGetShaderInfoLog wrapper. id = 66
+ * glGetShaderInfoLog wrapper. id = 94
  */
 GLboolean yagl_host_glGetShaderInfoLog(GLuint shader, GLchar *infolog, int32_t infolog_maxcount, int32_t *infolog_count)
 {
     struct yagl_transport *t = yagl_get_transport();
-    GLboolean retval;
+    GLboolean retval = 0;
 
-    yagl_transport_begin(t, yagl_api_id_gles, 66, 5 * 8, 3 * 8 + yagl_transport_array_size(infolog, infolog_maxcount, sizeof(GLchar)));
+    yagl_transport_begin(t, yagl_api_id_gles, 94, 5 * 8, 3 * 8 + yagl_transport_array_size(infolog, infolog_maxcount, sizeof(GLchar)));
     yagl_transport_put_out_GLuint(t, shader);
     yagl_transport_put_in_array(t, infolog, infolog_maxcount, infolog_count, sizeof(GLchar));
     yagl_transport_put_in_GLboolean(t, &retval);
@@ -981,13 +1429,13 @@ GLboolean yagl_host_glGetShaderInfoLog(GLuint shader, GLchar *infolog, int32_t i
 }
 
 /*
- * glGetUniformfv wrapper. id = 67
+ * glGetUniformfv wrapper. id = 95
  */
 void yagl_host_glGetUniformfv(GLboolean tl, GLuint program, uint32_t location, GLfloat *params, int32_t params_maxcount, int32_t *params_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 67, 5 * 8, 3 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 95, 5 * 8, 3 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLfloat)));
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_put_out_uint32_t(t, location);
@@ -996,13 +1444,13 @@ void yagl_host_glGetUniformfv(GLboolean tl, GLuint program, uint32_t location, G
 }
 
 /*
- * glGetUniformiv wrapper. id = 68
+ * glGetUniformiv wrapper. id = 96
  */
 void yagl_host_glGetUniformiv(GLboolean tl, GLuint program, uint32_t location, GLint *params, int32_t params_maxcount, int32_t *params_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 68, 5 * 8, 3 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLint)));
+    yagl_transport_begin(t, yagl_api_id_gles, 96, 5 * 8, 3 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLint)));
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_put_out_uint32_t(t, location);
@@ -1011,14 +1459,14 @@ void yagl_host_glGetUniformiv(GLboolean tl, GLuint program, uint32_t location, G
 }
 
 /*
- * glGetUniformLocation wrapper. id = 69
+ * glGetUniformLocation wrapper. id = 97
  */
 int yagl_host_glGetUniformLocation(GLuint program, const GLchar *name, int32_t name_count)
 {
     struct yagl_transport *t = yagl_get_transport();
-    int retval;
+    int retval = 0;
 
-    yagl_transport_begin(t, yagl_api_id_gles, 69, 5 * 8, 3 * 8 + yagl_transport_array_size(name, name_count, sizeof(GLchar)));
+    yagl_transport_begin(t, yagl_api_id_gles, 97, 5 * 8, 3 * 8 + yagl_transport_array_size(name, name_count, sizeof(GLchar)));
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_put_out_array(t, name, name_count, sizeof(GLchar));
     yagl_transport_put_in_int(t, &retval);
@@ -1028,13 +1476,13 @@ int yagl_host_glGetUniformLocation(GLuint program, const GLchar *name, int32_t n
 }
 
 /*
- * glGetVertexAttribfv wrapper. id = 70
+ * glGetVertexAttribfv wrapper. id = 98
  */
 void yagl_host_glGetVertexAttribfv(GLuint index, GLenum pname, GLfloat *params, int32_t params_maxcount, int32_t *params_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 70, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 98, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLfloat)));
     yagl_transport_put_out_GLuint(t, index);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLfloat));
@@ -1042,13 +1490,13 @@ void yagl_host_glGetVertexAttribfv(GLuint index, GLenum pname, GLfloat *params, 
 }
 
 /*
- * glGetVertexAttribiv wrapper. id = 71
+ * glGetVertexAttribiv wrapper. id = 99
  */
 void yagl_host_glGetVertexAttribiv(GLuint index, GLenum pname, GLint *params, int32_t params_maxcount, int32_t *params_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 71, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLint)));
+    yagl_transport_begin(t, yagl_api_id_gles, 99, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLint)));
     yagl_transport_put_out_GLuint(t, index);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLint));
@@ -1056,25 +1504,26 @@ void yagl_host_glGetVertexAttribiv(GLuint index, GLenum pname, GLint *params, in
 }
 
 /*
- * glLinkProgram wrapper. id = 72
+ * glLinkProgram wrapper. id = 100
  */
-void yagl_host_glLinkProgram(GLuint program)
+void yagl_host_glLinkProgram(GLuint program, GLint *params, int32_t params_maxcount, int32_t *params_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 72, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 100, 3 * 8, 1 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLint)));
     yagl_transport_put_out_GLuint(t, program);
+    yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLint));
     yagl_transport_end(t);
 }
 
 /*
- * glUniform1f wrapper. id = 73
+ * glUniform1f wrapper. id = 101
  */
 void yagl_host_glUniform1f(GLboolean tl, uint32_t location, GLfloat x)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 73, 3 * 8, 3 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 101, 3 * 8, 3 * 8);
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_GLfloat(t, x);
@@ -1082,13 +1531,13 @@ void yagl_host_glUniform1f(GLboolean tl, uint32_t location, GLfloat x)
 }
 
 /*
- * glUniform1fv wrapper. id = 74
+ * glUniform1fv wrapper. id = 102
  */
 void yagl_host_glUniform1fv(GLboolean tl, uint32_t location, const GLfloat *v, int32_t v_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 74, 4 * 8, 2 * 8 + yagl_transport_array_size(v, v_count, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 102, 4 * 8, 2 * 8 + yagl_transport_array_size(v, v_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_array(t, v, v_count, sizeof(GLfloat));
@@ -1096,13 +1545,13 @@ void yagl_host_glUniform1fv(GLboolean tl, uint32_t location, const GLfloat *v, i
 }
 
 /*
- * glUniform1i wrapper. id = 75
+ * glUniform1i wrapper. id = 103
  */
 void yagl_host_glUniform1i(GLboolean tl, uint32_t location, GLint x)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 75, 3 * 8, 3 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 103, 3 * 8, 3 * 8);
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_GLint(t, x);
@@ -1110,13 +1559,13 @@ void yagl_host_glUniform1i(GLboolean tl, uint32_t location, GLint x)
 }
 
 /*
- * glUniform1iv wrapper. id = 76
+ * glUniform1iv wrapper. id = 104
  */
 void yagl_host_glUniform1iv(GLboolean tl, uint32_t location, const GLint *v, int32_t v_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 76, 4 * 8, 2 * 8 + yagl_transport_array_size(v, v_count, sizeof(GLint)));
+    yagl_transport_begin(t, yagl_api_id_gles, 104, 4 * 8, 2 * 8 + yagl_transport_array_size(v, v_count, sizeof(GLint)));
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_array(t, v, v_count, sizeof(GLint));
@@ -1124,13 +1573,13 @@ void yagl_host_glUniform1iv(GLboolean tl, uint32_t location, const GLint *v, int
 }
 
 /*
- * glUniform2f wrapper. id = 77
+ * glUniform2f wrapper. id = 105
  */
 void yagl_host_glUniform2f(GLboolean tl, uint32_t location, GLfloat x, GLfloat y)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 77, 4 * 8, 4 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 105, 4 * 8, 4 * 8);
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_GLfloat(t, x);
@@ -1139,13 +1588,13 @@ void yagl_host_glUniform2f(GLboolean tl, uint32_t location, GLfloat x, GLfloat y
 }
 
 /*
- * glUniform2fv wrapper. id = 78
+ * glUniform2fv wrapper. id = 106
  */
 void yagl_host_glUniform2fv(GLboolean tl, uint32_t location, const GLfloat *v, int32_t v_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 78, 4 * 8, 2 * 8 + yagl_transport_array_size(v, v_count, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 106, 4 * 8, 2 * 8 + yagl_transport_array_size(v, v_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_array(t, v, v_count, sizeof(GLfloat));
@@ -1153,13 +1602,13 @@ void yagl_host_glUniform2fv(GLboolean tl, uint32_t location, const GLfloat *v, i
 }
 
 /*
- * glUniform2i wrapper. id = 79
+ * glUniform2i wrapper. id = 107
  */
 void yagl_host_glUniform2i(GLboolean tl, uint32_t location, GLint x, GLint y)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 79, 4 * 8, 4 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 107, 4 * 8, 4 * 8);
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_GLint(t, x);
@@ -1168,13 +1617,13 @@ void yagl_host_glUniform2i(GLboolean tl, uint32_t location, GLint x, GLint y)
 }
 
 /*
- * glUniform2iv wrapper. id = 80
+ * glUniform2iv wrapper. id = 108
  */
 void yagl_host_glUniform2iv(GLboolean tl, uint32_t location, const GLint *v, int32_t v_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 80, 4 * 8, 2 * 8 + yagl_transport_array_size(v, v_count, sizeof(GLint)));
+    yagl_transport_begin(t, yagl_api_id_gles, 108, 4 * 8, 2 * 8 + yagl_transport_array_size(v, v_count, sizeof(GLint)));
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_array(t, v, v_count, sizeof(GLint));
@@ -1182,13 +1631,13 @@ void yagl_host_glUniform2iv(GLboolean tl, uint32_t location, const GLint *v, int
 }
 
 /*
- * glUniform3f wrapper. id = 81
+ * glUniform3f wrapper. id = 109
  */
 void yagl_host_glUniform3f(GLboolean tl, uint32_t location, GLfloat x, GLfloat y, GLfloat z)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 81, 5 * 8, 5 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 109, 5 * 8, 5 * 8);
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_GLfloat(t, x);
@@ -1198,13 +1647,13 @@ void yagl_host_glUniform3f(GLboolean tl, uint32_t location, GLfloat x, GLfloat y
 }
 
 /*
- * glUniform3fv wrapper. id = 82
+ * glUniform3fv wrapper. id = 110
  */
 void yagl_host_glUniform3fv(GLboolean tl, uint32_t location, const GLfloat *v, int32_t v_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 82, 4 * 8, 2 * 8 + yagl_transport_array_size(v, v_count, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 110, 4 * 8, 2 * 8 + yagl_transport_array_size(v, v_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_array(t, v, v_count, sizeof(GLfloat));
@@ -1212,13 +1661,13 @@ void yagl_host_glUniform3fv(GLboolean tl, uint32_t location, const GLfloat *v, i
 }
 
 /*
- * glUniform3i wrapper. id = 83
+ * glUniform3i wrapper. id = 111
  */
 void yagl_host_glUniform3i(GLboolean tl, uint32_t location, GLint x, GLint y, GLint z)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 83, 5 * 8, 5 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 111, 5 * 8, 5 * 8);
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_GLint(t, x);
@@ -1228,13 +1677,13 @@ void yagl_host_glUniform3i(GLboolean tl, uint32_t location, GLint x, GLint y, GL
 }
 
 /*
- * glUniform3iv wrapper. id = 84
+ * glUniform3iv wrapper. id = 112
  */
 void yagl_host_glUniform3iv(GLboolean tl, uint32_t location, const GLint *v, int32_t v_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 84, 4 * 8, 2 * 8 + yagl_transport_array_size(v, v_count, sizeof(GLint)));
+    yagl_transport_begin(t, yagl_api_id_gles, 112, 4 * 8, 2 * 8 + yagl_transport_array_size(v, v_count, sizeof(GLint)));
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_array(t, v, v_count, sizeof(GLint));
@@ -1242,13 +1691,13 @@ void yagl_host_glUniform3iv(GLboolean tl, uint32_t location, const GLint *v, int
 }
 
 /*
- * glUniform4f wrapper. id = 85
+ * glUniform4f wrapper. id = 113
  */
 void yagl_host_glUniform4f(GLboolean tl, uint32_t location, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 85, 6 * 8, 6 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 113, 6 * 8, 6 * 8);
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_GLfloat(t, x);
@@ -1259,13 +1708,13 @@ void yagl_host_glUniform4f(GLboolean tl, uint32_t location, GLfloat x, GLfloat y
 }
 
 /*
- * glUniform4fv wrapper. id = 86
+ * glUniform4fv wrapper. id = 114
  */
 void yagl_host_glUniform4fv(GLboolean tl, uint32_t location, const GLfloat *v, int32_t v_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 86, 4 * 8, 2 * 8 + yagl_transport_array_size(v, v_count, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 114, 4 * 8, 2 * 8 + yagl_transport_array_size(v, v_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_array(t, v, v_count, sizeof(GLfloat));
@@ -1273,13 +1722,13 @@ void yagl_host_glUniform4fv(GLboolean tl, uint32_t location, const GLfloat *v, i
 }
 
 /*
- * glUniform4i wrapper. id = 87
+ * glUniform4i wrapper. id = 115
  */
 void yagl_host_glUniform4i(GLboolean tl, uint32_t location, GLint x, GLint y, GLint z, GLint w)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 87, 6 * 8, 6 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 115, 6 * 8, 6 * 8);
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_GLint(t, x);
@@ -1290,13 +1739,13 @@ void yagl_host_glUniform4i(GLboolean tl, uint32_t location, GLint x, GLint y, GL
 }
 
 /*
- * glUniform4iv wrapper. id = 88
+ * glUniform4iv wrapper. id = 116
  */
 void yagl_host_glUniform4iv(GLboolean tl, uint32_t location, const GLint *v, int32_t v_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 88, 4 * 8, 2 * 8 + yagl_transport_array_size(v, v_count, sizeof(GLint)));
+    yagl_transport_begin(t, yagl_api_id_gles, 116, 4 * 8, 2 * 8 + yagl_transport_array_size(v, v_count, sizeof(GLint)));
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_array(t, v, v_count, sizeof(GLint));
@@ -1304,13 +1753,13 @@ void yagl_host_glUniform4iv(GLboolean tl, uint32_t location, const GLint *v, int
 }
 
 /*
- * glUniformMatrix2fv wrapper. id = 89
+ * glUniformMatrix2fv wrapper. id = 117
  */
 void yagl_host_glUniformMatrix2fv(GLboolean tl, uint32_t location, GLboolean transpose, const GLfloat *value, int32_t value_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 89, 5 * 8, 3 * 8 + yagl_transport_array_size(value, value_count, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 117, 5 * 8, 3 * 8 + yagl_transport_array_size(value, value_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_GLboolean(t, transpose);
@@ -1319,13 +1768,13 @@ void yagl_host_glUniformMatrix2fv(GLboolean tl, uint32_t location, GLboolean tra
 }
 
 /*
- * glUniformMatrix3fv wrapper. id = 90
+ * glUniformMatrix3fv wrapper. id = 118
  */
 void yagl_host_glUniformMatrix3fv(GLboolean tl, uint32_t location, GLboolean transpose, const GLfloat *value, int32_t value_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 90, 5 * 8, 3 * 8 + yagl_transport_array_size(value, value_count, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 118, 5 * 8, 3 * 8 + yagl_transport_array_size(value, value_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_GLboolean(t, transpose);
@@ -1334,13 +1783,13 @@ void yagl_host_glUniformMatrix3fv(GLboolean tl, uint32_t location, GLboolean tra
 }
 
 /*
- * glUniformMatrix4fv wrapper. id = 91
+ * glUniformMatrix4fv wrapper. id = 119
  */
 void yagl_host_glUniformMatrix4fv(GLboolean tl, uint32_t location, GLboolean transpose, const GLfloat *value, int32_t value_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 91, 5 * 8, 3 * 8 + yagl_transport_array_size(value, value_count, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 119, 5 * 8, 3 * 8 + yagl_transport_array_size(value, value_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLboolean(t, tl);
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_GLboolean(t, transpose);
@@ -1349,63 +1798,63 @@ void yagl_host_glUniformMatrix4fv(GLboolean tl, uint32_t location, GLboolean tra
 }
 
 /*
- * glUseProgram wrapper. id = 92
+ * glUseProgram wrapper. id = 120
  */
 void yagl_host_glUseProgram(GLuint program)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 92, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 120, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_end(t);
 }
 
 /*
- * glValidateProgram wrapper. id = 93
+ * glValidateProgram wrapper. id = 121
  */
 void yagl_host_glValidateProgram(GLuint program)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 93, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 121, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_end(t);
 }
 
 /*
- * glVertexAttrib1f wrapper. id = 94
+ * glVertexAttrib1f wrapper. id = 122
  */
 void yagl_host_glVertexAttrib1f(GLuint indx, GLfloat x)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 94, 2 * 8, 2 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 122, 2 * 8, 2 * 8);
     yagl_transport_put_out_GLuint(t, indx);
     yagl_transport_put_out_GLfloat(t, x);
     yagl_transport_end(t);
 }
 
 /*
- * glVertexAttrib1fv wrapper. id = 95
+ * glVertexAttrib1fv wrapper. id = 123
  */
 void yagl_host_glVertexAttrib1fv(GLuint indx, const GLfloat *values, int32_t values_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 95, 3 * 8, 1 * 8 + yagl_transport_array_size(values, values_count, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 123, 3 * 8, 1 * 8 + yagl_transport_array_size(values, values_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLuint(t, indx);
     yagl_transport_put_out_array(t, values, values_count, sizeof(GLfloat));
     yagl_transport_end(t);
 }
 
 /*
- * glVertexAttrib2f wrapper. id = 96
+ * glVertexAttrib2f wrapper. id = 124
  */
 void yagl_host_glVertexAttrib2f(GLuint indx, GLfloat x, GLfloat y)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 96, 3 * 8, 3 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 124, 3 * 8, 3 * 8);
     yagl_transport_put_out_GLuint(t, indx);
     yagl_transport_put_out_GLfloat(t, x);
     yagl_transport_put_out_GLfloat(t, y);
@@ -1413,26 +1862,26 @@ void yagl_host_glVertexAttrib2f(GLuint indx, GLfloat x, GLfloat y)
 }
 
 /*
- * glVertexAttrib2fv wrapper. id = 97
+ * glVertexAttrib2fv wrapper. id = 125
  */
 void yagl_host_glVertexAttrib2fv(GLuint indx, const GLfloat *values, int32_t values_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 97, 3 * 8, 1 * 8 + yagl_transport_array_size(values, values_count, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 125, 3 * 8, 1 * 8 + yagl_transport_array_size(values, values_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLuint(t, indx);
     yagl_transport_put_out_array(t, values, values_count, sizeof(GLfloat));
     yagl_transport_end(t);
 }
 
 /*
- * glVertexAttrib3f wrapper. id = 98
+ * glVertexAttrib3f wrapper. id = 126
  */
 void yagl_host_glVertexAttrib3f(GLuint indx, GLfloat x, GLfloat y, GLfloat z)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 98, 4 * 8, 4 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 126, 4 * 8, 4 * 8);
     yagl_transport_put_out_GLuint(t, indx);
     yagl_transport_put_out_GLfloat(t, x);
     yagl_transport_put_out_GLfloat(t, y);
@@ -1441,26 +1890,26 @@ void yagl_host_glVertexAttrib3f(GLuint indx, GLfloat x, GLfloat y, GLfloat z)
 }
 
 /*
- * glVertexAttrib3fv wrapper. id = 99
+ * glVertexAttrib3fv wrapper. id = 127
  */
 void yagl_host_glVertexAttrib3fv(GLuint indx, const GLfloat *values, int32_t values_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 99, 3 * 8, 1 * 8 + yagl_transport_array_size(values, values_count, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 127, 3 * 8, 1 * 8 + yagl_transport_array_size(values, values_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLuint(t, indx);
     yagl_transport_put_out_array(t, values, values_count, sizeof(GLfloat));
     yagl_transport_end(t);
 }
 
 /*
- * glVertexAttrib4f wrapper. id = 100
+ * glVertexAttrib4f wrapper. id = 128
  */
 void yagl_host_glVertexAttrib4f(GLuint indx, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 100, 5 * 8, 5 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 128, 5 * 8, 5 * 8);
     yagl_transport_put_out_GLuint(t, indx);
     yagl_transport_put_out_GLfloat(t, x);
     yagl_transport_put_out_GLfloat(t, y);
@@ -1470,66 +1919,480 @@ void yagl_host_glVertexAttrib4f(GLuint indx, GLfloat x, GLfloat y, GLfloat z, GL
 }
 
 /*
- * glVertexAttrib4fv wrapper. id = 101
+ * glVertexAttrib4fv wrapper. id = 129
  */
 void yagl_host_glVertexAttrib4fv(GLuint indx, const GLfloat *values, int32_t values_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 101, 3 * 8, 1 * 8 + yagl_transport_array_size(values, values_count, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 129, 3 * 8, 1 * 8 + yagl_transport_array_size(values, values_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLuint(t, indx);
     yagl_transport_put_out_array(t, values, values_count, sizeof(GLfloat));
     yagl_transport_end(t);
 }
 
 /*
- * glGetIntegerv wrapper. id = 102
+ * glGetActiveUniformsiv wrapper. id = 130
  */
-void yagl_host_glGetIntegerv(GLenum pname, GLint *params, int32_t params_maxcount, int32_t *params_count)
+void yagl_host_glGetActiveUniformsiv(GLuint program, const GLuint *uniformIndices, int32_t uniformIndices_count, GLint *params, int32_t params_maxcount, int32_t *params_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 102, 3 * 8, 1 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLint)));
+    yagl_transport_begin(t, yagl_api_id_gles, 130, 5 * 8, 1 * 8 + yagl_transport_array_size(uniformIndices, uniformIndices_count, sizeof(GLuint)) + yagl_transport_array_size(params, params_maxcount, sizeof(GLint)));
+    yagl_transport_put_out_GLuint(t, program);
+    yagl_transport_put_out_array(t, uniformIndices, uniformIndices_count, sizeof(GLuint));
+    yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLint));
+    yagl_transport_end(t);
+}
+
+/*
+ * glGetUniformIndices wrapper. id = 131
+ */
+void yagl_host_glGetUniformIndices(GLuint program, const GLchar *uniformNames, int32_t uniformNames_count, GLuint *uniformIndices, int32_t uniformIndices_maxcount, int32_t *uniformIndices_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 131, 5 * 8, 1 * 8 + yagl_transport_array_size(uniformNames, uniformNames_count, sizeof(GLchar)) + yagl_transport_array_size(uniformIndices, uniformIndices_maxcount, sizeof(GLuint)));
+    yagl_transport_put_out_GLuint(t, program);
+    yagl_transport_put_out_array(t, uniformNames, uniformNames_count, sizeof(GLchar));
+    yagl_transport_put_in_array(t, uniformIndices, uniformIndices_maxcount, uniformIndices_count, sizeof(GLuint));
+    yagl_transport_end(t);
+}
+
+/*
+ * glGetUniformBlockIndex wrapper. id = 132
+ */
+GLuint yagl_host_glGetUniformBlockIndex(GLuint program, const GLchar *uniformBlockName, int32_t uniformBlockName_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+    GLuint retval = 0;
+
+    yagl_transport_begin(t, yagl_api_id_gles, 132, 5 * 8, 3 * 8 + yagl_transport_array_size(uniformBlockName, uniformBlockName_count, sizeof(GLchar)));
+    yagl_transport_put_out_GLuint(t, program);
+    yagl_transport_put_out_array(t, uniformBlockName, uniformBlockName_count, sizeof(GLchar));
+    yagl_transport_put_in_GLuint(t, &retval);
+    yagl_transport_end(t);
+
+    return retval;
+}
+
+/*
+ * glUniformBlockBinding wrapper. id = 133
+ */
+void yagl_host_glUniformBlockBinding(GLuint program, GLuint uniformBlockIndex, GLuint uniformBlockBinding)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 133, 3 * 8, 3 * 8);
+    yagl_transport_put_out_GLuint(t, program);
+    yagl_transport_put_out_GLuint(t, uniformBlockIndex);
+    yagl_transport_put_out_GLuint(t, uniformBlockBinding);
+    yagl_transport_end(t);
+}
+
+/*
+ * glGetActiveUniformBlockName wrapper. id = 134
+ */
+void yagl_host_glGetActiveUniformBlockName(GLuint program, GLuint uniformBlockIndex, GLchar *uniformBlockName, int32_t uniformBlockName_maxcount, int32_t *uniformBlockName_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 134, 4 * 8, 2 * 8 + yagl_transport_array_size(uniformBlockName, uniformBlockName_maxcount, sizeof(GLchar)));
+    yagl_transport_put_out_GLuint(t, program);
+    yagl_transport_put_out_GLuint(t, uniformBlockIndex);
+    yagl_transport_put_in_array(t, uniformBlockName, uniformBlockName_maxcount, uniformBlockName_count, sizeof(GLchar));
+    yagl_transport_end(t);
+}
+
+/*
+ * glGetActiveUniformBlockiv wrapper. id = 135
+ */
+void yagl_host_glGetActiveUniformBlockiv(GLuint program, GLuint uniformBlockIndex, GLenum pname, GLint *params, int32_t params_maxcount, int32_t *params_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 135, 5 * 8, 3 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLint)));
+    yagl_transport_put_out_GLuint(t, program);
+    yagl_transport_put_out_GLuint(t, uniformBlockIndex);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLint));
     yagl_transport_end(t);
 }
 
 /*
- * glGetFloatv wrapper. id = 103
+ * glGetVertexAttribIiv wrapper. id = 136
+ */
+void yagl_host_glGetVertexAttribIiv(GLuint index, GLenum pname, GLint *params, int32_t params_maxcount, int32_t *params_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 136, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLint)));
+    yagl_transport_put_out_GLuint(t, index);
+    yagl_transport_put_out_GLenum(t, pname);
+    yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLint));
+    yagl_transport_end(t);
+}
+
+/*
+ * glGetVertexAttribIuiv wrapper. id = 137
+ */
+void yagl_host_glGetVertexAttribIuiv(GLuint index, GLenum pname, GLuint *params, int32_t params_maxcount, int32_t *params_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 137, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLuint)));
+    yagl_transport_put_out_GLuint(t, index);
+    yagl_transport_put_out_GLenum(t, pname);
+    yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLuint));
+    yagl_transport_end(t);
+}
+
+/*
+ * glVertexAttribI4i wrapper. id = 138
+ */
+void yagl_host_glVertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 138, 5 * 8, 5 * 8);
+    yagl_transport_put_out_GLuint(t, index);
+    yagl_transport_put_out_GLint(t, x);
+    yagl_transport_put_out_GLint(t, y);
+    yagl_transport_put_out_GLint(t, z);
+    yagl_transport_put_out_GLint(t, w);
+    yagl_transport_end(t);
+}
+
+/*
+ * glVertexAttribI4ui wrapper. id = 139
+ */
+void yagl_host_glVertexAttribI4ui(GLuint index, GLuint x, GLuint y, GLuint z, GLuint w)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 139, 5 * 8, 5 * 8);
+    yagl_transport_put_out_GLuint(t, index);
+    yagl_transport_put_out_GLuint(t, x);
+    yagl_transport_put_out_GLuint(t, y);
+    yagl_transport_put_out_GLuint(t, z);
+    yagl_transport_put_out_GLuint(t, w);
+    yagl_transport_end(t);
+}
+
+/*
+ * glVertexAttribI4iv wrapper. id = 140
+ */
+void yagl_host_glVertexAttribI4iv(GLuint index, const GLint *v, int32_t v_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 140, 3 * 8, 1 * 8 + yagl_transport_array_size(v, v_count, sizeof(GLint)));
+    yagl_transport_put_out_GLuint(t, index);
+    yagl_transport_put_out_array(t, v, v_count, sizeof(GLint));
+    yagl_transport_end(t);
+}
+
+/*
+ * glVertexAttribI4uiv wrapper. id = 141
+ */
+void yagl_host_glVertexAttribI4uiv(GLuint index, const GLuint *v, int32_t v_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 141, 3 * 8, 1 * 8 + yagl_transport_array_size(v, v_count, sizeof(GLuint)));
+    yagl_transport_put_out_GLuint(t, index);
+    yagl_transport_put_out_array(t, v, v_count, sizeof(GLuint));
+    yagl_transport_end(t);
+}
+
+/*
+ * glGetUniformuiv wrapper. id = 142
+ */
+void yagl_host_glGetUniformuiv(GLboolean tl, GLuint program, uint32_t location, GLuint *params, int32_t params_maxcount, int32_t *params_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 142, 5 * 8, 3 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLuint)));
+    yagl_transport_put_out_GLboolean(t, tl);
+    yagl_transport_put_out_GLuint(t, program);
+    yagl_transport_put_out_uint32_t(t, location);
+    yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLuint));
+    yagl_transport_end(t);
+}
+
+/*
+ * glUniform1ui wrapper. id = 143
+ */
+void yagl_host_glUniform1ui(GLboolean tl, uint32_t location, GLuint v0)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 143, 3 * 8, 3 * 8);
+    yagl_transport_put_out_GLboolean(t, tl);
+    yagl_transport_put_out_uint32_t(t, location);
+    yagl_transport_put_out_GLuint(t, v0);
+    yagl_transport_end(t);
+}
+
+/*
+ * glUniform2ui wrapper. id = 144
+ */
+void yagl_host_glUniform2ui(GLboolean tl, uint32_t location, GLuint v0, GLuint v1)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 144, 4 * 8, 4 * 8);
+    yagl_transport_put_out_GLboolean(t, tl);
+    yagl_transport_put_out_uint32_t(t, location);
+    yagl_transport_put_out_GLuint(t, v0);
+    yagl_transport_put_out_GLuint(t, v1);
+    yagl_transport_end(t);
+}
+
+/*
+ * glUniform3ui wrapper. id = 145
+ */
+void yagl_host_glUniform3ui(GLboolean tl, uint32_t location, GLuint v0, GLuint v1, GLuint v2)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 145, 5 * 8, 5 * 8);
+    yagl_transport_put_out_GLboolean(t, tl);
+    yagl_transport_put_out_uint32_t(t, location);
+    yagl_transport_put_out_GLuint(t, v0);
+    yagl_transport_put_out_GLuint(t, v1);
+    yagl_transport_put_out_GLuint(t, v2);
+    yagl_transport_end(t);
+}
+
+/*
+ * glUniform4ui wrapper. id = 146
+ */
+void yagl_host_glUniform4ui(GLboolean tl, uint32_t location, GLuint v0, GLuint v1, GLuint v2, GLuint v3)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 146, 6 * 8, 6 * 8);
+    yagl_transport_put_out_GLboolean(t, tl);
+    yagl_transport_put_out_uint32_t(t, location);
+    yagl_transport_put_out_GLuint(t, v0);
+    yagl_transport_put_out_GLuint(t, v1);
+    yagl_transport_put_out_GLuint(t, v2);
+    yagl_transport_put_out_GLuint(t, v3);
+    yagl_transport_end(t);
+}
+
+/*
+ * glUniform1uiv wrapper. id = 147
+ */
+void yagl_host_glUniform1uiv(GLboolean tl, uint32_t location, const GLuint *v, int32_t v_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 147, 4 * 8, 2 * 8 + yagl_transport_array_size(v, v_count, sizeof(GLuint)));
+    yagl_transport_put_out_GLboolean(t, tl);
+    yagl_transport_put_out_uint32_t(t, location);
+    yagl_transport_put_out_array(t, v, v_count, sizeof(GLuint));
+    yagl_transport_end(t);
+}
+
+/*
+ * glUniform2uiv wrapper. id = 148
+ */
+void yagl_host_glUniform2uiv(GLboolean tl, uint32_t location, const GLuint *v, int32_t v_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 148, 4 * 8, 2 * 8 + yagl_transport_array_size(v, v_count, sizeof(GLuint)));
+    yagl_transport_put_out_GLboolean(t, tl);
+    yagl_transport_put_out_uint32_t(t, location);
+    yagl_transport_put_out_array(t, v, v_count, sizeof(GLuint));
+    yagl_transport_end(t);
+}
+
+/*
+ * glUniform3uiv wrapper. id = 149
+ */
+void yagl_host_glUniform3uiv(GLboolean tl, uint32_t location, const GLuint *v, int32_t v_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 149, 4 * 8, 2 * 8 + yagl_transport_array_size(v, v_count, sizeof(GLuint)));
+    yagl_transport_put_out_GLboolean(t, tl);
+    yagl_transport_put_out_uint32_t(t, location);
+    yagl_transport_put_out_array(t, v, v_count, sizeof(GLuint));
+    yagl_transport_end(t);
+}
+
+/*
+ * glUniform4uiv wrapper. id = 150
+ */
+void yagl_host_glUniform4uiv(GLboolean tl, uint32_t location, const GLuint *v, int32_t v_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 150, 4 * 8, 2 * 8 + yagl_transport_array_size(v, v_count, sizeof(GLuint)));
+    yagl_transport_put_out_GLboolean(t, tl);
+    yagl_transport_put_out_uint32_t(t, location);
+    yagl_transport_put_out_array(t, v, v_count, sizeof(GLuint));
+    yagl_transport_end(t);
+}
+
+/*
+ * glUniformMatrix2x3fv wrapper. id = 151
+ */
+void yagl_host_glUniformMatrix2x3fv(GLboolean tl, uint32_t location, GLboolean transpose, const GLfloat *value, int32_t value_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 151, 5 * 8, 3 * 8 + yagl_transport_array_size(value, value_count, sizeof(GLfloat)));
+    yagl_transport_put_out_GLboolean(t, tl);
+    yagl_transport_put_out_uint32_t(t, location);
+    yagl_transport_put_out_GLboolean(t, transpose);
+    yagl_transport_put_out_array(t, value, value_count, sizeof(GLfloat));
+    yagl_transport_end(t);
+}
+
+/*
+ * glUniformMatrix2x4fv wrapper. id = 152
+ */
+void yagl_host_glUniformMatrix2x4fv(GLboolean tl, uint32_t location, GLboolean transpose, const GLfloat *value, int32_t value_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 152, 5 * 8, 3 * 8 + yagl_transport_array_size(value, value_count, sizeof(GLfloat)));
+    yagl_transport_put_out_GLboolean(t, tl);
+    yagl_transport_put_out_uint32_t(t, location);
+    yagl_transport_put_out_GLboolean(t, transpose);
+    yagl_transport_put_out_array(t, value, value_count, sizeof(GLfloat));
+    yagl_transport_end(t);
+}
+
+/*
+ * glUniformMatrix3x2fv wrapper. id = 153
+ */
+void yagl_host_glUniformMatrix3x2fv(GLboolean tl, uint32_t location, GLboolean transpose, const GLfloat *value, int32_t value_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 153, 5 * 8, 3 * 8 + yagl_transport_array_size(value, value_count, sizeof(GLfloat)));
+    yagl_transport_put_out_GLboolean(t, tl);
+    yagl_transport_put_out_uint32_t(t, location);
+    yagl_transport_put_out_GLboolean(t, transpose);
+    yagl_transport_put_out_array(t, value, value_count, sizeof(GLfloat));
+    yagl_transport_end(t);
+}
+
+/*
+ * glUniformMatrix3x4fv wrapper. id = 154
+ */
+void yagl_host_glUniformMatrix3x4fv(GLboolean tl, uint32_t location, GLboolean transpose, const GLfloat *value, int32_t value_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 154, 5 * 8, 3 * 8 + yagl_transport_array_size(value, value_count, sizeof(GLfloat)));
+    yagl_transport_put_out_GLboolean(t, tl);
+    yagl_transport_put_out_uint32_t(t, location);
+    yagl_transport_put_out_GLboolean(t, transpose);
+    yagl_transport_put_out_array(t, value, value_count, sizeof(GLfloat));
+    yagl_transport_end(t);
+}
+
+/*
+ * glUniformMatrix4x2fv wrapper. id = 155
+ */
+void yagl_host_glUniformMatrix4x2fv(GLboolean tl, uint32_t location, GLboolean transpose, const GLfloat *value, int32_t value_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 155, 5 * 8, 3 * 8 + yagl_transport_array_size(value, value_count, sizeof(GLfloat)));
+    yagl_transport_put_out_GLboolean(t, tl);
+    yagl_transport_put_out_uint32_t(t, location);
+    yagl_transport_put_out_GLboolean(t, transpose);
+    yagl_transport_put_out_array(t, value, value_count, sizeof(GLfloat));
+    yagl_transport_end(t);
+}
+
+/*
+ * glUniformMatrix4x3fv wrapper. id = 156
+ */
+void yagl_host_glUniformMatrix4x3fv(GLboolean tl, uint32_t location, GLboolean transpose, const GLfloat *value, int32_t value_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 156, 5 * 8, 3 * 8 + yagl_transport_array_size(value, value_count, sizeof(GLfloat)));
+    yagl_transport_put_out_GLboolean(t, tl);
+    yagl_transport_put_out_uint32_t(t, location);
+    yagl_transport_put_out_GLboolean(t, transpose);
+    yagl_transport_put_out_array(t, value, value_count, sizeof(GLfloat));
+    yagl_transport_end(t);
+}
+
+/*
+ * glGetFragDataLocation wrapper. id = 157
+ */
+int yagl_host_glGetFragDataLocation(GLuint program, const GLchar *name, int32_t name_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+    int retval = 0;
+
+    yagl_transport_begin(t, yagl_api_id_gles, 157, 5 * 8, 3 * 8 + yagl_transport_array_size(name, name_count, sizeof(GLchar)));
+    yagl_transport_put_out_GLuint(t, program);
+    yagl_transport_put_out_array(t, name, name_count, sizeof(GLchar));
+    yagl_transport_put_in_int(t, &retval);
+    yagl_transport_end(t);
+
+    return retval;
+}
+
+/*
+ * glGetIntegerv wrapper. id = 158
+ */
+void yagl_host_glGetIntegerv(GLenum pname, GLint *params, int32_t params_maxcount, int32_t *params_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 158, 3 * 8, 1 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLint)));
+    yagl_transport_put_out_GLenum(t, pname);
+    yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLint));
+    yagl_transport_end(t);
+}
+
+/*
+ * glGetFloatv wrapper. id = 159
  */
 void yagl_host_glGetFloatv(GLenum pname, GLfloat *params, int32_t params_maxcount, int32_t *params_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 103, 3 * 8, 1 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 159, 3 * 8, 1 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLfloat)));
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLfloat));
     yagl_transport_end(t);
 }
 
 /*
- * glGetString wrapper. id = 104
+ * glGetString wrapper. id = 160
  */
 void yagl_host_glGetString(GLenum name, GLchar *str, int32_t str_maxcount, int32_t *str_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 104, 3 * 8, 1 * 8 + yagl_transport_array_size(str, str_maxcount, sizeof(GLchar)));
+    yagl_transport_begin(t, yagl_api_id_gles, 160, 3 * 8, 1 * 8 + yagl_transport_array_size(str, str_maxcount, sizeof(GLchar)));
     yagl_transport_put_out_GLenum(t, name);
     yagl_transport_put_in_array(t, str, str_maxcount, str_count, sizeof(GLchar));
     yagl_transport_end(t);
 }
 
 /*
- * glIsEnabled wrapper. id = 105
+ * glIsEnabled wrapper. id = 161
  */
 GLboolean yagl_host_glIsEnabled(GLenum cap)
 {
     struct yagl_transport *t = yagl_get_transport();
-    GLboolean retval;
+    GLboolean retval = 0;
 
-    yagl_transport_begin(t, yagl_api_id_gles, 105, 3 * 8, 3 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 161, 3 * 8, 3 * 8);
     yagl_transport_put_out_GLenum(t, cap);
     yagl_transport_put_in_GLboolean(t, &retval);
     yagl_transport_end(t);
@@ -1538,63 +2401,296 @@ GLboolean yagl_host_glIsEnabled(GLenum cap)
 }
 
 /*
- * glDeleteObjects wrapper. id = 106
+ * glGenTransformFeedbacks wrapper. id = 162
+ */
+void yagl_host_glGenTransformFeedbacks(const GLuint *ids, int32_t ids_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 162, 2 * 8, 0 * 8 + yagl_transport_array_size(ids, ids_count, sizeof(GLuint)));
+    yagl_transport_put_out_array(t, ids, ids_count, sizeof(GLuint));
+    yagl_transport_end(t);
+}
+
+/*
+ * glBindTransformFeedback wrapper. id = 163
+ */
+void yagl_host_glBindTransformFeedback(GLenum target, GLuint id)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 163, 2 * 8, 2 * 8);
+    yagl_transport_put_out_GLenum(t, target);
+    yagl_transport_put_out_GLuint(t, id);
+    yagl_transport_end(t);
+}
+
+/*
+ * glBeginTransformFeedback wrapper. id = 164
+ */
+void yagl_host_glBeginTransformFeedback(GLenum primitiveMode)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 164, 1 * 8, 1 * 8);
+    yagl_transport_put_out_GLenum(t, primitiveMode);
+    yagl_transport_end(t);
+}
+
+/*
+ * glEndTransformFeedback wrapper. id = 165
+ */
+void yagl_host_glEndTransformFeedback()
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 165, 0 * 8, 0 * 8);
+    yagl_transport_end(t);
+}
+
+/*
+ * glPauseTransformFeedback wrapper. id = 166
+ */
+void yagl_host_glPauseTransformFeedback()
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 166, 0 * 8, 0 * 8);
+    yagl_transport_end(t);
+}
+
+/*
+ * glResumeTransformFeedback wrapper. id = 167
+ */
+void yagl_host_glResumeTransformFeedback()
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 167, 0 * 8, 0 * 8);
+    yagl_transport_end(t);
+}
+
+/*
+ * glTransformFeedbackVaryings wrapper. id = 168
+ */
+void yagl_host_glTransformFeedbackVaryings(GLuint program, const GLchar *varyings, int32_t varyings_count, GLenum bufferMode)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 168, 4 * 8, 2 * 8 + yagl_transport_array_size(varyings, varyings_count, sizeof(GLchar)));
+    yagl_transport_put_out_GLuint(t, program);
+    yagl_transport_put_out_array(t, varyings, varyings_count, sizeof(GLchar));
+    yagl_transport_put_out_GLenum(t, bufferMode);
+    yagl_transport_end(t);
+}
+
+/*
+ * glGetTransformFeedbackVaryings wrapper. id = 169
+ */
+void yagl_host_glGetTransformFeedbackVaryings(GLuint program, GLsizei *sizes, int32_t sizes_maxcount, int32_t *sizes_count, GLenum *types, int32_t types_maxcount, int32_t *types_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 169, 5 * 8, 1 * 8 + yagl_transport_array_size(sizes, sizes_maxcount, sizeof(GLsizei)) + yagl_transport_array_size(types, types_maxcount, sizeof(GLenum)));
+    yagl_transport_put_out_GLuint(t, program);
+    yagl_transport_put_in_array(t, sizes, sizes_maxcount, sizes_count, sizeof(GLsizei));
+    yagl_transport_put_in_array(t, types, types_maxcount, types_count, sizeof(GLenum));
+    yagl_transport_end(t);
+}
+
+/*
+ * glGenQueries wrapper. id = 170
+ */
+void yagl_host_glGenQueries(const GLuint *ids, int32_t ids_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 170, 2 * 8, 0 * 8 + yagl_transport_array_size(ids, ids_count, sizeof(GLuint)));
+    yagl_transport_put_out_array(t, ids, ids_count, sizeof(GLuint));
+    yagl_transport_end(t);
+}
+
+/*
+ * glBeginQuery wrapper. id = 171
+ */
+void yagl_host_glBeginQuery(GLenum target, GLuint id)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 171, 2 * 8, 2 * 8);
+    yagl_transport_put_out_GLenum(t, target);
+    yagl_transport_put_out_GLuint(t, id);
+    yagl_transport_end(t);
+}
+
+/*
+ * glEndQuery wrapper. id = 172
+ */
+void yagl_host_glEndQuery(GLenum target)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 172, 1 * 8, 1 * 8);
+    yagl_transport_put_out_GLenum(t, target);
+    yagl_transport_end(t);
+}
+
+/*
+ * glGetQueryObjectuiv wrapper. id = 173
+ */
+GLboolean yagl_host_glGetQueryObjectuiv(GLuint id, GLuint *result)
+{
+    struct yagl_transport *t = yagl_get_transport();
+    GLboolean retval = 0;
+
+    yagl_transport_begin(t, yagl_api_id_gles, 173, 5 * 8, 5 * 8);
+    yagl_transport_put_out_GLuint(t, id);
+    yagl_transport_put_in_GLuint(t, result);
+    yagl_transport_put_in_GLboolean(t, &retval);
+    yagl_transport_end(t);
+
+    return retval;
+}
+
+/*
+ * glGenSamplers wrapper. id = 174
+ */
+void yagl_host_glGenSamplers(const GLuint *samplers, int32_t samplers_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 174, 2 * 8, 0 * 8 + yagl_transport_array_size(samplers, samplers_count, sizeof(GLuint)));
+    yagl_transport_put_out_array(t, samplers, samplers_count, sizeof(GLuint));
+    yagl_transport_end(t);
+}
+
+/*
+ * glBindSampler wrapper. id = 175
+ */
+void yagl_host_glBindSampler(GLuint unit, GLuint sampler)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 175, 2 * 8, 2 * 8);
+    yagl_transport_put_out_GLuint(t, unit);
+    yagl_transport_put_out_GLuint(t, sampler);
+    yagl_transport_end(t);
+}
+
+/*
+ * glSamplerParameteri wrapper. id = 176
+ */
+void yagl_host_glSamplerParameteri(GLuint sampler, GLenum pname, GLint param)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 176, 3 * 8, 3 * 8);
+    yagl_transport_put_out_GLuint(t, sampler);
+    yagl_transport_put_out_GLenum(t, pname);
+    yagl_transport_put_out_GLint(t, param);
+    yagl_transport_end(t);
+}
+
+/*
+ * glSamplerParameteriv wrapper. id = 177
+ */
+void yagl_host_glSamplerParameteriv(GLuint sampler, GLenum pname, const GLint *param, int32_t param_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 177, 4 * 8, 2 * 8 + yagl_transport_array_size(param, param_count, sizeof(GLint)));
+    yagl_transport_put_out_GLuint(t, sampler);
+    yagl_transport_put_out_GLenum(t, pname);
+    yagl_transport_put_out_array(t, param, param_count, sizeof(GLint));
+    yagl_transport_end(t);
+}
+
+/*
+ * glSamplerParameterf wrapper. id = 178
+ */
+void yagl_host_glSamplerParameterf(GLuint sampler, GLenum pname, GLfloat param)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 178, 3 * 8, 3 * 8);
+    yagl_transport_put_out_GLuint(t, sampler);
+    yagl_transport_put_out_GLenum(t, pname);
+    yagl_transport_put_out_GLfloat(t, param);
+    yagl_transport_end(t);
+}
+
+/*
+ * glSamplerParameterfv wrapper. id = 179
+ */
+void yagl_host_glSamplerParameterfv(GLuint sampler, GLenum pname, const GLfloat *param, int32_t param_count)
+{
+    struct yagl_transport *t = yagl_get_transport();
+
+    yagl_transport_begin(t, yagl_api_id_gles, 179, 4 * 8, 2 * 8 + yagl_transport_array_size(param, param_count, sizeof(GLfloat)));
+    yagl_transport_put_out_GLuint(t, sampler);
+    yagl_transport_put_out_GLenum(t, pname);
+    yagl_transport_put_out_array(t, param, param_count, sizeof(GLfloat));
+    yagl_transport_end(t);
+}
+
+/*
+ * glDeleteObjects wrapper. id = 180
  */
 void yagl_host_glDeleteObjects(const GLuint *objects, int32_t objects_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 106, 2 * 8, 0 * 8 + yagl_transport_array_size(objects, objects_count, sizeof(GLuint)));
+    yagl_transport_begin(t, yagl_api_id_gles, 180, 2 * 8, 0 * 8 + yagl_transport_array_size(objects, objects_count, sizeof(GLuint)));
     yagl_transport_put_out_array(t, objects, objects_count, sizeof(GLuint));
     yagl_transport_end(t);
 }
 
 /*
- * glBlendEquation wrapper. id = 107
+ * glBlendEquation wrapper. id = 181
  */
 void yagl_host_glBlendEquation(GLenum mode)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 107, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 181, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLenum(t, mode);
     yagl_transport_end(t);
 }
 
 /*
- * glBlendEquationSeparate wrapper. id = 108
+ * glBlendEquationSeparate wrapper. id = 182
  */
 void yagl_host_glBlendEquationSeparate(GLenum modeRGB, GLenum modeAlpha)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 108, 2 * 8, 2 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 182, 2 * 8, 2 * 8);
     yagl_transport_put_out_GLenum(t, modeRGB);
     yagl_transport_put_out_GLenum(t, modeAlpha);
     yagl_transport_end(t);
 }
 
 /*
- * glBlendFunc wrapper. id = 109
+ * glBlendFunc wrapper. id = 183
  */
 void yagl_host_glBlendFunc(GLenum sfactor, GLenum dfactor)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 109, 2 * 8, 2 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 183, 2 * 8, 2 * 8);
     yagl_transport_put_out_GLenum(t, sfactor);
     yagl_transport_put_out_GLenum(t, dfactor);
     yagl_transport_end(t);
 }
 
 /*
- * glBlendFuncSeparate wrapper. id = 110
+ * glBlendFuncSeparate wrapper. id = 184
  */
 void yagl_host_glBlendFuncSeparate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 110, 4 * 8, 4 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 184, 4 * 8, 4 * 8);
     yagl_transport_put_out_GLenum(t, srcRGB);
     yagl_transport_put_out_GLenum(t, dstRGB);
     yagl_transport_put_out_GLenum(t, srcAlpha);
@@ -1603,13 +2699,13 @@ void yagl_host_glBlendFuncSeparate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha
 }
 
 /*
- * glBlendColor wrapper. id = 111
+ * glBlendColor wrapper. id = 185
  */
 void yagl_host_glBlendColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 111, 4 * 8, 4 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 185, 4 * 8, 4 * 8);
     yagl_transport_put_out_GLclampf(t, red);
     yagl_transport_put_out_GLclampf(t, green);
     yagl_transport_put_out_GLclampf(t, blue);
@@ -1618,25 +2714,25 @@ void yagl_host_glBlendColor(GLclampf red, GLclampf green, GLclampf blue, GLclamp
 }
 
 /*
- * glClear wrapper. id = 112
+ * glClear wrapper. id = 186
  */
 void yagl_host_glClear(GLbitfield mask)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 112, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 186, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLbitfield(t, mask);
     yagl_transport_end(t);
 }
 
 /*
- * glClearColor wrapper. id = 113
+ * glClearColor wrapper. id = 187
  */
 void yagl_host_glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 113, 4 * 8, 4 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 187, 4 * 8, 4 * 8);
     yagl_transport_put_out_GLclampf(t, red);
     yagl_transport_put_out_GLclampf(t, green);
     yagl_transport_put_out_GLclampf(t, blue);
@@ -1645,37 +2741,37 @@ void yagl_host_glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclamp
 }
 
 /*
- * glClearDepthf wrapper. id = 114
+ * glClearDepthf wrapper. id = 188
  */
 void yagl_host_glClearDepthf(GLclampf depth)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 114, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 188, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLclampf(t, depth);
     yagl_transport_end(t);
 }
 
 /*
- * glClearStencil wrapper. id = 115
+ * glClearStencil wrapper. id = 189
  */
 void yagl_host_glClearStencil(GLint s)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 115, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 189, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLint(t, s);
     yagl_transport_end(t);
 }
 
 /*
- * glColorMask wrapper. id = 116
+ * glColorMask wrapper. id = 190
  */
 void yagl_host_glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 116, 4 * 8, 4 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 190, 4 * 8, 4 * 8);
     yagl_transport_put_out_GLboolean(t, red);
     yagl_transport_put_out_GLboolean(t, green);
     yagl_transport_put_out_GLboolean(t, blue);
@@ -1684,173 +2780,173 @@ void yagl_host_glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboo
 }
 
 /*
- * glCullFace wrapper. id = 117
+ * glCullFace wrapper. id = 191
  */
 void yagl_host_glCullFace(GLenum mode)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 117, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 191, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLenum(t, mode);
     yagl_transport_end(t);
 }
 
 /*
- * glDepthFunc wrapper. id = 118
+ * glDepthFunc wrapper. id = 192
  */
 void yagl_host_glDepthFunc(GLenum func)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 118, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 192, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLenum(t, func);
     yagl_transport_end(t);
 }
 
 /*
- * glDepthMask wrapper. id = 119
+ * glDepthMask wrapper. id = 193
  */
 void yagl_host_glDepthMask(GLboolean flag)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 119, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 193, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLboolean(t, flag);
     yagl_transport_end(t);
 }
 
 /*
- * glDepthRangef wrapper. id = 120
+ * glDepthRangef wrapper. id = 194
  */
 void yagl_host_glDepthRangef(GLclampf zNear, GLclampf zFar)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 120, 2 * 8, 2 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 194, 2 * 8, 2 * 8);
     yagl_transport_put_out_GLclampf(t, zNear);
     yagl_transport_put_out_GLclampf(t, zFar);
     yagl_transport_end(t);
 }
 
 /*
- * glEnable wrapper. id = 121
+ * glEnable wrapper. id = 195
  */
 void yagl_host_glEnable(GLenum cap)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 121, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 195, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLenum(t, cap);
     yagl_transport_end(t);
 }
 
 /*
- * glDisable wrapper. id = 122
+ * glDisable wrapper. id = 196
  */
 void yagl_host_glDisable(GLenum cap)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 122, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 196, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLenum(t, cap);
     yagl_transport_end(t);
 }
 
 /*
- * glFlush wrapper. id = 123
+ * glFlush wrapper. id = 197
  */
 void yagl_host_glFlush()
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 123, 0 * 8, 0 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 197, 0 * 8, 0 * 8);
     yagl_transport_end(t);
     yagl_transport_flush(t, NULL);
 }
 
 /*
- * glFrontFace wrapper. id = 124
+ * glFrontFace wrapper. id = 198
  */
 void yagl_host_glFrontFace(GLenum mode)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 124, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 198, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLenum(t, mode);
     yagl_transport_end(t);
 }
 
 /*
- * glGenerateMipmap wrapper. id = 125
+ * glGenerateMipmap wrapper. id = 199
  */
 void yagl_host_glGenerateMipmap(GLenum target)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 125, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 199, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_end(t);
 }
 
 /*
- * glHint wrapper. id = 126
+ * glHint wrapper. id = 200
  */
 void yagl_host_glHint(GLenum target, GLenum mode)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 126, 2 * 8, 2 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 200, 2 * 8, 2 * 8);
     yagl_transport_put_out_GLenum(t, target);
     yagl_transport_put_out_GLenum(t, mode);
     yagl_transport_end(t);
 }
 
 /*
- * glLineWidth wrapper. id = 127
+ * glLineWidth wrapper. id = 201
  */
 void yagl_host_glLineWidth(GLfloat width)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 127, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 201, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLfloat(t, width);
     yagl_transport_end(t);
 }
 
 /*
- * glPixelStorei wrapper. id = 128
+ * glPixelStorei wrapper. id = 202
  */
 void yagl_host_glPixelStorei(GLenum pname, GLint param)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 128, 2 * 8, 2 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 202, 2 * 8, 2 * 8);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_GLint(t, param);
     yagl_transport_end(t);
 }
 
 /*
- * glPolygonOffset wrapper. id = 129
+ * glPolygonOffset wrapper. id = 203
  */
 void yagl_host_glPolygonOffset(GLfloat factor, GLfloat units)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 129, 2 * 8, 2 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 203, 2 * 8, 2 * 8);
     yagl_transport_put_out_GLfloat(t, factor);
     yagl_transport_put_out_GLfloat(t, units);
     yagl_transport_end(t);
 }
 
 /*
- * glScissor wrapper. id = 130
+ * glScissor wrapper. id = 204
  */
 void yagl_host_glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 130, 4 * 8, 4 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 204, 4 * 8, 4 * 8);
     yagl_transport_put_out_GLint(t, x);
     yagl_transport_put_out_GLint(t, y);
     yagl_transport_put_out_GLsizei(t, width);
@@ -1859,13 +2955,13 @@ void yagl_host_glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
 }
 
 /*
- * glStencilFunc wrapper. id = 131
+ * glStencilFunc wrapper. id = 205
  */
 void yagl_host_glStencilFunc(GLenum func, GLint ref, GLuint mask)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 131, 3 * 8, 3 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 205, 3 * 8, 3 * 8);
     yagl_transport_put_out_GLenum(t, func);
     yagl_transport_put_out_GLint(t, ref);
     yagl_transport_put_out_GLuint(t, mask);
@@ -1873,25 +2969,25 @@ void yagl_host_glStencilFunc(GLenum func, GLint ref, GLuint mask)
 }
 
 /*
- * glStencilMask wrapper. id = 132
+ * glStencilMask wrapper. id = 206
  */
 void yagl_host_glStencilMask(GLuint mask)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 132, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 206, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLuint(t, mask);
     yagl_transport_end(t);
 }
 
 /*
- * glStencilOp wrapper. id = 133
+ * glStencilOp wrapper. id = 207
  */
 void yagl_host_glStencilOp(GLenum fail, GLenum zfail, GLenum zpass)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 133, 3 * 8, 3 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 207, 3 * 8, 3 * 8);
     yagl_transport_put_out_GLenum(t, fail);
     yagl_transport_put_out_GLenum(t, zfail);
     yagl_transport_put_out_GLenum(t, zpass);
@@ -1899,26 +2995,26 @@ void yagl_host_glStencilOp(GLenum fail, GLenum zfail, GLenum zpass)
 }
 
 /*
- * glSampleCoverage wrapper. id = 134
+ * glSampleCoverage wrapper. id = 208
  */
 void yagl_host_glSampleCoverage(GLclampf value, GLboolean invert)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 134, 2 * 8, 2 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 208, 2 * 8, 2 * 8);
     yagl_transport_put_out_GLclampf(t, value);
     yagl_transport_put_out_GLboolean(t, invert);
     yagl_transport_end(t);
 }
 
 /*
- * glViewport wrapper. id = 135
+ * glViewport wrapper. id = 209
  */
 void yagl_host_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 135, 4 * 8, 4 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 209, 4 * 8, 4 * 8);
     yagl_transport_put_out_GLint(t, x);
     yagl_transport_put_out_GLint(t, y);
     yagl_transport_put_out_GLsizei(t, width);
@@ -1927,13 +3023,13 @@ void yagl_host_glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 }
 
 /*
- * glStencilFuncSeparate wrapper. id = 136
+ * glStencilFuncSeparate wrapper. id = 210
  */
 void yagl_host_glStencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 136, 4 * 8, 4 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 210, 4 * 8, 4 * 8);
     yagl_transport_put_out_GLenum(t, face);
     yagl_transport_put_out_GLenum(t, func);
     yagl_transport_put_out_GLint(t, ref);
@@ -1942,26 +3038,26 @@ void yagl_host_glStencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint
 }
 
 /*
- * glStencilMaskSeparate wrapper. id = 137
+ * glStencilMaskSeparate wrapper. id = 211
  */
 void yagl_host_glStencilMaskSeparate(GLenum face, GLuint mask)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 137, 2 * 8, 2 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 211, 2 * 8, 2 * 8);
     yagl_transport_put_out_GLenum(t, face);
     yagl_transport_put_out_GLuint(t, mask);
     yagl_transport_end(t);
 }
 
 /*
- * glStencilOpSeparate wrapper. id = 138
+ * glStencilOpSeparate wrapper. id = 212
  */
 void yagl_host_glStencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenum zpass)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 138, 4 * 8, 4 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 212, 4 * 8, 4 * 8);
     yagl_transport_put_out_GLenum(t, face);
     yagl_transport_put_out_GLenum(t, fail);
     yagl_transport_put_out_GLenum(t, zfail);
@@ -1970,83 +3066,83 @@ void yagl_host_glStencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenu
 }
 
 /*
- * glPointSize wrapper. id = 139
+ * glPointSize wrapper. id = 213
  */
 void yagl_host_glPointSize(GLfloat size)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 139, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 213, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLfloat(t, size);
     yagl_transport_end(t);
 }
 
 /*
- * glAlphaFunc wrapper. id = 140
+ * glAlphaFunc wrapper. id = 214
  */
 void yagl_host_glAlphaFunc(GLenum func, GLclampf ref)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 140, 2 * 8, 2 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 214, 2 * 8, 2 * 8);
     yagl_transport_put_out_GLenum(t, func);
     yagl_transport_put_out_GLclampf(t, ref);
     yagl_transport_end(t);
 }
 
 /*
- * glMatrixMode wrapper. id = 141
+ * glMatrixMode wrapper. id = 215
  */
 void yagl_host_glMatrixMode(GLenum mode)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 141, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 215, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLenum(t, mode);
     yagl_transport_end(t);
 }
 
 /*
- * glLoadIdentity wrapper. id = 142
+ * glLoadIdentity wrapper. id = 216
  */
 void yagl_host_glLoadIdentity()
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 142, 0 * 8, 0 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 216, 0 * 8, 0 * 8);
     yagl_transport_end(t);
 }
 
 /*
- * glPopMatrix wrapper. id = 143
+ * glPopMatrix wrapper. id = 217
  */
 void yagl_host_glPopMatrix()
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 143, 0 * 8, 0 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 217, 0 * 8, 0 * 8);
     yagl_transport_end(t);
 }
 
 /*
- * glPushMatrix wrapper. id = 144
+ * glPushMatrix wrapper. id = 218
  */
 void yagl_host_glPushMatrix()
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 144, 0 * 8, 0 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 218, 0 * 8, 0 * 8);
     yagl_transport_end(t);
 }
 
 /*
- * glRotatef wrapper. id = 145
+ * glRotatef wrapper. id = 219
  */
 void yagl_host_glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 145, 4 * 8, 4 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 219, 4 * 8, 4 * 8);
     yagl_transport_put_out_GLfloat(t, angle);
     yagl_transport_put_out_GLfloat(t, x);
     yagl_transport_put_out_GLfloat(t, y);
@@ -2055,13 +3151,13 @@ void yagl_host_glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
 }
 
 /*
- * glTranslatef wrapper. id = 146
+ * glTranslatef wrapper. id = 220
  */
 void yagl_host_glTranslatef(GLfloat x, GLfloat y, GLfloat z)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 146, 3 * 8, 3 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 220, 3 * 8, 3 * 8);
     yagl_transport_put_out_GLfloat(t, x);
     yagl_transport_put_out_GLfloat(t, y);
     yagl_transport_put_out_GLfloat(t, z);
@@ -2069,13 +3165,13 @@ void yagl_host_glTranslatef(GLfloat x, GLfloat y, GLfloat z)
 }
 
 /*
- * glScalef wrapper. id = 147
+ * glScalef wrapper. id = 221
  */
 void yagl_host_glScalef(GLfloat x, GLfloat y, GLfloat z)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 147, 3 * 8, 3 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 221, 3 * 8, 3 * 8);
     yagl_transport_put_out_GLfloat(t, x);
     yagl_transport_put_out_GLfloat(t, y);
     yagl_transport_put_out_GLfloat(t, z);
@@ -2083,13 +3179,13 @@ void yagl_host_glScalef(GLfloat x, GLfloat y, GLfloat z)
 }
 
 /*
- * glOrthof wrapper. id = 148
+ * glOrthof wrapper. id = 222
  */
 void yagl_host_glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 148, 6 * 8, 6 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 222, 6 * 8, 6 * 8);
     yagl_transport_put_out_GLfloat(t, left);
     yagl_transport_put_out_GLfloat(t, right);
     yagl_transport_put_out_GLfloat(t, bottom);
@@ -2100,13 +3196,13 @@ void yagl_host_glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top
 }
 
 /*
- * glColor4f wrapper. id = 149
+ * glColor4f wrapper. id = 223
  */
 void yagl_host_glColor4f(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 149, 4 * 8, 4 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 223, 4 * 8, 4 * 8);
     yagl_transport_put_out_GLfloat(t, red);
     yagl_transport_put_out_GLfloat(t, green);
     yagl_transport_put_out_GLfloat(t, blue);
@@ -2115,13 +3211,13 @@ void yagl_host_glColor4f(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha
 }
 
 /*
- * glColor4ub wrapper. id = 150
+ * glColor4ub wrapper. id = 224
  */
 void yagl_host_glColor4ub(GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 150, 4 * 8, 4 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 224, 4 * 8, 4 * 8);
     yagl_transport_put_out_GLubyte(t, red);
     yagl_transport_put_out_GLubyte(t, green);
     yagl_transport_put_out_GLubyte(t, blue);
@@ -2130,13 +3226,13 @@ void yagl_host_glColor4ub(GLubyte red, GLubyte green, GLubyte blue, GLubyte alph
 }
 
 /*
- * glNormal3f wrapper. id = 151
+ * glNormal3f wrapper. id = 225
  */
 void yagl_host_glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 151, 3 * 8, 3 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 225, 3 * 8, 3 * 8);
     yagl_transport_put_out_GLfloat(t, nx);
     yagl_transport_put_out_GLfloat(t, ny);
     yagl_transport_put_out_GLfloat(t, nz);
@@ -2144,65 +3240,65 @@ void yagl_host_glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz)
 }
 
 /*
- * glPointParameterf wrapper. id = 152
+ * glPointParameterf wrapper. id = 226
  */
 void yagl_host_glPointParameterf(GLenum pname, GLfloat param)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 152, 2 * 8, 2 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 226, 2 * 8, 2 * 8);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_GLfloat(t, param);
     yagl_transport_end(t);
 }
 
 /*
- * glPointParameterfv wrapper. id = 153
+ * glPointParameterfv wrapper. id = 227
  */
 void yagl_host_glPointParameterfv(GLenum pname, const GLfloat *params, int32_t params_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 153, 3 * 8, 1 * 8 + yagl_transport_array_size(params, params_count, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 227, 3 * 8, 1 * 8 + yagl_transport_array_size(params, params_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_array(t, params, params_count, sizeof(GLfloat));
     yagl_transport_end(t);
 }
 
 /*
- * glFogf wrapper. id = 154
+ * glFogf wrapper. id = 228
  */
 void yagl_host_glFogf(GLenum pname, GLfloat param)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 154, 2 * 8, 2 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 228, 2 * 8, 2 * 8);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_GLfloat(t, param);
     yagl_transport_end(t);
 }
 
 /*
- * glFogfv wrapper. id = 155
+ * glFogfv wrapper. id = 229
  */
 void yagl_host_glFogfv(GLenum pname, const GLfloat *params, int32_t params_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 155, 3 * 8, 1 * 8 + yagl_transport_array_size(params, params_count, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 229, 3 * 8, 1 * 8 + yagl_transport_array_size(params, params_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_array(t, params, params_count, sizeof(GLfloat));
     yagl_transport_end(t);
 }
 
 /*
- * glFrustumf wrapper. id = 156
+ * glFrustumf wrapper. id = 230
  */
 void yagl_host_glFrustumf(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 156, 6 * 8, 6 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 230, 6 * 8, 6 * 8);
     yagl_transport_put_out_GLfloat(t, left);
     yagl_transport_put_out_GLfloat(t, right);
     yagl_transport_put_out_GLfloat(t, bottom);
@@ -2213,13 +3309,13 @@ void yagl_host_glFrustumf(GLfloat left, GLfloat right, GLfloat bottom, GLfloat t
 }
 
 /*
- * glLightf wrapper. id = 157
+ * glLightf wrapper. id = 231
  */
 void yagl_host_glLightf(GLenum light, GLenum pname, GLfloat param)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 157, 3 * 8, 3 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 231, 3 * 8, 3 * 8);
     yagl_transport_put_out_GLenum(t, light);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_GLfloat(t, param);
@@ -2227,13 +3323,13 @@ void yagl_host_glLightf(GLenum light, GLenum pname, GLfloat param)
 }
 
 /*
- * glLightfv wrapper. id = 158
+ * glLightfv wrapper. id = 232
  */
 void yagl_host_glLightfv(GLenum light, GLenum pname, const GLfloat *params, int32_t params_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 158, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_count, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 232, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLenum(t, light);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_array(t, params, params_count, sizeof(GLfloat));
@@ -2241,13 +3337,13 @@ void yagl_host_glLightfv(GLenum light, GLenum pname, const GLfloat *params, int3
 }
 
 /*
- * glGetLightfv wrapper. id = 159
+ * glGetLightfv wrapper. id = 233
  */
 void yagl_host_glGetLightfv(GLenum light, GLenum pname, GLfloat *params, int32_t params_maxcount, int32_t *params_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 159, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 233, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLfloat)));
     yagl_transport_put_out_GLenum(t, light);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLfloat));
@@ -2255,39 +3351,39 @@ void yagl_host_glGetLightfv(GLenum light, GLenum pname, GLfloat *params, int32_t
 }
 
 /*
- * glLightModelf wrapper. id = 160
+ * glLightModelf wrapper. id = 234
  */
 void yagl_host_glLightModelf(GLenum pname, GLfloat param)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 160, 2 * 8, 2 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 234, 2 * 8, 2 * 8);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_GLfloat(t, param);
     yagl_transport_end(t);
 }
 
 /*
- * glLightModelfv wrapper. id = 161
+ * glLightModelfv wrapper. id = 235
  */
 void yagl_host_glLightModelfv(GLenum pname, const GLfloat *params, int32_t params_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 161, 3 * 8, 1 * 8 + yagl_transport_array_size(params, params_count, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 235, 3 * 8, 1 * 8 + yagl_transport_array_size(params, params_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_array(t, params, params_count, sizeof(GLfloat));
     yagl_transport_end(t);
 }
 
 /*
- * glMaterialf wrapper. id = 162
+ * glMaterialf wrapper. id = 236
  */
 void yagl_host_glMaterialf(GLenum face, GLenum pname, GLfloat param)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 162, 3 * 8, 3 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 236, 3 * 8, 3 * 8);
     yagl_transport_put_out_GLenum(t, face);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_GLfloat(t, param);
@@ -2295,13 +3391,13 @@ void yagl_host_glMaterialf(GLenum face, GLenum pname, GLfloat param)
 }
 
 /*
- * glMaterialfv wrapper. id = 163
+ * glMaterialfv wrapper. id = 237
  */
 void yagl_host_glMaterialfv(GLenum face, GLenum pname, const GLfloat *params, int32_t params_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 163, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_count, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 237, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLenum(t, face);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_out_array(t, params, params_count, sizeof(GLfloat));
@@ -2309,13 +3405,13 @@ void yagl_host_glMaterialfv(GLenum face, GLenum pname, const GLfloat *params, in
 }
 
 /*
- * glGetMaterialfv wrapper. id = 164
+ * glGetMaterialfv wrapper. id = 238
  */
 void yagl_host_glGetMaterialfv(GLenum face, GLenum pname, GLfloat *params, int32_t params_maxcount, int32_t *params_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 164, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 238, 4 * 8, 2 * 8 + yagl_transport_array_size(params, params_maxcount, sizeof(GLfloat)));
     yagl_transport_put_out_GLenum(t, face);
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_array(t, params, params_maxcount, params_count, sizeof(GLfloat));
@@ -2323,87 +3419,87 @@ void yagl_host_glGetMaterialfv(GLenum face, GLenum pname, GLfloat *params, int32
 }
 
 /*
- * glShadeModel wrapper. id = 165
+ * glShadeModel wrapper. id = 239
  */
 void yagl_host_glShadeModel(GLenum mode)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 165, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 239, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLenum(t, mode);
     yagl_transport_end(t);
 }
 
 /*
- * glLogicOp wrapper. id = 166
+ * glLogicOp wrapper. id = 240
  */
 void yagl_host_glLogicOp(GLenum opcode)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 166, 1 * 8, 1 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 240, 1 * 8, 1 * 8);
     yagl_transport_put_out_GLenum(t, opcode);
     yagl_transport_end(t);
 }
 
 /*
- * glMultMatrixf wrapper. id = 167
+ * glMultMatrixf wrapper. id = 241
  */
 void yagl_host_glMultMatrixf(const GLfloat *m, int32_t m_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 167, 2 * 8, 0 * 8 + yagl_transport_array_size(m, m_count, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 241, 2 * 8, 0 * 8 + yagl_transport_array_size(m, m_count, sizeof(GLfloat)));
     yagl_transport_put_out_array(t, m, m_count, sizeof(GLfloat));
     yagl_transport_end(t);
 }
 
 /*
- * glLoadMatrixf wrapper. id = 168
+ * glLoadMatrixf wrapper. id = 242
  */
 void yagl_host_glLoadMatrixf(const GLfloat *m, int32_t m_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 168, 2 * 8, 0 * 8 + yagl_transport_array_size(m, m_count, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 242, 2 * 8, 0 * 8 + yagl_transport_array_size(m, m_count, sizeof(GLfloat)));
     yagl_transport_put_out_array(t, m, m_count, sizeof(GLfloat));
     yagl_transport_end(t);
 }
 
 /*
- * glClipPlanef wrapper. id = 169
+ * glClipPlanef wrapper. id = 243
  */
 void yagl_host_glClipPlanef(GLenum plane, const GLfloat *equation, int32_t equation_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 169, 3 * 8, 1 * 8 + yagl_transport_array_size(equation, equation_count, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 243, 3 * 8, 1 * 8 + yagl_transport_array_size(equation, equation_count, sizeof(GLfloat)));
     yagl_transport_put_out_GLenum(t, plane);
     yagl_transport_put_out_array(t, equation, equation_count, sizeof(GLfloat));
     yagl_transport_end(t);
 }
 
 /*
- * glGetClipPlanef wrapper. id = 170
+ * glGetClipPlanef wrapper. id = 244
  */
 void yagl_host_glGetClipPlanef(GLenum pname, GLfloat *eqn, int32_t eqn_maxcount, int32_t *eqn_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 170, 3 * 8, 1 * 8 + yagl_transport_array_size(eqn, eqn_maxcount, sizeof(GLfloat)));
+    yagl_transport_begin(t, yagl_api_id_gles, 244, 3 * 8, 1 * 8 + yagl_transport_array_size(eqn, eqn_maxcount, sizeof(GLfloat)));
     yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_array(t, eqn, eqn_maxcount, eqn_count, sizeof(GLfloat));
     yagl_transport_end(t);
 }
 
 /*
- * glUpdateOffscreenImageYAGL wrapper. id = 171
+ * glUpdateOffscreenImageYAGL wrapper. id = 245
  */
 void yagl_host_glUpdateOffscreenImageYAGL(GLuint texture, uint32_t width, uint32_t height, uint32_t bpp, const void *pixels, int32_t pixels_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 171, 6 * 8, 4 * 8 + yagl_transport_array_size(pixels, pixels_count, 1));
+    yagl_transport_begin(t, yagl_api_id_gles, 245, 6 * 8, 4 * 8 + yagl_transport_array_size(pixels, pixels_count, 1));
     yagl_transport_put_out_GLuint(t, texture);
     yagl_transport_put_out_uint32_t(t, width);
     yagl_transport_put_out_uint32_t(t, height);
@@ -2413,13 +3509,13 @@ void yagl_host_glUpdateOffscreenImageYAGL(GLuint texture, uint32_t width, uint32
 }
 
 /*
- * glGenUniformLocationYAGL wrapper. id = 172
+ * glGenUniformLocationYAGL wrapper. id = 246
  */
 void yagl_host_glGenUniformLocationYAGL(uint32_t location, GLuint program, const GLchar *name, int32_t name_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 172, 4 * 8, 2 * 8 + yagl_transport_array_size(name, name_count, sizeof(GLchar)));
+    yagl_transport_begin(t, yagl_api_id_gles, 246, 4 * 8, 2 * 8 + yagl_transport_array_size(name, name_count, sizeof(GLchar)));
     yagl_transport_put_out_uint32_t(t, location);
     yagl_transport_put_out_GLuint(t, program);
     yagl_transport_put_out_array(t, name, name_count, sizeof(GLchar));
@@ -2427,13 +3523,13 @@ void yagl_host_glGenUniformLocationYAGL(uint32_t location, GLuint program, const
 }
 
 /*
- * glDeleteUniformLocationsYAGL wrapper. id = 173
+ * glDeleteUniformLocationsYAGL wrapper. id = 247
  */
 void yagl_host_glDeleteUniformLocationsYAGL(const uint32_t *locations, int32_t locations_count)
 {
     struct yagl_transport *t = yagl_get_transport();
 
-    yagl_transport_begin(t, yagl_api_id_gles, 173, 2 * 8, 0 * 8 + yagl_transport_array_size(locations, locations_count, sizeof(uint32_t)));
+    yagl_transport_begin(t, yagl_api_id_gles, 247, 2 * 8, 0 * 8 + yagl_transport_array_size(locations, locations_count, sizeof(uint32_t)));
     yagl_transport_put_out_array(t, locations, locations_count, sizeof(uint32_t));
     yagl_transport_end(t);
 }

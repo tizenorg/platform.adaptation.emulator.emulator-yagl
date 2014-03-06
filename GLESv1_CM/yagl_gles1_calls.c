@@ -4,6 +4,7 @@
 #include "yagl_host_gles_calls.h"
 #include "yagl_gles1_validate.h"
 #include "yagl_gles1_context.h"
+#include "yagl_gles_vertex_array.h"
 #include "yagl_gles_array.h"
 #include "yagl_gles_buffer.h"
 #include "yagl_impl.h"
@@ -783,7 +784,7 @@ YAGL_API void glDisableClientState(GLenum array_name)
         goto out;
     }
 
-    array = &ctx->base.arrays[arr_idx];
+    array = &ctx->base.vao->arrays[arr_idx];
 
     yagl_gles_array_enable(array, 0);
 
@@ -809,7 +810,7 @@ YAGL_API void glEnableClientState(GLenum array_name)
         goto out;
     }
 
-    array = &ctx->base.arrays[arr_idx];
+    array = &ctx->base.vao->arrays[arr_idx];
 
     yagl_gles_array_enable(array, 1);
 
@@ -819,45 +820,6 @@ YAGL_API void glEnableClientState(GLenum array_name)
 
 out:
     YAGL_LOG_FUNC_EXIT(NULL);
-}
-
-YAGL_API const GLubyte* glGetString(GLenum name)
-{
-    struct yagl_gles1_context *ctx;
-    const char *str = NULL;
-
-    YAGL_LOG_FUNC_ENTER(glGetString, "name = 0x%X", name);
-
-    ctx = (struct yagl_gles1_context*)yagl_get_client_context();
-
-    if (!ctx || (ctx->base.base.client_api != yagl_client_api_gles1)) {
-        ctx = NULL;
-    }
-
-    switch (name) {
-    case GL_VENDOR:
-        str = "Samsung";
-        break;
-    case GL_VERSION:
-        str = "OpenGL ES-CM 1.1";
-        break;
-    case GL_RENDERER:
-        str = "YaGL GLESv1_CM";
-        break;
-    case GL_EXTENSIONS:
-        if (ctx) {
-            str = yagl_gles_context_get_extensions(&ctx->base);
-        } else {
-            str = "";
-        }
-        break;
-    default:
-        str = "";
-    }
-
-    YAGL_LOG_FUNC_EXIT("%s", str);
-
-    return (const GLubyte*)str;
 }
 
 YAGL_API void glGetTexEnviv(GLenum target, GLenum pname, GLint *params)
@@ -957,19 +919,19 @@ YAGL_API void glGetPointerv(GLenum pname, GLvoid** pointer)
 
     switch (pname) {
     case GL_VERTEX_ARRAY_POINTER:
-        array = &ctx->base.arrays[yagl_gles1_array_vertex];
+        array = &ctx->base.vao->arrays[yagl_gles1_array_vertex];
         break;
     case GL_COLOR_ARRAY_POINTER:
-        array = &ctx->base.arrays[yagl_gles1_array_color];
+        array = &ctx->base.vao->arrays[yagl_gles1_array_color];
         break;
     case GL_NORMAL_ARRAY_POINTER:
-        array = &ctx->base.arrays[yagl_gles1_array_normal];
+        array = &ctx->base.vao->arrays[yagl_gles1_array_normal];
         break;
     case GL_TEXTURE_COORD_ARRAY_POINTER:
-        array = &ctx->base.arrays[yagl_gles1_array_texcoord + ctx->client_active_texture];
+        array = &ctx->base.vao->arrays[yagl_gles1_array_texcoord + ctx->client_active_texture];
         break;
     case GL_POINT_SIZE_ARRAY_POINTER_OES:
-        array = &ctx->base.arrays[yagl_gles1_array_pointsize];
+        array = &ctx->base.vao->arrays[yagl_gles1_array_pointsize];
         break;
     default:
         YAGL_SET_ERR(GL_INVALID_ENUM);
@@ -1007,7 +969,7 @@ YAGL_API void glNormalPointer(GLenum type, GLsizei stride, const GLvoid* pointer
         goto out;
     }
 
-    array = &ctx->base.arrays[yagl_gles1_array_normal];
+    array = &ctx->base.vao->arrays[yagl_gles1_array_normal];
 
     if (ctx->base.vbo) {
         if (!yagl_gles_array_update_vbo(array,
@@ -1017,18 +979,33 @@ YAGL_API void glNormalPointer(GLenum type, GLsizei stride, const GLvoid* pointer
                                         GL_FALSE,
                                         stride,
                                         ctx->base.vbo,
-                                        (GLint)pointer)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+                                        (GLint)pointer,
+                                        0)) {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     } else {
+        /*
+         * GL_OES_vertex_array_object:
+         * "Binding a zero-named vertex array buffer:
+         * this can be detected by *Pointer(ES1) or VertexAttribPointer(ES2);
+         * if the pointer argument is not NULL:
+         * this means to bind a client vertex array;
+         * an INVALID_OPERATION error will be returned."
+         */
+        if ((ctx->base.vao != ctx->base.va_zero) && pointer) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            goto out;
+        }
+
         if (!yagl_gles_array_update(array,
                                     3,
                                     type,
                                     type == GL_FIXED,
                                     GL_FALSE,
                                     stride,
-                                    pointer)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+                                    pointer,
+                                    0)) {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     }
 
@@ -1055,7 +1032,7 @@ YAGL_API void glVertexPointer(GLint size, GLenum type, GLsizei stride, const GLv
         goto out;
     }
 
-    array = &ctx->base.arrays[yagl_gles1_array_vertex];
+    array = &ctx->base.vao->arrays[yagl_gles1_array_vertex];
 
     if (ctx->base.vbo) {
         if (!yagl_gles_array_update_vbo(array,
@@ -1065,18 +1042,33 @@ YAGL_API void glVertexPointer(GLint size, GLenum type, GLsizei stride, const GLv
                                         GL_FALSE,
                                         stride,
                                         ctx->base.vbo,
-                                        (GLint)pointer)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+                                        (GLint)pointer,
+                                        0)) {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     } else {
+        /*
+         * GL_OES_vertex_array_object:
+         * "Binding a zero-named vertex array buffer:
+         * this can be detected by *Pointer(ES1) or VertexAttribPointer(ES2);
+         * if the pointer argument is not NULL:
+         * this means to bind a client vertex array;
+         * an INVALID_OPERATION error will be returned."
+         */
+        if ((ctx->base.vao != ctx->base.va_zero) && pointer) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            goto out;
+        }
+
         if (!yagl_gles_array_update(array,
                                     size,
                                     type,
                                     type == GL_FIXED || type == GL_BYTE,
                                     GL_FALSE,
                                     stride,
-                                    pointer)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+                                    pointer,
+                                    0)) {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     }
 
@@ -1102,7 +1094,7 @@ YAGL_API void glColorPointer(GLint size, GLenum type, GLsizei stride, const GLvo
         goto out;
     }
 
-    array = &ctx->base.arrays[yagl_gles1_array_color];
+    array = &ctx->base.vao->arrays[yagl_gles1_array_color];
 
     if (ctx->base.vbo) {
         if (!yagl_gles_array_update_vbo(array,
@@ -1112,18 +1104,33 @@ YAGL_API void glColorPointer(GLint size, GLenum type, GLsizei stride, const GLvo
                                         GL_FALSE,
                                         stride,
                                         ctx->base.vbo,
-                                        (GLint)pointer)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+                                        (GLint)pointer,
+                                        0)) {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     } else {
+        /*
+         * GL_OES_vertex_array_object:
+         * "Binding a zero-named vertex array buffer:
+         * this can be detected by *Pointer(ES1) or VertexAttribPointer(ES2);
+         * if the pointer argument is not NULL:
+         * this means to bind a client vertex array;
+         * an INVALID_OPERATION error will be returned."
+         */
+        if ((ctx->base.vao != ctx->base.va_zero) && pointer) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            goto out;
+        }
+
         if (!yagl_gles_array_update(array,
                                     size,
                                     type,
                                     type == GL_FIXED,
                                     GL_FALSE,
                                     stride,
-                                    pointer)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+                                    pointer,
+                                    0)) {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     }
 
@@ -1150,7 +1157,7 @@ YAGL_API void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const G
         goto out;
     }
 
-    array = &ctx->base.arrays[yagl_gles1_array_texcoord + ctx->client_active_texture];
+    array = &ctx->base.vao->arrays[yagl_gles1_array_texcoord + ctx->client_active_texture];
 
     if (ctx->base.vbo) {
         if (!yagl_gles_array_update_vbo(array,
@@ -1160,18 +1167,33 @@ YAGL_API void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const G
                                         GL_FALSE,
                                         stride,
                                         ctx->base.vbo,
-                                        (GLint)pointer)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+                                        (GLint)pointer,
+                                        0)) {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     } else {
+        /*
+         * GL_OES_vertex_array_object:
+         * "Binding a zero-named vertex array buffer:
+         * this can be detected by *Pointer(ES1) or VertexAttribPointer(ES2);
+         * if the pointer argument is not NULL:
+         * this means to bind a client vertex array;
+         * an INVALID_OPERATION error will be returned."
+         */
+        if ((ctx->base.vao != ctx->base.va_zero) && pointer) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            goto out;
+        }
+
         if (!yagl_gles_array_update(array,
                                     size,
                                     type,
                                     type == GL_FIXED || type == GL_BYTE,
                                     GL_FALSE,
                                     stride,
-                                    pointer)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+                                    pointer,
+                                    0)) {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     }
 
@@ -1197,7 +1219,7 @@ YAGL_API void glPointSizePointerOES(GLenum type, GLsizei stride, const GLvoid* p
         goto out;
     }
 
-    array = &ctx->base.arrays[yagl_gles1_array_pointsize];
+    array = &ctx->base.vao->arrays[yagl_gles1_array_pointsize];
 
     if (ctx->base.vbo) {
         if (!yagl_gles_array_update_vbo(array,
@@ -1207,18 +1229,33 @@ YAGL_API void glPointSizePointerOES(GLenum type, GLsizei stride, const GLvoid* p
                                         GL_FALSE,
                                         stride,
                                         ctx->base.vbo,
-                                        (GLint)pointer)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+                                        (GLint)pointer,
+                                        0)) {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     } else {
+        /*
+         * GL_OES_vertex_array_object:
+         * "Binding a zero-named vertex array buffer:
+         * this can be detected by *Pointer(ES1) or VertexAttribPointer(ES2);
+         * if the pointer argument is not NULL:
+         * this means to bind a client vertex array;
+         * an INVALID_OPERATION error will be returned."
+         */
+        if ((ctx->base.vao != ctx->base.va_zero) && pointer) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            goto out;
+        }
+
         if (!yagl_gles_array_update(array,
                                     1,
                                     type,
                                     type == GL_FIXED,
                                     GL_FALSE,
                                     stride,
-                                    pointer)) {
-            YAGL_SET_ERR(GL_INVALID_VALUE);
+                                    pointer,
+                                    0)) {
+            YAGL_SET_ERR(GL_INVALID_ENUM);
         }
     }
 
@@ -1258,12 +1295,10 @@ YAGL_API void glGetTexParameterxv(GLenum target, GLenum pname, GLfixed *params)
 
     YAGL_GET_CTX();
 
-    if (target != GL_TEXTURE_2D) {
+    if (!yagl_gles_context_get_tex_parameterfv(&ctx->base, target, pname, &paramf)) {
         YAGL_SET_ERR(GL_INVALID_ENUM);
         goto out;
     }
-
-    yagl_gles_context_get_tex_parameterfv(&ctx->base, target, pname, &paramf);
 
     if (params) {
         *params = (GLfixed)paramf;

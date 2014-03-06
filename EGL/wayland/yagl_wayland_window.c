@@ -107,6 +107,7 @@ static int yagl_wayland_window_lock_back(struct yagl_wayland_window *window)
                                       window->height,
                                       (window->width * 4),
                                       vigs_drm_surface_bgrx8888,
+                                      0,
                                       &window->back->drm_sfc);
 
         if (ret != 0) {

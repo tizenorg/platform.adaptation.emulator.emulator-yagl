@@ -42,6 +42,13 @@ struct yagl_gles_buffer
     void *data;
     GLenum usage;
 
+    void *map_pointer;
+    GLbitfield map_access;
+    GLintptr map_offset;
+    GLsizeiptr map_length;
+
+    struct yagl_range_list gpu_dirty_list;
+
     int was_bound;
 
     int cached_minmax_idx;
@@ -81,10 +88,10 @@ int yagl_gles_buffer_get_minmax_index(struct yagl_gles_buffer *buffer,
                                       uint32_t *min_idx,
                                       uint32_t *max_idx);
 
-int yagl_gles_buffer_bind(struct yagl_gles_buffer *buffer,
-                          GLenum type,
-                          int need_convert,
-                          GLenum target);
+void yagl_gles_buffer_bind(struct yagl_gles_buffer *buffer,
+                           GLenum type,
+                           int need_convert,
+                           GLenum target);
 
 void yagl_gles_buffer_transfer(struct yagl_gles_buffer *buffer,
                                GLenum type,
@@ -95,12 +102,40 @@ int yagl_gles_buffer_get_parameter(struct yagl_gles_buffer *buffer,
                                    GLenum pname,
                                    GLint *param);
 
+/*
+ * Assumes that 'access' has already been validated.
+ */
+int yagl_gles_buffer_map(struct yagl_gles_buffer *buffer,
+                         GLintptr offset,
+                         GLsizeiptr length,
+                         GLbitfield access);
+
+int yagl_gles_buffer_mapped(struct yagl_gles_buffer *buffer);
+
+int yagl_gles_buffer_flush_mapped_range(struct yagl_gles_buffer *buffer,
+                                        GLintptr offset,
+                                        GLsizeiptr length);
+
+void yagl_gles_buffer_unmap(struct yagl_gles_buffer *buffer);
+
 void yagl_gles_buffer_set_bound(struct yagl_gles_buffer *buffer);
 
 int yagl_gles_buffer_was_bound(struct yagl_gles_buffer *buffer);
 
-int yagl_gles_buffer_is_dirty(struct yagl_gles_buffer *buffer,
-                              GLenum type,
-                              int need_convert);
+int yagl_gles_buffer_is_cpu_dirty(struct yagl_gles_buffer *buffer,
+                                  GLenum type,
+                                  int need_convert);
+
+void yagl_gles_buffer_set_gpu_dirty(struct yagl_gles_buffer *buffer,
+                                    GLint offset,
+                                    GLint size);
+
+int yagl_gles_buffer_copy_gpu(struct yagl_gles_buffer *from_buffer,
+                              GLenum from_target,
+                              struct yagl_gles_buffer *to_buffer,
+                              GLenum to_target,
+                              GLint from_offset,
+                              GLint to_offset,
+                              GLint size);
 
 #endif

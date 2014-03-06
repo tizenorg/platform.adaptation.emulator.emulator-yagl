@@ -12,6 +12,8 @@ struct yagl_onscreen_fence
     struct yagl_fence base;
 
     struct vigs_drm_fence *drm_fence;
+
+    int signaled;
 };
 
 struct yagl_onscreen_fence

@@ -7,6 +7,36 @@
 #include "yagl_host_gles_calls.h"
 #include <assert.h>
 
+/*
+ * We can't include GLES2/gl2ext.h here
+ */
+#define GL_HALF_FLOAT_OES 0x8D61
+
+static void yagl_gles_texture_swizzle(struct yagl_gles_texture *texture,
+                                      GLenum internalformat)
+{
+    switch (internalformat) {
+    case GL_ALPHA:
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_R, GL_ZERO);
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_G, GL_ZERO);
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_B, GL_ZERO);
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_A, GL_ALPHA);
+        break;
+    case GL_LUMINANCE:
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_R, GL_RED);
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_G, GL_RED);
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_B, GL_RED);
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_A, GL_ONE);
+        break;
+    case GL_LUMINANCE_ALPHA:
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_R, GL_RED);
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_G, GL_RED);
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_B, GL_RED);
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_A, GL_ALPHA);
+        break;
+    }
+}
+
 static void yagl_gles_texture_destroy(struct yagl_ref *ref)
 {
     struct yagl_gles_texture *texture = (struct yagl_gles_texture*)ref;
@@ -37,7 +67,8 @@ struct yagl_gles_texture *yagl_gles_texture_create(void)
     yagl_object_init(&texture->base, &yagl_gles_texture_destroy);
 
     texture->global_name = yagl_get_global_name();
-    texture->target = 0;
+    texture->min_filter = GL_NEAREST_MIPMAP_LINEAR;
+    texture->mag_filter = GL_LINEAR;
 
     yagl_host_glGenTextures(&texture->global_name, 1);
 
@@ -61,11 +92,6 @@ void yagl_gles_texture_release(struct yagl_gles_texture *texture)
 int yagl_gles_texture_bind(struct yagl_gles_texture *texture,
                            GLenum target)
 {
-    if (!texture) {
-        yagl_host_glBindTexture(target, 0);
-        return 1;
-    }
-
     if (texture->target && (texture->target != target)) {
         return 0;
     }
@@ -77,9 +103,75 @@ int yagl_gles_texture_bind(struct yagl_gles_texture *texture,
     return 1;
 }
 
-GLenum yagl_gles_texture_get_target(struct yagl_gles_texture *texture)
+void yagl_gles_texture_set_internalformat(struct yagl_gles_texture *texture,
+                                          GLenum internalformat,
+                                          GLenum type,
+                                          int swizzle)
 {
-    return texture->target;
+    texture->internalformat = internalformat;
+
+    switch (type) {
+    case GL_FLOAT:
+    case GL_HALF_FLOAT:
+    case GL_HALF_FLOAT_OES:
+        texture->is_float = 1;
+        break;
+    default:
+        texture->is_float = 0;
+        break;
+    }
+
+    if (swizzle) {
+        yagl_gles_texture_swizzle(texture, internalformat);
+    }
+}
+
+void yagl_gles_texture_set_immutable(struct yagl_gles_texture *texture,
+                                     GLenum internalformat,
+                                     GLenum type,
+                                     int swizzle)
+{
+    texture->immutable = GL_TRUE;
+    texture->internalformat = internalformat;
+
+    switch (type) {
+    case GL_FLOAT:
+    case GL_HALF_FLOAT:
+    case GL_HALF_FLOAT_OES:
+        texture->is_float = 1;
+        break;
+    default:
+        texture->is_float = 0;
+        break;
+    }
+
+    if (swizzle) {
+        yagl_gles_texture_swizzle(texture, internalformat);
+    }
+}
+
+int yagl_gles_texture_color_renderable(struct yagl_gles_texture *texture)
+{
+    if (!texture->is_float) {
+        return 1;
+    }
+
+    switch (texture->min_filter) {
+    case GL_NEAREST:
+    case GL_NEAREST_MIPMAP_NEAREST:
+        break;
+    default:
+        return 0;
+    }
+
+    switch (texture->mag_filter) {
+    case GL_NEAREST:
+        break;
+    default:
+        return 0;
+    }
+
+    return 1;
 }
 
 void yagl_gles_texture_set_image(struct yagl_gles_texture *texture,

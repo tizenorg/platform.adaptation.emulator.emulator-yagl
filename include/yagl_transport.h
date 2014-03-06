@@ -12,15 +12,15 @@
 #define YAGL_TRANSPORT_MAX_IN_DA 8
 #define YAGL_TRANSPORT_MAX_OUT_DA 8
 
+struct yagl_egl_fence;
+
 struct yagl_transport_ops
 {
     void *(*resize)(void */*ops_data*/, uint32_t /*size*/);
 
     void (*commit)(void */*ops_data*/, int /*sync*/);
 
-    uint32_t (*flush)(void */*ops_data*/, void **/*fence*/);
-
-    void (*fence_wait)(void */*ops_data*/, void */*fence*/);
+    uint32_t (*flush)(void */*ops_data*/, struct yagl_egl_fence **/*fence*/);
 };
 
 struct yagl_transport_in_arg
@@ -108,7 +108,7 @@ YAGL_API void yagl_transport_begin(struct yagl_transport *t,
 YAGL_API void yagl_transport_end(struct yagl_transport *t);
 
 YAGL_API void yagl_transport_flush(struct yagl_transport *t,
-                                   void *fence);
+                                   struct yagl_egl_fence *fence);
 
 /*
  * Waits until all commands for this transport

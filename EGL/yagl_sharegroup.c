@@ -11,6 +11,10 @@ static void yagl_sharegroup_destroy(struct yagl_ref *ref)
         yagl_namespace_cleanup(&sg->namespaces[i]);
     }
 
+    for (i = 0; i < YAGL_NUM_TEXTURE_TARGETS; ++i) {
+        yagl_object_release(sg->texture_zero[i]);
+    }
+
     yagl_ref_cleanup(&sg->ref);
 
     yagl_free(sg);

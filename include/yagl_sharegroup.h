@@ -6,13 +6,17 @@
 #include "yagl_ref.h"
 #include "yagl_namespace.h"
 
-#define YAGL_NUM_NAMESPACES 5
+#define YAGL_NUM_NAMESPACES 6
+
+#define YAGL_NUM_TEXTURE_TARGETS 4
 
 struct yagl_sharegroup
 {
     struct yagl_ref ref;
 
     struct yagl_namespace namespaces[YAGL_NUM_NAMESPACES];
+
+    struct yagl_object *texture_zero[YAGL_NUM_TEXTURE_TARGETS];
 };
 
 YAGL_API struct yagl_sharegroup *yagl_sharegroup_create(void);

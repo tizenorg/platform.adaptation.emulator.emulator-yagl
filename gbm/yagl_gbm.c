@@ -219,6 +219,7 @@ YAGL_API struct gbm_bo *gbm_bo_create(struct gbm_device *gbm,
                                   height,
                                   (width * 4),
                                   sfc_format,
+                                  0,
                                   &sfc);
 
     if (ret != 0) {

@@ -15,6 +15,8 @@ BuildRequires:  pkgconfig(x11-xcb)
 BuildRequires:  pkgconfig(xext)
 BuildRequires:  pkgconfig(dri2proto)
 BuildRequires:  pkgconfig(libdrm)
+BuildRequires:  flex
+BuildRequires:  bison
 %if %{with wayland}
 BuildRequires:  pkgconfig(gbm)
 BuildRequires:  pkgconfig(libudev)
@@ -66,6 +68,7 @@ cp -r include/EGL %{buildroot}/usr/include/
 cp -r include/GL %{buildroot}/usr/include/
 cp -r include/GLES %{buildroot}/usr/include/
 cp -r include/GLES2 %{buildroot}/usr/include/
+cp -r include/GLES3 %{buildroot}/usr/include/
 cp -r include/KHR %{buildroot}/usr/include/
 
 %post -p /sbin/ldconfig
@@ -90,4 +93,5 @@ cp -r include/KHR %{buildroot}/usr/include/
 /usr/include/GL
 /usr/include/GLES
 /usr/include/GLES2
+/usr/include/GLES3
 /usr/include/KHR

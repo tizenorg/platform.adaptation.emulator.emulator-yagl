@@ -17,6 +17,14 @@ struct yagl_gles_texture
 
     GLenum target;
 
+    GLenum internalformat;
+    int is_float;
+
+    GLboolean immutable;
+
+    GLenum min_filter;
+    GLenum mag_filter;
+
     /*
      * Non-NULL if it's an EGLImage/eglBindTexImage target.
      */
@@ -46,7 +54,17 @@ void yagl_gles_texture_release(struct yagl_gles_texture *texture);
 int yagl_gles_texture_bind(struct yagl_gles_texture *texture,
                            GLenum target);
 
-GLenum yagl_gles_texture_get_target(struct yagl_gles_texture *texture);
+void yagl_gles_texture_set_internalformat(struct yagl_gles_texture *texture,
+                                          GLenum internalformat,
+                                          GLenum type,
+                                          int swizzle);
+
+void yagl_gles_texture_set_immutable(struct yagl_gles_texture *texture,
+                                     GLenum internalformat,
+                                     GLenum type,
+                                     int swizzle);
+
+int yagl_gles_texture_color_renderable(struct yagl_gles_texture *texture);
 
 void yagl_gles_texture_set_image(struct yagl_gles_texture *texture,
                                  struct yagl_gles_image *image);

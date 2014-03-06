@@ -56,6 +56,8 @@ struct yagl_backend
     void (*destroy)(struct yagl_backend */*backend*/);
 
     EGLint y_inverted;
+
+    int fence_supported;
 };
 
 struct yagl_backend *yagl_get_backend();
