@@ -25,6 +25,7 @@
 #include "yagl_state.h"
 #include "yagl_render.h"
 #include "yagl_egl_fence.h"
+#include "yagl_utils.h"
 
 #define YAGL_SET_ERR(err) \
     yagl_gles_context_set_error(&ctx->base.base, err); \
@@ -2611,7 +2612,7 @@ YAGL_API void glClearBufferfi(GLenum buffer, GLint drawbuffer, GLfloat depth, GL
         goto out;
     }
 
-    yagl_host_glClearBufferfi(buffer, drawbuffer, depth, stencil);
+    yagl_host_glClearBufferfi(buffer, drawbuffer, yagl_clampf(depth), stencil);
 
 out:
     YAGL_LOG_FUNC_EXIT(NULL);
@@ -2619,6 +2620,8 @@ out:
 
 YAGL_API void glClearBufferfv(GLenum buffer, GLint drawbuffer, const GLfloat *value)
 {
+    GLfloat tmp[4];
+
     YAGL_LOG_FUNC_ENTER_SPLIT3(glClearBufferfv, GLenum, GLint, const GLfloat*, buffer, drawbuffer, value);
 
     YAGL_GET_CTX();
@@ -2635,7 +2638,8 @@ YAGL_API void glClearBufferfv(GLenum buffer, GLint drawbuffer, const GLfloat *va
             YAGL_SET_ERR(GL_INVALID_VALUE);
             goto out;
         }
-        yagl_host_glClearBufferfv(buffer, drawbuffer, value, 1);
+        tmp[0] = yagl_clampf(value[0]);
+        yagl_host_glClearBufferfv(buffer, drawbuffer, tmp, 1);
         break;
     default:
         if ((drawbuffer < 0) ||
@@ -2643,7 +2647,11 @@ YAGL_API void glClearBufferfv(GLenum buffer, GLint drawbuffer, const GLfloat *va
             YAGL_SET_ERR(GL_INVALID_VALUE);
             goto out;
         }
-        yagl_host_glClearBufferfv(buffer, drawbuffer, value, 4);
+        tmp[0] = yagl_clampf(value[0]);
+        tmp[1] = yagl_clampf(value[1]);
+        tmp[2] = yagl_clampf(value[2]);
+        tmp[3] = yagl_clampf(value[3]);
+        yagl_host_glClearBufferfv(buffer, drawbuffer, tmp, 4);
         break;
     }
 

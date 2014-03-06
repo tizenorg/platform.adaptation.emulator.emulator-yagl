@@ -254,14 +254,18 @@ void yagl_gles_context_prepare(struct yagl_gles_context *ctx,
     extensions = yagl_malloc0(size);
     yagl_host_glGetString(GL_EXTENSIONS, extensions, size, NULL);
 
-    ctx->packed_depth_stencil = (strstr(extensions, "GL_EXT_packed_depth_stencil ") != NULL);
+    if (yagl_get_host_gl_version() > yagl_gl_2) {
+        ctx->packed_depth_stencil = 1;
+        ctx->texture_rectangle = 1;
+    } else {
+        ctx->packed_depth_stencil = (strstr(extensions, "GL_EXT_packed_depth_stencil ") != NULL);
 
-    ctx->texture_npot = (strstr(extensions, "GL_OES_texture_npot ") != NULL) ||
-                        (strstr(extensions, "GL_ARB_texture_non_power_of_two ") != NULL);
+        ctx->texture_rectangle = (strstr(extensions, "GL_NV_texture_rectangle ") != NULL) ||
+                                 (strstr(extensions, "GL_EXT_texture_rectangle ") != NULL) ||
+                                 (strstr(extensions, "GL_ARB_texture_rectangle ") != NULL);
+    }
 
-    ctx->texture_rectangle = (strstr(extensions, "GL_NV_texture_rectangle ") != NULL) ||
-                             (strstr(extensions, "GL_EXT_texture_rectangle ") != NULL) ||
-                             (strstr(extensions, "GL_ARB_texture_rectangle ") != NULL);
+    ctx->texture_npot = 1;
 
     ctx->texture_filter_anisotropic = (strstr(extensions, "GL_EXT_texture_filter_anisotropic ") != NULL);
 

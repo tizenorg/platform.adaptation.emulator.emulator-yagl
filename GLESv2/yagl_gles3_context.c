@@ -292,6 +292,18 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
         *params = 0;
         *num_params = 1;
         break;
+    case GL_MAX_VARYING_COMPONENTS:
+        *num_params = 1;
+        if (yagl_get_host_gl_version() >= yagl_gl_3_2) {
+            /*
+             * GL_MAX_VARYING_COMPONENTS is deprecated in
+             * OpenGL 3.2, thus, we use a constant.
+             */
+            *params = 64;
+        } else {
+            yagl_host_glGetIntegerv(GL_MAX_VARYING_COMPONENTS, params, *num_params, NULL);
+        }
+        break;
     default:
         processed = 0;
         break;
@@ -319,7 +331,6 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
     case GL_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS:
     case GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS:
     case GL_MAX_UNIFORM_BLOCK_SIZE:
-    case GL_MAX_VARYING_COMPONENTS:
     case GL_MAX_VERTEX_OUTPUT_COMPONENTS:
     case GL_MAX_VERTEX_UNIFORM_BLOCKS:
     case GL_MAX_VERTEX_UNIFORM_COMPONENTS:

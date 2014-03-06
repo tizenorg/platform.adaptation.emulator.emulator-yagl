@@ -288,12 +288,17 @@ void yagl_gles2_context_prepare(struct yagl_gles2_context *ctx)
     extensions = yagl_malloc0(size);
     yagl_host_glGetString(GL_EXTENSIONS, extensions, size, NULL);
 
-    ctx->texture_half_float = (strstr(extensions, "GL_ARB_half_float_pixel ") != NULL) ||
-                              (strstr(extensions, "GL_NV_half_float ") != NULL);
+    if (yagl_get_host_gl_version() > yagl_gl_2) {
+        ctx->texture_half_float = 1;
+        ctx->vertex_half_float = 1;
+    } else {
+        ctx->texture_half_float = (strstr(extensions, "GL_ARB_half_float_pixel ") != NULL) ||
+                                  (strstr(extensions, "GL_NV_half_float ") != NULL);
 
-    ctx->vertex_half_float = (strstr(extensions, "GL_ARB_half_float_vertex ") != NULL);
+        ctx->vertex_half_float = (strstr(extensions, "GL_ARB_half_float_vertex ") != NULL);
+    }
 
-    ctx->standard_derivatives = (strstr(extensions, "GL_OES_standard_derivatives ") != NULL);
+    ctx->standard_derivatives = 1;
 
     yagl_free(extensions);
 
