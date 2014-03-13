@@ -8,13 +8,13 @@
 #define YAGL_LITTLE_ENDIAN
 #elif defined(__x86_64) || defined(_M_X64) || defined(_M_IA64)
 #define YAGL_LITTLE_ENDIAN
-#elif defined(__arm__)
+#elif defined(__arm__) || defined(__aarch64__)
 #define YAGL_LITTLE_ENDIAN
 #else
 #error Unknown architecture
 #endif
 
-#if defined(__x86_64) || defined(_M_X64) || defined(_M_IA64) || defined(__LP64__)
+#if defined(__x86_64) || defined(_M_X64) || defined(_M_IA64) || defined(__LP64__) || defined(__aarch64__)
 #define YAGL_64
 #else
 #define YAGL_32
