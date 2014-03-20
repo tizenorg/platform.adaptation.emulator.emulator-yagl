@@ -52,12 +52,12 @@ struct yagl_pixel_format
     GLenum src_internalformat;
     GLenum src_format;
     GLenum src_type;
-    GLenum src_bpp;
+    GLint src_bpp;
 
     GLenum dst_internalformat;
     GLenum dst_format;
     GLenum dst_type;
-    GLenum dst_bpp;
+    GLint dst_bpp;
 
     /*
      * NULL if no conversion is required.
