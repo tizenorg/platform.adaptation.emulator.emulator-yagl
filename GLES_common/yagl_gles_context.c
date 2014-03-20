@@ -977,13 +977,19 @@ void yagl_gles_context_unbind_buffer(struct yagl_gles_context *ctx,
     if (ctx->vbo && (ctx->vbo->base.local_name == buffer_local_name)) {
         yagl_gles_buffer_release(ctx->vbo);
         ctx->vbo = NULL;
-    } else if (ctx->vao->ebo && (ctx->vao->ebo->base.local_name == buffer_local_name)) {
+    }
+
+    if (ctx->vao->ebo && (ctx->vao->ebo->base.local_name == buffer_local_name)) {
         yagl_gles_buffer_release(ctx->vao->ebo);
         ctx->vao->ebo = NULL;
-    } else if (ctx->pack.pbo && (ctx->pack.pbo->base.local_name == buffer_local_name)) {
+    }
+
+    if (ctx->pack.pbo && (ctx->pack.pbo->base.local_name == buffer_local_name)) {
         yagl_gles_buffer_release(ctx->pack.pbo);
         ctx->pack.pbo = NULL;
-    } else if (ctx->unpack.pbo && (ctx->unpack.pbo->base.local_name == buffer_local_name)) {
+    }
+
+    if (ctx->unpack.pbo && (ctx->unpack.pbo->base.local_name == buffer_local_name)) {
         yagl_gles_buffer_release(ctx->unpack.pbo);
         ctx->unpack.pbo = NULL;
     }
