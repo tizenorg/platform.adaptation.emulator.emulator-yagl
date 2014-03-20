@@ -21,18 +21,45 @@ static void yagl_gles_texture_swizzle(struct yagl_gles_texture *texture,
         yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_G, GL_ZERO);
         yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_B, GL_ZERO);
         yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_A, GL_ALPHA);
+        texture->is_swizzled = 1;
         break;
     case GL_LUMINANCE:
         yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_R, GL_RED);
         yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_G, GL_RED);
         yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_B, GL_RED);
         yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_A, GL_ONE);
+        texture->is_swizzled = 1;
         break;
     case GL_LUMINANCE_ALPHA:
         yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_R, GL_RED);
         yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_G, GL_RED);
         yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_B, GL_RED);
         yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_A, GL_ALPHA);
+        texture->is_swizzled = 1;
+        break;
+    case GL_DEPTH_COMPONENT16:
+    case GL_DEPTH_COMPONENT24:
+    case GL_DEPTH_COMPONENT32:
+    case GL_DEPTH_COMPONENT32F:
+    case GL_DEPTH24_STENCIL8:
+    case GL_DEPTH32F_STENCIL8:
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_R, GL_RED);
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_G, GL_ZERO);
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_B, GL_ZERO);
+        yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_A, GL_ONE);
+        texture->is_swizzled = 1;
+        break;
+    default:
+        if (texture->is_swizzled) {
+            /*
+             * Unswizzle if it was swizzled.
+             */
+            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_R, GL_RED);
+            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_G, GL_GREEN);
+            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_B, GL_BLUE);
+            yagl_host_glTexParameteri(texture->target, GL_TEXTURE_SWIZZLE_A, GL_ALPHA);
+            texture->is_swizzled = 0;
+        }
         break;
     }
 }

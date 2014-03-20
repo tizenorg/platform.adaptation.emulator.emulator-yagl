@@ -19,6 +19,7 @@ struct yagl_gles_texture
 
     GLenum internalformat;
     int is_float;
+    int is_swizzled;
 
     GLboolean immutable;
 
