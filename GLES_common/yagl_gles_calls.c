@@ -1691,10 +1691,14 @@ void glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLe
                 *params = format_info->stencil_size;
                 break;
             case GL_FRAMEBUFFER_ATTACHMENT_COMPONENT_TYPE:
-                /*
-                 * TODO: implement.
-                 */
-                *params = 0;
+                if (attachment == GL_DEPTH_STENCIL_ATTACHMENT) {
+                    YAGL_SET_ERR(GL_INVALID_OPERATION);
+                } else {
+                    /*
+                     * TODO: implement.
+                     */
+                    *params = 0;
+                }
                 break;
             case GL_FRAMEBUFFER_ATTACHMENT_COLOR_ENCODING:
                 *params = ((format_info->flags & yagl_gles_format_srgb) != 0) ?
