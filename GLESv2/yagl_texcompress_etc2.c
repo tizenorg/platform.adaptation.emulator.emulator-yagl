@@ -625,9 +625,9 @@ void yagl_texcompress_etc2_unpack_r11(uint8_t *dst_row,
        for (x = 0; x < width; x+= bw) {
           etc2_r11_parse_block(&block, src);
 
-          for (j = 0; j < bh; j++) {
+          for (j = 0; (j < bh) && ((y + j) < height); j++) {
              uint8_t *dst = dst_row + (y + j) * dst_stride + x * comps * comp_size;
-             for (i = 0; i < bw; i++) {
+             for (i = 0; (i < bw) && ((x + i) < width); i++) {
                 etc2_r11_fetch_texel(&block, i, j, dst);
                 dst += comps * comp_size;
              }
@@ -659,10 +659,10 @@ void yagl_texcompress_etc2_unpack_signed_r11(uint8_t *dst_row,
        for (x = 0; x < width; x+= bw) {
           etc2_r11_parse_block(&block, src);
 
-          for (j = 0; j < bh; j++) {
+          for (j = 0; (j < bh) && ((y + j) < height); j++) {
              uint8_t *dst = dst_row + (y + j) * dst_stride +
                             x * comps * comp_size;
-             for (i = 0; i < bw; i++) {
+             for (i = 0; (i < bw) && ((x + i) < width); i++) {
                 etc2_signed_r11_fetch_texel(&block, i, j, dst);
                 dst += comps * comp_size;
              }
@@ -695,10 +695,10 @@ void yagl_texcompress_etc2_unpack_rg11(uint8_t *dst_row,
           /* red component */
           etc2_r11_parse_block(&block, src);
 
-          for (j = 0; j < bh; j++) {
+          for (j = 0; (j < bh) && ((y + j) < height); j++) {
              uint8_t *dst = dst_row + (y + j) * dst_stride +
                             x * comps * comp_size;
-             for (i = 0; i < bw; i++) {
+             for (i = 0; (i < bw) && ((x + i) < width); i++) {
                 etc2_r11_fetch_texel(&block, i, j, dst);
                 dst += comps * comp_size;
              }
@@ -706,10 +706,10 @@ void yagl_texcompress_etc2_unpack_rg11(uint8_t *dst_row,
           /* green/blue component */
           etc2_r11_parse_block(&block, src + 8);
 
-          for (j = 0; j < bh; j++) {
+          for (j = 0; (j < bh) && ((y + j) < height); j++) {
              uint8_t *dst = dst_row + (y + j) * dst_stride +
                             x * comps * comp_size;
-             for (i = 0; i < bw; i++) {
+             for (i = 0; (i < bw) && ((x + i) < width); i++) {
                 etc2_r11_fetch_texel(&block, i, j, dst + comp_size);
                 *(GLushort*)(dst + comp_size * 2) = 0;
                 dst += comps * comp_size;
@@ -743,10 +743,10 @@ void yagl_texcompress_etc2_unpack_signed_rg11(uint8_t *dst_row,
           /* red component */
           etc2_r11_parse_block(&block, src);
 
-          for (j = 0; j < bh; j++) {
+          for (j = 0; (j < bh) && ((y + j) < height); j++) {
              uint8_t *dst = dst_row + (y + j) * dst_stride +
                            x * comps * comp_size;
-             for (i = 0; i < bw; i++) {
+             for (i = 0; (i < bw) && ((x + i) < width); i++) {
                 etc2_signed_r11_fetch_texel(&block, i, j, dst);
                 dst += comps * comp_size;
              }
@@ -754,10 +754,10 @@ void yagl_texcompress_etc2_unpack_signed_rg11(uint8_t *dst_row,
           /* green/blue component */
           etc2_r11_parse_block(&block, src + 8);
 
-          for (j = 0; j < bh; j++) {
+          for (j = 0; (j < bh) && ((y + j) < height); j++) {
              uint8_t *dst = dst_row + (y + j) * dst_stride +
                             x * comps * comp_size;
-             for (i = 0; i < bw; i++) {
+             for (i = 0; (i < bw) && ((x + i) < width); i++) {
                 etc2_signed_r11_fetch_texel(&block, i, j, dst + comp_size);
                 *(GLushort*)(dst + comp_size * 2) = 0;
                 dst += comps * comp_size;
@@ -788,9 +788,9 @@ void yagl_texcompress_etc2_unpack_rgb8(uint8_t *dst_row,
           etc2_rgb8_parse_block(&block, src,
                                 false /* punchthrough_alpha */);
 
-          for (j = 0; j < bh; j++) {
+          for (j = 0; (j < bh) && ((y + j) < height); j++) {
              uint8_t *dst = dst_row + (y + j) * dst_stride + x * comps;
-             for (i = 0; i < bw; i++) {
+             for (i = 0; (i < bw) && ((x + i) < width); i++) {
                 etc2_rgb8_fetch_texel(&block, i, j, dst,
                                       false /* punchthrough_alpha */);
                 dst[3] = 255;
@@ -824,9 +824,9 @@ void yagl_texcompress_etc2_unpack_srgb8(uint8_t *dst_row,
           etc2_rgb8_parse_block(&block, src,
                                 false /* punchthrough_alpha */);
 
-          for (j = 0; j < bh; j++) {
+          for (j = 0; (j < bh) && ((y + j) < height); j++) {
              uint8_t *dst = dst_row + (y + j) * dst_stride + x * comps;
-             for (i = 0; i < bw; i++) {
+             for (i = 0; (i < bw) && ((x + i) < width); i++) {
                 etc2_rgb8_fetch_texel(&block, i, j, dst,
                                       false /* punchthrough_alpha */);
                 /* Convert to GL_BGRA */
@@ -862,9 +862,9 @@ void yagl_texcompress_etc2_unpack_rgb8_punchthrough_alpha1(uint8_t *dst_row,
        for (x = 0; x < width; x+= bw) {
           etc2_rgb8_parse_block(&block, src,
                                 true /* punchthrough_alpha */);
-          for (j = 0; j < bh; j++) {
+          for (j = 0; (j < bh) && ((y + j) < height); j++) {
              uint8_t *dst = dst_row + (y + j) * dst_stride + x * comps;
-             for (i = 0; i < bw; i++) {
+             for (i = 0; (i < bw) && ((x + i) < width); i++) {
                 etc2_rgb8_fetch_texel(&block, i, j, dst,
                                       true /* punchthrough_alpha */);
                 dst += comps;
@@ -896,9 +896,9 @@ void yagl_texcompress_etc2_unpack_srgb8_punchthrough_alpha1(uint8_t *dst_row,
        for (x = 0; x < width; x+= bw) {
           etc2_rgb8_parse_block(&block, src,
                                 true /* punchthrough_alpha */);
-          for (j = 0; j < bh; j++) {
+          for (j = 0; (j < bh) && ((y + j) < height); j++) {
              uint8_t *dst = dst_row + (y + j) * dst_stride + x * comps;
-             for (i = 0; i < bw; i++) {
+             for (i = 0; (i < bw) && ((x + i) < width); i++) {
                 etc2_rgb8_fetch_texel(&block, i, j, dst,
                                       true /* punchthrough_alpha */);
                 /* Convert to GL_BGRA */
@@ -939,9 +939,9 @@ void yagl_texcompress_etc2_unpack_rgba8(uint8_t *dst_row,
        for (x = 0; x < width; x+= bw) {
           etc2_rgba8_parse_block(&block, src);
 
-          for (j = 0; j < bh; j++) {
+          for (j = 0; (j < bh) && ((y + j) < height); j++) {
              uint8_t *dst = dst_row + (y + j) * dst_stride + x * comps;
-             for (i = 0; i < bw; i++) {
+             for (i = 0; (i < bw) && ((x + i) < width); i++) {
                 etc2_rgba8_fetch_texel(&block, i, j, dst);
                 dst += comps;
              }
@@ -975,9 +975,9 @@ void yagl_texcompress_etc2_unpack_srgb8_alpha8(uint8_t *dst_row,
        for (x = 0; x < width; x+= bw) {
           etc2_rgba8_parse_block(&block, src);
 
-          for (j = 0; j < bh; j++) {
+          for (j = 0; (j < bh) && ((y + j) < height); j++) {
              uint8_t *dst = dst_row + (y + j) * dst_stride + x * comps;
-             for (i = 0; i < bw; i++) {
+             for (i = 0; (i < bw) && ((x + i) < width); i++) {
                 etc2_rgba8_fetch_texel(&block, i, j, dst);
 
                 /* Convert to GL_BGRA */
