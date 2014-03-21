@@ -1185,9 +1185,27 @@ GLenum yagl_gles_context_check_framebuffer_status(struct yagl_gles_context *ctx,
 
     if (missing) {
         res = GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT;
-    } else {
-        res = GL_FRAMEBUFFER_COMPLETE;
+        goto out;
     }
+
+    /*
+     * According to OpenGL standard, 9.4.3 Required Framebuffer Formats:
+     * "However, when both depth and stencil attachments are
+     * present, implementations are only required to support
+     * framebuffer objects where both attachments refer to
+     * the same image."
+     */
+
+    if ((fb->attachment_states[yagl_gles_framebuffer_attachment_depth].type != GL_NONE) &&
+        (fb->attachment_states[yagl_gles_framebuffer_attachment_stencil].type != GL_NONE) &&
+        (memcmp(&fb->attachment_states[yagl_gles_framebuffer_attachment_depth],
+                &fb->attachment_states[yagl_gles_framebuffer_attachment_stencil],
+                sizeof(struct yagl_gles_framebuffer_attachment_state)) != 0)) {
+        res = GL_FRAMEBUFFER_UNSUPPORTED;
+        goto out;
+    }
+
+    res = GL_FRAMEBUFFER_COMPLETE;
 
 out:
     return res;
