@@ -13,6 +13,8 @@ struct yagl_gles3_sync
     struct yagl_object base;
 
     struct yagl_egl_fence *egl_fence;
+
+    int signaled;
 };
 
 struct yagl_gles3_sync *yagl_gles3_sync_create(void);

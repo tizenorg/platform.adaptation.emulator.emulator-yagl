@@ -1533,13 +1533,22 @@ YAGL_API GLenum glClientWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout
         goto out;
     }
 
-    if (timeout == 0) {
-        status = sync_obj->egl_fence->signaled(sync_obj->egl_fence) ? GL_CONDITION_SATISFIED
-                                                                    : GL_TIMEOUT_EXPIRED;
-    } else if (sync_obj->egl_fence->wait(sync_obj->egl_fence)) {
-        status = GL_CONDITION_SATISFIED;
+    if (sync_obj->signaled) {
+        status = GL_ALREADY_SIGNALED;
     } else {
-        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        if (timeout == 0) {
+            if (sync_obj->egl_fence->signaled(sync_obj->egl_fence)) {
+                status = GL_ALREADY_SIGNALED;
+                sync_obj->signaled = 1;
+            } else {
+                status = GL_TIMEOUT_EXPIRED;
+            }
+        } else if (sync_obj->egl_fence->wait(sync_obj->egl_fence)) {
+            status = GL_CONDITION_SATISFIED;
+            sync_obj->signaled = 1;
+        } else {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+        }
     }
 
 out:
@@ -1567,7 +1576,7 @@ YAGL_API void glWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout)
         YAGL_NS_SYNC, (yagl_object_name)sync);
 
     if (!sync_obj) {
-        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        YAGL_SET_ERR(GL_INVALID_VALUE);
         goto out;
     }
 
@@ -1629,7 +1638,12 @@ YAGL_API void glGetSynciv(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *l
         }
         break;
     case GL_SYNC_FLAGS:
-        if (length) {
+        if (bufSize > 0) {
+            *values = 0;
+            if (length) {
+                *length = 1;
+            }
+        } else if (length) {
             *length = 0;
         }
         break;
