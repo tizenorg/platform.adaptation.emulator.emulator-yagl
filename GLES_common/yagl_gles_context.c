@@ -20,6 +20,7 @@
 #include "yagl_render.h"
 #include "yagl_host_gles_calls.h"
 #include <string.h>
+#include <stdlib.h>
 #include <assert.h>
 
 /*
@@ -231,6 +232,7 @@ void yagl_gles_context_prepare(struct yagl_gles_context *ctx,
     int i;
     int32_t size = 0;
     char *extensions;
+    char *min_mag_blits;
 
     if (num_texture_units < 1) {
         num_texture_units = 1;
@@ -239,6 +241,22 @@ void yagl_gles_context_prepare(struct yagl_gles_context *ctx,
     YAGL_LOG_FUNC_ENTER(yagl_gles_context_prepare,
                         "num_texture_units = %d",
                         num_texture_units);
+
+    /*
+     * Currently minifying and magnifying blits in
+     * glBlitFramebuffer are disabled because of host
+     * OpenGL driver problems on many GPUs, they simply crash.
+     * But we want to be able to enable this temporarily for
+     * some apps that require it.
+     */
+
+    min_mag_blits = getenv("YAGL_MIN_MAG_BLITS");
+
+    if (min_mag_blits && atoi(min_mag_blits)) {
+        ctx->min_mag_blits = 1;
+    } else {
+        ctx->min_mag_blits = 0;
+    }
 
     ctx->num_texture_units = num_texture_units;
     ctx->texture_units =

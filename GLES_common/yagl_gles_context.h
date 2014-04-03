@@ -138,6 +138,8 @@ struct yagl_gles_context
 
     struct yagl_gles_vertex_array *va_zero;
 
+    int min_mag_blits;
+
     /*
      * GLES texture units, the number of texture units is determined
      * at runtime.
