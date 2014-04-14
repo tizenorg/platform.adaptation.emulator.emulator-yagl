@@ -18,7 +18,70 @@ struct yagl_gles3_context
     struct yagl_namespace transform_feedbacks;
     struct yagl_namespace queries;
 
-    int num_program_binary_formats;
+    GLboolean primitive_restart_fixed_index;
+    GLboolean rasterizer_discard;
+
+    GLenum fragment_shader_derivative_hint;
+
+    int have_max_array_texture_layers;
+    GLint max_array_texture_layers;
+
+    int have_max_combined_fragment_uniform_components;
+    GLint max_combined_fragment_uniform_components;
+
+    int have_max_combined_uniform_blocks;
+    GLint max_combined_uniform_blocks;
+
+    int have_max_combined_vertex_uniform_components;
+    GLint max_combined_vertex_uniform_components;
+
+    int have_max_element_index;
+    GLint max_element_index;
+
+    int have_max_elements_indices;
+    GLint max_elements_indices;
+
+    int have_max_elements_vertices;
+    GLint max_elements_vertices;
+
+    int have_max_fragment_input_components;
+    GLint max_fragment_input_components;
+
+    int have_max_fragment_uniform_blocks;
+    GLint max_fragment_uniform_blocks;
+
+    int have_max_fragment_uniform_components;
+    GLint max_fragment_uniform_components;
+
+    int have_max_program_texel_offset;
+    GLint max_program_texel_offset;
+
+    int have_max_samples;
+    GLint max_samples;
+
+    int have_max_texture_lod_bias;
+    GLint max_texture_lod_bias;
+
+    int have_max_transform_feedback_interleaved_components;
+    GLint max_transform_feedback_interleaved_components;
+
+    int have_max_transform_feedback_separate_components;
+    GLint max_transform_feedback_separate_components;
+
+    int have_max_uniform_block_size;
+    GLint max_uniform_block_size;
+
+    int have_max_vertex_output_components;
+    GLint max_vertex_output_components;
+
+    int have_max_vertex_uniform_blocks;
+    GLint max_vertex_uniform_blocks;
+
+    int have_max_vertex_uniform_components;
+    GLint max_vertex_uniform_components;
+
+    int have_min_program_texel_offset;
+    GLint min_program_texel_offset;
 
     /*
      * Uniform buffer objects.

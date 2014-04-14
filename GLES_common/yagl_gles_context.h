@@ -125,6 +125,10 @@ struct yagl_gles_context
     int (*validate_renderbuffer_format)(struct yagl_gles_context */*ctx*/,
                                         GLenum */*internalformat*/);
 
+    void (*hint)(struct yagl_gles_context */*ctx*/,
+                 GLenum /*target*/,
+                 GLenum /*mode*/);
+
     struct yagl_namespace framebuffers;
 
     struct yagl_namespace vertex_arrays;
@@ -207,6 +211,52 @@ struct yagl_gles_context
 
     GLenum fb0_draw_buffer;
     GLenum fb0_read_buffer;
+
+    GLenum generate_mipmap_hint;
+
+    GLclampf sample_coverage_value;
+    GLboolean sample_coverage_invert;
+
+    GLint clear_stencil;
+
+    struct
+    {
+        GLenum func;
+        GLint ref;
+        GLuint mask;
+        GLuint writemask;
+        GLenum fail;
+        GLenum zfail;
+        GLenum zpass;
+    } stencil_back, stencil_front;
+
+    GLfloat line_width;
+    GLfloat polygon_offset_factor;
+    GLfloat polygon_offset_units;
+
+    int have_max_renderbuffer_size;
+    GLint max_renderbuffer_size;
+
+    int have_max_viewport_dims;
+    GLint max_viewport_dims[2];
+
+    int have_sample_buffers;
+    GLint sample_buffers;
+
+    int have_samples;
+    GLint samples;
+
+    int have_scissor_box;
+    GLint scissor_box[4];
+
+    int have_subpixel_bits;
+    GLint subpixel_bits;
+
+    int have_line_width_range;
+    GLfloat line_width_range[2];
+
+    int have_point_size_range;
+    GLfloat point_size_range[2];
 
     GLboolean blend_enabled;
     GLboolean cull_face_enabled;
@@ -420,5 +470,9 @@ void yagl_gles_context_depth_rangef(struct yagl_gles_context *ctx,
 void yagl_gles_context_polygon_offset(struct yagl_gles_context *ctx,
                                       GLfloat factor,
                                       GLfloat units);
+
+void yagl_gles_context_hint(struct yagl_gles_context *ctx,
+                            GLenum target,
+                            GLenum mode);
 
 #endif

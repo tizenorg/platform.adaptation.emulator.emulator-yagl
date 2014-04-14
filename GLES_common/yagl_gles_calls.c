@@ -43,13 +43,33 @@
 
 #define YAGL_GET_CTX() YAGL_GET_CTX_IMPL(return)
 
-/*
- * TODO: Passthrough for now.
- * @{
- */
+YAGL_API void glClearStencil(GLint s)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT1(glClearStencil, GLint, s);
 
-YAGL_IMPLEMENT_API_NORET1(glClearStencil, GLint, s)
-YAGL_IMPLEMENT_API_NORET2(glHint, GLenum, GLenum, target, mode)
+    YAGL_GET_CTX();
+
+    ctx->clear_stencil = s;
+
+    yagl_host_glClearStencil(s);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glHint(GLenum target, GLenum mode)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glHint, GLenum, GLenum, target, mode);
+
+    YAGL_GET_CTX();
+
+    if (yagl_gles_is_hint_mode_valid(mode)) {
+        yagl_gles_context_hint(ctx, target, mode);
+    } else {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+    }
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
 
 YAGL_API void glLineWidth(GLfloat width)
 {
@@ -120,14 +140,89 @@ YAGL_API void glSampleCoverage(GLclampf value, GLboolean invert)
 YAGL_API void glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
 {
     YAGL_LOG_FUNC_ENTER_SPLIT4(glScissor, GLint, GLint, GLsizei, GLsizei, x, y, width, height);
+
+    YAGL_GET_CTX();
+
+    if ((width < 0) || (height < 0)) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
     yagl_render_invalidate(0);
+
+    ctx->have_scissor_box = 1;
+    ctx->scissor_box[0] = x;
+    ctx->scissor_box[1] = y;
+    ctx->scissor_box[2] = width;
+    ctx->scissor_box[3] = height;
+
     yagl_host_glScissor(x, y, width, height);
+
+out:
     YAGL_LOG_FUNC_EXIT(NULL);
 }
 
-YAGL_IMPLEMENT_API_NORET3(glStencilFunc, GLenum, GLint, GLuint, func, ref, mask)
-YAGL_IMPLEMENT_API_NORET1(glStencilMask, GLuint, mask)
-YAGL_IMPLEMENT_API_NORET3(glStencilOp, GLenum, GLenum, GLenum, fail, zfail, zpass)
+YAGL_API void glStencilFunc(GLenum func, GLint ref, GLuint mask)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glStencilFunc, GLenum, GLint, GLuint, func, ref, mask);
+
+    YAGL_GET_CTX();
+
+    if (yagl_gles_is_stencil_func_valid(func)) {
+        ctx->stencil_front.func = func;
+        ctx->stencil_front.ref = ref;
+        ctx->stencil_front.mask = mask;
+
+        ctx->stencil_back.func = func;
+        ctx->stencil_back.ref = ref;
+        ctx->stencil_back.mask = mask;
+
+        yagl_host_glStencilFunc(func, ref, mask);
+    } else {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+    }
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glStencilMask(GLuint mask)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT1(glStencilMask, GLuint, mask);
+
+    YAGL_GET_CTX();
+
+    ctx->stencil_front.writemask = mask;
+    ctx->stencil_back.writemask = mask;
+
+    yagl_host_glStencilMask(mask);
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glStencilOp(GLenum fail, GLenum zfail, GLenum zpass)
+{
+    YAGL_LOG_FUNC_ENTER_SPLIT3(glStencilOp, GLenum, GLenum, GLenum, fail, zfail, zpass);
+
+    YAGL_GET_CTX();
+
+    if (yagl_gles_is_stencil_op_valid(fail) &&
+        yagl_gles_is_stencil_op_valid(zfail) &&
+        yagl_gles_is_stencil_op_valid(zpass)) {
+        ctx->stencil_front.fail = fail;
+        ctx->stencil_front.zfail = zfail;
+        ctx->stencil_front.zpass = zpass;
+
+        ctx->stencil_back.fail = fail;
+        ctx->stencil_back.zfail = zfail;
+        ctx->stencil_back.zpass = zpass;
+
+        yagl_host_glStencilOp(fail, zfail, zpass);
+    } else {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+    }
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
 
 YAGL_API void glTexParameterf(GLenum target, GLenum pname, GLfloat param)
 {
@@ -237,10 +332,6 @@ YAGL_API void glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 out:
     YAGL_LOG_FUNC_EXIT(NULL);
 }
-
-/*
- * @}
- */
 
 YAGL_API const GLubyte *glGetString(GLenum name)
 {

@@ -67,8 +67,6 @@ struct yagl_gles2_context
      */
     int gen_locations;
 
-    int num_shader_binary_formats;
-
     int texture_half_float;
 
     int vertex_half_float;
@@ -78,6 +76,36 @@ struct yagl_gles2_context
     int instanced_arrays;
 
     struct yagl_gles2_program *program;
+
+    int have_max_texture_size;
+    GLint max_texture_size;
+
+    int have_max_cubemap_texture_size;
+    GLint max_cubemap_texture_size;
+
+    int have_max_samples_img;
+    GLint max_samples_img;
+
+    int have_max_texture_image_units;
+    GLint max_texture_image_units;
+
+    int have_max_texture_max_anisotropy;
+    GLint max_texture_max_anisotropy;
+
+    int have_max_vertex_texture_image_units;
+    GLint max_vertex_texture_image_units;
+
+    int have_max_3d_texture_size;
+    GLint max_3d_texture_size;
+
+    int have_max_fragment_uniform_components;
+    GLint max_fragment_uniform_components;
+
+    int have_max_varying_floats;
+    GLint max_varying_floats;
+
+    int have_max_vertex_uniform_components;
+    GLint max_vertex_uniform_components;
 
     GLclampf blend_color[4];
 };
@@ -210,6 +238,10 @@ int yagl_gles2_context_validate_texstorage_format(struct yagl_gles_context *ctx,
 
 int yagl_gles2_context_validate_renderbuffer_format(struct yagl_gles_context *ctx,
                                                     GLenum *internalformat);
+
+void yagl_gles2_context_hint(struct yagl_gles_context *ctx,
+                             GLenum target,
+                             GLenum mode);
 
 int yagl_gles2_context_get_programiv(struct yagl_gles2_context *ctx,
                                      struct yagl_gles2_program *program,

@@ -3,6 +3,12 @@
 
 #include "yagl_gles_types.h"
 
+int yagl_gles_is_stencil_op_valid(GLenum op);
+
+int yagl_gles_is_stencil_func_valid(GLenum func);
+
+int yagl_gles_is_hint_mode_valid(GLenum mode);
+
 int yagl_gles_is_draw_mode_valid(GLenum mode);
 
 int yagl_gles_is_buffer_usage_valid(GLenum usage);

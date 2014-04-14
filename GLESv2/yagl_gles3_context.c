@@ -71,11 +71,6 @@ static void yagl_gles3_context_prepare(struct yagl_client_context *ctx)
 
     yagl_gles2_context_prepare(&gles3_ctx->base);
 
-    /*
-     * We don't support it for now...
-     */
-    gles3_ctx->num_program_binary_formats = 0;
-
     yagl_host_glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS,
                             (GLint*)&gles3_ctx->num_uniform_buffer_bindings,
                             1,
@@ -176,9 +171,14 @@ static int yagl_gles3_context_enable(struct yagl_gles_context *ctx,
                                      GLenum cap,
                                      GLboolean enable)
 {
+    struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
+
     switch (cap) {
     case GL_PRIMITIVE_RESTART_FIXED_INDEX:
+        gles3_ctx->primitive_restart_fixed_index = enable;
+        break;
     case GL_RASTERIZER_DISCARD:
+        gles3_ctx->rasterizer_discard = enable;
         break;
     default:
         return 0;
@@ -197,15 +197,18 @@ static int yagl_gles3_context_is_enabled(struct yagl_gles_context *ctx,
                                          GLenum cap,
                                          GLboolean *enabled)
 {
+    struct yagl_gles3_context *gles3_ctx = (struct yagl_gles3_context*)ctx;
+
     switch (cap) {
     case GL_PRIMITIVE_RESTART_FIXED_INDEX:
+        *enabled = gles3_ctx->primitive_restart_fixed_index;
+        break;
     case GL_RASTERIZER_DISCARD:
+        *enabled = gles3_ctx->rasterizer_discard;
         break;
     default:
         return 0;
     }
-
-    *enabled = yagl_host_glIsEnabled(cap);
 
     return 1;
 }
@@ -226,7 +229,7 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
         *num_params = 1;
         break;
     case GL_NUM_PROGRAM_BINARY_FORMATS:
-        *params = gles3_ctx->num_program_binary_formats;
+        *params = 0;
         *num_params = 1;
         break;
     case GL_UNIFORM_BUFFER_BINDING:
@@ -300,9 +303,181 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
              * OpenGL 3.2, thus, we use a constant.
              */
             *params = 64;
+        } else if (gles3_ctx->base.have_max_varying_floats) {
+            *params = gles3_ctx->base.max_varying_floats;
         } else {
             yagl_host_glGetIntegerv(GL_MAX_VARYING_COMPONENTS, params, *num_params, NULL);
+            gles3_ctx->base.max_varying_floats = *params;
+            gles3_ctx->base.have_max_varying_floats = 1;
         }
+        break;
+    case GL_FRAGMENT_SHADER_DERIVATIVE_HINT:
+        *params = gles3_ctx->fragment_shader_derivative_hint;
+        *num_params = 1;
+        break;
+    case GL_MAX_ARRAY_TEXTURE_LAYERS:
+        if (gles3_ctx->have_max_array_texture_layers) {
+            *params = gles3_ctx->max_array_texture_layers;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS:
+        if (gles3_ctx->have_max_combined_fragment_uniform_components) {
+            *params = gles3_ctx->max_combined_fragment_uniform_components;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_COMBINED_UNIFORM_BLOCKS:
+        if (gles3_ctx->have_max_combined_uniform_blocks) {
+            *params = gles3_ctx->max_combined_uniform_blocks;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS:
+        if (gles3_ctx->have_max_combined_vertex_uniform_components) {
+            *params = gles3_ctx->max_combined_vertex_uniform_components;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_ELEMENT_INDEX:
+        if (gles3_ctx->have_max_element_index) {
+            *params = gles3_ctx->max_element_index;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_ELEMENTS_INDICES:
+        if (gles3_ctx->have_max_elements_indices) {
+            *params = gles3_ctx->max_elements_indices;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_ELEMENTS_VERTICES:
+        if (gles3_ctx->have_max_elements_vertices) {
+            *params = gles3_ctx->max_elements_vertices;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_FRAGMENT_INPUT_COMPONENTS:
+        if (gles3_ctx->have_max_fragment_input_components) {
+            *params = gles3_ctx->max_fragment_input_components;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_FRAGMENT_UNIFORM_BLOCKS:
+        if (gles3_ctx->have_max_fragment_uniform_blocks) {
+            *params = gles3_ctx->max_fragment_uniform_blocks;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_FRAGMENT_UNIFORM_COMPONENTS:
+        if (gles3_ctx->have_max_fragment_uniform_components) {
+            *params = gles3_ctx->max_fragment_uniform_components;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_PROGRAM_TEXEL_OFFSET:
+        if (gles3_ctx->have_max_program_texel_offset) {
+            *params = gles3_ctx->max_program_texel_offset;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_SAMPLES:
+        if (gles3_ctx->have_max_samples) {
+            *params = gles3_ctx->max_samples;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_TEXTURE_LOD_BIAS:
+        if (gles3_ctx->have_max_texture_lod_bias) {
+            *params = gles3_ctx->max_texture_lod_bias;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS:
+        if (gles3_ctx->have_max_transform_feedback_interleaved_components) {
+            *params = gles3_ctx->max_transform_feedback_interleaved_components;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS:
+        if (gles3_ctx->have_max_transform_feedback_separate_components) {
+            *params = gles3_ctx->max_transform_feedback_separate_components;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_UNIFORM_BLOCK_SIZE:
+        if (gles3_ctx->have_max_uniform_block_size) {
+            *params = gles3_ctx->max_uniform_block_size;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_VERTEX_OUTPUT_COMPONENTS:
+        if (gles3_ctx->have_max_vertex_output_components) {
+            *params = gles3_ctx->max_vertex_output_components;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_VERTEX_UNIFORM_BLOCKS:
+        if (gles3_ctx->have_max_vertex_uniform_blocks) {
+            *params = gles3_ctx->max_vertex_uniform_blocks;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_VERTEX_UNIFORM_COMPONENTS:
+        if (gles3_ctx->have_max_vertex_uniform_components) {
+            *params = gles3_ctx->max_vertex_uniform_components;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MIN_PROGRAM_TEXEL_OFFSET:
+        if (gles3_ctx->have_min_program_texel_offset) {
+            *params = gles3_ctx->min_program_texel_offset;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_PRIMITIVE_RESTART_FIXED_INDEX:
+        *params = gles3_ctx->primitive_restart_fixed_index;
+        *num_params = 1;
         break;
     default:
         processed = 0;
@@ -314,38 +489,132 @@ static int yagl_gles3_context_get_integerv(struct yagl_gles_context *ctx,
     }
 
     switch (pname) {
-    case GL_FRAGMENT_SHADER_DERIVATIVE_HINT:
     case GL_MAX_ARRAY_TEXTURE_LAYERS:
-    case GL_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS:
-    case GL_MAX_COMBINED_UNIFORM_BLOCKS:
-    case GL_MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS:
-    case GL_MAX_ELEMENT_INDEX:
-    case GL_MAX_ELEMENTS_INDICES:
-    case GL_MAX_ELEMENTS_VERTICES:
-    case GL_MAX_FRAGMENT_INPUT_COMPONENTS:
-    case GL_MAX_FRAGMENT_UNIFORM_BLOCKS:
-    case GL_MAX_FRAGMENT_UNIFORM_COMPONENTS:
-    case GL_MAX_PROGRAM_TEXEL_OFFSET:
-    case GL_MAX_SAMPLES:
-    case GL_MAX_TEXTURE_LOD_BIAS:
-    case GL_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS:
-    case GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS:
-    case GL_MAX_UNIFORM_BLOCK_SIZE:
-    case GL_MAX_VERTEX_OUTPUT_COMPONENTS:
-    case GL_MAX_VERTEX_UNIFORM_BLOCKS:
-    case GL_MAX_VERTEX_UNIFORM_COMPONENTS:
-    case GL_MIN_PROGRAM_TEXEL_OFFSET:
-    case GL_PRIMITIVE_RESTART_FIXED_INDEX:
         *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles3_ctx->max_array_texture_layers = *params;
+        gles3_ctx->have_max_array_texture_layers = 1;
+        break;
+    case GL_MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS:
+        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles3_ctx->max_combined_fragment_uniform_components = *params;
+        gles3_ctx->have_max_combined_fragment_uniform_components = 1;
+        break;
+    case GL_MAX_COMBINED_UNIFORM_BLOCKS:
+        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles3_ctx->max_combined_uniform_blocks = *params;
+        gles3_ctx->have_max_combined_uniform_blocks = 1;
+        break;
+    case GL_MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS:
+        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles3_ctx->max_combined_vertex_uniform_components = *params;
+        gles3_ctx->have_max_combined_vertex_uniform_components = 1;
+        break;
+    case GL_MAX_ELEMENT_INDEX:
+        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles3_ctx->max_element_index = *params;
+        gles3_ctx->have_max_element_index = 1;
+        break;
+    case GL_MAX_ELEMENTS_INDICES:
+        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles3_ctx->max_elements_indices = *params;
+        gles3_ctx->have_max_elements_indices = 1;
+        break;
+    case GL_MAX_ELEMENTS_VERTICES:
+        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles3_ctx->max_elements_vertices = *params;
+        gles3_ctx->have_max_elements_vertices = 1;
+        break;
+    case GL_MAX_FRAGMENT_INPUT_COMPONENTS:
+        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles3_ctx->max_fragment_input_components = *params;
+        gles3_ctx->have_max_fragment_input_components = 1;
+        break;
+    case GL_MAX_FRAGMENT_UNIFORM_BLOCKS:
+        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles3_ctx->max_fragment_uniform_blocks = *params;
+        gles3_ctx->have_max_fragment_uniform_blocks = 1;
+        break;
+    case GL_MAX_FRAGMENT_UNIFORM_COMPONENTS:
+        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles3_ctx->max_fragment_uniform_components = *params;
+        gles3_ctx->have_max_fragment_uniform_components = 1;
+        break;
+    case GL_MAX_PROGRAM_TEXEL_OFFSET:
+        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles3_ctx->max_program_texel_offset = *params;
+        gles3_ctx->have_max_program_texel_offset = 1;
+        break;
+    case GL_MAX_SAMPLES:
+        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles3_ctx->max_samples = *params;
+        gles3_ctx->have_max_samples = 1;
+        break;
+    case GL_MAX_TEXTURE_LOD_BIAS:
+        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles3_ctx->max_texture_lod_bias = *params;
+        gles3_ctx->have_max_texture_lod_bias = 1;
+        break;
+    case GL_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS:
+        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles3_ctx->max_transform_feedback_interleaved_components = *params;
+        gles3_ctx->have_max_transform_feedback_interleaved_components = 1;
+        break;
+    case GL_MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS:
+        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles3_ctx->max_transform_feedback_separate_components = *params;
+        gles3_ctx->have_max_transform_feedback_separate_components = 1;
+        break;
+    case GL_MAX_UNIFORM_BLOCK_SIZE:
+        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles3_ctx->max_uniform_block_size = *params;
+        gles3_ctx->have_max_uniform_block_size = 1;
+        break;
+    case GL_MAX_VERTEX_OUTPUT_COMPONENTS:
+        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles3_ctx->max_vertex_output_components = *params;
+        gles3_ctx->have_max_vertex_output_components = 1;
+        break;
+    case GL_MAX_VERTEX_UNIFORM_BLOCKS:
+        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles3_ctx->max_vertex_uniform_blocks = *params;
+        gles3_ctx->have_max_vertex_uniform_blocks = 1;
+        break;
+    case GL_MAX_VERTEX_UNIFORM_COMPONENTS:
+        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles3_ctx->max_vertex_uniform_components = *params;
+        gles3_ctx->have_max_vertex_uniform_components = 1;
+        break;
+    case GL_MIN_PROGRAM_TEXEL_OFFSET:
+        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles3_ctx->min_program_texel_offset = *params;
+        gles3_ctx->have_min_program_texel_offset = 1;
         break;
     case GL_PROGRAM_BINARY_FORMATS:
-        *num_params = gles3_ctx->num_program_binary_formats;
+        *num_params = 0;
         break;
     default:
         return yagl_gles2_context_get_integerv(ctx, pname, params, num_params);
     }
-
-    yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
 
     return 1;
 }
@@ -1251,6 +1520,22 @@ static int yagl_gles3_context_validate_renderbuffer_format(struct yagl_gles_cont
     return 1;
 }
 
+static void yagl_gles3_context_hint(struct yagl_gles_context *gles_ctx,
+                                    GLenum target,
+                                    GLenum mode)
+{
+    struct yagl_gles3_context *ctx = (struct yagl_gles3_context*)gles_ctx;
+
+    switch (target) {
+    case GL_FRAGMENT_SHADER_DERIVATIVE_HINT:
+        ctx->fragment_shader_derivative_hint = mode;
+        break;
+    default:
+        yagl_gles2_context_hint(gles_ctx, target, mode);
+        break;
+    }
+}
+
 static int yagl_gles3_context_get_programiv(struct yagl_gles2_context *ctx,
                                             struct yagl_gles2_program *program,
                                             GLenum pname,
@@ -1331,6 +1616,8 @@ struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg
 
     yagl_list_init(&gles3_ctx->active_uniform_buffer_bindings);
 
+    gles3_ctx->fragment_shader_derivative_hint = GL_DONT_CARE;
+
     gles3_ctx->base.base.base.prepare = &yagl_gles3_context_prepare;
     gles3_ctx->base.base.base.destroy = &yagl_gles3_context_destroy;
     gles3_ctx->base.base.create_arrays = &yagl_gles2_context_create_arrays;
@@ -1352,6 +1639,7 @@ struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg
     gles3_ctx->base.base.validate_copyteximage_format = &yagl_gles3_context_validate_copyteximage_format;
     gles3_ctx->base.base.validate_texstorage_format = &yagl_gles3_context_validate_texstorage_format;
     gles3_ctx->base.base.validate_renderbuffer_format = &yagl_gles3_context_validate_renderbuffer_format;
+    gles3_ctx->base.base.hint = &yagl_gles3_context_hint;
     gles3_ctx->base.get_programiv = &yagl_gles3_context_get_programiv;
     gles3_ctx->base.pre_use_program = &yagl_gles3_context_pre_use_program;
     gles3_ctx->base.pre_link_program = &yagl_gles3_context_pre_link_program;

@@ -222,6 +222,33 @@ void yagl_gles_context_init(struct yagl_gles_context *ctx,
     ctx->fb0_draw_buffer = GL_BACK;
     ctx->fb0_read_buffer = GL_BACK;
 
+    ctx->generate_mipmap_hint = GL_DONT_CARE;
+
+    ctx->sample_coverage_value = 1.0f;
+    ctx->sample_coverage_invert = GL_FALSE;
+
+    ctx->clear_stencil = 0;
+
+    ctx->stencil_front.func = GL_ALWAYS;
+    ctx->stencil_front.ref = 0;
+    ctx->stencil_front.mask = ~0U;
+    ctx->stencil_front.writemask = ~0U;
+    ctx->stencil_front.fail = GL_KEEP;
+    ctx->stencil_front.zfail = GL_KEEP;
+    ctx->stencil_front.zpass = GL_KEEP;
+
+    ctx->stencil_back.func = GL_ALWAYS;
+    ctx->stencil_back.ref = 0;
+    ctx->stencil_back.mask = ~0U;
+    ctx->stencil_back.writemask = ~0U;
+    ctx->stencil_back.fail = GL_KEEP;
+    ctx->stencil_back.zfail = GL_KEEP;
+    ctx->stencil_back.zpass = GL_KEEP;
+
+    ctx->line_width = 1.0f;
+    ctx->polygon_offset_factor = 0.0f;
+    ctx->polygon_offset_units = 0.0f;
+
     ctx->dither_enabled = GL_TRUE;
 }
 
@@ -1707,6 +1734,130 @@ int yagl_gles_context_get_integerv(struct yagl_gles_context *ctx,
         }
         *num_params = 1;
         break;
+    case GL_BLEND:
+        *params = ctx->blend_enabled;
+        *num_params = 1;
+        break;
+    case GL_CULL_FACE:
+        *params = ctx->cull_face_enabled;
+        *num_params = 1;
+        break;
+    case GL_DEPTH_TEST:
+        *params = ctx->depth_test_enabled;
+        *num_params = 1;
+        break;
+    case GL_POLYGON_OFFSET_FILL:
+        *params = ctx->polygon_offset_fill_enabled;
+        *num_params = 1;
+        break;
+    case GL_SAMPLE_ALPHA_TO_COVERAGE:
+        *params = ctx->sample_alpha_to_coverage_enabled;
+        *num_params = 1;
+        break;
+    case GL_SAMPLE_COVERAGE:
+        *params = ctx->sample_coverage_enabled;
+        *num_params = 1;
+        break;
+    case GL_SCISSOR_TEST:
+        *params = ctx->scissor_test_enabled;
+        *num_params = 1;
+        break;
+    case GL_STENCIL_TEST:
+        *params = ctx->stencil_test_enabled;
+        *num_params = 1;
+        break;
+    case GL_GENERATE_MIPMAP_HINT:
+        *params = ctx->generate_mipmap_hint;
+        *num_params = 1;
+        break;
+    case GL_SAMPLE_COVERAGE_INVERT:
+        *params = ctx->sample_coverage_invert;
+        *num_params = 1;
+        break;
+    case GL_STENCIL_CLEAR_VALUE:
+        *params = ctx->clear_stencil;
+        *num_params = 1;
+        break;
+    case GL_STENCIL_FAIL:
+        *params = ctx->stencil_front.fail;
+        *num_params = 1;
+        break;
+    case GL_STENCIL_FUNC:
+        *params = ctx->stencil_front.func;
+        *num_params = 1;
+        break;
+    case GL_STENCIL_PASS_DEPTH_FAIL:
+        *params = ctx->stencil_front.zfail;
+        *num_params = 1;
+        break;
+    case GL_STENCIL_PASS_DEPTH_PASS:
+        *params = ctx->stencil_front.zpass;
+        *num_params = 1;
+        break;
+    case GL_STENCIL_REF:
+        *params = ctx->stencil_front.ref;
+        *num_params = 1;
+        break;
+    case GL_STENCIL_VALUE_MASK:
+        *params = ctx->stencil_front.mask;
+        *num_params = 1;
+        break;
+    case GL_STENCIL_WRITEMASK:
+        *params = ctx->stencil_front.writemask;
+        *num_params = 1;
+        break;
+    case GL_MAX_RENDERBUFFER_SIZE:
+        if (ctx->have_max_renderbuffer_size) {
+            *params = ctx->max_renderbuffer_size;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_VIEWPORT_DIMS:
+        if (ctx->have_max_viewport_dims) {
+            params[0] = ctx->max_viewport_dims[0];
+            params[1] = ctx->max_viewport_dims[1];
+            *num_params = 2;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_SAMPLE_BUFFERS:
+        if (ctx->have_sample_buffers) {
+            *params = ctx->sample_buffers;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_SAMPLES:
+        if (ctx->have_samples) {
+            *params = ctx->samples;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_SCISSOR_BOX:
+        if (ctx->have_scissor_box) {
+            params[0] = ctx->scissor_box[0];
+            params[1] = ctx->scissor_box[1];
+            params[2] = ctx->scissor_box[2];
+            params[3] = ctx->scissor_box[3];
+            *num_params = 4;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_SUBPIXEL_BITS:
+        if (ctx->have_subpixel_bits) {
+            *params = ctx->subpixel_bits;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
     default:
         if ((pname >= GL_DRAW_BUFFER0) &&
             (pname <= (GL_DRAW_BUFFER0 + ctx->max_draw_buffers - 1))) {
@@ -1734,84 +1885,56 @@ int yagl_gles_context_get_integerv(struct yagl_gles_context *ctx,
     switch (pname) {
     case GL_MAX_RENDERBUFFER_SIZE:
         *num_params = 1;
-        break;
-    case GL_BLEND:
-        *num_params = 1;
-        break;
-    case GL_CULL_FACE:
-        *num_params = 1;
-        break;
-    case GL_DEPTH_TEST:
-        *num_params = 1;
-        break;
-    case GL_GENERATE_MIPMAP_HINT:
-        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        ctx->max_renderbuffer_size = *params;
+        ctx->have_max_renderbuffer_size = 1;
         break;
     case GL_MAX_VIEWPORT_DIMS:
         *num_params = 2;
-        break;
-    case GL_POLYGON_OFFSET_FILL:
-        *num_params = 1;
-        break;
-    case GL_SAMPLE_ALPHA_TO_COVERAGE:
-        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        ctx->max_viewport_dims[0] = params[0];
+        ctx->max_viewport_dims[1] = params[1];
+        ctx->have_max_viewport_dims = 1;
         break;
     case GL_SAMPLE_BUFFERS:
         *num_params = 1;
-        break;
-    case GL_SAMPLE_COVERAGE:
-        *num_params = 1;
-        break;
-    case GL_SAMPLE_COVERAGE_INVERT:
-        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        ctx->sample_buffers = *params;
+        ctx->have_sample_buffers = 1;
         break;
     case GL_SAMPLES:
         *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        ctx->samples = *params;
+        ctx->have_samples = 1;
         break;
     case GL_SCISSOR_BOX:
         *num_params = 4;
-        break;
-    case GL_SCISSOR_TEST:
-        *num_params = 1;
-        break;
-    case GL_STENCIL_CLEAR_VALUE:
-        *num_params = 1;
-        break;
-    case GL_STENCIL_FAIL:
-        *num_params = 1;
-        break;
-    case GL_STENCIL_FUNC:
-        *num_params = 1;
-        break;
-    case GL_STENCIL_PASS_DEPTH_FAIL:
-        *num_params = 1;
-        break;
-    case GL_STENCIL_PASS_DEPTH_PASS:
-        *num_params = 1;
-        break;
-    case GL_STENCIL_REF:
-        *num_params = 1;
-        break;
-    case GL_STENCIL_TEST:
-        *num_params = 1;
-        break;
-    case GL_STENCIL_VALUE_MASK:
-        *num_params = 1;
-        break;
-    case GL_STENCIL_WRITEMASK:
-        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        ctx->scissor_box[0] = params[0];
+        ctx->scissor_box[1] = params[1];
+        ctx->scissor_box[2] = params[2];
+        ctx->scissor_box[3] = params[3];
+        ctx->have_scissor_box = 1;
         break;
     case GL_SUBPIXEL_BITS:
         *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        ctx->subpixel_bits = *params;
+        ctx->have_subpixel_bits = 1;
         break;
     case GL_VIEWPORT:
         *num_params = 4;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        ctx->viewport[0] = params[0];
+        ctx->viewport[1] = params[1];
+        ctx->viewport[2] = params[2];
+        ctx->viewport[3] = params[3];
+        ctx->have_viewport = 1;
         break;
     default:
         return ctx->get_integerv(ctx, pname, params, num_params);
     }
-
-    yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
 
     return 1;
 }
@@ -1844,6 +1967,40 @@ int yagl_gles_context_get_floatv(struct yagl_gles_context *ctx,
         *num_params = 2;
         *needs_map = 1;
         break;
+    case GL_SAMPLE_COVERAGE_VALUE:
+        *params = ctx->sample_coverage_value;
+        *num_params = 1;
+        break;
+    case GL_LINE_WIDTH:
+        *params = ctx->line_width;
+        *num_params = 1;
+        break;
+    case GL_POLYGON_OFFSET_FACTOR:
+        *params = ctx->polygon_offset_factor;
+        *num_params = 1;
+        break;
+    case GL_POLYGON_OFFSET_UNITS:
+        *params = ctx->polygon_offset_units;
+        *num_params = 1;
+        break;
+    case GL_ALIASED_LINE_WIDTH_RANGE:
+        if (ctx->have_line_width_range) {
+            params[0] = ctx->line_width_range[0];
+            params[1] = ctx->line_width_range[1];
+            *num_params = 2;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_ALIASED_POINT_SIZE_RANGE:
+        if (ctx->have_point_size_range) {
+            params[0] = ctx->point_size_range[0];
+            params[1] = ctx->point_size_range[1];
+            *num_params = 2;
+        } else {
+            processed = 0;
+        }
+        break;
     default:
         processed = 0;
         break;
@@ -1856,27 +2013,21 @@ int yagl_gles_context_get_floatv(struct yagl_gles_context *ctx,
     switch (pname) {
     case GL_ALIASED_LINE_WIDTH_RANGE:
         *num_params = 2;
+        yagl_host_glGetFloatv(pname, params, *num_params, NULL);
+        ctx->line_width_range[0] = params[0];
+        ctx->line_width_range[1] = params[1];
+        ctx->have_line_width_range = 1;
         break;
     case GL_ALIASED_POINT_SIZE_RANGE:
         *num_params = 2;
-        break;
-    case GL_LINE_WIDTH:
-        *num_params = 1;
-        break;
-    case GL_POLYGON_OFFSET_FACTOR:
-        *num_params = 1;
-        break;
-    case GL_POLYGON_OFFSET_UNITS:
-        *num_params = 1;
-        break;
-    case GL_SAMPLE_COVERAGE_VALUE:
-        *num_params = 1;
+        yagl_host_glGetFloatv(pname, params, *num_params, NULL);
+        ctx->point_size_range[0] = params[0];
+        ctx->point_size_range[1] = params[1];
+        ctx->have_point_size_range = 1;
         break;
     default:
         return ctx->get_floatv(ctx, pname, params, num_params, needs_map);
     }
-
-    yagl_host_glGetFloatv(pname, params, *num_params, NULL);
 
     return 1;
 }
@@ -2112,6 +2263,8 @@ void yagl_gles_context_post_pack(struct yagl_gles_context *ctx,
 void yagl_gles_context_line_width(struct yagl_gles_context *ctx,
                                   GLfloat width)
 {
+    ctx->line_width = width;
+
     yagl_host_glLineWidth(width);
 }
 
@@ -2255,6 +2408,9 @@ void yagl_gles_context_sample_coverage(struct yagl_gles_context *ctx,
                                        GLclampf value,
                                        GLboolean invert)
 {
+    ctx->sample_coverage_value = yagl_clampf(value);
+    ctx->sample_coverage_invert = invert;
+
     yagl_host_glSampleCoverage(value, invert);
 }
 
@@ -2272,5 +2428,24 @@ void yagl_gles_context_polygon_offset(struct yagl_gles_context *ctx,
                                       GLfloat factor,
                                       GLfloat units)
 {
+    ctx->polygon_offset_factor = factor;
+    ctx->polygon_offset_units = units;
+
     yagl_host_glPolygonOffset(factor, units);
+}
+
+void yagl_gles_context_hint(struct yagl_gles_context *ctx,
+                            GLenum target,
+                            GLenum mode)
+{
+    switch (target) {
+    case GL_GENERATE_MIPMAP_HINT:
+        ctx->generate_mipmap_hint = mode;
+        break;
+    default:
+        ctx->hint(ctx, target, mode);
+        break;
+    }
+
+    yagl_host_glHint(target, mode);
 }

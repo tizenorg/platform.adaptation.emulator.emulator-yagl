@@ -5,6 +5,7 @@
 #include "yagl_gles2_shader.h"
 #include "yagl_gles2_validate.h"
 #include "yagl_gles2_context.h"
+#include "yagl_gles_validate.h"
 #include "yagl_gles_vertex_array.h"
 #include "yagl_gles_array.h"
 #include "yagl_gles_buffer.h"
@@ -46,18 +47,114 @@
 
 #define YAGL_GET_CTX() YAGL_GET_CTX_IMPL(return)
 
-/*
- * TODO: Passthrough for now.
- * @{
- */
+YAGL_API void glStencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask)
+{
+    int tmp = 0;
 
-YAGL_IMPLEMENT_API_NORET4(glStencilFuncSeparate, GLenum, GLenum, GLint, GLuint, face, func, ref, mask)
-YAGL_IMPLEMENT_API_NORET2(glStencilMaskSeparate, GLenum, GLuint, face, mask)
-YAGL_IMPLEMENT_API_NORET4(glStencilOpSeparate, GLenum, GLenum, GLenum, GLenum, face, fail, zfail, zpass)
+    YAGL_LOG_FUNC_ENTER_SPLIT4(glStencilFuncSeparate, GLenum, GLenum, GLint, GLuint, face, func, ref, mask);
 
-/*
- * @}
- */
+    YAGL_GET_CTX();
+
+    if (!yagl_gles_is_stencil_func_valid(func)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if ((face == GL_FRONT) || (face == GL_FRONT_AND_BACK)) {
+        ctx->base.stencil_front.func = func;
+        ctx->base.stencil_front.ref = ref;
+        ctx->base.stencil_front.mask = mask;
+
+        tmp = 1;
+    }
+
+    if ((face == GL_BACK) || (face == GL_FRONT_AND_BACK)) {
+        ctx->base.stencil_back.func = func;
+        ctx->base.stencil_back.ref = ref;
+        ctx->base.stencil_back.mask = mask;
+
+        tmp = 1;
+    }
+
+    if (tmp) {
+        yagl_host_glStencilFuncSeparate(face, func, ref, mask);
+    } else {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glStencilMaskSeparate(GLenum face, GLuint mask)
+{
+    int tmp = 0;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT2(glStencilMaskSeparate, GLenum, GLuint, face, mask);
+
+    YAGL_GET_CTX();
+
+    if ((face == GL_FRONT) || (face == GL_FRONT_AND_BACK)) {
+        ctx->base.stencil_front.writemask = mask;
+
+        tmp = 1;
+    }
+
+    if ((face == GL_BACK) || (face == GL_FRONT_AND_BACK)) {
+        ctx->base.stencil_back.writemask = mask;
+
+        tmp = 1;
+    }
+
+    if (tmp) {
+        yagl_host_glStencilMaskSeparate(face, mask);
+    } else {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+    }
+
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
+
+YAGL_API void glStencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenum zpass)
+{
+    int tmp = 0;
+
+    YAGL_LOG_FUNC_ENTER_SPLIT4(glStencilOpSeparate, GLenum, GLenum, GLenum, GLenum, face, fail, zfail, zpass);
+
+    YAGL_GET_CTX();
+
+    if (!yagl_gles_is_stencil_op_valid(fail) ||
+        !yagl_gles_is_stencil_op_valid(zfail) ||
+        !yagl_gles_is_stencil_op_valid(zpass)) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+        goto out;
+    }
+
+    if ((face == GL_FRONT) || (face == GL_FRONT_AND_BACK)) {
+        ctx->base.stencil_front.fail = fail;
+        ctx->base.stencil_front.zfail = zfail;
+        ctx->base.stencil_front.zpass = zpass;
+
+        tmp = 1;
+    }
+
+    if ((face == GL_BACK) || (face == GL_FRONT_AND_BACK)) {
+        ctx->base.stencil_back.fail = fail;
+        ctx->base.stencil_back.zfail = zfail;
+        ctx->base.stencil_back.zpass = zpass;
+
+        tmp = 1;
+    }
+
+    if (tmp) {
+        yagl_host_glStencilOpSeparate(face, fail, zfail, zpass);
+    } else {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+    }
+
+out:
+    YAGL_LOG_FUNC_EXIT(NULL);
+}
 
 YAGL_API void glAttachShader(GLuint program, GLuint shader)
 {

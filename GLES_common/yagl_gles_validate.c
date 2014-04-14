@@ -1,6 +1,52 @@
 #include "GL/gl.h"
 #include "yagl_gles_validate.h"
 
+int yagl_gles_is_stencil_op_valid(GLenum op)
+{
+    switch (op) {
+    case GL_KEEP:
+    case GL_ZERO:
+    case GL_REPLACE:
+    case GL_INCR:
+    case GL_INCR_WRAP:
+    case GL_DECR:
+    case GL_DECR_WRAP:
+    case GL_INVERT:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+int yagl_gles_is_stencil_func_valid(GLenum func)
+{
+    switch (func) {
+    case GL_NEVER:
+    case GL_LESS:
+    case GL_LEQUAL:
+    case GL_GREATER:
+    case GL_GEQUAL:
+    case GL_EQUAL:
+    case GL_NOTEQUAL:
+    case GL_ALWAYS:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+int yagl_gles_is_hint_mode_valid(GLenum mode)
+{
+    switch (mode) {
+    case GL_FASTEST:
+    case GL_NICEST:
+    case GL_DONT_CARE:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
 int yagl_gles_is_draw_mode_valid(GLenum mode)
 {
     switch (mode) {

@@ -279,11 +279,6 @@ void yagl_gles2_context_prepare(struct yagl_gles2_context *ctx)
         ctx->gen_locations = 0;
     }
 
-    /*
-     * We don't support it for now...
-     */
-    ctx->num_shader_binary_formats = 0;
-
     yagl_host_glGetString(GL_EXTENSIONS, NULL, 0, &size);
     extensions = yagl_malloc0(size);
     yagl_host_glGetString(GL_EXTENSIONS, extensions, size, NULL);
@@ -983,7 +978,7 @@ int yagl_gles2_context_get_integerv(struct yagl_gles_context *ctx,
 
     switch (pname) {
     case GL_NUM_SHADER_BINARY_FORMATS:
-        *params = gles2_ctx->num_shader_binary_formats;
+        *params = 0;
         *num_params = 1;
         break;
     case GL_NUM_COMPRESSED_TEXTURE_FORMATS:
@@ -1019,7 +1014,13 @@ int yagl_gles2_context_get_integerv(struct yagl_gles_context *ctx,
         break;
     case GL_MAX_FRAGMENT_UNIFORM_VECTORS:
         *num_params = 1;
-        yagl_host_glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, params, *num_params, NULL);
+        if (gles2_ctx->have_max_fragment_uniform_components) {
+            *params = gles2_ctx->max_fragment_uniform_components;
+        } else {
+            yagl_host_glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, params, *num_params, NULL);
+            gles2_ctx->max_fragment_uniform_components = *params;
+            gles2_ctx->have_max_fragment_uniform_components = 1;
+        }
         *params /= 4;
         break;
     case GL_MAX_VARYING_VECTORS:
@@ -1031,19 +1032,117 @@ int yagl_gles2_context_get_integerv(struct yagl_gles_context *ctx,
              * OpenGL 3.2, thus, we use a constant.
              */
             *params = 64;
+        } else if (gles2_ctx->have_max_varying_floats) {
+            *params = gles2_ctx->max_varying_floats;
         } else {
             yagl_host_glGetIntegerv(GL_MAX_VARYING_FLOATS, params, *num_params, NULL);
+            gles2_ctx->max_varying_floats = *params;
+            gles2_ctx->have_max_varying_floats = 1;
         }
         *params /= 4;
         break;
     case GL_MAX_VERTEX_UNIFORM_VECTORS:
         *num_params = 1;
-        yagl_host_glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS, params, *num_params, NULL);
+        if (gles2_ctx->have_max_vertex_uniform_components) {
+            *params = gles2_ctx->max_vertex_uniform_components;
+        } else {
+            yagl_host_glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS, params, *num_params, NULL);
+            gles2_ctx->max_vertex_uniform_components = *params;
+            gles2_ctx->have_max_vertex_uniform_components = 1;
+        }
         *params /= 4;
         break;
     case GL_SHADER_COMPILER:
         *params = GL_TRUE;
         *num_params = 1;
+        break;
+    case GL_STENCIL_BACK_FAIL:
+        *params = ctx->stencil_back.fail;
+        *num_params = 1;
+        break;
+    case GL_STENCIL_BACK_FUNC:
+        *params = ctx->stencil_back.func;
+        *num_params = 1;
+        break;
+    case GL_STENCIL_BACK_PASS_DEPTH_FAIL:
+        *params = ctx->stencil_back.zfail;
+        *num_params = 1;
+        break;
+    case GL_STENCIL_BACK_PASS_DEPTH_PASS:
+        *params = ctx->stencil_back.zpass;
+        *num_params = 1;
+        break;
+    case GL_STENCIL_BACK_REF:
+        *params = ctx->stencil_back.ref;
+        *num_params = 1;
+        break;
+    case GL_STENCIL_BACK_VALUE_MASK:
+        *params = ctx->stencil_back.mask;
+        *num_params = 1;
+        break;
+    case GL_STENCIL_BACK_WRITEMASK:
+        *params = ctx->stencil_back.writemask;
+        *num_params = 1;
+        break;
+    case GL_DITHER:
+        *params = ctx->dither_enabled;
+        *num_params = 1;
+        break;
+    case GL_MAX_TEXTURE_SIZE:
+        if (gles2_ctx->have_max_texture_size) {
+            *params = gles2_ctx->max_texture_size;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_CUBE_MAP_TEXTURE_SIZE:
+        if (gles2_ctx->have_max_cubemap_texture_size) {
+            *params = gles2_ctx->max_cubemap_texture_size;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_SAMPLES_IMG:
+        if (gles2_ctx->have_max_samples_img) {
+            *params = gles2_ctx->max_samples_img;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_TEXTURE_IMAGE_UNITS:
+        if (gles2_ctx->have_max_texture_image_units) {
+            *params = gles2_ctx->max_texture_image_units;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT:
+        if (gles2_ctx->have_max_texture_max_anisotropy) {
+            *params = gles2_ctx->max_texture_max_anisotropy;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
+        if (gles2_ctx->have_max_vertex_texture_image_units) {
+            *params = gles2_ctx->max_vertex_texture_image_units;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
+        break;
+    case GL_MAX_3D_TEXTURE_SIZE_OES:
+        if (gles2_ctx->have_max_3d_texture_size) {
+            *params = gles2_ctx->max_3d_texture_size;
+            *num_params = 1;
+        } else {
+            processed = 0;
+        }
         break;
     default:
         processed = 0;
@@ -1057,57 +1156,52 @@ int yagl_gles2_context_get_integerv(struct yagl_gles_context *ctx,
     switch (pname) {
     case GL_MAX_TEXTURE_SIZE:
         *num_params = 1;
-        break;
-    case GL_DITHER:
-        *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles2_ctx->max_texture_size = *params;
+        gles2_ctx->have_max_texture_size = 1;
         break;
     case GL_MAX_CUBE_MAP_TEXTURE_SIZE:
         *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles2_ctx->max_cubemap_texture_size = *params;
+        gles2_ctx->have_max_cubemap_texture_size = 1;
         break;
     case GL_MAX_SAMPLES_IMG:
         *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles2_ctx->max_samples_img = *params;
+        gles2_ctx->have_max_samples_img = 1;
         break;
     case GL_MAX_TEXTURE_IMAGE_UNITS:
         *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles2_ctx->max_texture_image_units = *params;
+        gles2_ctx->have_max_texture_image_units = 1;
         break;
     case GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT:
         *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles2_ctx->max_texture_max_anisotropy = *params;
+        gles2_ctx->have_max_texture_max_anisotropy = 1;
         break;
     case GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
         *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles2_ctx->max_vertex_texture_image_units = *params;
+        gles2_ctx->have_max_vertex_texture_image_units = 1;
         break;
     case GL_SHADER_BINARY_FORMATS:
-        *num_params = gles2_ctx->num_shader_binary_formats;
-        break;
-    case GL_STENCIL_BACK_FAIL:
-        *num_params = 1;
-        break;
-    case GL_STENCIL_BACK_FUNC:
-        *num_params = 1;
-        break;
-    case GL_STENCIL_BACK_PASS_DEPTH_FAIL:
-        *num_params = 1;
-        break;
-    case GL_STENCIL_BACK_PASS_DEPTH_PASS:
-        *num_params = 1;
-        break;
-    case GL_STENCIL_BACK_REF:
-        *num_params = 1;
-        break;
-    case GL_STENCIL_BACK_VALUE_MASK:
-        *num_params = 1;
-        break;
-    case GL_STENCIL_BACK_WRITEMASK:
-        *num_params = 1;
+        *num_params = 0;
         break;
     case GL_MAX_3D_TEXTURE_SIZE_OES:
         *num_params = 1;
+        yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
+        gles2_ctx->max_3d_texture_size = *params;
+        gles2_ctx->have_max_3d_texture_size = 1;
         break;
     default:
         return 0;
     }
-
-    yagl_host_glGetIntegerv(pname, params, *num_params, NULL);
 
     return 1;
 }
@@ -1255,6 +1349,12 @@ int yagl_gles2_context_validate_renderbuffer_format(struct yagl_gles_context *ct
     return 0;
 }
 
+void yagl_gles2_context_hint(struct yagl_gles_context *ctx,
+                             GLenum target,
+                             GLenum mode)
+{
+}
+
 int yagl_gles2_context_get_programiv(struct yagl_gles2_context *ctx,
                                      struct yagl_gles2_program *program,
                                      GLenum pname,
@@ -1324,6 +1424,7 @@ struct yagl_client_context *yagl_gles2_context_create(struct yagl_sharegroup *sg
     gles2_ctx->base.validate_copyteximage_format = &yagl_gles2_context_validate_copyteximage_format;
     gles2_ctx->base.validate_texstorage_format = &yagl_gles2_context_validate_texstorage_format;
     gles2_ctx->base.validate_renderbuffer_format = &yagl_gles2_context_validate_renderbuffer_format;
+    gles2_ctx->base.hint = &yagl_gles2_context_hint;
     gles2_ctx->get_programiv = &yagl_gles2_context_get_programiv;
     gles2_ctx->pre_use_program = &yagl_gles2_context_pre_use_program;
     gles2_ctx->pre_link_program = &yagl_gles2_context_pre_link_program;
