@@ -2447,8 +2447,13 @@ YAGL_API void glTexImage3D(GLenum target, GLint level, GLint internalformat, GLs
         goto out;
     }
 
-    pixels += yagl_pixel_format_get_info(pf, &ctx->base.unpack,
-                                         width, height, depth, &size);
+    if (pixels || using_pbo) {
+        pixels += yagl_pixel_format_get_info(pf, &ctx->base.unpack,
+                                             width, height, depth, &size);
+    } else {
+        yagl_pixel_format_get_info(pf, &ctx->base.unpack,
+                                   width, height, depth, &size);
+    }
 
     if (using_pbo) {
         yagl_host_glTexImage3DOffset(target,
