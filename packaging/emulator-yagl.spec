@@ -9,11 +9,6 @@ License:    MIT
 Source0:    %{name}-%{version}.tar.gz
 Source1001:     emulator-yagl.manifest
 BuildRequires:  cmake
-BuildRequires:  pkgconfig(xfixes)
-BuildRequires:  pkgconfig(x11)
-BuildRequires:  pkgconfig(x11-xcb)
-BuildRequires:  pkgconfig(xext)
-BuildRequires:  pkgconfig(dri2proto)
 BuildRequires:  pkgconfig(libdrm)
 BuildRequires:  flex
 BuildRequires:  bison
@@ -22,6 +17,12 @@ BuildRequires:  pkgconfig(gbm)
 BuildRequires:  pkgconfig(libudev)
 BuildRequires:  pkgconfig(wayland-client)
 BuildRequires:  pkgconfig(wayland-server)
+%else
+BuildRequires:  pkgconfig(xfixes)
+BuildRequires:  pkgconfig(x11)
+BuildRequires:  pkgconfig(x11-xcb)
+BuildRequires:  pkgconfig(xext)
+BuildRequires:  pkgconfig(dri2proto)
 %endif
 
 %description
@@ -42,7 +43,7 @@ YaGL - OpenGLES acceleration module for emulator (devel)
 %build
 cp %{SOURCE1001} .
 %if %{with wayland}
-cmake -DCMAKE_INSTALL_PREFIX=%{buildroot}/usr -DPLATFORM_GBM=1 -DPLATFORM_WAYLAND=1
+cmake -DCMAKE_INSTALL_PREFIX=%{buildroot}/usr -DPLATFORM_X11=0 -DPLATFORM_GBM=1 -DPLATFORM_WAYLAND=1
 %else
 cmake -DCMAKE_INSTALL_PREFIX=%{buildroot}/usr -DINSTALL_LIB_DIR=lib/yagl
 %endif
