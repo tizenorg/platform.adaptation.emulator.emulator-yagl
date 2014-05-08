@@ -1,0 +1,11 @@
+prefix=/usr
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: Desktop OpenGL ES 2.0
+Description: Desktop OpenGL ES 2.0 Library
+Version:0.5
+
+Libs: -L${libdir} -lEGL -lGLESv2 -lX11 -ldl -lm
+Cflags: -I${includedir}

@@ -345,6 +345,7 @@ typedef khronos_uint8_t GLubyte;
 #define GL_RGB5_A1                        0x8057
 #define GL_RGB565                         0x8D62
 #define GL_DEPTH_COMPONENT16              0x81A5
+#define GL_STENCIL_INDEX                  0x1901
 #define GL_STENCIL_INDEX8                 0x8D48
 #define GL_RENDERBUFFER_WIDTH             0x8D42
 #define GL_RENDERBUFFER_HEIGHT            0x8D43

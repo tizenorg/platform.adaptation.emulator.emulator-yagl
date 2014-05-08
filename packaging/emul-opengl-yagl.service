@@ -1,9 +1,11 @@
 [Unit]
-Description=OpenGL "YAGL"
+Description=OpenGL mode check
 DefaultDependencies=no
-After=emul-opengl-mode.service
 Before=basic.target
 
 [Service]
 Type=oneshot
-ExecStart=/bin/sh -c 'true'
+ExecStart=/bin/sh -c '/etc/emulator/yagl.sh'
+
+[Install]
+WantedBy=emulator_preinit.target
