@@ -1,4 +1,5 @@
 %bcond_with wayland
+%bcond_with emulator
 
 Name:       emulator-yagl
 Summary:    YaGL - OpenGLES acceleration module for emulator
@@ -23,6 +24,10 @@ BuildRequires:  pkgconfig(x11)
 BuildRequires:  pkgconfig(x11-xcb)
 BuildRequires:  pkgconfig(xext)
 BuildRequires:  pkgconfig(dri2proto)
+%endif
+
+%if !%{with emulator}
+ExclusiveArch:
 %endif
 
 %description
