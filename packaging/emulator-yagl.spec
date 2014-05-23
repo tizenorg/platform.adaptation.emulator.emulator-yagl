@@ -25,6 +25,10 @@ BuildRequires:  pkgconfig(xext)
 BuildRequires:  pkgconfig(dri2proto)
 %endif
 
+%if ! 0%{?simulator}
+ExclusiveArch:
+%endif
+
 %description
 YaGL - OpenGLES acceleration module for emulator.
 This package contains shared libraries libEGL, libGLES_CM, libGLESv2.
