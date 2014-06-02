@@ -159,8 +159,6 @@ struct yagl_gles_context
 
     int texture_npot;
 
-    int texture_rectangle;
-
     int texture_filter_anisotropic;
 
     int max_color_attachments;

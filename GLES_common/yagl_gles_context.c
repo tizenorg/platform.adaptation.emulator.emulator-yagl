@@ -301,13 +301,8 @@ void yagl_gles_context_prepare(struct yagl_gles_context *ctx,
 
     if (yagl_get_host_gl_version() > yagl_gl_2) {
         ctx->packed_depth_stencil = 1;
-        ctx->texture_rectangle = 1;
     } else {
         ctx->packed_depth_stencil = (strstr(extensions, "GL_EXT_packed_depth_stencil ") != NULL);
-
-        ctx->texture_rectangle = (strstr(extensions, "GL_NV_texture_rectangle ") != NULL) ||
-                                 (strstr(extensions, "GL_EXT_texture_rectangle ") != NULL) ||
-                                 (strstr(extensions, "GL_ARB_texture_rectangle ") != NULL);
     }
 
     ctx->texture_npot = 1;

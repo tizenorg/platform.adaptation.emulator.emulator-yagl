@@ -56,7 +56,6 @@ static const GLchar *unpack_subimage_ext = "GL_EXT_unpack_subimage";
 static const GLchar *egl_sync_ext = "GL_OES_EGL_sync";
 static const GLchar *packed_depth_stencil_ext = "GL_OES_packed_depth_stencil";
 static const GLchar *texture_npot_ext = "GL_OES_texture_npot";
-static const GLchar *texture_rectangle_ext = "GL_ARB_texture_rectangle";
 static const GLchar *texture_filter_anisotropic_ext = "GL_EXT_texture_filter_anisotropic";
 static const GLchar *vertex_array_object_ext = "GL_OES_vertex_array_object";
 static const GLchar *texture_half_float_ext = "GL_OES_texture_half_float";
@@ -341,10 +340,6 @@ const GLchar **yagl_gles2_context_get_extensions(struct yagl_gles2_context *ctx,
 
     if (ctx->base.texture_npot) {
         extensions[i++] = texture_npot_ext;
-    }
-
-    if (ctx->base.texture_rectangle) {
-        extensions[i++] = texture_rectangle_ext;
     }
 
     if (ctx->base.texture_filter_anisotropic) {
