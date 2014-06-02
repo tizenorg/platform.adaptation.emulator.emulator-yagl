@@ -47,7 +47,6 @@ static const GLchar *map_buffer_range_ext = "GL_EXT_map_buffer_range";
 static const GLchar *element_index_uint_ext = "GL_OES_element_index_uint";
 static const GLchar *texture_3d_ext = "GL_OES_texture_3D";
 static const GLchar *blend_minmax_ext = "GL_EXT_blend_minmax";
-static const GLchar *texture_storage_ext = "GL_EXT_texture_storage";
 static const GLchar *pbo_ext = "GL_NV_pixel_buffer_object";
 static const GLchar *read_buffer_ext = "GL_NV_read_buffer";
 static const GLchar *compressed_etc1_rgb8_texture_ext = "GL_OES_compressed_ETC1_RGB8_texture";
@@ -324,7 +323,6 @@ const GLchar **yagl_gles2_context_get_extensions(struct yagl_gles2_context *ctx,
     extensions[i++] = element_index_uint_ext;
     extensions[i++] = texture_3d_ext;
     extensions[i++] = blend_minmax_ext;
-    extensions[i++] = texture_storage_ext;
     extensions[i++] = pbo_ext;
     extensions[i++] = read_buffer_ext;
     extensions[i++] = compressed_etc1_rgb8_texture_ext;

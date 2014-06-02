@@ -54,7 +54,6 @@ static const GLchar *framebuffer_blit_ext = "GL_ANGLE_framebuffer_blit";
 static const GLchar *draw_buffers_ext = "GL_EXT_draw_buffers";
 static const GLchar *mapbuffer_ext = "GL_OES_mapbuffer";
 static const GLchar *map_buffer_range_ext = "GL_EXT_map_buffer_range";
-static const GLchar *texture_storage_ext = "GL_EXT_texture_storage";
 static const GLchar *pbo_ext = "GL_NV_pixel_buffer_object";
 static const GLchar *read_buffer_ext = "GL_NV_read_buffer";
 static const GLchar *compressed_etc1_rgb8_texture_ext = "GL_OES_compressed_ETC1_RGB8_texture";
@@ -100,7 +99,6 @@ static const GLchar **yagl_gles1_context_get_extensions(struct yagl_gles1_contex
     extensions[i++] = draw_buffers_ext;
     extensions[i++] = mapbuffer_ext;
     extensions[i++] = map_buffer_range_ext;
-    extensions[i++] = texture_storage_ext;
     extensions[i++] = pbo_ext;
     extensions[i++] = read_buffer_ext;
     extensions[i++] = compressed_etc1_rgb8_texture_ext;
