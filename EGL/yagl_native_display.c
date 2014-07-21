@@ -85,6 +85,10 @@ int yagl_native_display_bind_wl_display(struct yagl_native_display *dpy,
                                             &wl_drm_callbacks,
                                             dpy);
 
+    if (dpy->wl_server_drm) {
+        dpy->update_wl_server(dpy);
+    }
+
     return dpy->wl_server_drm ? 1 : 0;
 }
 
@@ -97,6 +101,7 @@ int yagl_native_display_unbind_wl_display(struct yagl_native_display *dpy)
     wayland_drm_destroy(dpy->wl_server_drm);
     dpy->wl_server_drm = NULL;
 
+    dpy->update_wl_server(dpy);
     return 1;
 }
 
@@ -105,7 +110,7 @@ int yagl_native_display_query_wl_buffer(struct yagl_native_display *dpy,
                                         EGLint attribute,
                                         EGLint *value)
 {
-    struct wl_drm_buffer *drm_buffer = wayland_drm_get_buffer(buffer);
+    struct wl_drm_buffer *drm_buffer = wayland_drm_get_buffer(dpy->wl_server_drm, buffer);
     struct vigs_drm_surface *drm_sfc;
 
     if (!drm_buffer) {
