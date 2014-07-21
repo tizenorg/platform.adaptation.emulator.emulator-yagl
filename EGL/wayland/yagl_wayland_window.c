@@ -151,9 +151,23 @@ static int yagl_wayland_window_get_buffer(struct yagl_native_drawable *drawable,
 {
     struct yagl_wayland_window *window = (struct yagl_wayland_window*)drawable;
     struct wl_egl_window *egl_window = YAGL_WAYLAND_WINDOW(drawable->os_drawable);
-    int i;
+    struct yagl_wayland_display *dpy = (struct yagl_wayland_display *)drawable->dpy;
+    struct wl_display *wl_dpy=YAGL_WAYLAND_DPY(drawable->dpy->os_dpy);
+    int i, ret=0;
 
     YAGL_LOG_FUNC_SET(yagl_wayland_window_get_buffer);
+
+    /*
+     *Throttle
+     */
+    while(window->frame_callback && (ret != -1)) {
+        ret = wl_display_dispatch_queue(wl_dpy, dpy->queue);
+    }
+
+    if (ret < 0) {
+        YAGL_LOG_ERROR("wl_display_dispatch_queue failed for egl_window %p: %d", egl_window, ret);
+        return 0;
+    }
 
     switch (attachment) {
     case yagl_native_attachment_back:

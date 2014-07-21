@@ -109,6 +109,14 @@ static int yagl_gbm_display_get_visual(struct yagl_native_display *dpy,
     return 1;
 }
 
+static void yagl_gbm_display_update_wl_server(struct yagl_native_display *dpy)
+{
+#ifdef YAGL_PLATFORM_WAYLAND
+    struct gbm_device *gbm_dev = YAGL_GBM_DPY(dpy->os_dpy);
+    gbm_dev->wl_drm = dpy->wl_server_drm;
+#endif
+}
+
 static void yagl_gbm_display_destroy(struct yagl_native_display *dpy)
 {
     yagl_native_display_cleanup(dpy);
@@ -142,6 +150,7 @@ struct yagl_native_display
     dpy->create_pixmap = &yagl_gbm_display_create_pixmap;
     dpy->create_image = &yagl_gbm_display_create_image;
     dpy->get_visual = &yagl_gbm_display_get_visual;
+    dpy->update_wl_server = &yagl_gbm_display_update_wl_server;
     dpy->destroy = &yagl_gbm_display_destroy;
 
     free(device_name);

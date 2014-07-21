@@ -26,7 +26,7 @@ struct wl_drm *wayland_drm_create(struct wl_display *display,
 
 void wayland_drm_destroy(struct wl_drm *drm);
 
-struct wl_drm_buffer *wayland_drm_get_buffer(struct wl_resource *resource);
+struct wl_drm_buffer *wayland_drm_get_buffer(struct wl_drm *drm, struct wl_resource *resource);
 
 struct vigs_drm_surface *wayland_drm_buffer_get_sfc(struct wl_drm_buffer *buffer);
 
