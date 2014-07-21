@@ -181,6 +181,11 @@ static int yagl_x11_display_get_visual(struct yagl_native_display *dpy,
     return 1;
 }
 
+static void yagl_x11_display_update_wl_server(struct yagl_native_display *dpy)
+{
+        return ;
+}
+
 static void yagl_x11_display_destroy(struct yagl_native_display *dpy)
 {
     struct yagl_x11_display *x11_dpy = (struct yagl_x11_display*)dpy;
@@ -266,6 +271,7 @@ struct yagl_native_display *yagl_x11_display_create(struct yagl_native_platform 
     dpy->base.create_pixmap = &yagl_x11_display_create_pixmap;
     dpy->base.create_image = &yagl_x11_display_create_image;
     dpy->base.get_visual = &yagl_x11_display_get_visual;
+    dpy->base.update_wl_server = &yagl_x11_display_update_wl_server;
     dpy->base.destroy = &yagl_x11_display_destroy;
 
     if (dri_device) {

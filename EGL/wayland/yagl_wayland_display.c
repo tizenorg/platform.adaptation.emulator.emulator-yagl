@@ -240,6 +240,11 @@ static int yagl_wayland_display_get_visual(struct yagl_native_display *dpy,
     return 1;
 }
 
+static void yagl_wayland_display_update_wl_server(struct yagl_native_display *dpy)
+{
+    return ;
+}
+
 static void yagl_wayland_display_destroy(struct yagl_native_display *dpy)
 {
     struct yagl_wayland_display *wayland_dpy = (struct yagl_wayland_display*)dpy;
@@ -343,6 +348,7 @@ struct yagl_native_display
     dpy->base.create_pixmap = &yagl_wayland_display_create_pixmap;
     dpy->base.create_image = &yagl_wayland_display_create_image;
     dpy->base.get_visual = &yagl_wayland_display_get_visual;
+    dpy->base.update_wl_server = &yagl_wayland_display_update_wl_server;
     dpy->base.destroy = &yagl_wayland_display_destroy;
 
     YAGL_LOG_FUNC_EXIT("display %p created", dpy);

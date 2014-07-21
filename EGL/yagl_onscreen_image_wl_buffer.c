@@ -1,4 +1,5 @@
 #include "yagl_onscreen_image_wl_buffer.h"
+#include "yagl_native_display.h"
 #include "yagl_display.h"
 #include "yagl_malloc.h"
 #include "yagl_host_egl_calls.h"
@@ -36,8 +37,7 @@ struct yagl_onscreen_image_wl_buffer
     struct vigs_drm_surface *drm_sfc;
 
     image = yagl_malloc0(sizeof(*image));
-
-    drm_buffer = wayland_drm_get_buffer(buffer);
+    drm_buffer = wayland_drm_get_buffer(dpy->native_dpy->wl_server_drm, buffer);
 
     if (!drm_buffer) {
         /*

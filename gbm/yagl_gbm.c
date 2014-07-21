@@ -254,7 +254,7 @@ YAGL_API struct gbm_bo *gbm_bo_import(struct gbm_device *gbm, uint32_t type,
     switch (type) {
 #ifdef YAGL_PLATFORM_WAYLAND
     case GBM_BO_IMPORT_WL_BUFFER:
-        drm_buffer = wayland_drm_get_buffer((struct wl_resource*)buffer);
+        drm_buffer = wayland_drm_get_buffer(gbm->wl_drm, (struct wl_resource*)buffer);
 
         if (!drm_buffer) {
             return NULL;
