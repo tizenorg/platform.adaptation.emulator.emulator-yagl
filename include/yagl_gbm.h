@@ -16,8 +16,6 @@ struct gbm_device
     struct gbm_device *(*dummy)(int);
 
     struct vigs_drm_device *drm_dev;
-
-    struct wl_drm *wl_drm;
 };
 
 struct gbm_bo

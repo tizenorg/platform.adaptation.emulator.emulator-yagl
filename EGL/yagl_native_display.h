@@ -53,8 +53,6 @@ struct yagl_native_display
                       int */*visual_id*/,
                       int */*visual_type*/);
 
-    void (*update_wl_server)(struct yagl_native_display */*dpy*/);
-
     void (*destroy)(struct yagl_native_display */*dpy*/);
 };
 

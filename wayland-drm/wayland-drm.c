@@ -12,7 +12,6 @@ struct wl_drm
     char *device_name;
     struct wayland_drm_callbacks *callbacks;
     void *user_data;
-    struct wl_buffer_interface buffer_interface;
 };
 
 struct wl_drm_buffer
@@ -38,6 +37,11 @@ static void drm_buffer_destroy(struct wl_client *client,
 {
     wl_resource_destroy(resource);
 }
+
+static struct wl_buffer_interface drm_buffer_interface =
+{
+    drm_buffer_destroy
+};
 
 static void drm_create_buffer(struct wl_client *client,
                               struct wl_resource *resource,
@@ -82,7 +86,7 @@ static void drm_create_buffer(struct wl_client *client,
 
     buffer->resource.object.id = id;
     buffer->resource.object.interface = &wl_buffer_interface;
-    buffer->resource.object.implementation = (void(**)(void))&drm->buffer_interface;
+    buffer->resource.object.implementation = (void(**)(void))&drm_buffer_interface;
     buffer->resource.data = buffer;
 
     buffer->resource.destroy = buffer_destroy;
@@ -174,7 +178,6 @@ struct wl_drm *wayland_drm_create(struct wl_display *display,
     drm->callbacks = callbacks;
     drm->user_data = user_data;
 
-    drm->buffer_interface.destroy = drm_buffer_destroy;
     wl_global_create(display, &wl_drm_interface, 1, drm, bind_drm);
 
     return drm;
@@ -187,7 +190,7 @@ void wayland_drm_destroy(struct wl_drm *drm)
     free(drm);
 }
 
-struct wl_drm_buffer *wayland_drm_get_buffer(struct wl_drm *drm, struct wl_resource *resource)
+struct wl_drm_buffer *wayland_drm_get_buffer(struct wl_resource *resource)
 {
     if (!resource) {
         return NULL;
@@ -195,7 +198,7 @@ struct wl_drm_buffer *wayland_drm_get_buffer(struct wl_drm *drm, struct wl_resou
 
     if (wl_resource_instance_of(resource,
                                 &wl_buffer_interface,
-                                &drm->buffer_interface)) {
+                                &drm_buffer_interface)) {
         return wl_resource_get_user_data(resource);
     } else {
         return NULL;
