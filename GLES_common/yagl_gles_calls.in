@@ -181,7 +181,7 @@ void glGetTransformFeedbackVaryings(GLuint program, GLsizei *sizes, GLenum *type
 void glGenQueries(const GLuint *ids)
 void glBeginQuery(GLenum target, GLuint id)
 void glEndQuery(GLenum target)
-GLboolean glGetQueryObjectuiv(GLuint id, GLuint &result)
+GLboolean glGetQueryObjectuiv(GLuint id, GLenum pname, GLuint &result)
 # Samplers
 void glGenSamplers(const GLuint *samplers)
 void glBindSampler(GLuint unit, GLuint sampler)

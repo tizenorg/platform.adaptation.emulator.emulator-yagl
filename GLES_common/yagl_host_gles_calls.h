@@ -870,7 +870,7 @@ void yagl_host_glEndQuery(GLenum target);
 /*
  * glGetQueryObjectuiv wrapper. id = 173
  */
-GLboolean yagl_host_glGetQueryObjectuiv(GLuint id, GLuint *result);
+GLboolean yagl_host_glGetQueryObjectuiv(GLuint id, GLenum pname, GLuint *result);
 
 /*
  * glGenSamplers wrapper. id = 174

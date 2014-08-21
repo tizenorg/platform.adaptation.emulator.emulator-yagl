@@ -2538,13 +2538,14 @@ void yagl_host_glEndQuery(GLenum target)
 /*
  * glGetQueryObjectuiv wrapper. id = 173
  */
-GLboolean yagl_host_glGetQueryObjectuiv(GLuint id, GLuint *result)
+GLboolean yagl_host_glGetQueryObjectuiv(GLuint id, GLenum pname, GLuint *result)
 {
     struct yagl_transport *t = yagl_get_transport();
     GLboolean retval = 0;
 
-    yagl_transport_begin(t, yagl_api_id_gles, 173, 5 * 8, 5 * 8);
+    yagl_transport_begin(t, yagl_api_id_gles, 173, 6 * 8, 6 * 8);
     yagl_transport_put_out_GLuint(t, id);
+    yagl_transport_put_out_GLenum(t, pname);
     yagl_transport_put_in_GLuint(t, result);
     yagl_transport_put_in_GLboolean(t, &retval);
     yagl_transport_end(t);

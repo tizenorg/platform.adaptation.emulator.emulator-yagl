@@ -37,11 +37,11 @@
 #include "yagl_state.h"
 #include "yagl_host_gles_calls.h"
 
-static void yagl_gles3_query_update_result(struct yagl_gles3_query *query)
+static void yagl_gles3_query_update_result(struct yagl_gles3_query *query, GLenum pname)
 {
     if (!query->result_available) {
         query->result_available =
-            yagl_host_glGetQueryObjectuiv(query->global_name, &query->result);
+            yagl_host_glGetQueryObjectuiv(query->global_name, pname, &query->result);
     }
 }
 
@@ -106,14 +106,14 @@ void yagl_gles3_query_end(struct yagl_gles3_query *query,
 
 int yagl_gles3_query_is_result_available(struct yagl_gles3_query *query)
 {
-    yagl_gles3_query_update_result(query);
+    yagl_gles3_query_update_result(query, GL_QUERY_RESULT_AVAILABLE);
 
     return query->result_available;
 }
 
 GLuint yagl_gles3_query_get_result(struct yagl_gles3_query *query)
 {
-    yagl_gles3_query_update_result(query);
+    yagl_gles3_query_update_result(query, GL_QUERY_RESULT);
 
     return query->result;
 }
