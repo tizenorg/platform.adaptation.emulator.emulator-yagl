@@ -74,10 +74,19 @@ static int yagl_wayland_window_lock_back(struct yagl_wayland_window *window)
     struct wl_display *wl_dpy = YAGL_WAYLAND_DPY(dpy->base.os_dpy);
     int i, ret;
 
-    /*
-     * There might be a buffer release already queued that wasn't processed.
-     */
-    wl_display_dispatch_queue_pending(wl_dpy, dpy->queue);
+    if (window->frame_callback == NULL) {
+        /* There might be a buffer release already queued that wasn't processed
+        */
+        wl_display_dispatch_queue_pending(wl_dpy, dpy->queue);
+    } else {
+        /* We throttle to the frame callback here so that we can be sure to have
+        * received any release events before trying to decide whether to
+        * allocate a new buffer */
+        do {
+            if (wl_display_dispatch_queue(wl_dpy, dpy->queue) == -1)
+                    return EGL_FALSE;
+        } while (window->frame_callback != NULL);
+    }
 
     if (!window->back) {
         for (i = 0;
@@ -241,25 +250,6 @@ static void yagl_wayland_window_swap_buffers(struct yagl_native_drawable *drawab
     int i, ret = 0;
 
     YAGL_LOG_FUNC_SET(yagl_wayland_window_swap_buffers);
-
-    /*
-     * Throttle.
-     */
-    while (window->frame_callback && (ret != -1)) {
-        ret = wl_display_dispatch_queue(wl_dpy, dpy->queue);
-    }
-
-    if (ret < 0) {
-        YAGL_LOG_ERROR("wl_display_dispatch_queue failed for egl_window %p: %d", egl_window, ret);
-        return;
-    }
-
-    window->frame_callback = wl_surface_frame(egl_window->surface);
-    wl_callback_add_listener(window->frame_callback,
-                             &yagl_wayland_window_frame_listener,
-                             window);
-    wl_proxy_set_queue((struct wl_proxy*)window->frame_callback, dpy->queue);
-
     for (i = 0;
          i < sizeof(window->color_buffers)/sizeof(window->color_buffers[0]);
          ++i) {
@@ -276,6 +266,12 @@ static void yagl_wayland_window_swap_buffers(struct yagl_native_drawable *drawab
         YAGL_LOG_ERROR("Cannot lock back for egl_window %p", egl_window);
         return;
     }
+
+    window->frame_callback = wl_surface_frame(egl_window->surface);
+    wl_callback_add_listener(window->frame_callback,
+                             &yagl_wayland_window_frame_listener, window);
+    wl_proxy_set_queue((struct wl_proxy *) window->frame_callback,
+                       dpy->queue);
 
     window->front = window->back;
     window->front->age = 1;
