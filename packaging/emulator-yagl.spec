@@ -1,6 +1,8 @@
 %bcond_with wayland
 %bcond_with emulator
 
+%define yagl_group display
+
 Name:       emulator-yagl
 Summary:    YaGL - OpenGLES acceleration module for emulator
 Version:    1.0
@@ -48,9 +50,9 @@ YaGL - OpenGLES acceleration module for emulator (devel)
 %build
 cp %{SOURCE1001} .
 %if %{with wayland}
-cmake -DCMAKE_INSTALL_PREFIX=%{buildroot}/usr -DPLATFORM_X11=0 -DPLATFORM_GBM=1 -DPLATFORM_WAYLAND=1
+cmake -DCMAKE_INSTALL_PREFIX=%{buildroot}/usr -DPLATFORM_X11=0 -DPLATFORM_GBM=1 -DPLATFORM_WAYLAND=1 -DYAGL_GROUP=%{yagl_group}
 %else
-cmake -DCMAKE_INSTALL_PREFIX=%{buildroot}/usr -DINSTALL_LIB_DIR=lib/yagl
+cmake -DCMAKE_INSTALL_PREFIX=%{buildroot}/usr -DINSTALL_LIB_DIR=lib/yagl -DYAGL_GROUP=%{yagl_group}
 %endif
 make
 
@@ -84,6 +86,7 @@ cp -r include/KHR %{buildroot}/usr/include/
 %files
 %manifest %{name}.manifest
 %defattr(-,root,root,-)
+%config %{_sysconfdir}/udev/rules.d/99-yagl.rules
 %if %{with wayland}
 /usr/lib/*.so*
 %else

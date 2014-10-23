@@ -1,0 +1,6 @@
+if(NOT ${YAGL_GROUP})
+	message(STATUS "$YAGL_GROUP not set, using default: display")
+	set(YAGL_GROUP "display")
+endif()
+configure_file(99-yagl.rules.in 99-yagl.rules)
+install(FILES 99-yagl.rules DESTINATION ../etc/udev/rules.d)

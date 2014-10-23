@@ -1,0 +1,1 @@
+KERNEL=="yagl", MODE="0660", GROUP="@YAGL_GROUP@", SECLABEL{smack}="*"
