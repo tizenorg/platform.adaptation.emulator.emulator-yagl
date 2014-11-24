@@ -3,7 +3,7 @@
 
 Name:       emulator-yagl
 Summary:    YaGL - OpenGLES acceleration module for emulator
-Version:    1.2
+Version:    1.3
 Release:    1
 License:    MIT
 #URL:        http://www.khronos.org
@@ -74,14 +74,8 @@ ln -s libGLESv1_CM.so.1 %{buildroot}%{_libdir}/libGLESv1_CM.so
 ln -s yagl/libGLESv2.so.1.0 %{buildroot}%{_libdir}/libGLESv2.so.1
 ln -s libGLESv2.so.1 %{buildroot}%{_libdir}/libGLESv2.so
 
-mkdir -p %{buildroot}/usr/lib/systemd/system
-cp packaging/emul-opengl-yagl.service %{buildroot}/usr/lib/systemd/system
-
-mkdir -p %{buildroot}/usr/lib/systemd/system/emulator_preinit.target.wants
-ln -s ../emul-opengl-yagl.service %{buildroot}/usr/lib/systemd/system/emulator_preinit.target.wants/emul-opengl-yagl.service
-
 mkdir -p %{buildroot}/etc/emulator
-cp packaging/yagl.sh %{buildroot}/etc/emulator
+cp packaging/opengl-es-setup-yagl-env.sh %{buildroot}/etc/emulator
 
 mkdir -p %{buildroot}/usr/share/license
 cp COPYING %{buildroot}/usr/share/license/%{name}
@@ -112,9 +106,7 @@ cp pkgconfig/* %{buildroot}/usr/lib/pkgconfig/
 /usr/lib/libGLES*
 /usr/lib/yagl/*
 /usr/lib/dummy-gl/*
-/usr/lib/systemd/system/emul-opengl-yagl.service
-/usr/lib/systemd/system/emulator_preinit.target.wants/emul-opengl-yagl.service
-%attr(777,root,root)/etc/emulator/yagl.sh
+%attr(777,root,root)/etc/emulator/opengl-es-setup-yagl-env.sh
 /usr/share/license/%{name}
 %endif
 
