@@ -3,7 +3,6 @@ Description=OpenGL "YAGL"
 DefaultDependencies=no
 After=emul-opengl-mode.service
 Before=basic.target
-ConditionKernelCommandLine=yagl=1
 
 [Service]
 Type=oneshot

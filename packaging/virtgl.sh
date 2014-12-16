@@ -1,7 +1,7 @@
  #!/bin/sh
  
 echo -e "[${_G} Opengl-es acceleration module setting. ${C_}]"
-if grep "yagl=1" /proc/cmdline ; then
+if [ -e /dev/yagl ] ; then
         echo -e "[${_G} Emulator support gles hw acceleration. ${C_}]"
         echo -e "[${_G} Change permission of /dev/yagl. ${C_}]"
         chmod 666 /dev/yagl
@@ -16,7 +16,7 @@ if grep "yagl=1" /proc/cmdline ; then
                rm -f /usr/lib/egl_gallium.so
                rm -f /usr/lib/libglapi.so*
                systemctl set-environment ELM_ENGINE=gl
-elif grep "gles=1" /proc/cmdline ; then
+elif [ -e /dev/glmem ] ; then
         echo -e "[${_G} Emulator support gles hw acceleration. ${C_}]"
         echo -e "[${_G} Change permission of /dev/glmem. ${C_}]"
         chmod 666 /dev/glmem
