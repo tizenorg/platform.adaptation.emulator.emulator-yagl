@@ -82,6 +82,9 @@ ln -s ../emul-opengl-yagl.service %{buildroot}/usr/lib/systemd/system/emulator_p
 
 mkdir -p %{buildroot}/etc/emulator
 cp packaging/yagl.sh %{buildroot}/etc/emulator
+
+mkdir -p %{buildroot}/usr/share/license
+cp COPYING %{buildroot}/usr/share/license/%{name}
 %endif
 
 mkdir -p %{buildroot}/usr/include
@@ -112,6 +115,7 @@ cp pkgconfig/* %{buildroot}/usr/lib/pkgconfig/
 /usr/lib/systemd/system/emul-opengl-yagl.service
 /usr/lib/systemd/system/emulator_preinit.target.wants/emul-opengl-yagl.service
 %attr(777,root,root)/etc/emulator/yagl.sh
+/usr/share/license/%{name}
 %endif
 
 %files devel
