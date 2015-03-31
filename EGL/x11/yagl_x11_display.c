@@ -34,9 +34,11 @@
 #include "yagl_x11_display.h"
 #include "yagl_x11_drawable.h"
 #include "yagl_x11_image.h"
+#include "yagl_native_platform.h"
 #include "yagl_log.h"
 #include "yagl_malloc.h"
 #include "yagl_dri2.h"
+#include "yagl_dri3.h"
 #include "vigs.h"
 #include <X11/Xutil.h>
 #include <X11/extensions/XShm.h>
@@ -137,23 +139,32 @@ out:
 static int yagl_x11_display_authenticate(struct yagl_native_display *dpy,
                                          uint32_t id)
 {
+    struct yagl_x11_display *x11_dpy = (struct yagl_x11_display*)dpy;
     Display *x_dpy = YAGL_X11_DPY(dpy->os_dpy);
 
-    return yagl_x11_display_dri2_authenticate(x_dpy, id);
+    if (!x11_dpy->dri3_supported) {
+        return yagl_x11_display_dri2_authenticate(x_dpy, id);
+    }
+
+    return 1;
 }
 
 static struct yagl_native_drawable
     *yagl_x11_display_wrap_window(struct yagl_native_display *dpy,
                                   yagl_os_window os_window)
 {
-    return yagl_x11_drawable_create(dpy, os_window, 0, 0);
+    struct yagl_x11_display *x11_dpy = (struct yagl_x11_display*)dpy;
+
+    return x11_dpy->create_drawable(dpy, os_window, 0, 0);
 }
 
 static struct yagl_native_drawable
     *yagl_x11_display_wrap_pixmap(struct yagl_native_display *dpy,
                                   yagl_os_pixmap os_pixmap)
 {
-    return yagl_x11_drawable_create(dpy, os_pixmap, 0, 1);
+    struct yagl_x11_display *x11_dpy = (struct yagl_x11_display*)dpy;
+
+    return x11_dpy->create_drawable(dpy, os_pixmap, 0, 1);
 }
 
 static struct yagl_native_drawable
@@ -162,6 +173,7 @@ static struct yagl_native_drawable
                                     uint32_t height,
                                     uint32_t depth)
 {
+    struct yagl_x11_display *x11_dpy = (struct yagl_x11_display*)dpy;
     struct yagl_native_drawable *drawable;
     Display *x_dpy = YAGL_X11_DPY(dpy->os_dpy);
     Pixmap x_pixmap = XCreatePixmap(x_dpy,
@@ -172,7 +184,7 @@ static struct yagl_native_drawable
         return NULL;
     }
 
-    drawable = yagl_x11_drawable_create(dpy, (yagl_os_pixmap)x_pixmap, 1, 1);
+    drawable = x11_dpy->create_drawable(dpy, (yagl_os_pixmap)x_pixmap, 1, 1);
 
     if (!drawable) {
         XFreePixmap(x_dpy, x_pixmap);
@@ -271,12 +283,24 @@ struct yagl_native_display *yagl_x11_display_create(struct yagl_native_platform 
                    xminor,
                    pixmaps);
 
+    dpy->create_drawable = &yagl_x11_drawable_create;
+
     if (enable_drm) {
-        int drm_fd = yagl_x11_display_dri2_init(x_dpy, &dri_device);
+        int drm_fd = yagl_dri3_display_init(x_dpy, &dri_device);
 
         if (drm_fd < 0) {
-            yagl_free(dpy);
-            return NULL;
+            YAGL_LOG_DEBUG("DRI3 init failed. Falling back to DRI2...");
+
+            drm_fd = yagl_x11_display_dri2_init(x_dpy, &dri_device);
+
+            if (drm_fd < 0) {
+                yagl_free(dpy);
+                return NULL;
+            }
+        } else {
+            dpy->create_drawable = &yagl_dri3_drawable_create;
+            dpy->dri3_supported = 1;
+            platform->buffer_age_supported = 1;
         }
 
         ret = vigs_drm_device_create(drm_fd, &drm_dev);

@@ -23,6 +23,8 @@ BuildRequires:  pkgconfig(wayland-server)
 BuildRequires:  pkgconfig(xfixes)
 BuildRequires:  pkgconfig(x11)
 BuildRequires:  pkgconfig(x11-xcb)
+BuildRequires:  pkgconfig(xshmfence)
+BuildRequires:  pkgconfig(xcb)
 BuildRequires:  pkgconfig(xext)
 BuildRequires:  pkgconfig(dri2proto)
 %endif

@@ -48,6 +48,13 @@ struct yagl_x11_display
     int xshm_images_supported;
 
     int xshm_pixmaps_supported;
+
+    int dri3_supported;
+
+    struct yagl_native_drawable *(*create_drawable)(struct yagl_native_display */*dpy*/,
+                                                    yagl_os_drawable /*os_drawable*/,
+                                                    int /*own_drawable*/,
+                                                    int /*is_pixmap*/);
 };
 
 struct yagl_native_display *yagl_x11_display_create(struct yagl_native_platform *platform,

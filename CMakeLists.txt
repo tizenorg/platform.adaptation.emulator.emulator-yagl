@@ -74,6 +74,7 @@ if (PLATFORM_X11)
     pkg_check_modules(X11 REQUIRED x11)
     pkg_check_modules(XEXT REQUIRED xext)
     pkg_check_modules(XFIXES REQUIRED xfixes)
+    pkg_check_modules(XCB REQUIRED xcb)
 
     add_definitions(${X11_CFLAGS})
     include_directories(${X11_INCLUDE_DIRS})
@@ -86,6 +87,10 @@ if (PLATFORM_X11)
     add_definitions(${XFIXES_CFLAGS})
     include_directories(${XFIXES_INCLUDE_DIRS})
     link_directories(${XFIXES_LIBRARY_DIRS})
+
+    add_definitions(${XCB_CFLAGS})
+    include_directories(${XCB_INCLUDE_DIRS})
+    link_directories(${XCB_LIBRARY_DIRS})
 endif ()
 
 if (PLATFORM_GBM)

@@ -47,6 +47,7 @@ set(LIBRARIES
 if (PLATFORM_X11)
     set(SOURCES ${SOURCES}
         x11/yagl_dri2.c
+        x11/yagl_dri3.c
         x11/yagl_x11_platform.c
         x11/yagl_x11_display.c
         x11/yagl_x11_drawable.c
@@ -56,6 +57,12 @@ if (PLATFORM_X11)
         ${X11_LIBRARIES}
         ${XEXT_LIBRARIES}
         ${XFIXES_LIBRARIES}
+        ${XCB_LIBRARIES}
+        X11-xcb
+        xcb-dri3
+        xcb-present
+        xshmfence
+        xcb-sync
     )
     add_definitions(-DYAGL_PLATFORM_X11)
 endif ()
