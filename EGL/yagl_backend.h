@@ -90,6 +90,10 @@ struct yagl_backend
                                                      yagl_object_name /*texture*/,
                                                      struct yagl_client_interface */*iface*/);
 
+    struct yagl_image *(*create_image_tizen_sfc)(struct yagl_display */*dpy*/,
+                                                 EGLClientBuffer /*buffer*/,
+                                                 struct yagl_client_interface */*iface*/);
+
     struct yagl_fence *(*create_fence)(struct yagl_display */*dpy*/);
 
     void (*destroy)(struct yagl_backend */*backend*/);

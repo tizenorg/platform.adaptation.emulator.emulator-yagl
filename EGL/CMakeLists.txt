@@ -22,6 +22,7 @@ set(SOURCES
     yagl_onscreen.c
     yagl_onscreen_image_pixmap.c
     yagl_onscreen_image_gl_texture_2d.c
+    yagl_onscreen_image_tizen_sfc.c
     yagl_onscreen_surface.c
     yagl_onscreen_fence.c
     yagl_onscreen_utils.c
@@ -42,6 +43,7 @@ set(LIBRARIES
     ${CMAKE_THREAD_LIBS_INIT}
     ${LIBDRM_LIBRARIES}
     ${LIBDRM_VIGS_LIBRARIES}
+    ${LIBTBM_LIBRARIES}
     dl
 )
 

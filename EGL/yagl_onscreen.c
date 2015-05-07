@@ -38,6 +38,7 @@
 #include "yagl_onscreen_image_wl_buffer.h"
 #endif
 #include "yagl_onscreen_image_gl_texture_2d.h"
+#include "yagl_onscreen_image_tizen_sfc.h"
 #include "yagl_onscreen_fence.h"
 #include "yagl_backend.h"
 #include "yagl_malloc.h"
@@ -160,6 +161,17 @@ static struct yagl_image
     return image ? &image->base: NULL;
 }
 
+static struct yagl_image
+    *yagl_onscreen_create_image_tizen_sfc(struct yagl_display *dpy,
+                                          EGLClientBuffer buffer,
+                                          struct yagl_client_interface *iface)
+{
+    struct yagl_onscreen_image_tizen_sfc *image =
+        yagl_onscreen_image_tizen_sfc_create(dpy, buffer, iface);
+
+    return image ? &image->base: NULL;
+}
+
 static struct yagl_fence
     *yagl_onscreen_create_fence(struct yagl_display *dpy)
 {
@@ -186,6 +198,7 @@ struct yagl_backend *yagl_onscreen_create()
     backend->create_image_pixmap = &yagl_onscreen_create_image_pixmap;
     backend->create_image_wl_buffer = &yagl_onscreen_create_image_wl_buffer;
     backend->create_image_gl_texture_2d = &yagl_onscreen_create_image_gl_texture_2d;
+    backend->create_image_tizen_sfc = &yagl_onscreen_create_image_tizen_sfc;
     backend->create_fence = &yagl_onscreen_create_fence;
     backend->destroy = &yagl_onscreen_destroy;
     backend->y_inverted = 0;

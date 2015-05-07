@@ -12,6 +12,7 @@ Source0:    %{name}-%{version}.tar.gz
 Source1001:     emulator-yagl.manifest
 BuildRequires:  cmake
 BuildRequires:  pkgconfig(libdrm)
+BuildRequires:  pkgconfig(libtbm)
 BuildRequires:  flex
 BuildRequires:  bison
 %if %{with wayland}
@@ -28,6 +29,7 @@ BuildRequires:  pkgconfig(xcb)
 BuildRequires:  pkgconfig(xext)
 BuildRequires:  pkgconfig(dri2proto)
 %endif
+Requires:   libtbm
 Provides:   opengl-es-drv
 
 %if !%{with emulator}

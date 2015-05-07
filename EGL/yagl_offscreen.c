@@ -143,6 +143,14 @@ static struct yagl_image
     return NULL;
 }
 
+static struct yagl_image
+    *yagl_offscreen_create_image_tizen_sfc(struct yagl_display *dpy,
+                                           EGLClientBuffer buffer,
+                                           struct yagl_client_interface *iface)
+{
+    return NULL;
+}
+
 static struct yagl_fence
     *yagl_offscreen_create_fence(struct yagl_display *dpy)
 {
@@ -167,6 +175,7 @@ struct yagl_backend *yagl_offscreen_create()
     backend->create_image_pixmap = &yagl_offscreen_create_image_pixmap;
     backend->create_image_wl_buffer = &yagl_offscreen_create_image_wl_buffer;
     backend->create_image_gl_texture_2d = &yagl_offscreen_create_image_gl_texture_2d;
+    backend->create_image_tizen_sfc = &yagl_offscreen_create_image_tizen_sfc;
     backend->create_fence = &yagl_offscreen_create_fence;
     backend->destroy = &yagl_offscreen_destroy;
     backend->y_inverted = 1;

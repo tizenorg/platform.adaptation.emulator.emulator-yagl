@@ -1630,6 +1630,10 @@ out:
     return res;
 }
 
+#ifndef EGL_NATIVE_SURFACE_TIZEN
+#define EGL_NATIVE_SURFACE_TIZEN 0x32A1
+#endif
+
 YAGL_API EGLImageKHR eglCreateImageKHR(EGLDisplay dpy_,
                                        EGLContext ctx_,
                                        EGLenum target,
@@ -1759,6 +1763,30 @@ YAGL_API EGLImageKHR eglCreateImageKHR(EGLDisplay dpy_,
                                                                ctx,
                                                                (yagl_object_name)buffer,
                                                                iface);
+
+        if (!image) {
+            goto out;
+        }
+
+        break;
+    case EGL_NATIVE_SURFACE_TIZEN:
+        if (attrib_list) {
+            while (attrib_list[i] != EGL_NONE) {
+                switch (attrib_list[i]) {
+                case EGL_IMAGE_PRESERVED_KHR:
+                    break;
+                default:
+                    YAGL_SET_ERR(EGL_BAD_ATTRIBUTE);
+                    goto out;
+                }
+
+                i += 2;
+            }
+        }
+
+        image = yagl_get_backend()->create_image_tizen_sfc(dpy,
+                                                           buffer,
+                                                           iface);
 
         if (!image) {
             goto out;

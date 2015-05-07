@@ -70,6 +70,11 @@ add_definitions(${LIBDRM_VIGS_CFLAGS})
 include_directories(${LIBDRM_VIGS_INCLUDE_DIRS})
 link_directories(${LIBDRM_VIGS_LIBRARY_DIRS})
 
+pkg_check_modules(LIBTBM REQUIRED libtbm)
+add_definitions(${LIBTBM_CFLAGS})
+include_directories(${LIBTBM_INCLUDE_DIRS})
+link_directories(${LIBTBM_LIBRARY_DIRS})
+
 if (PLATFORM_X11)
     pkg_check_modules(X11 REQUIRED x11)
     pkg_check_modules(XEXT REQUIRED xext)

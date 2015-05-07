@@ -59,6 +59,8 @@
 
 #define YAGL_EGL_GL_TEXTURE_EXTENSIONS "EGL_KHR_gl_texture_2D_image "
 
+#define YAGL_EGL_TIZEN_EXTENSIONS "EGL_TIZEN_image_native_surface "
+
 #define YAGL_EGL_BUFFER_AGE_EXTENSIONS "EGL_EXT_buffer_age "
 
 #define YAGL_EGL_FENCE_EXTENSIONS "EGL_KHR_fence_sync "
@@ -310,6 +312,8 @@ const char *yagl_display_get_extensions(struct yagl_display *dpy)
 
         len += strlen(YAGL_EGL_GL_TEXTURE_EXTENSIONS);
 
+        len += strlen(YAGL_EGL_TIZEN_EXTENSIONS);
+
         dpy->extensions = yagl_malloc(len + 1);
 
         strcpy(dpy->extensions, YAGL_EGL_BASE_EXTENSIONS);
@@ -331,6 +335,8 @@ const char *yagl_display_get_extensions(struct yagl_display *dpy)
         }
 
         strcat(dpy->extensions, YAGL_EGL_GL_TEXTURE_EXTENSIONS);
+
+        strcpy(dpy->extensions, YAGL_EGL_TIZEN_EXTENSIONS);
     }
 
     pthread_mutex_unlock(&dpy->mutex);
