@@ -1396,6 +1396,8 @@ YAGL_API EGLBoolean eglQueryContext(EGLDisplay dpy_,
         goto out;
     }
 
+    res = EGL_TRUE;
+
     switch (attribute) {
     case EGL_CONTEXT_CLIENT_TYPE:
         switch (ctx->client_ctx->client_api) {
