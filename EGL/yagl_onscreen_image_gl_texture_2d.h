@@ -4,7 +4,7 @@
  * Copyright (c) 2012 Samsung Electronics Co., Ltd. All rights reserved.
  *
  * Contact :
- * Stanislav Vorobiov <s.vorobiov@samsung.com>
+ * Vasily Ulyanov <v.ulyanov@samsung.com>
  * Jinhyung Jo <jinhyung.jo@samsung.com>
  * YeongKyoon Lee <yeongkyoon.lee@samsung.com>
  *
@@ -31,37 +31,26 @@
  *
  */
 
-#ifndef _YAGL_GLES_IMAGE_H_
-#define _YAGL_GLES_IMAGE_H_
+#ifndef _YAGL_ONSCREEN_IMAGE_GL_TEXTURE_2D_H_
+#define _YAGL_ONSCREEN_IMAGE_GL_TEXTURE_2D_H_
 
-#include "yagl_types.h"
-#include "yagl_client_image.h"
+#include "yagl_image.h"
+#include "EGL/egl.h"
 
-struct yagl_client_context;
+struct yagl_context;
+struct yagl_client_interface;
 
-struct yagl_gles_image
+struct yagl_onscreen_image_gl_texture_2d
 {
-    struct yagl_client_image base;
+    struct yagl_image base;
 
-    yagl_object_name tex_global_name;
-
-    int own_tex;
+    struct yagl_object *texture_obj;
 };
 
-struct yagl_gles_image *yagl_gles_image_create(yagl_object_name tex_global_name);
-
-struct yagl_gles_image *yagl_gles_image_wrap_tex(struct yagl_client_context *ctx,
-                                                 yagl_object_name tex_local_name,
-                                                 struct yagl_object **obj);
-
-/*
- * Passing NULL won't hurt, this is for convenience.
- */
-void yagl_gles_image_acquire(struct yagl_gles_image *image);
-
-/*
- * Passing NULL won't hurt, this is for convenience.
- */
-void yagl_gles_image_release(struct yagl_gles_image *image);
+struct yagl_onscreen_image_gl_texture_2d
+    *yagl_onscreen_image_gl_texture_2d_create(struct yagl_display *dpy,
+                                              struct yagl_context *ctx,
+                                              yagl_object_name texture,
+                                              struct yagl_client_interface *iface);
 
 #endif

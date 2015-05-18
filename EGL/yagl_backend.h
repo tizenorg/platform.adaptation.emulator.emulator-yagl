@@ -47,6 +47,7 @@ struct yagl_native_platform;
 struct yagl_native_drawable;
 struct yagl_client_interface;
 struct wl_resource;
+struct yagl_context;
 
 struct yagl_backend
 {
@@ -83,6 +84,11 @@ struct yagl_backend
     struct yagl_image *(*create_image_wl_buffer)(struct yagl_display */*dpy*/,
                                                  struct wl_resource */*buffer*/,
                                                  struct yagl_client_interface */*iface*/);
+
+    struct yagl_image *(*create_image_gl_texture_2d)(struct yagl_display */*dpy*/,
+                                                     struct yagl_context */*ctx*/,
+                                                     yagl_object_name /*texture*/,
+                                                     struct yagl_client_interface */*iface*/);
 
     struct yagl_fence *(*create_fence)(struct yagl_display */*dpy*/);
 

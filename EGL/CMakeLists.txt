@@ -21,6 +21,7 @@ set(SOURCES
     yagl_offscreen_surface.c
     yagl_onscreen.c
     yagl_onscreen_image_pixmap.c
+    yagl_onscreen_image_gl_texture_2d.c
     yagl_onscreen_surface.c
     yagl_onscreen_fence.c
     yagl_onscreen_utils.c

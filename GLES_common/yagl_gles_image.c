@@ -33,6 +33,9 @@
 
 #include "GL/gl.h"
 #include "yagl_gles_image.h"
+#include "yagl_gles_texture.h"
+#include "yagl_client_context.h"
+#include "yagl_sharegroup.h"
 #include "yagl_malloc.h"
 #include "yagl_host_gles_calls.h"
 
@@ -56,7 +59,9 @@ static void yagl_gles_image_destroy(struct yagl_ref *ref)
 {
     struct yagl_gles_image *image = (struct yagl_gles_image*)ref;
 
-    yagl_host_glDeleteObjects(&image->tex_global_name, 1);
+    if (image->own_tex) {
+        yagl_host_glDeleteObjects(&image->tex_global_name, 1);
+    }
 
     yagl_client_image_cleanup(&image->base);
 
@@ -74,8 +79,43 @@ struct yagl_gles_image *yagl_gles_image_create(yagl_object_name tex_global_name)
     image->base.update = &yagl_gles_image_update;
 
     image->tex_global_name = tex_global_name;
+    image->own_tex = 1;
 
     return image;
+}
+
+struct yagl_gles_image *yagl_gles_image_wrap_tex(struct yagl_client_context *ctx,
+                                                 yagl_object_name tex_local_name,
+                                                 struct yagl_object **obj)
+{
+    struct yagl_gles_texture *texture_obj;
+    struct yagl_gles_image *image;
+
+    texture_obj = (struct yagl_gles_texture *)yagl_sharegroup_acquire_object(ctx->sg,
+                                                                             YAGL_NS_TEXTURE,
+                                                                             tex_local_name);
+
+    if (!texture_obj) {
+        goto fail;
+    }
+
+    image = yagl_malloc0(sizeof(*image));
+
+    yagl_client_image_init(&image->base, &yagl_gles_image_destroy);
+
+    image->base.update = &yagl_gles_image_update;
+
+    image->tex_global_name = texture_obj->global_name;
+    image->own_tex = 0;
+
+    *obj = &texture_obj->base;
+
+    return image;
+
+fail:
+    yagl_gles_texture_release(texture_obj);
+
+    return NULL;
 }
 
 void yagl_gles_image_acquire(struct yagl_gles_image *image)

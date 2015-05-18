@@ -37,6 +37,7 @@
 #ifdef YAGL_PLATFORM_WAYLAND
 #include "yagl_onscreen_image_wl_buffer.h"
 #endif
+#include "yagl_onscreen_image_gl_texture_2d.h"
 #include "yagl_onscreen_fence.h"
 #include "yagl_backend.h"
 #include "yagl_malloc.h"
@@ -147,6 +148,18 @@ static struct yagl_image
 #endif
 }
 
+static struct yagl_image
+    *yagl_onscreen_create_image_gl_texture_2d(struct yagl_display *dpy,
+                                              struct yagl_context *ctx,
+                                              yagl_object_name texture,
+                                              struct yagl_client_interface *iface)
+{
+    struct yagl_onscreen_image_gl_texture_2d *image =
+        yagl_onscreen_image_gl_texture_2d_create(dpy, ctx, texture, iface);
+
+    return image ? &image->base: NULL;
+}
+
 static struct yagl_fence
     *yagl_onscreen_create_fence(struct yagl_display *dpy)
 {
@@ -172,6 +185,7 @@ struct yagl_backend *yagl_onscreen_create()
     backend->create_pbuffer_surface = &yagl_onscreen_create_pbuffer_surface;
     backend->create_image_pixmap = &yagl_onscreen_create_image_pixmap;
     backend->create_image_wl_buffer = &yagl_onscreen_create_image_wl_buffer;
+    backend->create_image_gl_texture_2d = &yagl_onscreen_create_image_gl_texture_2d;
     backend->create_fence = &yagl_onscreen_create_fence;
     backend->destroy = &yagl_onscreen_destroy;
     backend->y_inverted = 0;
