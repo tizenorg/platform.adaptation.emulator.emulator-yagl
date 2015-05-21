@@ -574,7 +574,7 @@ void yagl_gles2_context_pre_draw(struct yagl_gles2_context *ctx,
      */
 
     if (mode == GL_POINTS) {
-        if (yagl_get_host_gl_version() <= yagl_gl_2) {
+        if (yagl_get_host_gl_version() <= yagl_gl_3_2) {
             yagl_host_glEnable(GL_POINT_SPRITE);
         }
         yagl_host_glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
@@ -587,7 +587,7 @@ void yagl_gles2_context_post_draw(struct yagl_gles2_context *ctx,
 {
     if (mode == GL_POINTS) {
         yagl_host_glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
-        if (yagl_get_host_gl_version() <= yagl_gl_2) {
+        if (yagl_get_host_gl_version() <= yagl_gl_3_2) {
             yagl_host_glDisable(GL_POINT_SPRITE);
         }
     }
