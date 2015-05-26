@@ -336,7 +336,7 @@ const char *yagl_display_get_extensions(struct yagl_display *dpy)
 
         strcat(dpy->extensions, YAGL_EGL_GL_TEXTURE_EXTENSIONS);
 
-        strcpy(dpy->extensions, YAGL_EGL_TIZEN_EXTENSIONS);
+        strcat(dpy->extensions, YAGL_EGL_TIZEN_EXTENSIONS);
     }
 
     pthread_mutex_unlock(&dpy->mutex);
