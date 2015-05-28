@@ -7,7 +7,6 @@ Version:    1.4
 Release:    1
 License:    MIT
 #URL:        http://www.khronos.org
-ExclusiveArch:    %{ix86}
 Source0:    %{name}-%{version}.tar.gz
 Source1001:     emulator-yagl.manifest
 BuildRequires:  cmake
@@ -32,7 +31,9 @@ BuildRequires:  pkgconfig(dri2proto)
 Requires:   libtbm
 Provides:   opengl-es-drv
 
-%if !%{with emulator}
+%if %{with emulator}
+ExclusiveArch: %{ix86}
+%else
 ExclusiveArch:
 %endif
 
