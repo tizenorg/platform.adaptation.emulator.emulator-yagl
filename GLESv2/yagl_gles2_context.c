@@ -176,7 +176,13 @@ static const GLchar
 
     switch (name) {
     case GL_VERSION:
-        str = "OpenGL ES 2.0";
+        if (yagl_get_host_gl_version() >= yagl_gl_3_1_es3) {
+            /* Workaround for libevas gles version checking: report 3.0
+             * version if the host supports it. */
+            str = "OpenGL ES 3.0";
+        } else {
+            str = "OpenGL ES 2.0";
+        }
         break;
     case GL_RENDERER:
         str = "YaGL GLESv2";
