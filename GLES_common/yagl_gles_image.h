@@ -37,6 +37,7 @@
 #include "yagl_types.h"
 #include "yagl_client_image.h"
 
+struct yagl_gles_texture;
 struct yagl_client_context;
 
 struct yagl_gles_image
@@ -45,14 +46,16 @@ struct yagl_gles_image
 
     yagl_object_name tex_global_name;
 
-    int own_tex;
+    /*
+     * Non-NULL if the image wraps this texture object
+     */
+    struct yagl_gles_texture *texture_obj;
 };
 
 struct yagl_gles_image *yagl_gles_image_create(yagl_object_name tex_global_name);
 
 struct yagl_gles_image *yagl_gles_image_wrap_tex(struct yagl_client_context *ctx,
-                                                 yagl_object_name tex_local_name,
-                                                 struct yagl_object **obj);
+                                                 yagl_object_name tex_local_name);
 
 /*
  * Passing NULL won't hurt, this is for convenience.

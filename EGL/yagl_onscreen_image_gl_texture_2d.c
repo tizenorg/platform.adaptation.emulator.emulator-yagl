@@ -46,8 +46,6 @@ static void yagl_onscreen_image_gl_texture_2d_destroy(struct yagl_ref *ref)
 {
     struct yagl_onscreen_image_gl_texture_2d *image = (struct yagl_onscreen_image_gl_texture_2d *)ref;
 
-    yagl_object_release(image->texture_obj);
-
     yagl_image_cleanup(&image->base);
 
     yagl_free(image);
@@ -62,14 +60,12 @@ struct yagl_onscreen_image_gl_texture_2d
 {
     struct yagl_client_image *client_image;
     struct yagl_onscreen_image_gl_texture_2d *image;
-    struct yagl_object *texture_obj = NULL;
 
     image = yagl_malloc0(sizeof(*image));
 
     client_image = iface->wrap_texture(iface,
                                        ctx->client_ctx,
-                                       texture,
-                                       &texture_obj);
+                                       texture);
 
     if (!client_image) {
         yagl_set_error(EGL_BAD_PARAMETER);
@@ -86,15 +82,9 @@ struct yagl_onscreen_image_gl_texture_2d
 
     image->base.update = &yagl_onscreen_image_gl_texture_2d_update;
 
-    image->texture_obj = texture_obj;
-
     return image;
 
 fail:
-    if (texture_obj) {
-        yagl_object_release(texture_obj);
-    }
-
     yagl_free(image);
 
     return NULL;

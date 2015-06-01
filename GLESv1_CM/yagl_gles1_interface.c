@@ -55,10 +55,9 @@ static struct yagl_client_image
 static struct yagl_client_image
     *yagl_gles1_wrap_texture(struct yagl_client_interface *iface,
                              struct yagl_client_context *ctx,
-                             yagl_object_name tex_local_name,
-                             struct yagl_object **texture_obj)
+                             yagl_object_name tex_local_name)
 {
-    return &yagl_gles_image_wrap_tex(ctx,tex_local_name, texture_obj)->base;
+    return &yagl_gles_image_wrap_tex(ctx,tex_local_name)->base;
 }
 
 static void yagl_gles1_release_tex_image(struct yagl_client_interface *iface,

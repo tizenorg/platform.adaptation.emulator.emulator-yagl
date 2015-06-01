@@ -59,7 +59,9 @@ static void yagl_gles_image_destroy(struct yagl_ref *ref)
 {
     struct yagl_gles_image *image = (struct yagl_gles_image*)ref;
 
-    if (image->own_tex) {
+    if (image->texture_obj) {
+        yagl_gles_texture_release(image->texture_obj);
+    } else {
         yagl_host_glDeleteObjects(&image->tex_global_name, 1);
     }
 
@@ -79,14 +81,12 @@ struct yagl_gles_image *yagl_gles_image_create(yagl_object_name tex_global_name)
     image->base.update = &yagl_gles_image_update;
 
     image->tex_global_name = tex_global_name;
-    image->own_tex = 1;
 
     return image;
 }
 
 struct yagl_gles_image *yagl_gles_image_wrap_tex(struct yagl_client_context *ctx,
-                                                 yagl_object_name tex_local_name,
-                                                 struct yagl_object **obj)
+                                                 yagl_object_name tex_local_name)
 {
     struct yagl_gles_texture *texture_obj;
     struct yagl_gles_image *image;
@@ -106,9 +106,7 @@ struct yagl_gles_image *yagl_gles_image_wrap_tex(struct yagl_client_context *ctx
     image->base.update = &yagl_gles_image_update;
 
     image->tex_global_name = texture_obj->global_name;
-    image->own_tex = 0;
-
-    *obj = &texture_obj->base;
+    image->texture_obj = texture_obj;
 
     return image;
 

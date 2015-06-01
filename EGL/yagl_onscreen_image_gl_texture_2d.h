@@ -43,8 +43,6 @@ struct yagl_client_interface;
 struct yagl_onscreen_image_gl_texture_2d
 {
     struct yagl_image base;
-
-    struct yagl_object *texture_obj;
 };
 
 struct yagl_onscreen_image_gl_texture_2d

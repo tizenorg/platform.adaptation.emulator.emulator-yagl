@@ -39,7 +39,6 @@
 struct yagl_client_context;
 struct yagl_client_image;
 struct yagl_sharegroup;
-struct yagl_object;
 
 struct yagl_client_interface
 {
@@ -54,8 +53,7 @@ struct yagl_client_interface
     struct yagl_client_image
         *(*wrap_texture)(struct yagl_client_interface */*iface*/,
                          struct yagl_client_context */*ctx*/,
-                         yagl_object_name /*tex_local_name*/,
-                         struct yagl_object **/*obj*/);
+                         yagl_object_name /*tex_local_name*/);
 
     void (*release_tex_image)(struct yagl_client_interface */*iface*/,
                               void */*cookie*/);
