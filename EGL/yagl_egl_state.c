@@ -82,11 +82,7 @@ void *yagl_get_gles1_sym(const char *name)
 void *yagl_get_gles2_sym(const char *name)
 {
     void *handle;
-    void *sym = dlsym(NULL, name);
-
-    if (sym) {
-        return sym;
-    }
+    void *sym = NULL;
 
     handle = dlopen("libGLESv2.so.1", RTLD_NOW|RTLD_GLOBAL);
     if (!handle) {
@@ -94,10 +90,14 @@ void *yagl_get_gles2_sym(const char *name)
     }
 
     if (handle) {
-        return dlsym(handle, name);
+        sym = dlsym(handle, name);
     }
 
-    return NULL;
+    if (!sym) {
+        sym = dlsym(NULL, name);
+    }
+
+    return sym;
 }
 
 static void yagl_egl_state_free(void* ptr)
