@@ -2064,6 +2064,11 @@ YAGL_API void glUseProgram(GLuint program)
             YAGL_SET_ERR(GL_INVALID_OPERATION);
             goto out;
         }
+
+        if (!program_obj->linked) {
+            YAGL_SET_ERR(GL_INVALID_OPERATION);
+            goto out;
+        }
     }
 
     if (!ctx->pre_use_program(ctx, program_obj)) {

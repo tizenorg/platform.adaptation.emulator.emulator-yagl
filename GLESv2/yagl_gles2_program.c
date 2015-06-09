@@ -327,7 +327,7 @@ void yagl_gles2_program_link(struct yagl_gles2_program *program)
                             sizeof(params)/sizeof(params[0]),
                             NULL);
 
-    program->linked = 1;
+    program->linked = params[0];
 
     program->link_status = params[0];
     program->info_log_length = params[1];
