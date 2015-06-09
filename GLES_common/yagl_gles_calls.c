@@ -2243,6 +2243,11 @@ YAGL_API void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLs
         goto out;
     }
 
+    if (squashed_target == GL_TEXTURE_CUBE_MAP && width != height) {
+        YAGL_SET_ERR(GL_INVALID_VALUE);
+        goto out;
+    }
+
     tex_target_state =
         yagl_gles_context_get_active_texture_target_state(ctx, texture_target);
 
