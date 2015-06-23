@@ -279,6 +279,10 @@ static void yagl_dri3_update_num_back(struct yagl_dri3_drawable *drawable)
     if (drawable->swap_interval == 0) {
         drawable->num_back++;
     }
+
+    if (drawable->num_back < 2) {
+        drawable->num_back = 2;
+    }
 }
 
 /*
