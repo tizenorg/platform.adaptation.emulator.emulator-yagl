@@ -265,6 +265,7 @@ void yagl_host_eglMakeCurrent(yagl_host_handle dpy, yagl_host_handle draw, yagl_
     yagl_transport_put_out_yagl_host_handle(t, read);
     yagl_transport_put_out_yagl_host_handle(t, ctx);
     yagl_transport_end(t);
+    yagl_transport_flush(t, NULL);
 }
 
 /*
