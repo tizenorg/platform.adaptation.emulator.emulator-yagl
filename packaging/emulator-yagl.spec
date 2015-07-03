@@ -32,7 +32,7 @@ Requires:   libtbm
 Provides:   opengl-es-drv
 
 %if %{with emulator}
-ExclusiveArch: %{ix86}
+ExclusiveArch: %{ix86} x86_64
 %else
 ExclusiveArch:
 %endif
