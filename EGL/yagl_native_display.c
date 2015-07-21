@@ -38,6 +38,7 @@
 #include "wayland-drm.h"
 #endif
 #include "vigs.h"
+#include "EGL/eglext.h"
 #include "EGL/eglmesaext.h"
 #include <string.h>
 #include <stdlib.h>
