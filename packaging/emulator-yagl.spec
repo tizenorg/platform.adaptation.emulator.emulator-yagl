@@ -4,8 +4,8 @@
 Name:       emulator-yagl
 Summary:    YaGL - OpenGLES acceleration module for emulator
 Version:    1.4
-Release:    2
-License:    MIT
+Release:    4
+License:    MIT and LPGL-3.0
 #URL:        http://www.khronos.org
 Source0:    %{name}-%{version}.tar.gz
 Source1001:     emulator-yagl.manifest
