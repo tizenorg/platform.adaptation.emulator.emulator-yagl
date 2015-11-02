@@ -173,6 +173,13 @@ static __inline void yagl_transport_put_out_uint32_t(struct yagl_transport *t,
     t->ptr += 8;
 }
 
+static __inline void yagl_transport_put_out_uint64_t(struct yagl_transport *t,
+                                                     uint64_t value)
+{
+    *(uint64_t*)t->ptr = value;
+    t->ptr += 8;
+}
+
 static __inline void yagl_transport_put_out_float(struct yagl_transport *t,
                                                   float value)
 {
@@ -236,7 +243,9 @@ static __inline void yagl_transport_put_out_array(struct yagl_transport *t,
                                                   int32_t count,
                                                   int32_t el_size)
 {
-    yagl_transport_put_out_uint32_t(t, (uint32_t)data);
+    // FIXME: We can assume VA is always 64 bit for now.
+    //yagl_transport_put_out_uint32_t(t, (uint32_t)data);
+    yagl_transport_put_out_uint64_t(t, (uint64_t)data);
     yagl_transport_put_out_uint32_t(t, count);
 
     if (!data || (count <= 0)) {
@@ -262,7 +271,9 @@ static __inline void yagl_transport_put_in_array(struct yagl_transport *t,
 {
     int32_t *count;
 
-    yagl_transport_put_out_uint32_t(t, (uint32_t)data);
+    // FIXME: We can assume VA is always 64 bit for now.
+    //yagl_transport_put_out_uint32_t(t, (uint32_t)data);
+    yagl_transport_put_out_uint64_t(t, (uint64_t)data);
     count = (int32_t*)t->ptr;
     yagl_transport_put_out_uint32_t(t, maxcount);
 
@@ -346,7 +357,9 @@ static __inline void yagl_transport_put_out_yagl_winsys_id(struct yagl_transport
 static __inline void yagl_transport_put_out_va(struct yagl_transport *t,
                                                const void *value)
 {
-    yagl_transport_put_out_uint32_t(t, (uint32_t)value);
+    // FIXME: We can assume VA is always 64 bit for now.
+    //yagl_transport_put_out_uint32_t(t, (uint32_t)value);
+    yagl_transport_put_out_uint64_t(t, (uint64_t)value);
 }
 
 static __inline void yagl_transport_put_in_yagl_host_handle(struct yagl_transport *t,
