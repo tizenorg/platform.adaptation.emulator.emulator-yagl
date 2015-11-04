@@ -54,6 +54,12 @@ static __inline void yagl_transport_put_out_GLint(struct yagl_transport *t,
     yagl_transport_put_out_uint32_t(t, value);
 }
 
+static __inline void yagl_transport_put_out_GLintptr(struct yagl_transport *t,
+                                                     GLintptr value)
+{
+    yagl_transport_put_out_uintptr_t(t, value);
+}
+
 static __inline void yagl_transport_put_out_GLbitfield(struct yagl_transport *t,
                                                        GLbitfield value)
 {

@@ -3,17 +3,18 @@
 
 Name:       emulator-yagl
 Summary:    YaGL - OpenGLES acceleration module for emulator
-Version:    1.4
-Release:    4
-License:    MIT and LPGL-3.0
+Version:    1.5
+Release:    1
+License:    MIT and LGPL-3.0
+Group:      SDK/Libraries
 #URL:        http://www.khronos.org
 Source0:    %{name}-%{version}.tar.gz
 Source1001:     emulator-yagl.manifest
 BuildRequires:  cmake
-BuildRequires:  pkgconfig(libdrm)
-BuildRequires:  pkgconfig(libtbm)
 BuildRequires:  flex
 BuildRequires:  bison
+BuildRequires:  pkgconfig(libdrm)
+BuildRequires:  pkgconfig(libtbm)
 %if %{with wayland}
 BuildRequires:  pkgconfig(gbm)
 BuildRequires:  pkgconfig(libudev)
@@ -28,7 +29,6 @@ BuildRequires:  pkgconfig(xcb)
 BuildRequires:  pkgconfig(xext)
 BuildRequires:  pkgconfig(dri2proto)
 %endif
-Requires:   libtbm
 Provides:   opengl-es-drv
 
 %if %{with emulator}
@@ -45,10 +45,11 @@ This package contains shared libraries libEGL, libGLES_CM, libGLESv2.
 Summary:    YaGL - OpenGLES acceleration module for emulator (devel)
 Provides:   opengl-es-drv-devel
 Requires:   %{name} = %{version}-%{release}
-Requires: pkgconfig(x11)
+Requires:   pkgconfig(x11)
 
 %description devel
 YaGL - OpenGLES acceleration module for emulator (devel)
+This package contains header files for EGL, GLESv1_CM, GLESv2, GLESv3, KHR.
 
 %prep
 %setup -q

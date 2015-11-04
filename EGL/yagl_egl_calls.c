@@ -233,7 +233,7 @@ YAGL_API EGLDisplay eglGetDisplay(EGLNativeDisplayType display_id)
         goto out;
     }
 
-    ret = (EGLDisplay)dpy->host_dpy;
+    ret = (EGLDisplay)INT2VOIDP(dpy->host_dpy);
 
     YAGL_LOG_FUNC_EXIT_SPLIT(yagl_host_handle, dpy->host_dpy);
 
@@ -357,7 +357,7 @@ YAGL_API EGLBoolean eglGetConfigs(EGLDisplay dpy,
         goto fail;
     }
 
-    if (!yagl_host_eglGetConfigs((yagl_host_handle)dpy,
+    if (!yagl_host_eglGetConfigs((yagl_host_handle)VOIDP2INT(dpy),
                                  (yagl_host_handle*)configs,
                                  config_size,
                                  num_config,
@@ -391,7 +391,7 @@ YAGL_API EGLBoolean eglChooseConfig(EGLDisplay dpy,
         goto fail;
     }
 
-    if (!yagl_host_eglChooseConfig((yagl_host_handle)dpy,
+    if (!yagl_host_eglChooseConfig((yagl_host_handle)VOIDP2INT(dpy),
                                    attrib_list,
                                    yagl_transport_attrib_list_count(attrib_list),
                                    (yagl_host_handle*)configs,
@@ -460,8 +460,8 @@ YAGL_API EGLBoolean eglGetConfigAttrib(EGLDisplay dpy_,
         }
         /* Fall through. */
     default:
-        ret = yagl_host_eglGetConfigAttrib((yagl_host_handle)dpy_,
-                                           (yagl_host_handle)config,
+        ret = yagl_host_eglGetConfigAttrib((yagl_host_handle)VOIDP2INT(dpy_),
+                                           (yagl_host_handle)VOIDP2INT(config),
                                            attribute,
                                            value,
                                            &error);
@@ -514,7 +514,7 @@ YAGL_API EGLSurface eglCreateWindowSurface(EGLDisplay dpy_,
     }
 
     surface = yagl_get_backend()->create_window_surface(dpy,
-                                                        (yagl_host_handle)config,
+                                                        (yagl_host_handle)VOIDP2INT(config),
                                                         native_win,
                                                         attrib_list);
 
@@ -562,7 +562,7 @@ YAGL_API EGLSurface eglCreatePbufferSurface(EGLDisplay dpy_,
     }
 
     surface = yagl_get_backend()->create_pbuffer_surface(dpy,
-                                                         (yagl_host_handle)config,
+                                                         (yagl_host_handle)VOIDP2INT(config),
                                                          attrib_list);
 
     if (!surface) {
@@ -616,7 +616,7 @@ YAGL_API EGLSurface eglCreatePixmapSurface(EGLDisplay dpy_,
     }
 
     surface = yagl_get_backend()->create_pixmap_surface(dpy,
-                                                        (yagl_host_handle)config,
+                                                        (yagl_host_handle)VOIDP2INT(config),
                                                         native_pixmap,
                                                         attrib_list);
 
@@ -718,7 +718,7 @@ YAGL_API EGLBoolean eglQuerySurface(EGLDisplay dpy_,
     case EGL_BITMAP_POINTER_KHR:
         ptr = yagl_surface_map(surface, &stride);
         if (ptr) {
-            *value = (EGLint)ptr;
+            *value = (EGLint)VOIDP2INT(ptr);
             retval = EGL_TRUE;
         } else {
             YAGL_SET_ERR(EGL_BAD_ACCESS);
@@ -1121,8 +1121,8 @@ YAGL_API EGLContext eglCreateContext(EGLDisplay dpy_,
 
     host_context =
         yagl_host_eglCreateContext(dpy->host_dpy,
-                                   (yagl_host_handle)config,
-                                   (yagl_host_handle)share_context_,
+                                   (yagl_host_handle)VOIDP2INT(config),
+                                   (yagl_host_handle)VOIDP2INT(share_context_),
                                    attrib_list,
                                    yagl_transport_attrib_list_count(attrib_list),
                                    &error);
@@ -1147,7 +1147,7 @@ out:
 
     YAGL_LOG_FUNC_EXIT("%u", host_context);
 
-    return (EGLContext)host_context;
+    return (EGLContext)INT2VOIDP(host_context);
 }
 
 YAGL_API EGLBoolean eglDestroyContext(EGLDisplay dpy_, EGLContext ctx)
@@ -1164,7 +1164,7 @@ YAGL_API EGLBoolean eglDestroyContext(EGLDisplay dpy_, EGLContext ctx)
         goto fail;
     }
 
-    if (!yagl_host_eglDestroyContext(dpy->host_dpy, (yagl_host_handle)ctx, &error)) {
+    if (!yagl_host_eglDestroyContext(dpy->host_dpy, (yagl_host_handle)VOIDP2INT(ctx), &error)) {
         YAGL_SET_ERR(error);
         goto fail;
     }
@@ -1221,7 +1221,7 @@ YAGL_API EGLBoolean eglMakeCurrent(EGLDisplay dpy_,
                  * the current context.
                  */
 
-                dpy_ = (EGLDisplay)prev_ctx->dpy->host_dpy;
+                dpy_ = (EGLDisplay)INT2VOIDP(prev_ctx->dpy->host_dpy);
                 dpy = prev_ctx->dpy;
             } else {
                 if (!yagl_validate_display(dpy_, &dpy)) {
@@ -1301,7 +1301,7 @@ YAGL_API EGLBoolean eglMakeCurrent(EGLDisplay dpy_,
 
     yagl_render_invalidate(0);
 
-    yagl_host_eglMakeCurrent((yagl_host_handle)dpy_,
+    yagl_host_eglMakeCurrent((yagl_host_handle)VOIDP2INT(dpy_),
                              (draw ? draw->res.handle : 0),
                              (read ? read->res.handle : 0),
                              (ctx ? ctx->res.handle : 0));
@@ -1333,7 +1333,7 @@ YAGL_API EGLContext eglGetCurrentContext(void)
 
     YAGL_LOG_FUNC_EXIT("%u", (ctx ? ctx->res.handle : 0));
 
-    return (ctx ? (EGLContext)ctx->res.handle : EGL_NO_CONTEXT);
+    return (ctx ? (EGLContext)INT2VOIDP(ctx->res.handle) : EGL_NO_CONTEXT);
 }
 
 YAGL_API EGLSurface eglGetCurrentSurface(EGLint readdraw)
@@ -1368,7 +1368,7 @@ YAGL_API EGLDisplay eglGetCurrentDisplay(void)
 
     YAGL_LOG_FUNC_EXIT("%u", (ctx ? ctx->dpy->host_dpy : 0));
 
-    return (ctx ? (EGLDisplay)ctx->dpy->host_dpy : EGL_NO_DISPLAY);
+    return (ctx ? (EGLDisplay)INT2VOIDP(ctx->dpy->host_dpy) : EGL_NO_DISPLAY);
 }
 
 YAGL_API EGLBoolean eglQueryContext(EGLDisplay dpy_,
@@ -1453,7 +1453,7 @@ YAGL_API EGLBoolean eglQueryContext(EGLDisplay dpy_,
         break;
     default:
         res = yagl_host_eglQueryContext(dpy->host_dpy,
-                                        (yagl_host_handle)ctx_,
+                                        (yagl_host_handle)VOIDP2INT(ctx_),
                                         attribute,
                                         value,
                                         &error);
@@ -1761,7 +1761,7 @@ YAGL_API EGLImageKHR eglCreateImageKHR(EGLDisplay dpy_,
 
         image = yagl_get_backend()->create_image_gl_texture_2d(dpy,
                                                                ctx,
-                                                               (yagl_object_name)buffer,
+                                                               (yagl_object_name)VOIDP2INT(buffer),
                                                                iface);
 
         if (!image) {

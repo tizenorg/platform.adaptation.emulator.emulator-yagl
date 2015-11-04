@@ -110,11 +110,11 @@ static __inline int yagl_get_el_size(GLenum type,
 
 static __inline void yagl_get_actual(GLenum type,
                                      GLsizei stride,
-                                     GLint offset,
+                                     GLintptr offset,
                                      int need_convert,
                                      GLenum *actual_type,
                                      GLsizei *actual_stride,
-                                     GLint *actual_offset)
+                                     GLintptr *actual_offset)
 {
     *actual_type = type;
     *actual_stride = stride;
@@ -282,7 +282,7 @@ int yagl_gles_array_update_vbo(struct yagl_gles_array *array,
                                GLboolean normalized,
                                GLsizei stride,
                                struct yagl_gles_buffer *vbo,
-                               GLint offset,
+                               GLintptr offset,
                                int integer)
 {
     if (!yagl_get_el_size(type, integer, &array->el_size, &type)) {

@@ -25,7 +25,7 @@ void yagl_host_glReadPixelsData(GLint x, GLint y, GLsizei width, GLsizei height,
 /*
  * glReadPixelsOffset wrapper. id = 4
  */
-void yagl_host_glReadPixelsOffset(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei pixels);
+void yagl_host_glReadPixelsOffset(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, uintptr_t pixels);
 
 /*
  * glDrawArraysInstanced wrapper. id = 5
@@ -70,7 +70,7 @@ void yagl_host_glVertexAttribPointerData(GLuint indx, GLint size, GLenum type, G
 /*
  * glVertexAttribPointerOffset wrapper. id = 13
  */
-void yagl_host_glVertexAttribPointerOffset(GLuint indx, GLint size, GLenum type, GLboolean normalized, GLsizei stride, GLsizei offset);
+void yagl_host_glVertexAttribPointerOffset(GLuint indx, GLint size, GLenum type, GLboolean normalized, GLsizei stride, uintptr_t offset);
 
 /*
  * glVertexPointerData wrapper. id = 14
@@ -80,7 +80,7 @@ void yagl_host_glVertexPointerData(GLint size, GLenum type, GLsizei stride, GLin
 /*
  * glVertexPointerOffset wrapper. id = 15
  */
-void yagl_host_glVertexPointerOffset(GLint size, GLenum type, GLsizei stride, GLsizei offset);
+void yagl_host_glVertexPointerOffset(GLint size, GLenum type, GLsizei stride, uintptr_t offset);
 
 /*
  * glNormalPointerData wrapper. id = 16
@@ -90,7 +90,7 @@ void yagl_host_glNormalPointerData(GLenum type, GLsizei stride, GLint first, con
 /*
  * glNormalPointerOffset wrapper. id = 17
  */
-void yagl_host_glNormalPointerOffset(GLenum type, GLsizei stride, GLsizei offset);
+void yagl_host_glNormalPointerOffset(GLenum type, GLsizei stride, uintptr_t offset);
 
 /*
  * glColorPointerData wrapper. id = 18
@@ -100,7 +100,7 @@ void yagl_host_glColorPointerData(GLint size, GLenum type, GLsizei stride, GLint
 /*
  * glColorPointerOffset wrapper. id = 19
  */
-void yagl_host_glColorPointerOffset(GLint size, GLenum type, GLsizei stride, GLsizei offset);
+void yagl_host_glColorPointerOffset(GLint size, GLenum type, GLsizei stride, uintptr_t offset);
 
 /*
  * glTexCoordPointerData wrapper. id = 20
@@ -110,7 +110,7 @@ void yagl_host_glTexCoordPointerData(GLint tex_id, GLint size, GLenum type, GLsi
 /*
  * glTexCoordPointerOffset wrapper. id = 21
  */
-void yagl_host_glTexCoordPointerOffset(GLint size, GLenum type, GLsizei stride, GLsizei offset);
+void yagl_host_glTexCoordPointerOffset(GLint size, GLenum type, GLsizei stride, uintptr_t offset);
 
 /*
  * glDisableClientState wrapper. id = 22
@@ -135,7 +135,7 @@ void yagl_host_glVertexAttribIPointerData(GLuint index, GLint size, GLenum type,
 /*
  * glVertexAttribIPointerOffset wrapper. id = 26
  */
-void yagl_host_glVertexAttribIPointerOffset(GLuint index, GLint size, GLenum type, GLsizei stride, GLsizei offset);
+void yagl_host_glVertexAttribIPointerOffset(GLuint index, GLint size, GLenum type, GLsizei stride, uintptr_t offset);
 
 /*
  * glGenBuffers wrapper. id = 27
@@ -175,7 +175,7 @@ void yagl_host_glMapBuffer(GLuint buffer, const GLuint *ranges, int32_t ranges_c
 /*
  * glCopyBufferSubData wrapper. id = 34
  */
-void yagl_host_glCopyBufferSubData(GLenum readTarget, GLenum writeTarget, GLint readOffset, GLint writeOffset, GLsizei size);
+void yagl_host_glCopyBufferSubData(GLenum readTarget, GLenum writeTarget, GLintptr readOffset, GLintptr writeOffset, GLsizei size);
 
 /*
  * glGenTextures wrapper. id = 35
@@ -220,7 +220,7 @@ void yagl_host_glTexImage2DData(GLenum target, GLint level, GLint internalformat
 /*
  * glTexImage2DOffset wrapper. id = 43
  */
-void yagl_host_glTexImage2DOffset(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, GLsizei pixels);
+void yagl_host_glTexImage2DOffset(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, uintptr_t pixels);
 
 /*
  * glTexParameterf wrapper. id = 44
@@ -250,7 +250,7 @@ void yagl_host_glTexSubImage2DData(GLenum target, GLint level, GLint xoffset, GL
 /*
  * glTexSubImage2DOffset wrapper. id = 49
  */
-void yagl_host_glTexSubImage2DOffset(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei pixels);
+void yagl_host_glTexSubImage2DOffset(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, uintptr_t pixels);
 
 /*
  * glClientActiveTexture wrapper. id = 50
@@ -300,7 +300,7 @@ void yagl_host_glTexImage3DData(GLenum target, GLint level, GLint internalformat
 /*
  * glTexImage3DOffset wrapper. id = 59
  */
-void yagl_host_glTexImage3DOffset(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, GLsizei pixels);
+void yagl_host_glTexImage3DOffset(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, uintptr_t pixels);
 
 /*
  * glTexSubImage3DData wrapper. id = 60
@@ -310,7 +310,7 @@ void yagl_host_glTexSubImage3DData(GLenum target, GLint level, GLint xoffset, GL
 /*
  * glTexSubImage3DOffset wrapper. id = 61
  */
-void yagl_host_glTexSubImage3DOffset(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, GLsizei pixels);
+void yagl_host_glTexSubImage3DOffset(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, uintptr_t pixels);
 
 /*
  * glCopyTexSubImage3D wrapper. id = 62

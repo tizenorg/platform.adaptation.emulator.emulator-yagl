@@ -1481,7 +1481,7 @@ YAGL_API GLsync glFenceSync(GLenum condition, GLbitfield flags)
     }
 
     yagl_sharegroup_add(ctx->base.sg, YAGL_NS_SYNC, &sync->base);
-    res = (GLsync)sync->base.local_name;
+    res = (GLsync)INT2VOIDP(sync->base.local_name);
 
     yagl_transport_flush(yagl_get_transport(), sync->egl_fence);
 
@@ -1503,7 +1503,7 @@ YAGL_API GLboolean glIsSync(GLsync sync)
     YAGL_GET_CTX_RET(GL_FALSE);
 
     sync_obj = (struct yagl_gles3_sync*)yagl_sharegroup_acquire_object(ctx->base.sg,
-        YAGL_NS_SYNC, (yagl_object_name)sync);
+        YAGL_NS_SYNC, (yagl_object_name)VOIDP2INT(sync));
 
     res = (sync_obj != NULL);
 
@@ -1527,7 +1527,7 @@ YAGL_API void glDeleteSync(GLsync sync)
     }
 
     sync_obj = (struct yagl_gles3_sync*)yagl_sharegroup_acquire_object(ctx->base.sg,
-        YAGL_NS_SYNC, (yagl_object_name)sync);
+        YAGL_NS_SYNC, (yagl_object_name)VOIDP2INT(sync));
 
     if (!sync_obj) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
@@ -1536,7 +1536,7 @@ YAGL_API void glDeleteSync(GLsync sync)
 
     yagl_sharegroup_remove(ctx->base.sg,
                            YAGL_NS_SYNC,
-                           (yagl_object_name)sync);
+                           (yagl_object_name)VOIDP2INT(sync));
 
 out:
     yagl_gles3_sync_release(sync_obj);
@@ -1559,7 +1559,7 @@ YAGL_API GLenum glClientWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout
     }
 
     sync_obj = (struct yagl_gles3_sync*)yagl_sharegroup_acquire_object(ctx->base.sg,
-        YAGL_NS_SYNC, (yagl_object_name)sync);
+        YAGL_NS_SYNC, (yagl_object_name)VOIDP2INT(sync));
 
     if (!sync_obj) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
@@ -1606,7 +1606,7 @@ YAGL_API void glWaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout)
     }
 
     sync_obj = (struct yagl_gles3_sync*)yagl_sharegroup_acquire_object(ctx->base.sg,
-        YAGL_NS_SYNC, (yagl_object_name)sync);
+        YAGL_NS_SYNC, (yagl_object_name)VOIDP2INT(sync));
 
     if (!sync_obj) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
@@ -1632,7 +1632,7 @@ YAGL_API void glGetSynciv(GLsync sync, GLenum pname, GLsizei bufSize, GLsizei *l
     YAGL_GET_CTX();
 
     sync_obj = (struct yagl_gles3_sync*)yagl_sharegroup_acquire_object(ctx->base.sg,
-        YAGL_NS_SYNC, (yagl_object_name)sync);
+        YAGL_NS_SYNC, (yagl_object_name)VOIDP2INT(sync));
 
     if (!sync_obj) {
         YAGL_SET_ERR(GL_INVALID_VALUE);
@@ -1855,7 +1855,7 @@ YAGL_API void glVertexAttribIPointer(GLuint index, GLint size, GLenum type, GLsi
                                         GL_FALSE,
                                         stride,
                                         ctx->base.base.vbo,
-                                        (GLint)pointer,
+                                        (GLintptr)pointer,
                                         1)) {
             YAGL_SET_ERR(GL_INVALID_ENUM);
         }
@@ -2806,7 +2806,7 @@ YAGL_API void glDrawRangeElements(GLenum mode, GLuint start, GLuint end,
                                   GL_ELEMENT_ARRAY_BUFFER,
                                   0);
         yagl_gles3_context_draw_range_elements(ctx, mode, start, end, count,
-                                               type, NULL, (int32_t)indices);
+                                               type, NULL, (int32_t)VOIDP2INT(indices));
         yagl_host_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     } else {
         yagl_gles3_context_draw_range_elements(ctx, mode, start, end, count,

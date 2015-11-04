@@ -2303,7 +2303,7 @@ YAGL_API void glVertexAttribPointer(GLuint indx, GLint size, GLenum type, GLbool
                                         normalized,
                                         stride,
                                         ctx->base.vbo,
-                                        (GLint)ptr,
+                                        (GLintptr)ptr,
                                         0)) {
             YAGL_SET_ERR(GL_INVALID_ENUM);
         }
@@ -2503,7 +2503,7 @@ YAGL_API void glTexImage3D(GLenum target, GLint level, GLint internalformat, GLs
                                      border,
                                      pf->dst_format,
                                      pf->dst_type,
-                                     (GLsizei)pixels);
+                                     (uintptr_t)pixels);
     } else {
         yagl_host_glTexImage3DData(target,
                                    level,
@@ -2601,7 +2601,7 @@ YAGL_API void glTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint y
                                         depth,
                                         pf->dst_format,
                                         pf->dst_type,
-                                        (GLsizei)pixels);
+                                        (uintptr_t)pixels);
     } else {
         yagl_host_glTexSubImage3DData(target,
                                       level,

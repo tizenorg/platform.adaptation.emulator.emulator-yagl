@@ -2181,7 +2181,7 @@ YAGL_API void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLen
                                      width, height,
                                      pf->dst_format,
                                      pf->dst_type,
-                                     (GLsizei)pixels);
+                                     (uintptr_t)pixels);
     } else {
         GLvoid *pixels_from;
 
@@ -2297,7 +2297,7 @@ YAGL_API void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLs
                                      border,
                                      pf->dst_format,
                                      pf->dst_type,
-                                     (GLsizei)pixels);
+                                     (uintptr_t)pixels);
     } else {
         yagl_host_glTexImage2DData(target,
                                    level,
@@ -2390,7 +2390,7 @@ YAGL_API void glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint y
                                         height,
                                         pf->dst_format,
                                         pf->dst_type,
-                                        (GLsizei)pixels);
+                                        (uintptr_t)pixels);
     } else {
         yagl_host_glTexSubImage2DData(target,
                                       level,
@@ -2430,7 +2430,7 @@ YAGL_API void glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOES image)
         goto out;
     }
 
-    image_obj = (struct yagl_gles_image*)yagl_acquire_client_image((yagl_host_handle)image);
+    image_obj = (struct yagl_gles_image*)yagl_acquire_client_image((yagl_host_handle)VOIDP2INT(image));
 
     if (!image_obj) {
         YAGL_SET_ERR(GL_INVALID_OPERATION);

@@ -101,7 +101,7 @@ struct yagl_onscreen_image_tizen_sfc
     yagl_image_init(&image->base,
                     &yagl_onscreen_image_tizen_sfc_destroy,
                     dpy,
-                    (EGLImageKHR)drm_sfc->gem.name,
+                    (EGLImageKHR)INT2VOIDP(drm_sfc->gem.name),
                     client_image);
 
     yagl_client_image_release(client_image);
