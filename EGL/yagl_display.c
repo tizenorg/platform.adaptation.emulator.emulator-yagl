@@ -120,7 +120,7 @@ void yagl_display_atfork(void)
 
 struct yagl_display *yagl_display_get(EGLDisplay handle)
 {
-    yagl_host_handle host_dpy = (yagl_host_handle)handle;
+    yagl_host_handle host_dpy = (yagl_host_handle)VOIDP2INT(handle);
     struct yagl_display *dpy;
 
     yagl_displays_init();
@@ -427,7 +427,7 @@ struct yagl_context *yagl_display_context_acquire(struct yagl_display *dpy,
     pthread_mutex_lock(&dpy->mutex);
 
     yagl_list_for_each(struct yagl_resource, res, &dpy->contexts, list) {
-        if (res->handle == (yagl_host_handle)handle) {
+        if (res->handle == (yagl_host_handle)VOIDP2INT(handle)) {
             yagl_resource_acquire(res);
             pthread_mutex_unlock(&dpy->mutex);
             return (struct yagl_context*)res;
@@ -447,7 +447,7 @@ void yagl_display_context_remove(struct yagl_display *dpy,
     pthread_mutex_lock(&dpy->mutex);
 
     yagl_list_for_each(struct yagl_resource, res, &dpy->contexts, list) {
-        if (res->handle == (yagl_host_handle)handle) {
+        if (res->handle == (yagl_host_handle)VOIDP2INT(handle)) {
             yagl_list_remove(&res->list);
             yagl_resource_release(res);
             break;

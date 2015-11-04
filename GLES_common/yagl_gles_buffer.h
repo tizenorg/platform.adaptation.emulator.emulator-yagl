@@ -86,7 +86,7 @@ struct yagl_gles_buffer
 
     int cached_minmax_idx;
     GLenum cached_type;
-    GLint cached_offset;
+    GLintptr cached_offset;
     GLint cached_count;
     uint32_t cached_min_idx;
     uint32_t cached_max_idx;
@@ -110,13 +110,13 @@ void yagl_gles_buffer_set_data(struct yagl_gles_buffer *buffer,
                                GLenum usage);
 
 int yagl_gles_buffer_update_data(struct yagl_gles_buffer *buffer,
-                                 GLint offset,
+                                 GLintptr offset,
                                  GLint size,
                                  const void *data);
 
 int yagl_gles_buffer_get_minmax_index(struct yagl_gles_buffer *buffer,
                                       GLenum type,
-                                      GLint offset,
+                                      GLintptr offset,
                                       GLint count,
                                       uint32_t *min_idx,
                                       uint32_t *max_idx);
@@ -160,15 +160,15 @@ int yagl_gles_buffer_is_cpu_dirty(struct yagl_gles_buffer *buffer,
                                   int need_convert);
 
 void yagl_gles_buffer_set_gpu_dirty(struct yagl_gles_buffer *buffer,
-                                    GLint offset,
+                                    GLintptr offset,
                                     GLint size);
 
 int yagl_gles_buffer_copy_gpu(struct yagl_gles_buffer *from_buffer,
                               GLenum from_target,
                               struct yagl_gles_buffer *to_buffer,
                               GLenum to_target,
-                              GLint from_offset,
-                              GLint to_offset,
+                              GLintptr from_offset,
+                              GLintptr to_offset,
                               GLint size);
 
 #endif

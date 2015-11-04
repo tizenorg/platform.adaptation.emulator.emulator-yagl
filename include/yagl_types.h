@@ -36,6 +36,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <inttypes.h>
 
 #if defined(__i386) || defined(_M_IX86)
 #define YAGL_LITTLE_ENDIAN
@@ -97,5 +98,13 @@ typedef uint32_t yagl_object_name;
 #define yagl_offsetof(type, member) ((size_t)&((type*)0)->member)
 
 #define yagl_containerof(ptr, type, member) ((type*)((char*)(ptr) - yagl_offsetof(type, member)))
+
+#ifndef INT2VOIDP
+#define INT2VOIDP(i) ((void*)((uintptr_t)(i)))
+#endif
+#ifndef VOIDP2INT
+#define VOIDP2INT(p) ((uintptr_t)(p))
+#endif
+
 
 #endif

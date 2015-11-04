@@ -278,7 +278,9 @@ static void yagl_wayland_window_swap_buffers(struct yagl_native_drawable *drawab
 {
     struct yagl_wayland_window *window = (struct yagl_wayland_window*)drawable;
     struct yagl_wayland_display *dpy = (struct yagl_wayland_display*)drawable->dpy;
+    /* XXX: unused variable
     struct wl_display *wl_dpy = YAGL_WAYLAND_DPY(drawable->dpy->os_dpy);
+    */
     struct wl_egl_window *egl_window = YAGL_WAYLAND_WINDOW(drawable->os_drawable);
     int i, ret = 0;
 

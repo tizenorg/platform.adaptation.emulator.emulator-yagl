@@ -2141,7 +2141,7 @@ void yagl_gles_context_draw_elements(struct yagl_gles_context *ctx,
             if (ctx->vao->ebo) {
                 if (!yagl_gles_buffer_get_minmax_index(ctx->vao->ebo,
                                                        type,
-                                                       (GLint)indices,
+                                                       (GLintptr)indices,
                                                        count,
                                                        &min_idx,
                                                        &max_idx)) {
@@ -2174,7 +2174,7 @@ void yagl_gles_context_draw_elements(struct yagl_gles_context *ctx,
                                   type,
                                   GL_ELEMENT_ARRAY_BUFFER,
                                   0);
-        ctx->draw_elements(ctx, mode, count, type, NULL, (int32_t)indices, primcount, max_idx);
+        ctx->draw_elements(ctx, mode, count, type, NULL, (int32_t)VOIDP2INT(indices), primcount, max_idx);
         yagl_host_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     } else {
         ctx->draw_elements(ctx, mode, count, type, indices, count * index_size, primcount, max_idx);
@@ -2213,7 +2213,7 @@ int yagl_gles_context_pre_unpack(struct yagl_gles_context *ctx,
         return 0;
     }
 
-    *pixels = ctx->unpack.pbo->map_pointer + (uint32_t)*pixels;
+    *pixels = ctx->unpack.pbo->map_pointer + (GLintptr)*pixels;
 
     return 1;
 }
@@ -2264,7 +2264,7 @@ int yagl_gles_context_pre_pack(struct yagl_gles_context *ctx,
         return 0;
     }
 
-    *pixels = ctx->pack.pbo->map_pointer + (uint32_t)*pixels;
+    *pixels = ctx->pack.pbo->map_pointer + (GLintptr)*pixels;
 
     return 1;
 }
@@ -2283,7 +2283,7 @@ void yagl_gles_context_post_pack(struct yagl_gles_context *ctx,
     } else {
         yagl_host_glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
         yagl_gles_buffer_set_gpu_dirty(ctx->pack.pbo,
-                                       (GLint)pixels,
+                                       (GLintptr)pixels,
                                        size);
     }
 }

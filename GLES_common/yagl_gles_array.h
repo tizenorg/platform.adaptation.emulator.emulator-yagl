@@ -102,8 +102,8 @@ struct yagl_gles_array
         const GLvoid *ptr;
         struct
         {
-            GLint offset;
-            GLint actual_offset;
+            GLintptr offset;
+            GLintptr actual_offset;
         };
     };
 
@@ -136,7 +136,7 @@ int yagl_gles_array_update_vbo(struct yagl_gles_array *array,
                                GLboolean normalized,
                                GLsizei stride,
                                struct yagl_gles_buffer *vbo,
-                               GLint offset,
+                               GLintptr offset,
                                int integer);
 
 void yagl_gles_array_apply(struct yagl_gles_array *array);

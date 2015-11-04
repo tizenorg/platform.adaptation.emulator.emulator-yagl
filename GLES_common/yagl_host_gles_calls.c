@@ -57,7 +57,7 @@ void yagl_host_glReadPixelsData(GLint x, GLint y, GLsizei width, GLsizei height,
 /*
  * glReadPixelsOffset wrapper. id = 4
  */
-void yagl_host_glReadPixelsOffset(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei pixels)
+void yagl_host_glReadPixelsOffset(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, uintptr_t pixels)
 {
     struct yagl_transport *t = yagl_get_transport();
 
@@ -68,7 +68,7 @@ void yagl_host_glReadPixelsOffset(GLint x, GLint y, GLsizei width, GLsizei heigh
     yagl_transport_put_out_GLsizei(t, height);
     yagl_transport_put_out_GLenum(t, format);
     yagl_transport_put_out_GLenum(t, type);
-    yagl_transport_put_out_GLsizei(t, pixels);
+    yagl_transport_put_out_uintptr_t(t, pixels);
     yagl_transport_end(t);
 }
 
@@ -189,7 +189,7 @@ void yagl_host_glVertexAttribPointerData(GLuint indx, GLint size, GLenum type, G
 /*
  * glVertexAttribPointerOffset wrapper. id = 13
  */
-void yagl_host_glVertexAttribPointerOffset(GLuint indx, GLint size, GLenum type, GLboolean normalized, GLsizei stride, GLsizei offset)
+void yagl_host_glVertexAttribPointerOffset(GLuint indx, GLint size, GLenum type, GLboolean normalized, GLsizei stride, uintptr_t offset)
 {
     struct yagl_transport *t = yagl_get_transport();
 
@@ -199,7 +199,7 @@ void yagl_host_glVertexAttribPointerOffset(GLuint indx, GLint size, GLenum type,
     yagl_transport_put_out_GLenum(t, type);
     yagl_transport_put_out_GLboolean(t, normalized);
     yagl_transport_put_out_GLsizei(t, stride);
-    yagl_transport_put_out_GLsizei(t, offset);
+    yagl_transport_put_out_uintptr_t(t, offset);
     yagl_transport_end(t);
 }
 
@@ -222,7 +222,7 @@ void yagl_host_glVertexPointerData(GLint size, GLenum type, GLsizei stride, GLin
 /*
  * glVertexPointerOffset wrapper. id = 15
  */
-void yagl_host_glVertexPointerOffset(GLint size, GLenum type, GLsizei stride, GLsizei offset)
+void yagl_host_glVertexPointerOffset(GLint size, GLenum type, GLsizei stride, uintptr_t offset)
 {
     struct yagl_transport *t = yagl_get_transport();
 
@@ -230,7 +230,7 @@ void yagl_host_glVertexPointerOffset(GLint size, GLenum type, GLsizei stride, GL
     yagl_transport_put_out_GLint(t, size);
     yagl_transport_put_out_GLenum(t, type);
     yagl_transport_put_out_GLsizei(t, stride);
-    yagl_transport_put_out_GLsizei(t, offset);
+    yagl_transport_put_out_uintptr_t(t, offset);
     yagl_transport_end(t);
 }
 
@@ -252,14 +252,14 @@ void yagl_host_glNormalPointerData(GLenum type, GLsizei stride, GLint first, con
 /*
  * glNormalPointerOffset wrapper. id = 17
  */
-void yagl_host_glNormalPointerOffset(GLenum type, GLsizei stride, GLsizei offset)
+void yagl_host_glNormalPointerOffset(GLenum type, GLsizei stride, uintptr_t offset)
 {
     struct yagl_transport *t = yagl_get_transport();
 
     yagl_transport_begin(t, yagl_api_id_gles, 17, 3 * 8, 3 * 8);
     yagl_transport_put_out_GLenum(t, type);
     yagl_transport_put_out_GLsizei(t, stride);
-    yagl_transport_put_out_GLsizei(t, offset);
+    yagl_transport_put_out_uintptr_t(t, offset);
     yagl_transport_end(t);
 }
 
@@ -282,7 +282,7 @@ void yagl_host_glColorPointerData(GLint size, GLenum type, GLsizei stride, GLint
 /*
  * glColorPointerOffset wrapper. id = 19
  */
-void yagl_host_glColorPointerOffset(GLint size, GLenum type, GLsizei stride, GLsizei offset)
+void yagl_host_glColorPointerOffset(GLint size, GLenum type, GLsizei stride, uintptr_t offset)
 {
     struct yagl_transport *t = yagl_get_transport();
 
@@ -290,7 +290,7 @@ void yagl_host_glColorPointerOffset(GLint size, GLenum type, GLsizei stride, GLs
     yagl_transport_put_out_GLint(t, size);
     yagl_transport_put_out_GLenum(t, type);
     yagl_transport_put_out_GLsizei(t, stride);
-    yagl_transport_put_out_GLsizei(t, offset);
+    yagl_transport_put_out_uintptr_t(t, offset);
     yagl_transport_end(t);
 }
 
@@ -314,7 +314,7 @@ void yagl_host_glTexCoordPointerData(GLint tex_id, GLint size, GLenum type, GLsi
 /*
  * glTexCoordPointerOffset wrapper. id = 21
  */
-void yagl_host_glTexCoordPointerOffset(GLint size, GLenum type, GLsizei stride, GLsizei offset)
+void yagl_host_glTexCoordPointerOffset(GLint size, GLenum type, GLsizei stride, uintptr_t offset)
 {
     struct yagl_transport *t = yagl_get_transport();
 
@@ -322,7 +322,7 @@ void yagl_host_glTexCoordPointerOffset(GLint size, GLenum type, GLsizei stride, 
     yagl_transport_put_out_GLint(t, size);
     yagl_transport_put_out_GLenum(t, type);
     yagl_transport_put_out_GLsizei(t, stride);
-    yagl_transport_put_out_GLsizei(t, offset);
+    yagl_transport_put_out_uintptr_t(t, offset);
     yagl_transport_end(t);
 }
 
@@ -383,7 +383,7 @@ void yagl_host_glVertexAttribIPointerData(GLuint index, GLint size, GLenum type,
 /*
  * glVertexAttribIPointerOffset wrapper. id = 26
  */
-void yagl_host_glVertexAttribIPointerOffset(GLuint index, GLint size, GLenum type, GLsizei stride, GLsizei offset)
+void yagl_host_glVertexAttribIPointerOffset(GLuint index, GLint size, GLenum type, GLsizei stride, uintptr_t offset)
 {
     struct yagl_transport *t = yagl_get_transport();
 
@@ -392,7 +392,7 @@ void yagl_host_glVertexAttribIPointerOffset(GLuint index, GLint size, GLenum typ
     yagl_transport_put_out_GLint(t, size);
     yagl_transport_put_out_GLenum(t, type);
     yagl_transport_put_out_GLsizei(t, stride);
-    yagl_transport_put_out_GLsizei(t, offset);
+    yagl_transport_put_out_uintptr_t(t, offset);
     yagl_transport_end(t);
 }
 
@@ -496,15 +496,15 @@ void yagl_host_glMapBuffer(GLuint buffer, const GLuint *ranges, int32_t ranges_c
 /*
  * glCopyBufferSubData wrapper. id = 34
  */
-void yagl_host_glCopyBufferSubData(GLenum readTarget, GLenum writeTarget, GLint readOffset, GLint writeOffset, GLsizei size)
+void yagl_host_glCopyBufferSubData(GLenum readTarget, GLenum writeTarget, GLintptr readOffset, GLintptr writeOffset, GLsizei size)
 {
     struct yagl_transport *t = yagl_get_transport();
 
     yagl_transport_begin(t, yagl_api_id_gles, 34, 5 * 8, 5 * 8);
     yagl_transport_put_out_GLenum(t, readTarget);
     yagl_transport_put_out_GLenum(t, writeTarget);
-    yagl_transport_put_out_GLint(t, readOffset);
-    yagl_transport_put_out_GLint(t, writeOffset);
+    yagl_transport_put_out_GLintptr(t, readOffset);
+    yagl_transport_put_out_GLintptr(t, writeOffset);
     yagl_transport_put_out_GLsizei(t, size);
     yagl_transport_end(t);
 }
@@ -635,7 +635,7 @@ void yagl_host_glTexImage2DData(GLenum target, GLint level, GLint internalformat
 /*
  * glTexImage2DOffset wrapper. id = 43
  */
-void yagl_host_glTexImage2DOffset(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, GLsizei pixels)
+void yagl_host_glTexImage2DOffset(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, uintptr_t pixels)
 {
     struct yagl_transport *t = yagl_get_transport();
 
@@ -648,7 +648,7 @@ void yagl_host_glTexImage2DOffset(GLenum target, GLint level, GLint internalform
     yagl_transport_put_out_GLint(t, border);
     yagl_transport_put_out_GLenum(t, format);
     yagl_transport_put_out_GLenum(t, type);
-    yagl_transport_put_out_GLsizei(t, pixels);
+    yagl_transport_put_out_uintptr_t(t, pixels);
     yagl_transport_end(t);
 }
 
@@ -731,7 +731,7 @@ void yagl_host_glTexSubImage2DData(GLenum target, GLint level, GLint xoffset, GL
 /*
  * glTexSubImage2DOffset wrapper. id = 49
  */
-void yagl_host_glTexSubImage2DOffset(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei pixels)
+void yagl_host_glTexSubImage2DOffset(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, uintptr_t pixels)
 {
     struct yagl_transport *t = yagl_get_transport();
 
@@ -744,7 +744,7 @@ void yagl_host_glTexSubImage2DOffset(GLenum target, GLint level, GLint xoffset, 
     yagl_transport_put_out_GLsizei(t, height);
     yagl_transport_put_out_GLenum(t, format);
     yagl_transport_put_out_GLenum(t, type);
-    yagl_transport_put_out_GLsizei(t, pixels);
+    yagl_transport_put_out_uintptr_t(t, pixels);
     yagl_transport_end(t);
 }
 
@@ -884,7 +884,7 @@ void yagl_host_glTexImage3DData(GLenum target, GLint level, GLint internalformat
 /*
  * glTexImage3DOffset wrapper. id = 59
  */
-void yagl_host_glTexImage3DOffset(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, GLsizei pixels)
+void yagl_host_glTexImage3DOffset(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, uintptr_t pixels)
 {
     struct yagl_transport *t = yagl_get_transport();
 
@@ -898,7 +898,7 @@ void yagl_host_glTexImage3DOffset(GLenum target, GLint level, GLint internalform
     yagl_transport_put_out_GLint(t, border);
     yagl_transport_put_out_GLenum(t, format);
     yagl_transport_put_out_GLenum(t, type);
-    yagl_transport_put_out_GLsizei(t, pixels);
+    yagl_transport_put_out_uintptr_t(t, pixels);
     yagl_transport_end(t);
 }
 
@@ -927,7 +927,7 @@ void yagl_host_glTexSubImage3DData(GLenum target, GLint level, GLint xoffset, GL
 /*
  * glTexSubImage3DOffset wrapper. id = 61
  */
-void yagl_host_glTexSubImage3DOffset(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, GLsizei pixels)
+void yagl_host_glTexSubImage3DOffset(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, uintptr_t pixels)
 {
     struct yagl_transport *t = yagl_get_transport();
 
@@ -942,7 +942,7 @@ void yagl_host_glTexSubImage3DOffset(GLenum target, GLint level, GLint xoffset, 
     yagl_transport_put_out_GLsizei(t, depth);
     yagl_transport_put_out_GLenum(t, format);
     yagl_transport_put_out_GLenum(t, type);
-    yagl_transport_put_out_GLsizei(t, pixels);
+    yagl_transport_put_out_uintptr_t(t, pixels);
     yagl_transport_end(t);
 }
 

@@ -72,7 +72,7 @@ struct yagl_client_image *yagl_acquire_client_image(yagl_host_handle handle)
         return NULL;
     }
 
-    image = yagl_display_image_acquire(ctx->dpy, (EGLImageKHR)handle);
+    image = yagl_display_image_acquire(ctx->dpy, (EGLImageKHR)INT2VOIDP(handle));
 
     if (!image) {
         return NULL;

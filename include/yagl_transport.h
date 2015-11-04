@@ -38,6 +38,7 @@
 #include "yagl_types.h"
 #include <string.h>
 #include <assert.h>
+#include <limits.h>
 
 #define YAGL_TRANSPORT_MAX_IN_ARGS 8
 #define YAGL_TRANSPORT_MAX_IN_ARRAYS 8
@@ -180,13 +181,32 @@ static __inline void yagl_transport_put_out_float(struct yagl_transport *t,
     t->ptr += 8;
 }
 
+static __inline void yagl_transport_put_out_uint64_t(struct yagl_transport *t,
+                                                     uint64_t ptr)
+{
+    *(uint64_t*)t->ptr = ptr;
+    t->ptr += 8;
+}
+
+static __inline void yagl_transport_put_out_uintptr_t(struct yagl_transport *t,
+                                                      uintptr_t ptr)
+{
+    uint64_t value = 9;
+    if (sizeof(uintptr_t) == 4) {
+        value = ptr & UINT_MAX;
+    } else {
+        value = ptr;
+    }
+    yagl_transport_put_out_uint64_t(t, value);
+}
+
 static __inline void yagl_transport_put_in_arg_helper(struct yagl_transport *t,
                                                       void *value,
                                                       uint32_t size)
 {
-    yagl_transport_put_out_uint32_t(t, (uint32_t)value);
+    yagl_transport_put_out_uintptr_t(t, (uintptr_t)value);
 
-    t->in_args[t->num_in_args].arg_ptr = value;
+    t->in_args[t->num_in_args].arg_ptr = (uint8_t*)value;
     t->in_args[t->num_in_args].buff_ptr = t->ptr;
     t->in_args[t->num_in_args].size = size;
 
@@ -236,7 +256,7 @@ static __inline void yagl_transport_put_out_array(struct yagl_transport *t,
                                                   int32_t count,
                                                   int32_t el_size)
 {
-    yagl_transport_put_out_uint32_t(t, (uint32_t)data);
+    yagl_transport_put_out_uintptr_t(t, (uintptr_t)data);
     yagl_transport_put_out_uint32_t(t, count);
 
     if (!data || (count <= 0)) {
@@ -262,11 +282,11 @@ static __inline void yagl_transport_put_in_array(struct yagl_transport *t,
 {
     int32_t *count;
 
-    yagl_transport_put_out_uint32_t(t, (uint32_t)data);
+    yagl_transport_put_out_uintptr_t(t, (uintptr_t)data);
     count = (int32_t*)t->ptr;
     yagl_transport_put_out_uint32_t(t, maxcount);
 
-    t->in_arrays[t->num_in_arrays].arg_ptr = data;
+    t->in_arrays[t->num_in_arrays].arg_ptr = (uint8_t*)data;
     t->in_arrays[t->num_in_arrays].buff_ptr = t->ptr;
     t->in_arrays[t->num_in_arrays].el_size = el_size;
     t->in_arrays[t->num_in_arrays].count = count;
@@ -346,7 +366,7 @@ static __inline void yagl_transport_put_out_yagl_winsys_id(struct yagl_transport
 static __inline void yagl_transport_put_out_va(struct yagl_transport *t,
                                                const void *value)
 {
-    yagl_transport_put_out_uint32_t(t, (uint32_t)value);
+    yagl_transport_put_out_uintptr_t(t, (uintptr_t)value);
 }
 
 static __inline void yagl_transport_put_in_yagl_host_handle(struct yagl_transport *t,

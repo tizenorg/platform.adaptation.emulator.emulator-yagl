@@ -122,7 +122,7 @@ EGLSurface yagl_surface_get_handle(struct yagl_surface *sfc)
 {
     switch (sfc->type) {
     case EGL_PBUFFER_BIT:
-        return (EGLSurface)sfc->res.handle;
+        return (EGLSurface)INT2VOIDP(sfc->res.handle);
     case EGL_PIXMAP_BIT:
     case EGL_WINDOW_BIT:
         return (EGLSurface)sfc->native_drawable->os_drawable;

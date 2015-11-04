@@ -1012,7 +1012,7 @@ YAGL_API void glNormalPointer(GLenum type, GLsizei stride, const GLvoid* pointer
                                         GL_FALSE,
                                         stride,
                                         ctx->base.vbo,
-                                        (GLint)pointer,
+                                        (GLintptr)pointer,
                                         0)) {
             YAGL_SET_ERR(GL_INVALID_ENUM);
         }
@@ -1075,7 +1075,7 @@ YAGL_API void glVertexPointer(GLint size, GLenum type, GLsizei stride, const GLv
                                         GL_FALSE,
                                         stride,
                                         ctx->base.vbo,
-                                        (GLint)pointer,
+                                        (GLintptr)pointer,
                                         0)) {
             YAGL_SET_ERR(GL_INVALID_ENUM);
         }
@@ -1137,7 +1137,7 @@ YAGL_API void glColorPointer(GLint size, GLenum type, GLsizei stride, const GLvo
                                         GL_FALSE,
                                         stride,
                                         ctx->base.vbo,
-                                        (GLint)pointer,
+                                        (GLintptr)pointer,
                                         0)) {
             YAGL_SET_ERR(GL_INVALID_ENUM);
         }
@@ -1200,7 +1200,7 @@ YAGL_API void glTexCoordPointer(GLint size, GLenum type, GLsizei stride, const G
                                         GL_FALSE,
                                         stride,
                                         ctx->base.vbo,
-                                        (GLint)pointer,
+                                        (GLintptr)pointer,
                                         0)) {
             YAGL_SET_ERR(GL_INVALID_ENUM);
         }
@@ -1262,7 +1262,7 @@ YAGL_API void glPointSizePointerOES(GLenum type, GLsizei stride, const GLvoid* p
                                         GL_FALSE,
                                         stride,
                                         ctx->base.vbo,
-                                        (GLint)pointer,
+                                        (GLintptr)pointer,
                                         0)) {
             YAGL_SET_ERR(GL_INVALID_ENUM);
         }
