@@ -50,7 +50,7 @@ struct wl_drm
 
 struct wl_drm_buffer
 {
-    struct wl_resource resource;
+    struct wl_resource *resource;
 
     struct wl_drm *drm;
 
@@ -112,16 +112,18 @@ static void drm_create_buffer(struct wl_client *client,
     }
 
     buffer->drm = drm;
+    buffer->resource = wl_resource_create(client, &wl_buffer_interface, 1, id);
 
-    buffer->resource.object.id = id;
-    buffer->resource.object.interface = &wl_buffer_interface;
-    buffer->resource.object.implementation = (void(**)(void))&drm->buffer_interface;
-    buffer->resource.data = buffer;
+    if (!buffer->resource) {
+        wl_resource_post_no_memory(resource);
+        free(buffer);
+        return;
+    }
 
-    buffer->resource.destroy = buffer_destroy;
-    buffer->resource.client = resource->client;
-
-    wl_client_add_resource(resource->client, &buffer->resource);
+    wl_resource_set_implementation(buffer->resource,
+                                   (void(**)(void))&drm->buffer_interface,
+                                   buffer,
+                                   buffer_destroy);
 }
 
 static void drm_create_planar_buffer(struct wl_client *client,
