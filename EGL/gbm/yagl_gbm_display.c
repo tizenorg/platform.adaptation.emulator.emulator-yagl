@@ -136,7 +136,15 @@ static int yagl_gbm_display_get_visual(struct yagl_native_display *dpy,
                                        int *visual_id,
                                        int *visual_type)
 {
-    *visual_id = 0;
+    /* XXX: W/A for evas
+       efl GIT: platform/upstream/efl
+       evas src: /src/modules/evas/engines/gl_drm/evas_outbuf.c
+       evas func.: _evas_outbuf_egl_setup()
+       reference: https://www.khronos.org/registry/egl/
+                          extensions/KHR/EGL_KHR_platform_gbm.txt
+                  read 'New Behavior' section
+    */
+    *visual_id = GBM_FORMAT_ARGB8888;
     *visual_type = 0;
 
     return 1;
