@@ -38,6 +38,21 @@ if ((NOT PLATFORM_X11) AND (NOT PLATFORM_GBM) AND (NOT PLATFORM_WAYLAND))
     message(FATAL_ERROR "At least one platform must be supported")
 endif ()
 
+# BUILD ARCH SETTINGS
+set(BUILD_ARCH "$ENV{RPM_ARCH}")
+
+# set pkgconfig file
+if(${BUILD_ARCH} MATCHES "aarch64")
+set(LIBDIR "lib64")
+elseif(${BUILD_ARCH} MATCHES "x86_64")
+set(LIBDIR "lib64")
+else(${BUILD_ARCH} MATCHES "aarch64")
+set(LIBDIR "lib")
+endif(${BUILD_ARCH} MATCHES "aarch64")
+
+configure_file(pkgconfig/wayland-egl.pc.in pkgconfig/wayland-egl.pc @ONLY)
+# end pkgconfig file
+
 #out dir
 
 set(YAGL_OUT_DIR ${YAGL_BINARY_DIR}/out)
