@@ -37,5 +37,5 @@ target_link_libraries(GLESv2 "-Wl,-whole-archive" GLES_common "-Wl,-no-whole-arc
 
 install(
     TARGETS GLESv2
-    LIBRARY DESTINATION ${INSTALL_LIB_DIR}
+    LIBRARY DESTINATION ${INSTALL_LIB_DIR}/driver
 )
