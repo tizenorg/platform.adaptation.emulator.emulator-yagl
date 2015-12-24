@@ -108,5 +108,5 @@ target_link_libraries(EGL ${LIBRARIES})
 
 install(
     TARGETS EGL
-    LIBRARY DESTINATION ${INSTALL_LIB_DIR}
+    LIBRARY DESTINATION ${INSTALL_LIB_DIR}/driver
 )

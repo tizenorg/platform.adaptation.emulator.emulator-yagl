@@ -16,5 +16,5 @@ target_link_libraries(GLESv1_CM "-Wl,-whole-archive" GLES_common "-Wl,-no-whole-
 
 install(
     TARGETS GLESv1_CM
-    LIBRARY DESTINATION ${INSTALL_LIB_DIR}
+    LIBRARY DESTINATION ${INSTALL_LIB_DIR}/driver
 )
