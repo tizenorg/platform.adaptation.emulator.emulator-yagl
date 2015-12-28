@@ -30,8 +30,6 @@ option(PLATFORM_X11 "Enable X11 platform" TRUE)
 option(PLATFORM_GBM "Enable GBM platform" FALSE)
 option(PLATFORM_WAYLAND "Enable wayland platform" FALSE)
 
-set(INSTALL_LIB_DIR "lib" CACHE STRING "Where to install library files")
-
 # END USER SETTINGS
 
 if ((NOT PLATFORM_X11) AND (NOT PLATFORM_GBM) AND (NOT PLATFORM_WAYLAND))
