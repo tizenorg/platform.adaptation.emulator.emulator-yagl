@@ -56,17 +56,18 @@ Development files for use with Wayland protocol
 
 %build
 cp %{SOURCE1001} .
-cmake -DCMAKE_INSTALL_PREFIX=%{buildroot}/usr -DPLATFORM_X11=0 -DPLATFORM_GBM=1 -DPLATFORM_WAYLAND=1
+cmake -DCMAKE_INSTALL_PREFIX=%{buildroot} -DINSTALL_LIB_DIR=%{buildroot}%{_libdir} -DPLATFORM_X11=0 -DPLATFORM_GBM=1 -DPLATFORM_WAYLAND=1
 make
 
 %install
+rm -fr %{buildroot}
+mkdir -p %{buildroot}
+mkdir -p %{buildroot}%{_libdir}
+mkdir -p %{buildroot}%{_libdir}/pkgconfig
+
 make install
 
-mkdir -p %{buildroot}/usr/share/license
-cp COPYING %{buildroot}/usr/share/license/%{name}
-
-mkdir -p %{buildroot}/usr/lib/pkgconfig
-cp pkgconfig/wayland-egl.pc %{buildroot}/usr/lib/pkgconfig/
+cp pkgconfig/wayland-egl.pc %{buildroot}%{_libdir}/pkgconfig/
 
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
@@ -78,28 +79,28 @@ cp pkgconfig/wayland-egl.pc %{buildroot}/usr/lib/pkgconfig/
 
 %files
 %manifest %{name}.manifest
+%license COPYING
 %defattr(-,root,root,-)
 %if %{with wayland}
-/usr/lib/libgbm*
-/usr/lib/driver/libEGL*
-/usr/lib/driver/libGL*
+%{_libdir}/libgbm*
+%{_libdir}/driver/libEGL*
+%{_libdir}/driver/libGL*
 %else
-/usr/lib/libEGL*
-/usr/lib/libGLES*
-/usr/lib/yagl/*
-/usr/lib/dummy-gl/*
+%{_libdir}/libEGL*
+%{_libdir}/libGLES*
+%{_libdir}/yagl/*
+%{_libdir}/dummy-gl/*
 %attr(777,root,root)/etc/emulator/opengl-es-setup-yagl-env.sh
 %endif
-/usr/share/license/%{name}
 
 %if %{with wayland}
 %files -n libwayland-egl
 %manifest %{name}.manifest
+%license COPYING
 %defattr(-,root,root,-)
-/usr/lib/libwayland-egl*
-/usr/share/license/%{name}
+%{_libdir}/libwayland-egl*
 
 %files -n libwayland-egl-devel
 %defattr(-,root,root,-)
-/usr/lib/pkgconfig/wayland-egl.pc
+%{_libdir}/pkgconfig/wayland-egl.pc
 %endif
