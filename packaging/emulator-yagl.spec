@@ -101,5 +101,5 @@ cp pkgconfig/wayland-egl.pc %{buildroot}/usr/lib/pkgconfig/
 
 %files -n libwayland-egl-devel
 %defattr(-,root,root,-)
-/usr/lib/pkgconfig
+/usr/lib/pkgconfig/wayland-egl.pc
 %endif
