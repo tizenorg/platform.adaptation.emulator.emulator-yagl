@@ -32,12 +32,24 @@ This package contains shared libraries libEGL, libGLES_CM, libGLESv2.
 
 %package devel
 Summary:    YaGL - OpenGLES acceleration module for emulator (devel)
-Provides:   opengl-es-drv-devel
 Requires:   %{name} = %{version}-%{release}
 
 %description devel
 YaGL - OpenGLES acceleration module for emulator (devel)
-This package contains header files for EGL, GLESv1_CM, GLESv2, GLESv3, KHR.
+
+%if %{with wayland}
+%package -n libwayland-egl
+Summary:    Wayland EGL backend
+
+%description -n libwayland-egl
+Wayland EGL backend
+
+%package -n libwayland-egl-devel
+Summary:    Development files for use with Wayland protocol
+
+%description -n libwayland-egl-devel
+Development files for use with Wayland protocol
+%endif
 
 %prep
 %setup -q
@@ -57,15 +69,18 @@ mkdir -p %{buildroot}/usr/lib/pkgconfig
 cp pkgconfig/wayland-egl.pc %{buildroot}/usr/lib/pkgconfig/
 
 %post -p /sbin/ldconfig
-
 %postun -p /sbin/ldconfig
+
+%if %{with wayland}
+%post   -n libwayland-egl -p /sbin/ldconfig
+%postun -n libwayland-egl -p /sbin/ldconfig
+%endif
 
 %files
 %manifest %{name}.manifest
 %defattr(-,root,root,-)
 %if %{with wayland}
 /usr/lib/libgbm*
-/usr/lib/libwayland-egl*
 /usr/lib/driver/libEGL*
 /usr/lib/driver/libGL*
 %else
@@ -77,7 +92,14 @@ cp pkgconfig/wayland-egl.pc %{buildroot}/usr/lib/pkgconfig/
 %endif
 /usr/share/license/%{name}
 
-%files devel
+%if %{with wayland}
+%files -n libwayland-egl
 %manifest %{name}.manifest
 %defattr(-,root,root,-)
+/usr/lib/libwayland-egl*
+/usr/share/license/%{name}
+
+%files -n libwayland-egl-devel
+%defattr(-,root,root,-)
 /usr/lib/pkgconfig
+%endif
