@@ -59,6 +59,8 @@ struct yagl_gles_texture
     GLenum min_filter;
     GLenum mag_filter;
 
+    GLint num_image_units;
+
     /*
      * Non-NULL if it's an EGLImage/eglBindTexImage target.
      */

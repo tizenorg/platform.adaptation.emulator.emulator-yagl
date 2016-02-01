@@ -83,6 +83,7 @@ static const GLchar *stencil1_ext = "GL_OES_stencil1";
 static const GLchar *stencil4_ext = "GL_OES_stencil4";
 static const GLchar *stencil8_ext = "GL_OES_stencil8";
 static const GLchar *egl_image_ext = "GL_OES_EGL_image";
+static const GLchar *egl_image_external_ext = "GL_OES_EGL_image_external";
 static const GLchar *framebuffer_blit_ext = "GL_ANGLE_framebuffer_blit";
 static const GLchar *draw_buffers_ext = "GL_EXT_draw_buffers";
 static const GLchar *mapbuffer_ext = "GL_OES_mapbuffer";
@@ -128,6 +129,7 @@ static const GLchar **yagl_gles1_context_get_extensions(struct yagl_gles1_contex
     extensions[i++] = stencil4_ext;
     extensions[i++] = stencil8_ext;
     extensions[i++] = egl_image_ext;
+    extensions[i++] = egl_image_external_ext;
     extensions[i++] = framebuffer_blit_ext;
     extensions[i++] = draw_buffers_ext;
     extensions[i++] = mapbuffer_ext;
@@ -856,6 +858,10 @@ static int yagl_gles1_context_enable(struct yagl_gles_context *ctx,
         yagl_gles_context_active_texture_set_enabled(ctx,
             yagl_gles_texture_target_2d, enable);
         break;
+    case GL_TEXTURE_EXTERNAL_OES:
+        yagl_gles_context_active_texture_set_enabled(ctx,
+            yagl_gles_texture_target_external_oes, enable);
+        break;
     case GL_ALPHA_TEST:
     case GL_COLOR_LOGIC_OP:
     case GL_COLOR_MATERIAL:
@@ -899,6 +905,11 @@ static int yagl_gles1_context_is_enabled(struct yagl_gles_context *ctx,
     case GL_TEXTURE_2D:
         tts = yagl_gles_context_get_active_texture_target_state(ctx,
                   yagl_gles_texture_target_2d);
+        *enabled = tts->enabled;
+        return 1;
+    case GL_TEXTURE_EXTERNAL_OES:
+        tts = yagl_gles_context_get_active_texture_target_state(ctx,
+                  yagl_gles_texture_target_external_oes);
         *enabled = tts->enabled;
         return 1;
     case GL_VERTEX_ARRAY:

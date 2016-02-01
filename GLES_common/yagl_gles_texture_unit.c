@@ -38,12 +38,15 @@
 #include "yagl_gles_sampler.h"
 #include <string.h>
 
+#define GL_TEXTURE_EXTERNAL_OES 0x8D65
+
 static const GLenum target_map[] =
 {
     GL_TEXTURE_2D,
     GL_TEXTURE_2D_ARRAY,
     GL_TEXTURE_3D,
-    GL_TEXTURE_CUBE_MAP
+    GL_TEXTURE_CUBE_MAP,
+    GL_TEXTURE_EXTERNAL_OES
 };
 
 void yagl_gles_texture_unit_init(struct yagl_gles_texture_unit *texture_unit,

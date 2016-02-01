@@ -61,6 +61,9 @@
  */
 #define GL_HALF_FLOAT_OES 0x8D61
 #define GL_RGB565_OES 0x8D62
+#define GL_TEXTURE_EXTERNAL_OES 0x8D65
+#define GL_TEXTURE_BINDING_EXTERNAL_OES 0x8D67
+#define GL_REQUIRED_TEXTURE_IMAGE_UNITS_OES 0x8D68
 
 #define YAGL_SET_ERR(err) \
     yagl_gles_context_set_error(ctx, err); \
@@ -509,6 +512,9 @@ int yagl_gles_context_validate_texture_target(struct yagl_gles_context *ctx,
     switch (target) {
     case GL_TEXTURE_2D:
         *texture_target = yagl_gles_texture_target_2d;
+        break;
+    case GL_TEXTURE_EXTERNAL_OES:
+        *texture_target = yagl_gles_texture_target_external_oes;
         break;
     default:
         return ctx->validate_texture_target(ctx, target, texture_target);
@@ -1503,6 +1509,12 @@ int yagl_gles_context_get_integerv(struct yagl_gles_context *ctx,
         *params = tts->texture->base.local_name;
         *num_params = 1;
         break;
+    case GL_TEXTURE_BINDING_EXTERNAL_OES:
+        tts = yagl_gles_context_get_active_texture_target_state(ctx,
+            yagl_gles_texture_target_external_oes);
+        *params = tts->texture->base.local_name;
+        *num_params = 1;
+        break;
     case GL_ARRAY_BUFFER_BINDING:
         *params = ctx->vbo ? ctx->vbo->base.local_name : 0;
         *num_params = 1;
@@ -2400,6 +2412,9 @@ int yagl_gles_context_get_tex_parameteriv(struct yagl_gles_context *ctx,
     switch (pname) {
     case GL_TEXTURE_IMMUTABLE_FORMAT:
         params[0] = texture_obj->immutable;
+        return 1;
+    case GL_REQUIRED_TEXTURE_IMAGE_UNITS_OES:
+        params[0] = texture_obj->num_image_units;
         return 1;
     default:
         break;

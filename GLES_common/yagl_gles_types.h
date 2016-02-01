@@ -43,7 +43,8 @@ typedef enum
     yagl_gles_texture_target_2d = 0,
     yagl_gles_texture_target_2d_array = 1,
     yagl_gles_texture_target_3d = 2,
-    yagl_gles_texture_target_cubemap = 3
+    yagl_gles_texture_target_cubemap = 3,
+    yagl_gles_texture_target_external_oes = 4
 } yagl_gles_texture_target;
 
 typedef enum

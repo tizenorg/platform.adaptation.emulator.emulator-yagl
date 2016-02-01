@@ -41,7 +41,7 @@
 
 #define YAGL_NUM_NAMESPACES 6
 
-#define YAGL_NUM_TEXTURE_TARGETS 4
+#define YAGL_NUM_TEXTURE_TARGETS 5
 
 struct yagl_sharegroup
 {

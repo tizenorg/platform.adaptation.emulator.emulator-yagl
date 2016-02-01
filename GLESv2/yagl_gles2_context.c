@@ -67,6 +67,7 @@
 #define GL_VERTEX_ATTRIB_ARRAY_INTEGER     0x88FD
 
 static const GLchar *egl_image_ext = "GL_OES_EGL_image";
+static const GLchar *egl_image_external_ext = "GL_OES_EGL_image_external";
 static const GLchar *depth24_ext = "GL_OES_depth24";
 static const GLchar *depth32_ext = "GL_OES_depth32";
 static const GLchar *texture_float_ext = "GL_OES_texture_float";
@@ -343,6 +344,7 @@ const GLchar **yagl_gles2_context_get_extensions(struct yagl_gles2_context *ctx,
     extensions = yagl_malloc(100 * sizeof(*extensions));
 
     extensions[i++] = egl_image_ext;
+    extensions[i++] = egl_image_external_ext;
     extensions[i++] = depth24_ext;
     extensions[i++] = depth32_ext;
     extensions[i++] = texture_float_ext;

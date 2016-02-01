@@ -59,6 +59,8 @@
 #include <string.h>
 #include <assert.h>
 
+#define GL_TEXTURE_EXTERNAL_OES 0x8D65
+
 #define YAGL_SET_ERR(err) \
     yagl_gles_context_set_error(ctx, err); \
     YAGL_LOG_ERROR("error = 0x%X", err)
@@ -1449,7 +1451,11 @@ void glGenerateMipmap(GLenum target)
 
     YAGL_GET_CTX();
 
-    yagl_host_glGenerateMipmap(target);
+    if (target == GL_TEXTURE_EXTERNAL_OES) {
+        YAGL_SET_ERR(GL_INVALID_ENUM);
+    } else {
+        yagl_host_glGenerateMipmap(target);
+    }
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
@@ -2420,12 +2426,20 @@ YAGL_API void glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOES image)
 {
     struct yagl_gles_image *image_obj = NULL;
     struct yagl_gles_texture_target_state *tex_target_state;
+    yagl_gles_texture_target texture_target;
 
     YAGL_LOG_FUNC_ENTER_SPLIT2(glEGLImageTargetTexture2DOES, GLenum, GLeglImageOES, target, image);
 
     YAGL_GET_CTX();
 
-    if (target != GL_TEXTURE_2D) {
+    switch (target) {
+    case GL_TEXTURE_2D:
+        texture_target = yagl_gles_texture_target_2d;
+        break;
+    case GL_TEXTURE_EXTERNAL_OES:
+        texture_target = yagl_gles_texture_target_external_oes;
+        break;
+    default:
         YAGL_SET_ERR(GL_INVALID_ENUM);
         goto out;
     }
@@ -2438,8 +2452,7 @@ YAGL_API void glEGLImageTargetTexture2DOES(GLenum target, GLeglImageOES image)
     }
 
     tex_target_state =
-        yagl_gles_context_get_active_texture_target_state(ctx,
-                                                          yagl_gles_texture_target_2d);
+        yagl_gles_context_get_active_texture_target_state(ctx, texture_target);
 
     if (tex_target_state->texture == tex_target_state->texture_zero) {
         YAGL_SET_ERR(GL_INVALID_OPERATION);

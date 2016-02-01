@@ -36,6 +36,7 @@
 
 #include "yagl_image.h"
 #include "EGL/egl.h"
+#include <tbm_surface.h>
 
 struct yagl_client_interface;
 struct vigs_drm_surface;
@@ -43,6 +44,10 @@ struct vigs_drm_surface;
 struct yagl_onscreen_image_tizen_sfc
 {
     struct yagl_image base;
+
+    tbm_surface_h sfc;
+
+    bool planar;
 
     struct vigs_drm_surface *drm_sfc;
 };

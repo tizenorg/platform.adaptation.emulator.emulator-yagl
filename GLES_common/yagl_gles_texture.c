@@ -44,6 +44,7 @@
  * We can't include GLES2/gl2ext.h here
  */
 #define GL_HALF_FLOAT_OES 0x8D61
+#define GL_TEXTURE_EXTERNAL_OES 0x8D65
 
 static void yagl_gles_texture_swizzle(struct yagl_gles_texture *texture,
                                       GLenum internalformat)
@@ -129,6 +130,7 @@ struct yagl_gles_texture *yagl_gles_texture_create(void)
     texture->global_name = yagl_get_global_name();
     texture->min_filter = GL_NEAREST_MIPMAP_LINEAR;
     texture->mag_filter = GL_LINEAR;
+    texture->num_image_units = 1;
 
     yagl_host_glGenTextures(&texture->global_name, 1);
 
@@ -156,7 +158,8 @@ int yagl_gles_texture_bind(struct yagl_gles_texture *texture,
         return 0;
     }
 
-    yagl_host_glBindTexture(target, texture->global_name);
+    yagl_host_glBindTexture(target == GL_TEXTURE_EXTERNAL_OES ? GL_TEXTURE_2D : target,
+                            texture->global_name);
 
     texture->target = target;
 
@@ -260,7 +263,8 @@ void yagl_gles_texture_set_image(struct yagl_gles_texture *texture,
     texture->global_name = image->tex_global_name;
     texture->image = image;
 
-    yagl_host_glBindTexture(texture->target, texture->global_name);
+    yagl_host_glBindTexture(texture->target == GL_TEXTURE_EXTERNAL_OES ? GL_TEXTURE_2D : texture->target,
+                            texture->global_name);
 }
 
 void yagl_gles_texture_unset_image(struct yagl_gles_texture *texture)
@@ -277,7 +281,8 @@ void yagl_gles_texture_unset_image(struct yagl_gles_texture *texture)
         texture->global_name = yagl_get_global_name();
 
         yagl_host_glGenTextures(&texture->global_name, 1);
-        yagl_host_glBindTexture(texture->target, texture->global_name);
+        yagl_host_glBindTexture(texture->target == GL_TEXTURE_EXTERNAL_OES ? GL_TEXTURE_2D : texture->target,
+                                texture->global_name);
     }
 }
 
@@ -305,7 +310,8 @@ void yagl_gles_texture_bind_tex_image(struct yagl_gles_texture *texture,
     texture->image = image;
     texture->binding = binding;
 
-    yagl_host_glBindTexture(texture->target, texture->global_name);
+    yagl_host_glBindTexture(texture->target == GL_TEXTURE_EXTERNAL_OES ? GL_TEXTURE_2D : texture->target,
+                            texture->global_name);
 }
 
 /*
