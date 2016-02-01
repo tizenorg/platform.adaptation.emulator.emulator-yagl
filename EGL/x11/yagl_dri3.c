@@ -684,7 +684,7 @@ err_import:
     close(fds[0]);
 
 err_get_fd:
-    /* nothing to do here */
+    xshmfence_unmap_shm(shm_fence);
 
 err_map_shm:
     close(fence_fd);
@@ -883,13 +883,13 @@ static int yagl_dri3_drawable_get_buffer_age(struct yagl_native_drawable *drawab
     xcb_connection_t *c = XGetXCBConnection(x_dpy);
     struct yagl_dri3_drawable *dri3_drawable = (struct yagl_dri3_drawable *)drawable;
     int back_id = DRI3_BACK_ID(yagl_dri3_find_back(c, dri3_drawable));
-    struct yagl_dri3_buffer *back = dri3_drawable->buffers[back_id];
+    struct yagl_dri3_buffer *back = back_id < 0 ? NULL : dri3_drawable->buffers[back_id];
 
     YAGL_LOG_FUNC_SET(yagl_dri3_drawable_get_buffer_age);
 
     YAGL_LOG_DEBUG("enter");
 
-    if (back_id < 0 || !back) {
+    if (!back) {
         return 0;
     }
 

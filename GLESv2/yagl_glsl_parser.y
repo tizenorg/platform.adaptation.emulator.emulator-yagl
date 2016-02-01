@@ -115,7 +115,7 @@ version
         break;
     }
 
-    sprintf(s, "%d", version);
+    snprintf(s, 100, "%d", version);
     yagl_glsl_state_append_output(state, s);
     yagl_glsl_state_flush_pending(state, $3.index);
     if (state->patch_version == yagl_glsl_asis) {
@@ -153,7 +153,7 @@ version
         break;
     }
 
-    sprintf(s, "%d", version);
+    snprintf(s, 100, "%d", version);
     yagl_glsl_state_append_output(state, s);
     yagl_glsl_state_flush_pending(state, $3.index);
     yagl_glsl_state_append_output(state, $3.value);

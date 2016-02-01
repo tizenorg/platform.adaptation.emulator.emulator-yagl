@@ -408,7 +408,7 @@ etc2_rgb8_parse_block(struct etc2_block *block,
       block->flipped = (src[3] & 0x1);
    }
 
-   block->pixel_indices[0] =
+   block->pixel_indices[0] = (unsigned)
       (src[4] << 24) | (src[5] << 16) | (src[6] << 8) | src[7];
 }
 
@@ -905,7 +905,7 @@ void yagl_texcompress_etc2_unpack_srgb8_punchthrough_alpha1(uint8_t *dst_row,
                 tmp = dst[0];
                 dst[0] = dst[2];
                 dst[2] = tmp;
-                dst[3] = dst[3];
+                /* dst[3] = dst[3]; */
 
                 dst += comps;
              }
@@ -984,7 +984,7 @@ void yagl_texcompress_etc2_unpack_srgb8_alpha8(uint8_t *dst_row,
                 tmp = dst[0];
                 dst[0] = dst[2];
                 dst[2] = tmp;
-                dst[3] = dst[3];
+                /* dst[3] = dst[3]; */
 
                 dst += comps;
              }

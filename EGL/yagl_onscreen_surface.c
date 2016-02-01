@@ -486,16 +486,14 @@ struct yagl_onscreen_surface
     return sfc;
 
 fail:
-    if (sfc) {
-        if (sfc->tmp_pixmap) {
-            if (drm_sfc) {
-                vigs_drm_gem_unref(&drm_sfc->gem);
-            }
-            sfc->tmp_pixmap->destroy(sfc->tmp_pixmap);
-            sfc->tmp_pixmap = NULL;
+    if (sfc->tmp_pixmap) {
+        if (drm_sfc) {
+            vigs_drm_gem_unref(&drm_sfc->gem);
         }
-        yagl_free(sfc);
+        sfc->tmp_pixmap->destroy(sfc->tmp_pixmap);
+        sfc->tmp_pixmap = NULL;
     }
+    yagl_free(sfc);
 
     return NULL;
 }

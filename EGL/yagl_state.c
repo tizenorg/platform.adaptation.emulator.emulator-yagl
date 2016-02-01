@@ -107,7 +107,7 @@ static void *yagl_state_transport_resize(void *ops_data, uint32_t size)
                       PROT_READ|PROT_WRITE,
                       MAP_SHARED,
                       state->fd,
-                      sysconf(_SC_PAGE_SIZE));
+                      (size_t)sysconf(_SC_PAGE_SIZE));
 
     if (buff == MAP_FAILED) {
         fprintf(stderr, "Unable to resize YaGL buffer to %u: %s!\n",
@@ -207,7 +207,7 @@ static void yagl_state_free(void *ptr)
     yagl_transport_destroy(state->t);
 
     munmap(state->buff, state->buff_size);
-    munmap(state->regs, sysconf(_SC_PAGE_SIZE));
+    munmap(state->regs, (size_t)sysconf(_SC_PAGE_SIZE));
 
     close(state->fd);
 
@@ -255,7 +255,7 @@ static void yagl_state_atfork()
         yagl_display_atfork();
 
         munmap(state->buff, state->buff_size);
-        munmap(state->regs, sysconf(_SC_PAGE_SIZE));
+        munmap(state->regs, (size_t)sysconf(_SC_PAGE_SIZE));
 
         close(state->fd);
 
@@ -321,8 +321,7 @@ static struct yagl_state *yagl_get_state()
         exit(1);
     }
 
-    if ((user_info.index < 0) ||
-        (user_info.index >= (sysconf(_SC_PAGE_SIZE) / YAGL_REGS_SIZE))) {
+    if ((user_info.index >= (sysconf(_SC_PAGE_SIZE) / YAGL_REGS_SIZE))) {
         fprintf(stderr, "Critical error! Bad user index: %d!\n",
                 user_info.index);
         exit(1);
@@ -353,7 +352,7 @@ static struct yagl_state *yagl_get_state()
     }
 
     state->regs = mmap(NULL,
-                       sysconf(_SC_PAGE_SIZE),
+                       (size_t)sysconf(_SC_PAGE_SIZE),
                        PROT_READ|PROT_WRITE,
                        MAP_SHARED,
                        state->fd,

@@ -73,7 +73,10 @@ void *yagl_get_gles1_sym(const char *name)
     }
 
     if (handle) {
-        return dlsym(handle, name);
+        sym = dlsym(handle, name);
+        dlclose(handle);
+
+        return sym;
     }
 
     return NULL;
@@ -91,6 +94,7 @@ void *yagl_get_gles2_sym(const char *name)
 
     if (handle) {
         sym = dlsym(handle, name);
+        dlclose(handle);
     }
 
     if (!sym) {

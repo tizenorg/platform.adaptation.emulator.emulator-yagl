@@ -2646,10 +2646,13 @@ YAGL_API void glGenVertexArrays(GLsizei n, GLuint *array_names)
     }
 
 out:
-    for (i = 0; i < n; ++i) {
-        yagl_gles_vertex_array_release(arrays[i]);
+    if (arrays) {
+        for (i = 0; i < n; ++i) {
+            yagl_gles_vertex_array_release(arrays[i]);
+        }
+
+        yagl_free(arrays);
     }
-    yagl_free(arrays);
 
     YAGL_LOG_FUNC_EXIT(NULL);
 }
