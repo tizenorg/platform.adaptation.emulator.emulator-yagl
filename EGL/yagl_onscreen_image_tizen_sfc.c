@@ -94,6 +94,7 @@ static bool yagl_onscreen_image_tizen_sfc_convert(struct yagl_onscreen_image_tiz
     }
 
     dst = image->drm_sfc->gem.vaddr;
+    dst += info.width * info.height - info.width;
 
     switch (info.format) {
     case TBM_FORMAT_NV21:
@@ -103,7 +104,7 @@ static bool yagl_onscreen_image_tizen_sfc_convert(struct yagl_onscreen_image_tiz
                 v = info.planes[1].ptr[i * info.width / 2 + (j & ~1) + 0];
                 u = info.planes[1].ptr[i * info.width / 2 + (j & ~1) + 1];
 
-                *dst++ = yuv2argb(y, u, v);
+                *(dst - i * info.width + j) = yuv2argb(y, u, v);
             }
         }
         break;
@@ -114,7 +115,7 @@ static bool yagl_onscreen_image_tizen_sfc_convert(struct yagl_onscreen_image_tiz
                 u = info.planes[1].ptr[(i / 2) * (info.width / 2) + (j / 2)];
                 v = info.planes[2].ptr[(i / 2) * (info.width / 2) + (j / 2)];
 
-                *dst++ = yuv2argb(y, u, v);
+                *(dst - i * info.width + j) = yuv2argb(y, u, v);
             }
         }
         break;
