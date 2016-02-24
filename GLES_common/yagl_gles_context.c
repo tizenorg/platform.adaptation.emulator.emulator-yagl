@@ -905,6 +905,11 @@ int yagl_gles_context_validate_renderbuffer_format(struct yagl_gles_context *ctx
     return res;
 }
 
+int yagl_gles_context_validate_framebuffer_blit(struct yagl_gles_context *ctx)
+{
+    return ctx->validate_framebuffer_blit(ctx);
+}
+
 void yagl_gles_context_set_active_texture(struct yagl_gles_context *ctx,
                                           GLenum texture)
 {

@@ -2511,6 +2511,10 @@ YAGL_API void glBlitFramebuffer(GLint srcX0, GLint srcY0,
         goto out;
     }
 
+    if (!yagl_gles_context_validate_framebuffer_blit(ctx)) {
+        goto out;
+    }
+
     read_status = yagl_gles_context_check_framebuffer_status(ctx,
                                                              ctx->fbo_read);
 

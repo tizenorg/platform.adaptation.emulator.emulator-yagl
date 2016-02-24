@@ -1553,6 +1553,20 @@ static int yagl_gles3_context_validate_renderbuffer_format(struct yagl_gles_cont
     return 1;
 }
 
+static int yagl_gles3_context_validate_framebuffer_blit(struct yagl_gles_context *gles_ctx)
+{
+    struct yagl_gles3_context *ctx = (struct yagl_gles3_context*)gles_ctx;
+
+    YAGL_LOG_FUNC_SET(glBlitFramebuffer);
+
+    if (ctx->base.base.fbo_read == ctx->base.base.fbo_draw) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        return 0;
+    }
+
+    return 1;
+}
+
 static void yagl_gles3_context_hint(struct yagl_gles_context *gles_ctx,
                                     GLenum target,
                                     GLenum mode)
@@ -1672,6 +1686,7 @@ struct yagl_client_context *yagl_gles3_context_create(struct yagl_sharegroup *sg
     gles3_ctx->base.base.validate_copyteximage_format = &yagl_gles3_context_validate_copyteximage_format;
     gles3_ctx->base.base.validate_texstorage_format = &yagl_gles3_context_validate_texstorage_format;
     gles3_ctx->base.base.validate_renderbuffer_format = &yagl_gles3_context_validate_renderbuffer_format;
+    gles3_ctx->base.base.validate_framebuffer_blit = &yagl_gles3_context_validate_framebuffer_blit;
     gles3_ctx->base.base.hint = &yagl_gles3_context_hint;
     gles3_ctx->base.get_programiv = &yagl_gles3_context_get_programiv;
     gles3_ctx->base.pre_use_program = &yagl_gles3_context_pre_use_program;

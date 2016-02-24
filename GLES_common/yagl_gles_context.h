@@ -158,6 +158,8 @@ struct yagl_gles_context
     int (*validate_renderbuffer_format)(struct yagl_gles_context */*ctx*/,
                                         GLenum */*internalformat*/);
 
+    int (*validate_framebuffer_blit)(struct yagl_gles_context */*ctx*/);
+
     void (*hint)(struct yagl_gles_context */*ctx*/,
                  GLenum /*target*/,
                  GLenum /*mode*/);
@@ -356,6 +358,8 @@ int yagl_gles_context_validate_texstorage_format(struct yagl_gles_context *ctx,
 
 int yagl_gles_context_validate_renderbuffer_format(struct yagl_gles_context *ctx,
                                                    GLenum *internalformat);
+
+int yagl_gles_context_validate_framebuffer_blit(struct yagl_gles_context *ctx);
 
 void yagl_gles_context_set_active_texture(struct yagl_gles_context *ctx,
                                           GLenum texture);

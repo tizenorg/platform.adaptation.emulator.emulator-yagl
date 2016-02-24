@@ -1293,6 +1293,11 @@ YAGL_API void glLinkProgram(GLuint program)
         goto out;
     }
 
+    if (!program_obj->vertex_shader || !program_obj->fragment_shader) {
+        YAGL_SET_ERR(GL_INVALID_OPERATION);
+        goto out;
+    }
+
     if (!ctx->pre_link_program(ctx, program_obj)) {
         goto out;
     }

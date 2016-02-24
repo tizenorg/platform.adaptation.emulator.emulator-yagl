@@ -1386,6 +1386,11 @@ int yagl_gles2_context_validate_renderbuffer_format(struct yagl_gles_context *ct
     return 0;
 }
 
+static int yagl_gles2_context_validate_framebuffer_blit(struct yagl_gles_context *ctx)
+{
+    return 1;
+}
+
 void yagl_gles2_context_hint(struct yagl_gles_context *ctx,
                              GLenum target,
                              GLenum mode)
@@ -1461,6 +1466,7 @@ struct yagl_client_context *yagl_gles2_context_create(struct yagl_sharegroup *sg
     gles2_ctx->base.validate_copyteximage_format = &yagl_gles2_context_validate_copyteximage_format;
     gles2_ctx->base.validate_texstorage_format = &yagl_gles2_context_validate_texstorage_format;
     gles2_ctx->base.validate_renderbuffer_format = &yagl_gles2_context_validate_renderbuffer_format;
+    gles2_ctx->base.validate_framebuffer_blit = &yagl_gles2_context_validate_framebuffer_blit;
     gles2_ctx->base.hint = &yagl_gles2_context_hint;
     gles2_ctx->get_programiv = &yagl_gles2_context_get_programiv;
     gles2_ctx->pre_use_program = &yagl_gles2_context_pre_use_program;
