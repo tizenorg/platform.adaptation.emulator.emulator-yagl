@@ -53,28 +53,38 @@ struct yagl_egl_state
 
     struct yagl_client_interface *gles1_iface;
     struct yagl_client_interface *gles2_iface;
+
+    void *egl_handle;
+    void *gles1_handle;
+    void *gles2_handle;
 };
 
 static pthread_key_t g_state_key;
 static pthread_once_t g_state_key_init = PTHREAD_ONCE_INIT;
 
+static struct yagl_egl_state *yagl_egl_get_state();
+
 void *yagl_get_gles1_sym(const char *name)
 {
-    void *handle;
+    struct yagl_egl_state *state = yagl_egl_get_state();
     void *sym = dlsym(NULL, name);
 
     if (sym) {
         return sym;
     }
 
-    handle = dlopen("libGLESv1_CM.so.1", RTLD_NOW|RTLD_GLOBAL);
-    if (!handle) {
-        handle = dlopen("libGLESv1_CM.so", RTLD_NOW|RTLD_GLOBAL);
+    if (!state->gles1_handle) {
+        state->gles1_handle = dlopen("/usr/lib/driver/libGLESv1_CM.so.1",
+                                     RTLD_NOW | RTLD_GLOBAL);
+
+        if (!state->gles1_handle) {
+            state->gles1_handle = dlopen("/usr/lib/driver/libGLESv1_CM.so",
+                                         RTLD_NOW | RTLD_GLOBAL);
+        }
     }
 
-    if (handle) {
-        sym = dlsym(handle, name);
-        dlclose(handle);
+    if (state->gles1_handle) {
+        sym = dlsym(state->gles1_handle, name);
 
         return sym;
     }
@@ -84,17 +94,21 @@ void *yagl_get_gles1_sym(const char *name)
 
 void *yagl_get_gles2_sym(const char *name)
 {
-    void *handle;
+    struct yagl_egl_state *state = yagl_egl_get_state();
     void *sym = NULL;
 
-    handle = dlopen("libGLESv2.so.1", RTLD_NOW|RTLD_GLOBAL);
-    if (!handle) {
-        handle = dlopen("libGLESv2.so", RTLD_NOW|RTLD_GLOBAL);
+    if (!state->gles2_handle) {
+        state->gles2_handle = dlopen("/usr/lib/driver/libGLESv2.so.1",
+                                     RTLD_NOW | RTLD_GLOBAL);
+
+        if (!state->gles2_handle) {
+            state->gles2_handle = dlopen("/usr/lib/driver/libGLESv2.so",
+                                         RTLD_NOW | RTLD_GLOBAL);
+        }
     }
 
-    if (handle) {
-        sym = dlsym(handle, name);
-        dlclose(handle);
+    if (state->gles2_handle) {
+        sym = dlsym(state->gles2_handle, name);
     }
 
     if (!sym) {
@@ -117,6 +131,18 @@ static void yagl_egl_state_free(void* ptr)
     yagl_surface_release(state->read_sfc);
     yagl_surface_release(state->draw_sfc);
     yagl_context_release(state->ctx);
+
+    if (state->gles2_handle) {
+        dlclose(state->gles2_handle);
+    }
+
+    if (state->gles1_handle) {
+        dlclose(state->gles1_handle);
+    }
+
+    if (state->egl_handle) {
+        dlclose(state->egl_handle);
+    }
 
     yagl_free(state);
 
@@ -163,6 +189,17 @@ static void yagl_egl_state_init()
 
     state->error = EGL_SUCCESS;
     state->api = EGL_OPENGL_ES_API;
+    /*
+     * FIXME dlopen libEGL from libEGL :/ ... this is a hack to make
+     * yagl-specific symbols visible to GLES libraries. Coregl seems
+     * to load libEGL with RTLD_LOCAL flag which makes the symbols
+     * unavailable for subsequently loaded libraries.
+     *
+     * Perhaps common EGL/GLES code needs to be moved to a separate
+     * library in the future.
+     */
+    state->egl_handle = dlopen("/usr/lib/driver/libEGL.so",
+                               RTLD_NOW | RTLD_GLOBAL);
 
     pthread_setspecific(g_state_key, state);
 
@@ -330,7 +367,7 @@ struct yagl_client_interface *yagl_get_client_interface(yagl_client_api client_a
     case yagl_client_api_gles2:
     case yagl_client_api_gles3:
         if (!state->gles2_iface) {
-            state->gles2_iface = yagl_get_gles1_sym("yagl_gles2_interface");
+            state->gles2_iface = yagl_get_gles2_sym("yagl_gles2_interface");
         }
         return state->gles2_iface;
     default:
