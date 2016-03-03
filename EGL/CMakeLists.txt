@@ -89,6 +89,7 @@ if (PLATFORM_WAYLAND)
         wayland/yagl_wayland_platform.c
         wayland/yagl_wayland_display.c
         wayland/yagl_wayland_window.c
+        wayland/yagl_wayland_pbuffer.c
         yagl_onscreen_image_wl_buffer.c
     )
     set(LIBRARIES ${LIBRARIES}

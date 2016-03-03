@@ -33,6 +33,7 @@
 
 #include "yagl_wayland_display.h"
 #include "yagl_wayland_window.h"
+#include "yagl_wayland_pbuffer.h"
 #include "yagl_log.h"
 #include "yagl_malloc.h"
 #include "wayland-drm-client-protocol.h"
@@ -251,7 +252,11 @@ static struct yagl_native_drawable
                                         uint32_t height,
                                         uint32_t depth)
 {
-    return NULL;
+    /*
+     * Wayland actaully has no pixmap type. This is just for creating
+     * a pbuffer and to make Tizen conformance tests happy.
+     */
+    return yagl_wayland_pbuffer_create(dpy, width, height, depth);
 }
 
 static struct yagl_native_image
