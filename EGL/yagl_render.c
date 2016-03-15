@@ -35,6 +35,8 @@
 #include "yagl_egl_state.h"
 #include "yagl_surface.h"
 #include "yagl_context.h"
+#include "yagl_transport.h"
+#include "yagl_state.h"
 
 void yagl_render_invalidate(int throttle)
 {
@@ -63,5 +65,12 @@ void yagl_render_finish()
 
     if (draw_sfc) {
         draw_sfc->wait_gl(draw_sfc);
+    } else {
+        /*
+         * GL_OES_surfaceless_context: if current context has no draw_sfc
+         * we still need to ensure all the offscreen rendering is completed.
+         * Transport flush should be sufficient in this case.
+         */
+        yagl_transport_flush(yagl_get_transport(), NULL);
     }
 }
