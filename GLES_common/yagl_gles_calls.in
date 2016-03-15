@@ -37,7 +37,7 @@ void glBindBufferRange(GLenum target, GLuint index, GLuint buffer, GLint offset,
 void glMapBuffer(GLuint buffer, const GLuint *ranges, GLvoid *data)
 void glCopyBufferSubData(GLenum readTarget, GLenum writeTarget, GLintptr readOffset, GLintptr writeOffset, GLsizei size)
 # Textures
-@void glGenTextures(const GLuint *textures)
+void glGenTextures(const GLuint *textures)
 void glBindTexture(GLenum target, GLuint texture)
 void glActiveTexture(GLenum texture)
 void glCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)

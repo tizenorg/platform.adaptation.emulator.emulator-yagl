@@ -519,7 +519,6 @@ void yagl_host_glGenTextures(const GLuint *textures, int32_t textures_count)
     yagl_transport_begin(t, yagl_api_id_gles, 35, 2 * 8, 0 * 8 + yagl_transport_array_size(textures, textures_count, sizeof(GLuint)));
     yagl_transport_put_out_array(t, textures, textures_count, sizeof(GLuint));
     yagl_transport_end(t);
-    yagl_transport_flush(t, NULL);
 }
 
 /*
