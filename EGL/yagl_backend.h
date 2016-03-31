@@ -82,8 +82,12 @@ struct yagl_backend
                                               struct yagl_client_interface */*iface*/);
 
     struct yagl_image *(*create_image_wl_buffer)(struct yagl_display */*dpy*/,
-                                                 struct wl_resource */*buffer*/,
-                                                 struct yagl_client_interface */*iface*/);
+#ifdef YAGL_PLATFORM_TIZEN
+												EGLClientBuffer pixmap,
+#else
+												struct wl_resource *buffer,
+#endif
+												struct yagl_client_interface */*iface*/);
 
     struct yagl_image *(*create_image_gl_texture_2d)(struct yagl_display */*dpy*/,
                                                      struct yagl_context */*ctx*/,

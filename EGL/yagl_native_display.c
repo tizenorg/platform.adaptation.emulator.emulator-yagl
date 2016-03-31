@@ -37,6 +37,10 @@
 #ifdef YAGL_PLATFORM_WAYLAND
 #include "wayland-drm.h"
 #endif
+#ifdef YAGL_PLATFORM_TIZEN
+#include "yagl_tizen_egl.h"
+#include <tpl.h>
+#endif
 #include "vigs.h"
 #include "EGL/eglext.h"
 #include "EGL/eglmesaext.h"
@@ -52,12 +56,15 @@ void yagl_native_display_init(struct yagl_native_display *dpy,
     dpy->platform = platform;
     dpy->os_dpy = os_dpy;
     dpy->drm_dev = drm_dev;
-    if (drm_dev) {
+    if (drm_dev && drm_dev_name) {
         dpy->drm_dev_name = strdup(drm_dev_name);
     } else {
         dpy->drm_dev_name = NULL;
     }
 #ifdef YAGL_PLATFORM_WAYLAND
+    dpy->WL_bind_wayland_display_supported = (drm_dev ? 1 : 0);
+#elif YAGL_PLATFORM_TIZEN
+    /* TODO: do we need to handle X case? */
     dpy->WL_bind_wayland_display_supported = (drm_dev ? 1 : 0);
 #else
     dpy->WL_bind_wayland_display_supported = 0;
@@ -67,7 +74,8 @@ void yagl_native_display_init(struct yagl_native_display *dpy,
 void yagl_native_display_cleanup(struct yagl_native_display *dpy)
 {
     dpy->drm_dev = NULL;
-    free(dpy->drm_dev_name);
+    if (dpy->drm_dev_name)
+        free(dpy->drm_dev_name);
     dpy->drm_dev_name = NULL;
 }
 
@@ -153,32 +161,104 @@ int yagl_native_display_query_wl_buffer(struct yagl_native_display *dpy,
 
     drm_sfc = wayland_drm_buffer_get_sfc(drm_buffer);
 
-    switch (attribute) {
-    case EGL_TEXTURE_FORMAT:
-        switch (drm_sfc->format) {
-        case vigs_drm_surface_bgrx8888:
-            *value = EGL_TEXTURE_RGB;
-            break;
-        case vigs_drm_surface_bgra8888:
-            *value = EGL_TEXTURE_RGBA;
-            break;
-        default:
-            return 0;
-        }
-        break;
-    case EGL_WIDTH:
-        *value = drm_sfc->width;
-        break;
-    case EGL_HEIGHT:
-        *value = drm_sfc->height;
-        break;
-    case EGL_WAYLAND_Y_INVERTED_WL:
-        *value = yagl_get_backend()->y_inverted;
-        break;
-    default:
-        return 0;
+	switch (attribute) {
+		case EGL_TEXTURE_FORMAT:
+			switch (drm_sfc->format) {
+				case vigs_drm_surface_bgrx8888:
+					*value = EGL_TEXTURE_RGB;
+					break;
+				case vigs_drm_surface_bgra8888:
+					*value = EGL_TEXTURE_RGBA;
+					break;
+				default:
+					return 0;
+			}
+			break;
+		case EGL_WIDTH:
+			*value = drm_sfc->width;
+			break;
+		case EGL_HEIGHT:
+			*value = drm_sfc->height;
+			break;
+		case EGL_WAYLAND_Y_INVERTED_WL:
+			*value = yagl_get_backend()->y_inverted;
+			break;
+		default:
+		return 0;
+	}
+
+	return 1;
+}
+#endif
+
+#ifdef YAGL_PLATFORM_TIZEN
+int yagl_native_display_bind_wl_display(yagl_os_display dpy)
+{
+	tpl_display_t *tpl_display = tpl_display_get((tpl_handle_t)dpy);
+
+	if (tpl_display)
+		return EGL_TRUE;
+	else
+		return EGL_FALSE;
+}
+
+int yagl_native_display_unbind_wl_display(yagl_os_display dpy)
+{
+	tpl_display_t *tpl_display = tpl_display_get((tpl_handle_t)dpy);
+
+	if (tpl_display)
+		return EGL_TRUE;
+	else
+		return EGL_TRUE;
+}
+
+int yagl_native_display_query_wl_buffer(yagl_os_display dpy,
+                                        struct wl_resource *buffer,
+                                        EGLint attribute,
+                                        EGLint *value)
+{
+	tpl_display_t *tpl_display = tpl_display_get((tpl_handle_t)dpy);
+	tbm_format format = 0;
+	tpl_result_t ret;
+	int width = 0, height = 0;
+
+	if ( (ret=tpl_display_get_native_pixmap_info(tpl_display,
+					(tpl_handle_t)buffer, &width, &height, &format)) != TPL_ERROR_NONE )
+	{
+		YAGL_LOG_ERROR("%s: get pixmap info failed\n", __func__);
+		return 0;
+	}
+
+	switch (attribute) {
+		case EGL_TEXTURE_FORMAT:
+			switch (format) {
+				case TBM_FORMAT_ARGB8888:
+				case TBM_FORMAT_BGRA8888:
+					*value = EGL_TEXTURE_RGBA;
+					break;
+				case TBM_FORMAT_XRGB8888:
+				case TBM_FORMAT_BGRX8888:
+				case TBM_FORMAT_RGB565:
+					*value = EGL_TEXTURE_RGB;
+					break;
+
+				default:
+					return 0;
+			}
+			break;
+		case EGL_WIDTH:
+			*value = width;
+			break;
+		case EGL_HEIGHT:
+			*value = height;
+			break;
+		case EGL_WAYLAND_Y_INVERTED_WL:
+			*value = 1;
+			break;
+		default:
+			return 0;
     }
 
-    return 1;
+	return 1;
 }
 #endif

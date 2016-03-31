@@ -1729,10 +1729,15 @@ YAGL_API EGLImageKHR eglCreateImageKHR(EGLDisplay dpy_,
                 i += 2;
             }
         }
-
+#ifdef YAGL_PLATFORM_WAYLAND
         image = yagl_get_backend()->create_image_wl_buffer(dpy,
                                                            (struct wl_resource*)buffer,
                                                            iface);
+#elif YAGL_PLATFORM_TIZEN
+        image = yagl_get_backend()->create_image_wl_buffer(dpy,
+                                                           buffer,
+                                                           iface);
+#endif
 
         if (!image) {
             goto out;
@@ -2117,10 +2122,11 @@ out:
     return res;
 }
 
+
 #ifdef YAGL_PLATFORM_WAYLAND
 struct wl_display;
 struct wl_resource;
-
+#endif
 YAGL_API EGLBoolean eglBindWaylandDisplayWL(EGLDisplay dpy_,
                                             struct wl_display *display)
 {
@@ -2146,7 +2152,11 @@ YAGL_API EGLBoolean eglBindWaylandDisplayWL(EGLDisplay dpy_,
         goto out;
     }
 
+#ifdef YAGL_PLATFORM_WAYLAND
     res = yagl_native_display_bind_wl_display(dpy->native_dpy, display);
+#elif YAGL_PLATFORM_TIZEN
+    res = yagl_native_display_bind_wl_display(dpy->display_id);
+#endif
 
 out:
     YAGL_LOG_FUNC_EXIT("%d", res);
@@ -2179,7 +2189,12 @@ YAGL_API EGLBoolean eglUnbindWaylandDisplayWL(EGLDisplay dpy_,
         goto out;
     }
 
+#ifdef YAGL_PLATFORM_WAYLAND
     res = yagl_native_display_unbind_wl_display(dpy->native_dpy);
+#elif YAGL_PLATFORM_TIZEN
+    res = yagl_native_display_unbind_wl_display(dpy->display_id);
+#endif
+
 
 out:
     YAGL_LOG_FUNC_EXIT("%d", res);
@@ -2215,17 +2230,24 @@ YAGL_API EGLBoolean eglQueryWaylandBufferWL(EGLDisplay dpy_,
         goto out;
     }
 
+#ifdef YAGL_PLATFORM_WAYLAND
     res = yagl_native_display_query_wl_buffer(dpy->native_dpy,
                                               buffer,
                                               attribute,
                                               value);
+#elif YAGL_PLATFORM_TIZEN
+    res = yagl_native_display_query_wl_buffer(dpy->display_id,
+                                              buffer,
+                                              attribute,
+                                              value);
+#endif
+
 
 out:
     YAGL_LOG_FUNC_EXIT("%d", res);
 
     return res;
 }
-#endif
 
 YAGL_API __eglMustCastToProperFunctionPointerType eglGetProcAddress(const char* procname)
 {
