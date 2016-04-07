@@ -31,8 +31,8 @@
  *
  */
 
-#ifndef _YAGL_WAYLAND_PBUFFER_H_
-#define _YAGL_WAYLAND_PBUFFER_H_
+#ifndef _YAGL_TIZEN_PBUFFER_H_
+#define _YAGL_TIZEN_PBUFFER_H_
 
 #include "yagl_export.h"
 #include "yagl_native_types.h"
@@ -46,4 +46,4 @@ struct yagl_native_drawable
                                  uint32_t height,
                                  uint32_t depth);
 
-#endif /* _YAGL_WAYLAND_PBUFFER_H_ */
+#endif /* _YAGL_TIZEN_PBUFFER_H_ */

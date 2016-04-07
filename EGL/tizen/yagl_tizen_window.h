@@ -31,40 +31,39 @@
  *
  */
 
-#ifndef _YAGL_WAYLAND_WINDOW_H_
-#define _YAGL_WAYLAND_WINDOW_H_
+#ifndef _YAGL_TIZEN_WINDOW_H_
+#define _YAGL_TIZEN_WINDOW_H_
 
 #include "yagl_export.h"
 #include "yagl_native_drawable.h"
-#include "yagl_tizen_egl.h"
-#include <wayland-client.h>
+#include <tpl.h>
+#include <tbm_surface.h>
+#include <tbm_surface_internal.h>
 
-#define YAGL_TIZEN_WINDOW(os_window) ((tpl_handle_t)(os_window))
+#define YAGL_TIZEN_MAX_COLOR_BUF 3
 
 struct vigs_drm_surface;
 
 struct yagl_tizen_window
 {
-	struct yagl_native_drawable base;
+    struct yagl_native_drawable base;
 
-	struct
-	{
-		void *data;
-		int locked;
-		int age;
-	} color_buffers[3], back;
+    struct
+    {
+        void *data;
+        int locked;
+        int age;
+    } color_buffers[YAGL_TIZEN_MAX_COLOR_BUF], *back;
 
-	int current_buf;
+    int current_buf;
 
-	int width;
-	int height;
+    int width;
+    int height;
 
-	int dx;
-	int dy;
-	tpl_surface_t *surface;
-	void *user_data;
+    tpl_surface_t *surface;
+    void *user_data;
 
-	struct wl_callback *frame_callback;
+    struct wl_callback *frame_callback;
 };
 
 struct yagl_native_drawable

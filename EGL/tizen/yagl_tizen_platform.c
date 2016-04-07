@@ -36,31 +36,30 @@
 #include "yagl_native_platform.h"
 #include "yagl_log.h"
 #include "EGL/egl.h"
-#include <wayland-client.h>
 
 static int yagl_tizen_platform_probe(yagl_os_display os_dpy)
 {
-	/* Don't need to do anything */
-	return 1;
+    /* Don't need to do anything */
+    return 1;
 }
 
 static struct yagl_native_display
     *yagl_tizen_wrap_display(yagl_os_display os_dpy,
                                int enable_drm)
 {
-	struct yagl_native_display *dpy = NULL;
+    struct yagl_native_display *dpy = NULL;
 
-	YAGL_LOG_FUNC_SET(eglGetDisplay);
+    YAGL_LOG_FUNC_SET(eglGetDisplay);
 
-	dpy = yagl_tizen_display_create(&yagl_tizen_platform,os_dpy);
+    dpy = yagl_tizen_display_create(&yagl_tizen_platform,os_dpy);
 
-	return dpy;
+    return dpy;
 }
 
 struct yagl_native_platform yagl_tizen_platform =
 {
-	.pixmaps_supported = 0,
-	.buffer_age_supported = 1,
-	.probe = yagl_tizen_platform_probe,
-	.wrap_display = yagl_tizen_wrap_display
+    .pixmaps_supported = 0,
+    .buffer_age_supported = 1,
+    .probe = yagl_tizen_platform_probe,
+    .wrap_display = yagl_tizen_wrap_display
 };
