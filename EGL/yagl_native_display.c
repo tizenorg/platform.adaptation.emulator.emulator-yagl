@@ -38,7 +38,6 @@
 #include "wayland-drm.h"
 #endif
 #ifdef YAGL_PLATFORM_TIZEN
-#include "yagl_tizen_egl.h"
 #include <tpl.h>
 #endif
 #include "vigs.h"
@@ -161,55 +160,55 @@ int yagl_native_display_query_wl_buffer(struct yagl_native_display *dpy,
 
     drm_sfc = wayland_drm_buffer_get_sfc(drm_buffer);
 
-	switch (attribute) {
-		case EGL_TEXTURE_FORMAT:
-			switch (drm_sfc->format) {
-				case vigs_drm_surface_bgrx8888:
-					*value = EGL_TEXTURE_RGB;
-					break;
-				case vigs_drm_surface_bgra8888:
-					*value = EGL_TEXTURE_RGBA;
-					break;
-				default:
-					return 0;
-			}
-			break;
-		case EGL_WIDTH:
-			*value = drm_sfc->width;
-			break;
-		case EGL_HEIGHT:
-			*value = drm_sfc->height;
-			break;
-		case EGL_WAYLAND_Y_INVERTED_WL:
-			*value = yagl_get_backend()->y_inverted;
-			break;
-		default:
-		return 0;
-	}
+    switch (attribute) {
+        case EGL_TEXTURE_FORMAT:
+            switch (drm_sfc->format) {
+                case vigs_drm_surface_bgrx8888:
+                    *value = EGL_TEXTURE_RGB;
+                    break;
+                case vigs_drm_surface_bgra8888:
+                    *value = EGL_TEXTURE_RGBA;
+                    break;
+                default:
+                    return 0;
+            }
+            break;
+        case EGL_WIDTH:
+            *value = drm_sfc->width;
+            break;
+        case EGL_HEIGHT:
+            *value = drm_sfc->height;
+            break;
+        case EGL_WAYLAND_Y_INVERTED_WL:
+            *value = yagl_get_backend()->y_inverted;
+            break;
+        default:
+        return 0;
+    }
 
-	return 1;
+    return 1;
 }
 #endif
 
 #ifdef YAGL_PLATFORM_TIZEN
 int yagl_native_display_bind_wl_display(yagl_os_display dpy)
 {
-	tpl_display_t *tpl_display = tpl_display_get((tpl_handle_t)dpy);
+    tpl_display_t *tpl_display = tpl_display_get((tpl_handle_t)dpy);
 
-	if (tpl_display)
-		return EGL_TRUE;
-	else
-		return EGL_FALSE;
+    if (tpl_display)
+        return EGL_TRUE;
+    else
+        return EGL_FALSE;
 }
 
 int yagl_native_display_unbind_wl_display(yagl_os_display dpy)
 {
-	tpl_display_t *tpl_display = tpl_display_get((tpl_handle_t)dpy);
+    tpl_display_t *tpl_display = tpl_display_get((tpl_handle_t)dpy);
 
-	if (tpl_display)
-		return EGL_TRUE;
-	else
-		return EGL_TRUE;
+    if (tpl_display)
+        return EGL_TRUE;
+    else
+        return EGL_TRUE;
 }
 
 int yagl_native_display_query_wl_buffer(yagl_os_display dpy,
@@ -217,48 +216,49 @@ int yagl_native_display_query_wl_buffer(yagl_os_display dpy,
                                         EGLint attribute,
                                         EGLint *value)
 {
-	tpl_display_t *tpl_display = tpl_display_get((tpl_handle_t)dpy);
-	tbm_format format = 0;
-	tpl_result_t ret;
-	int width = 0, height = 0;
+    tpl_display_t *tpl_display = tpl_display_get((tpl_handle_t)dpy);
+    tbm_format format = 0;
+    tpl_result_t ret;
+    int width = 0, height = 0;
 
-	if ( (ret=tpl_display_get_native_pixmap_info(tpl_display,
-					(tpl_handle_t)buffer, &width, &height, &format)) != TPL_ERROR_NONE )
-	{
-		YAGL_LOG_ERROR("%s: get pixmap info failed\n", __func__);
-		return 0;
-	}
-
-	switch (attribute) {
-		case EGL_TEXTURE_FORMAT:
-			switch (format) {
-				case TBM_FORMAT_ARGB8888:
-				case TBM_FORMAT_BGRA8888:
-					*value = EGL_TEXTURE_RGBA;
-					break;
-				case TBM_FORMAT_XRGB8888:
-				case TBM_FORMAT_BGRX8888:
-				case TBM_FORMAT_RGB565:
-					*value = EGL_TEXTURE_RGB;
-					break;
-
-				default:
-					return 0;
-			}
-			break;
-		case EGL_WIDTH:
-			*value = width;
-			break;
-		case EGL_HEIGHT:
-			*value = height;
-			break;
-		case EGL_WAYLAND_Y_INVERTED_WL:
-			*value = 1;
-			break;
-		default:
-			return 0;
+    YAGL_LOG_FUNC_SET(yagl_native_display_query_wl_buffer);
+    if ( (ret=tpl_display_get_native_pixmap_info(tpl_display,
+                    (tpl_handle_t)buffer, &width, &height, &format)) != TPL_ERROR_NONE )
+    {
+        YAGL_LOG_ERROR("get pixmap info failed");
+        return 0;
     }
 
-	return 1;
+    switch (attribute) {
+        case EGL_TEXTURE_FORMAT:
+            switch (format) {
+                case TBM_FORMAT_ARGB8888:
+                case TBM_FORMAT_BGRA8888:
+                    *value = EGL_TEXTURE_RGBA;
+                    break;
+                case TBM_FORMAT_XRGB8888:
+                case TBM_FORMAT_BGRX8888:
+                case TBM_FORMAT_RGB565:
+                    *value = EGL_TEXTURE_RGB;
+                    break;
+
+                default:
+                    return 0;
+            }
+            break;
+        case EGL_WIDTH:
+            *value = width;
+            break;
+        case EGL_HEIGHT:
+            *value = height;
+            break;
+        case EGL_WAYLAND_Y_INVERTED_WL:
+            *value = yagl_get_backend()->y_inverted;
+            break;
+        default:
+            return 0;
+    }
+
+    return 1;
 }
 #endif

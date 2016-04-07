@@ -35,7 +35,6 @@
 #include "yagl_tizen_display.h"
 #include "yagl_log.h"
 #include "yagl_malloc.h"
-#include "yagl_tizen_egl.h"
 #include <tbm_bufmgr_backend.h>
 #include "vigs.h"
 #include <stdio.h>
@@ -49,98 +48,105 @@ static int yagl_tizen_window_get_buffer(struct yagl_native_drawable *drawable,
                                           uint32_t *buffer_name,
                                           struct vigs_drm_surface **buffer_sfc)
 {
-	struct yagl_tizen_window *window = (struct yagl_tizen_window*)drawable;
-	int	width, height;
-	tbm_bo bo;
-	tbm_surface_h tbm_surface;
+    struct yagl_tizen_window *window = (struct yagl_tizen_window*)drawable;
+    int width, height;
+    tbm_bo bo;
+    tbm_surface_h tbm_surface;
 
-	YAGL_LOG_FUNC_SET(yagl_tizen_window_get_buffer);
+    YAGL_LOG_FUNC_SET(yagl_tizen_window_get_buffer);
 
-	switch (attachment)
-	{
-		case yagl_native_attachment_back:
-			break;
-		case yagl_native_attachment_front:
-		default:
-			YAGL_LOG_ERROR("Bad attachment %u", attachment);
-		return 0;
-	}
+    switch (attachment) {
+        case yagl_native_attachment_back:
+            break;
+        case yagl_native_attachment_front:
+        default:
+            YAGL_LOG_ERROR("Bad attachment %u", attachment);
+        return 0;
+    }
 
-	tbm_surface = tpl_surface_dequeue_buffer(window->surface);
-	if (tbm_surface == NULL)
-	{
-		YAGL_LOG_ERROR("can't get buffer for %p\n", window->surface);
-		return 0;
-	}
-	YAGL_LOG_INFO("get buffer %p for %p\n", tbm_surface, window->surface);
-	/*tbm_surface_internal_ref(tbm_surface);*/
-	width = tbm_surface_get_width(tbm_surface);
-	height = tbm_surface_get_height(tbm_surface);
+    tbm_surface = tpl_surface_dequeue_buffer(window->surface);
+    if (tbm_surface == NULL) {
+        YAGL_LOG_ERROR("can't get buffer for %p", window->surface);
+        return 0;
+    }
+    YAGL_LOG_INFO("get buffer %p for %p", tbm_surface, window->surface);
+    tbm_surface_internal_ref(tbm_surface);
+    width = tbm_surface_get_width(tbm_surface);
+    height = tbm_surface_get_height(tbm_surface);
 
-	if ((window->width != width) ||
-	(window->height != height)) {
-		if(window->back.data)
-			tbm_surface_internal_unref(window->back.data);
+    if ((window->width != width) ||
+    (window->height != height)) {
+        if(window->back.data)
+            tbm_surface_internal_unref(window->back.data);
 
-		window->back.data = NULL;
-		window->width = width;
-		window->height = height;
-	}
+        window->back.data = NULL;
+        window->width = width;
+        window->height = height;
+    }
 
-	bo = tbm_surface_internal_get_bo(tbm_surface, 0);
+    bo = tbm_surface_internal_get_bo(tbm_surface, 0);
 
-	if (buffer_sfc != NULL)
-		*buffer_sfc = (struct vigs_drm_surface *)tbm_backend_get_bo_priv(bo);
+    if (buffer_sfc != NULL) {
+        *buffer_sfc = (struct vigs_drm_surface *)tbm_backend_get_bo_priv(bo);
 
-	if (vigs_drm_gem_get_name(&(*buffer_sfc)->gem))
-		YAGL_LOG_ERROR("%s: get gem name failed\n", __func__);
+        if (vigs_drm_gem_get_name(&(*buffer_sfc)->gem))
+                    YAGL_LOG_ERROR("%s: get gem name failed\n", __func__);
 
-	*buffer_name = (*buffer_sfc)->gem.name;
-	window->back.data = (void *)tbm_surface;
-	vigs_drm_gem_ref(&(*buffer_sfc)->gem);
+        vigs_drm_gem_ref(&(*buffer_sfc)->gem);
 
-	return 1;
+        if (buffer_name)
+            *buffer_name = (*buffer_sfc)->gem.name;
+    }
+
+
+    window->back.data = (void *)tbm_surface;
+
+    return 1;
 }
 
 static int yagl_tizen_window_get_buffer_age(struct yagl_native_drawable *drawable)
 {
-	struct yagl_tizen_window *window = (struct yagl_tizen_window*)drawable;
+    struct yagl_tizen_window *window = (struct yagl_tizen_window*)drawable;
 
-	YAGL_LOG_FUNC_SET(yagl_tizen_window_get_buffer_age);
+    YAGL_LOG_FUNC_SET(yagl_tizen_window_get_buffer_age);
 
-	return window->back.age;
+    return window->back.age;
 }
 
 static void yagl_tizen_window_swap_buffers(struct yagl_native_drawable *drawable)
 {
-	struct yagl_tizen_window *window = (struct yagl_tizen_window*)drawable;
-	tpl_result_t ret = TPL_ERROR_INVALID_OPERATION;
+    struct yagl_tizen_window *window = (struct yagl_tizen_window*)drawable;
+    tpl_result_t ret = TPL_ERROR_INVALID_OPERATION;
 
-	YAGL_LOG_FUNC_SET(yagl_tizen_window_swap_buffers);
+    YAGL_LOG_FUNC_SET(yagl_tizen_window_swap_buffers);
 
-	/* TODO: buffer age */
+    /* TODO: buffer age */
 
-	/*
-	 * Make sure we have a back buffer in case we're swapping without ever
-	 * rendering.
-	 */
-	if (!window->back.data) {
-	    YAGL_LOG_ERROR("Cannot lock back for egl_window %p\n", window);
-	    return;
-	}
+    /*
+     * Make sure we have a back buffer in case we're swapping without ever
+     * rendering.
+     */
+    if (!window->back.data) {
+        yagl_tizen_window_get_buffer(drawable, yagl_native_attachment_back, NULL, NULL);
+        if (!window->back.data) {
+            YAGL_LOG_ERROR("Cannot lock back for egl_window %p\n", window);
+            return;
+        }
+    }
 
-	ret = tpl_surface_enqueue_buffer(window->surface, window->back.data);
-	if (ret != TPL_ERROR_NONE)
-		YAGL_LOG_ERROR("post failed\n");
-	tbm_surface_internal_unref(window->back.data);
+    ret = tpl_surface_enqueue_buffer(window->surface, window->back.data);
+    if (ret != TPL_ERROR_NONE)
+        YAGL_LOG_ERROR("post failed\n");
 
-	/*
-	 * Reset resize growing parameters.
-	 */
-	window->dx = 0;
-	window->dy = 0;
+    tbm_surface_internal_unref(window->back.data);
+    window->back.data = NULL;
+    /*
+     * Reset resize growing parameters.
+     */
+    window->dx = 0;
+    window->dy = 0;
 
-	++drawable->stamp;
+    ++drawable->stamp;
 }
 
 static void yagl_tizen_window_wait(struct yagl_native_drawable *drawable,
@@ -177,70 +183,63 @@ static struct yagl_native_image
                                    uint32_t width,
                                    uint32_t height)
 {
-	return NULL;
+    return NULL;
 }
 
 static void yagl_tizen_window_destroy(struct yagl_native_drawable *drawable)
 {
-	struct yagl_tizen_window *window = (struct yagl_tizen_window *)drawable;
+    struct yagl_tizen_window *window = (struct yagl_tizen_window *)drawable;
 
-	/* TODO: destroy tbm surface */
+    /* TODO: destroy tbm surface */
 
-	yagl_native_drawable_cleanup(drawable);
+    yagl_native_drawable_cleanup(drawable);
 
-	window->user_data = NULL;
+    window->user_data = NULL;
 
-	/* Destroy TPL surface. */
-	if (window->surface)
-		tpl_object_unreference((tpl_object_t *)window->surface);
+    /* Destroy TPL surface. */
+    if (window->surface)
+        tpl_object_unreference((tpl_object_t *)window->surface);
 
-	yagl_free(drawable);
+    yagl_free(drawable);
 }
 
 struct yagl_native_drawable
     *yagl_tizen_window_create(struct yagl_native_display *dpy,
                                 yagl_os_window os_window)
 {
-	struct yagl_tizen_window *window;
-	tpl_display_t *tpl_display = NULL;
-	tpl_surface_t *tpl_surface = NULL;
+    struct yagl_tizen_window *window;
+    tpl_display_t *tpl_display = NULL;
+    tpl_surface_t *tpl_surface = NULL;
 
-	YAGL_LOG_FUNC_SET(yagl_tizen_window_create);
+    YAGL_LOG_FUNC_SET(yagl_tizen_window_create);
 
-	/* TODO: */
-	/*if (egl_window->user_data)
-	{
-		YAGL_LOG_ERROR("wl_egl_window %p already wrapped", egl_window);
-		return NULL;
-	}*/
+    window = yagl_malloc0(sizeof(*window));
 
-	window = yagl_malloc0(sizeof(*window));
+    yagl_native_drawable_init(&window->base, dpy, os_window);
 
-	yagl_native_drawable_init(&window->base, dpy, os_window);
+    tpl_display = tpl_display_get((tpl_handle_t)dpy->os_dpy);
+    tpl_surface = tpl_surface_create(tpl_display,
+                                     (tpl_handle_t)os_window,
+                                     TPL_SURFACE_TYPE_WINDOW,
+                                     TBM_FORMAT_ARGB8888);
+    window->base.get_buffer = &yagl_tizen_window_get_buffer;
+    window->base.get_buffer_age = &yagl_tizen_window_get_buffer_age;
+    window->base.swap_buffers = &yagl_tizen_window_swap_buffers;
+    window->base.wait = &yagl_tizen_window_wait;
+    window->base.copy_to_pixmap = &yagl_tizen_window_copy_to_pixmap;
+    window->base.set_swap_interval = &yagl_tizen_window_set_swap_interval;
+    window->base.get_geometry = &yagl_tizen_window_get_geometry;
+    window->base.get_image = &yagl_tizen_window_get_image;
+    window->base.destroy = &yagl_tizen_window_destroy;
 
-	tpl_display = tpl_display_get((tpl_handle_t)dpy->os_dpy);
-	tpl_surface = tpl_surface_create(tpl_display,
-							 (tpl_handle_t)os_window,
-							 TPL_SURFACE_TYPE_WINDOW,
-							 TBM_FORMAT_ARGB8888);
-	window->base.get_buffer = &yagl_tizen_window_get_buffer;
-	window->base.get_buffer_age = &yagl_tizen_window_get_buffer_age;
-	window->base.swap_buffers = &yagl_tizen_window_swap_buffers;
-	window->base.wait = &yagl_tizen_window_wait;
-	window->base.copy_to_pixmap = &yagl_tizen_window_copy_to_pixmap;
-	window->base.set_swap_interval = &yagl_tizen_window_set_swap_interval;
-	window->base.get_geometry = &yagl_tizen_window_get_geometry;
-	window->base.get_image = &yagl_tizen_window_get_image;
-	window->base.destroy = &yagl_tizen_window_destroy;
+    /*
+    * First comparison against real window
+    * dimensions must always fail.
+    */
+    window->width = -1;
+    window->height = -1;
+    window->current_buf = 0;
+    window->surface = tpl_surface;
 
-	/*
-	* First comparison against real window
-	* dimensions must always fail.
-	*/
-	window->width = -1;
-	window->height = -1;
-	window->current_buf = 0;
-	window->surface = tpl_surface;
-
-	return &window->base;
+    return &window->base;
 }
