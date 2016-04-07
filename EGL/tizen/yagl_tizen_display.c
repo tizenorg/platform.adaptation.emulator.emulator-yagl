@@ -34,12 +34,10 @@
 #include "yagl_tizen_display.h"
 #include "yagl_tizen_window.h"
 #include "yagl_tizen_pbuffer.h"
-#include "yagl_tizen_egl.h"
 #include <tbm_bufmgr_backend.h>
 #include "yagl_log.h"
 #include "yagl_malloc.h"
 #include "vigs.h"
-#include <xf86drm.h>
 #include <sys/fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,16 +49,14 @@
 static int yagl_tizen_display_authenticate(struct yagl_native_display *dpy,
                                              uint32_t id)
 {
-    /* TODO: do we need it? */
-
-    return 1;
+	return 1;
 }
 
 static struct yagl_native_drawable
     *yagl_tizen_display_wrap_window(struct yagl_native_display *dpy,
                                       yagl_os_window os_window)
 {
-    return yagl_tizen_window_create(dpy, os_window);
+	return yagl_tizen_window_create(dpy, os_window);
 }
 
 static struct yagl_native_drawable
@@ -80,7 +76,7 @@ static struct yagl_native_drawable
      * Wayland actaully has no pixmap type. This is just for creating
      * a pbuffer and to make Tizen conformance tests happy.
      */
-    return  yagl_tizen_pbuffer_create(dpy, width, height, depth);
+	return  yagl_tizen_pbuffer_create(dpy, width, height, depth);
 }
 
 static struct yagl_native_image
@@ -99,16 +95,18 @@ static int yagl_tizen_display_get_visual(struct yagl_native_display *dpy,
 	tpl_display_t	*tpl_display = NULL;
 	tpl_result_t	ret;
 
+	YAGL_LOG_FUNC_SET(yagl_tizen_display_get_visual);
+
 	tpl_display = tpl_display_get((tpl_handle_t)dpy->os_dpy);
 
 
 	ret = tpl_display_query_config(tpl_display, TPL_SURFACE_TYPE_WINDOW,
 						      8, 8, 8, 8, 32,
 						      visual_id, NULL);
-	if (ret != TPL_ERROR_NONE)
-	{
-		YAGL_LOG_ERROR("%s : query error\n", __func__);
+	if (ret != TPL_ERROR_NONE) {
+		YAGL_LOG_ERROR("query error");
 	}
+
 	*visual_type = 0;
 
 	return 1;
@@ -122,8 +120,7 @@ static void yagl_tizen_display_update_wl_server(struct yagl_native_display *dpy)
 static void yagl_tizen_display_destroy(struct yagl_native_display *dpy)
 {
 	struct yagl_tizen_display *tizen_dpy = (struct yagl_tizen_display *)dpy;
-	if (tizen_dpy->tpl_display != NULL)
-	{
+	if (tizen_dpy->tpl_display != NULL) {
 		tpl_object_unreference((tpl_object_t *)tizen_dpy->tpl_display);
 	}
 
@@ -157,10 +154,10 @@ struct yagl_native_display
 	drm_dev = (struct vigs_drm_device *)tbm_backend_get_priv_from_bufmgr(bufmgr);
 
 	yagl_native_display_init(&dpy->base,
-							platform,
-							os_dpy,
-							drm_dev,
-							NULL);
+				platform,
+				os_dpy,
+				drm_dev,
+				NULL);
 	dpy->base.authenticate = &yagl_tizen_display_authenticate;
 	dpy->base.wrap_window = &yagl_tizen_display_wrap_window;
 	dpy->base.wrap_pixmap = &yagl_tizen_display_wrap_pixmap;

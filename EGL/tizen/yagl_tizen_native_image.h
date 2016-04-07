@@ -31,18 +31,18 @@
  *
  */
 
-#ifndef _YAGL_WAYLAND_NATIVE_IMAGE_H_
-#define _YAGL_WAYLAND_NATIVE_IMAGE_H_
+#ifndef _YAGL_TIZEN_NATIVE_IMAGE_H_
+#define _YAGL_TIZEN_NATIVE_IMAGE_H_
 
 
 #include "yagl_types.h"
 #include "yagl_image.h"
 #include "yagl_export.h"
 #include "yagl_native_drawable.h"
-#include "yagl_tizen_egl.h"
 #include "yagl_client_interface.h"
 #include "yagl_image.h"
 #include "EGL/egl.h"
+#include <tbm_surface.h>
 
 struct yagl_onscreen_image_tizen
 {

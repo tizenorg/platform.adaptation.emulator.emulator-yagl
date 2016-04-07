@@ -128,10 +128,10 @@ static struct yagl_image
 
 static struct yagl_image
     *yagl_offscreen_create_image_wl_buffer(struct yagl_display *dpy,
-#ifdef YAGL_PLATFORM_TIZEN
-											 EGLClientBuffer pixmap,
-#else
-											  struct wl_resource *buffer,
+#ifdef YAGL_PLATFORM_WAYLAND
+						struct wl_resource *buffer,
+#elif YAGL_PLATFORM_TIZEN
+						 EGLClientBuffer pixmap,
 #endif
                                            struct yagl_client_interface *iface)
 {
