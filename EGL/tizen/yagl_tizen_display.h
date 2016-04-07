@@ -31,15 +31,13 @@
  *
  */
 
-#ifndef _YAGL_WAYLAND_DISPLAY_H_
-#define _YAGL_WAYLAND_DISPLAY_H_
+#ifndef _YAGL_TIZEN_DISPLAY_H_
+#define _YAGL_TIZEN_DISPLAY_H_
 
 #include "yagl_export.h"
 #include "yagl_native_display.h"
-#include <wayland-client.h>
-#include "yagl_tizen_egl.h"
+#include <tpl.h>
 
-#define YAGL_WAYLAND_DPY(os_dpy) ((struct wl_display*)(os_dpy))
 
 struct wl_drm;
 

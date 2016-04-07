@@ -38,7 +38,6 @@
 #include "wayland-drm.h"
 #endif
 #ifdef YAGL_PLATFORM_TIZEN
-#include "yagl_tizen_egl.h"
 #include <tpl.h>
 #endif
 #include "vigs.h"
@@ -222,10 +221,11 @@ int yagl_native_display_query_wl_buffer(yagl_os_display dpy,
 	tpl_result_t ret;
 	int width = 0, height = 0;
 
+	YAGL_LOG_FUNC_SET(yagl_native_display_query_wl_buffer);
 	if ( (ret=tpl_display_get_native_pixmap_info(tpl_display,
 					(tpl_handle_t)buffer, &width, &height, &format)) != TPL_ERROR_NONE )
 	{
-		YAGL_LOG_ERROR("%s: get pixmap info failed\n", __func__);
+		YAGL_LOG_ERROR("get pixmap info failed");
 		return 0;
 	}
 

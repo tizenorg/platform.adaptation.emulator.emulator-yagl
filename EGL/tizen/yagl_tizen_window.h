@@ -31,13 +31,14 @@
  *
  */
 
-#ifndef _YAGL_WAYLAND_WINDOW_H_
-#define _YAGL_WAYLAND_WINDOW_H_
+#ifndef _YAGL_TIZEN_WINDOW_H_
+#define _YAGL_TIZEN_WINDOW_H_
 
 #include "yagl_export.h"
 #include "yagl_native_drawable.h"
-#include "yagl_tizen_egl.h"
-#include <wayland-client.h>
+#include <tpl.h>
+#include <tbm_surface.h>
+#include <tbm_surface_internal.h>
 
 #define YAGL_TIZEN_WINDOW(os_window) ((tpl_handle_t)(os_window))
 
