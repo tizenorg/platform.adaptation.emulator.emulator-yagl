@@ -81,13 +81,13 @@ struct yagl_backend
                                               struct yagl_native_drawable */*native_pixmap*/,
                                               struct yagl_client_interface */*iface*/);
 
-    struct yagl_image *(*create_image_wl_buffer)(struct yagl_display */*dpy*/,
-#ifdef YAGL_PLATFORM_TIZEN
-												EGLClientBuffer pixmap,
-#else
-												struct wl_resource *buffer,
+    struct yagl_image *(*create_image_wl_buffer)(struct yagl_display *dpy,
+#ifdef YAGL_PLATFORM_WAYLAND
+						struct wl_resource *buffer,
+#elif YAGL_PLATFORM_TIZEN
+						EGLClientBuffer pixmap,
 #endif
-												struct yagl_client_interface */*iface*/);
+						struct yagl_client_interface */*iface*/);
 
     struct yagl_image *(*create_image_gl_texture_2d)(struct yagl_display */*dpy*/,
                                                      struct yagl_context */*ctx*/,

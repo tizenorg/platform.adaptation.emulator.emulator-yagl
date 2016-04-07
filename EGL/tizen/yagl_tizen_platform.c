@@ -36,7 +36,6 @@
 #include "yagl_native_platform.h"
 #include "yagl_log.h"
 #include "EGL/egl.h"
-#include <wayland-client.h>
 
 static int yagl_tizen_platform_probe(yagl_os_display os_dpy)
 {
