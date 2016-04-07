@@ -137,12 +137,12 @@ static struct yagl_image
 
 static struct yagl_image
     *yagl_onscreen_create_image_wl_buffer(struct yagl_display *dpy,
-#ifdef YAGL_PLATFORM_TIZEN
-                                          EGLClientBuffer pixmap,
-#else
-                                          struct wl_resource *buffer,
+#ifdef YAGL_PLATFORM_WAYLAND
+                        struct wl_resource *buffer,
+#elif YAGL_PLATFORM_TIZEN
+                        EGLClientBuffer pixmap,
 #endif
-                                          struct yagl_client_interface *iface)
+                        struct yagl_client_interface *iface)
 {
 #ifdef YAGL_PLATFORM_WAYLAND
     struct yagl_onscreen_image_wl_buffer *image =
@@ -152,8 +152,8 @@ static struct yagl_image
 
     return image ? &image->base : NULL;
 #elif YAGL_PLATFORM_TIZEN
-	struct yagl_onscreen_image_tizen *image = yagl_onscreen_image_tizen_create(dpy, pixmap, iface);
-	return image ? &image->base : NULL;
+    struct yagl_onscreen_image_tizen *image = yagl_onscreen_image_tizen_create(dpy, pixmap, iface);
+    return image ? &image->base : NULL;
 #else
     return NULL;
 #endif
