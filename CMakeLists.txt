@@ -26,7 +26,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "")
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: None (CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel." FORCE)
 endif ()
 
-option(PLATFORM_TIZEN "Enable Tizen backend" TRUE)
+option(PLATFORM_TIZEN "Enable Tizen backend" FALSE)
 option(PLATFORM_X11 "Enable X11 platform" FALSE)
 option(PLATFORM_GBM "Enable GBM platform" FALSE)
 option(PLATFORM_WAYLAND "Enable wayland platform" FALSE)

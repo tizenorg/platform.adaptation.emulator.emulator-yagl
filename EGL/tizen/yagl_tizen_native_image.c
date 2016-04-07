@@ -34,18 +34,17 @@
 #include "yagl_log.h"
 #include "yagl_malloc.h"
 #include "yagl_display.h"
-#include "yagl_tizen_egl.h"
 #include "yagl_tizen_native_image.h"
 #include "yagl_state.h"
 #include "yagl_egl_state.h"
 #include "yagl_client_image.h"
 #include "yagl_host_egl_calls.h"
-#include <tbm_bufmgr_backend.h>
 #include "vigs.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <errno.h>
+#include <tbm_surface.h>
+#include <tbm_surface_internal.h>
+#include <tpl.h>
+#include <tbm_bufmgr_backend.h>
 
 static void yagl_onscreen_image_tizen_update(struct yagl_image *image)
 {
@@ -53,14 +52,14 @@ static void yagl_onscreen_image_tizen_update(struct yagl_image *image)
 
 static void yagl_onscreen_image_tizen_destroy(struct yagl_ref *ref)
 {
-	struct yagl_onscreen_image_tizen *image = (struct yagl_onscreen_image_tizen*)ref;
+    struct yagl_onscreen_image_tizen *image = (struct yagl_onscreen_image_tizen*)ref;
 
-	if (image->buffer)
-		tbm_surface_internal_unref(image->buffer);
+    if (image->buffer)
+        tbm_surface_internal_unref(image->buffer);
 
-	yagl_image_cleanup(&image->base);
+    yagl_image_cleanup(&image->base);
 
-	yagl_free(image);
+    yagl_free(image);
 }
 
 
@@ -69,66 +68,68 @@ struct yagl_onscreen_image_tizen
                                           EGLClientBuffer pixmap,
                                           struct yagl_client_interface *iface)
 {
-	EGLint error = 0;
-	tpl_display_t *tpl_display;
-	tbm_surface_h tbm_surface;
-	tbm_bo bo;
-	yagl_object_name tex_global_name = yagl_get_global_name();
-	struct yagl_client_image *client_image;
-	struct yagl_onscreen_image_tizen *image;
-	struct vigs_drm_surface *drm_sfc;
+    EGLint error = 0;
+    tpl_display_t *tpl_display;
+    tbm_surface_h tbm_surface;
+    tbm_bo bo;
+    yagl_object_name tex_global_name = yagl_get_global_name();
+    struct yagl_client_image *client_image;
+    struct yagl_onscreen_image_tizen *image;
+    struct vigs_drm_surface *drm_sfc;
 
-	image = yagl_malloc0(sizeof(*image));
+    YAGL_LOG_FUNC_SET(yagl_onscreen_image_tizen_create);
+    image = yagl_malloc0(sizeof(*image));
 
-	tpl_display = tpl_display_get((tpl_handle_t)dpy->display_id);
-	if (tpl_display == NULL)
-	{
-		yagl_set_error(EGL_BAD_DISPLAY);
-		YAGL_LOG_ERROR("%s: tpl_display is NULL\n", __func__);
-		goto fail;
-	}
+    tpl_display = tpl_display_get((tpl_handle_t)dpy->display_id);
+    if (tpl_display == NULL) {
+        yagl_set_error(EGL_BAD_DISPLAY);
+        YAGL_LOG_ERROR("tpl_display is NULL");
+        goto fail;
+    }
 
-	/* Get native buffer from pixmap */
-	tbm_surface = tpl_display_get_buffer_from_native_pixmap(tpl_display, pixmap);
+    /* Get native buffer from pixmap */
+    tbm_surface = tpl_display_get_buffer_from_native_pixmap(tpl_display, pixmap);
 
-	if (tbm_surface == NULL)
-	{
-		yagl_set_error(EGL_BAD_NATIVE_PIXMAP);
-		YAGL_LOG_ERROR("%s: tbm_surface is NULL\n", __func__);
-		goto fail;
-	}
-	tbm_surface_internal_ref(tbm_surface);
+    if (tbm_surface == NULL) {
+        yagl_set_error(EGL_BAD_NATIVE_PIXMAP);
+        YAGL_LOG_ERROR("tbm_surface is NULL");
+        goto fail;
+    }
+    tbm_surface_internal_ref(tbm_surface);
 
-	bo = tbm_surface_internal_get_bo(tbm_surface, 0);
-	drm_sfc = (struct vigs_drm_surface *)tbm_backend_get_bo_priv(bo);
+    bo = tbm_surface_internal_get_bo(tbm_surface, 0);
+    drm_sfc = (struct vigs_drm_surface *)tbm_backend_get_bo_priv(bo);
+    if (vigs_drm_gem_get_name(&drm_sfc->gem)) {
+        yagl_set_error(EGL_BAD_NATIVE_PIXMAP);
+                YAGL_LOG_ERROR("get gem name failed");
+                goto fail;
+    }
+    if (!yagl_host_eglCreateImageYAGL(tex_global_name,
+                                    dpy->host_dpy,
+                                    drm_sfc->id,
+                                    &error)) {
+        yagl_set_error(error);
+        goto fail;
+    }
 
-	if (!yagl_host_eglCreateImageYAGL(tex_global_name,
-									dpy->host_dpy,
-									drm_sfc->id,
-									&error))
-	{
-		yagl_set_error(error);
-		goto fail;
-	}
+    client_image = iface->create_image(iface, tex_global_name);
 
-	client_image = iface->create_image(iface, tex_global_name);
+    yagl_image_init(&image->base,
+                    &yagl_onscreen_image_tizen_destroy,
+                    dpy,
+                    (EGLImageKHR)INT2VOIDP(drm_sfc->gem.name),
+                    client_image);
 
-	yagl_image_init(&image->base,
-					&yagl_onscreen_image_tizen_destroy,
-					dpy,
-					(EGLImageKHR)INT2VOIDP(drm_sfc->gem.name),
-					client_image);
+    yagl_client_image_release(client_image);
 
-	yagl_client_image_release(client_image);
+    image->base.update = &yagl_onscreen_image_tizen_update;
 
-	image->base.update = &yagl_onscreen_image_tizen_update;
+    image->buffer = tbm_surface;
 
-	image->buffer = tbm_surface;
-
-	return image;
+    return image;
 
 fail:
-	yagl_free(image);
+    yagl_free(image);
 
-	return NULL;
+    return NULL;
 }

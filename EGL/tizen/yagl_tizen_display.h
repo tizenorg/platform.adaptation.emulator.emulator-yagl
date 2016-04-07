@@ -31,33 +31,31 @@
  *
  */
 
-#ifndef _YAGL_WAYLAND_DISPLAY_H_
-#define _YAGL_WAYLAND_DISPLAY_H_
+#ifndef _YAGL_TIZEN_DISPLAY_H_
+#define _YAGL_TIZEN_DISPLAY_H_
 
 #include "yagl_export.h"
 #include "yagl_native_display.h"
-#include <wayland-client.h>
-#include "yagl_tizen_egl.h"
+#include <tpl.h>
 
-#define YAGL_WAYLAND_DPY(os_dpy) ((struct wl_display*)(os_dpy))
 
 struct wl_drm;
 
 struct yagl_tizen_display
 {
-	struct yagl_native_display base;
+    struct yagl_native_display base;
 
-	int own_dpy;
+    int own_dpy;
 
-	tpl_display_t *tpl_display;
+    tpl_display_t *tpl_display;
 
-	struct wl_drm *wl_drm;
+    struct wl_drm *wl_drm;
 
-	char *drm_dev_name;
+    char *drm_dev_name;
 
-	int drm_fd;
+    int drm_fd;
 
-	int authenticated;
+    int authenticated;
 };
 
 struct yagl_native_display
