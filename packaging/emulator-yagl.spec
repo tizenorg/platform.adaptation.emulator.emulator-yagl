@@ -69,6 +69,10 @@ make install
 
 cp pkgconfig/wayland-egl.pc %{buildroot}%{_libdir}/pkgconfig/
 
+%if %{with wayland}
+ln -sf driver/libGLESv1_CM.so.1.0 %{buildroot}%{_libdir}/libGLESv1_CM.so.1.0
+%endif
+
 %post -p /sbin/ldconfig
 %postun -p /sbin/ldconfig
 
@@ -85,6 +89,7 @@ cp pkgconfig/wayland-egl.pc %{buildroot}%{_libdir}/pkgconfig/
 %{_libdir}/libgbm*
 %{_libdir}/driver/libEGL*
 %{_libdir}/driver/libGL*
+%{_libdir}/libGLESv1_CM.so.1.0
 %else
 %{_libdir}/libEGL*
 %{_libdir}/libGLES*
