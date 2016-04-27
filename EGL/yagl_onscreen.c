@@ -37,6 +37,9 @@
 #ifdef YAGL_PLATFORM_WAYLAND
 #include "yagl_onscreen_image_wl_buffer.h"
 #endif
+#ifdef YAGL_PLATFORM_TIZEN
+#include "tizen/yagl_tizen_native_image.h"
+#endif
 #include "yagl_onscreen_image_gl_texture_2d.h"
 #include "yagl_onscreen_image_tizen_sfc.h"
 #include "yagl_onscreen_fence.h"
@@ -134,8 +137,12 @@ static struct yagl_image
 
 static struct yagl_image
     *yagl_onscreen_create_image_wl_buffer(struct yagl_display *dpy,
-                                          struct wl_resource *buffer,
-                                          struct yagl_client_interface *iface)
+#ifdef YAGL_PLATFORM_WAYLAND
+                        struct wl_resource *buffer,
+#elif YAGL_PLATFORM_TIZEN
+                        EGLClientBuffer pixmap,
+#endif
+                        struct yagl_client_interface *iface)
 {
 #ifdef YAGL_PLATFORM_WAYLAND
     struct yagl_onscreen_image_wl_buffer *image =
@@ -143,6 +150,9 @@ static struct yagl_image
                                              buffer,
                                              iface);
 
+    return image ? &image->base : NULL;
+#elif YAGL_PLATFORM_TIZEN
+    struct yagl_onscreen_image_tizen *image = yagl_onscreen_image_tizen_create(dpy, pixmap, iface);
     return image ? &image->base : NULL;
 #else
     return NULL;

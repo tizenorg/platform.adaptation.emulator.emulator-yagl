@@ -49,6 +49,10 @@ struct wl_resource;
 struct wl_drm;
 #endif
 
+#ifdef YAGL_PLATFORM_TIZEN
+struct wl_resource;
+#endif
+
 struct yagl_native_display
 {
     struct yagl_native_platform *platform;
@@ -102,13 +106,20 @@ void yagl_native_display_cleanup(struct yagl_native_display *dpy);
 #ifdef YAGL_PLATFORM_WAYLAND
 int yagl_native_display_bind_wl_display(struct yagl_native_display *dpy,
                                         struct wl_display *wl_dpy);
-
 int yagl_native_display_unbind_wl_display(struct yagl_native_display *dpy);
 
 int yagl_native_display_query_wl_buffer(struct yagl_native_display *dpy,
                                         struct wl_resource *buffer,
                                         EGLint attribute,
                                         EGLint *value);
+#elif YAGL_PLATFORM_TIZEN
+int yagl_native_display_bind_wl_display(yagl_os_display dpy);
+int yagl_native_display_unbind_wl_display(yagl_os_display dpy);
+int yagl_native_display_query_wl_buffer(yagl_os_display dpy,
+                                        struct wl_resource *buffer,
+                                        EGLint attribute,
+                                        EGLint *value);
+
 #endif
 
 #endif
