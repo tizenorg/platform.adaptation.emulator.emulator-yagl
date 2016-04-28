@@ -100,6 +100,22 @@ if (PLATFORM_WAYLAND)
     add_definitions(-DYAGL_PLATFORM_WAYLAND)
 endif ()
 
+if (PLATFORM_TIZEN)
+    set(SOURCES ${SOURCES}
+        tizen/yagl_tizen_platform.c
+        tizen/yagl_tizen_display.c
+        tizen/yagl_tizen_window.c
+        tizen/yagl_tizen_pbuffer.c
+        tizen/yagl_tizen_native_image.c
+    )
+    set(LIBRARIES ${LIBRARIES}
+        wayland-egl
+        tpl-egl
+        ${WAYLAND_CLIENT_LIBRARIES}
+    )
+    add_definitions(-DYAGL_PLATFORM_TIZEN)
+endif ()
+
 include_directories(.)
 
 add_library(EGL SHARED ${SOURCES})

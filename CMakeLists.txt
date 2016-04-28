@@ -26,13 +26,14 @@ if (CMAKE_BUILD_TYPE STREQUAL "")
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build, options are: None (CMAKE_CXX_FLAGS or CMAKE_C_FLAGS used) Debug Release RelWithDebInfo MinSizeRel." FORCE)
 endif ()
 
-option(PLATFORM_X11 "Enable X11 platform" TRUE)
+option(PLATFORM_TIZEN "Enable Tizen backend" FALSE)
+option(PLATFORM_X11 "Enable X11 platform" FALSE)
 option(PLATFORM_GBM "Enable GBM platform" FALSE)
 option(PLATFORM_WAYLAND "Enable wayland platform" FALSE)
 
 # END USER SETTINGS
 
-if ((NOT PLATFORM_X11) AND (NOT PLATFORM_GBM) AND (NOT PLATFORM_WAYLAND))
+if ((NOT PLATFORM_X11) AND (NOT PLATFORM_GBM) AND (NOT PLATFORM_WAYLAND) AND (NOT PLATFORM_TIZEN))
     message(FATAL_ERROR "At least one platform must be supported")
 endif ()
 
