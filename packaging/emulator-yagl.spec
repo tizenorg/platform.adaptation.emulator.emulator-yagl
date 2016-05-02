@@ -1,5 +1,6 @@
-#%bcond_with wayland
-#%bcond_with emulator
+%bcond_with wayland
+%bcond_with emulator
+
 %define ENABLE_TIZEN_BACKEND 1
 
 Name:       emulator-yagl
@@ -24,6 +25,12 @@ BuildRequires:  pkgconfig(libudev)
 BuildRequires:  pkgconfig(wayland-client)
 BuildRequires:  pkgconfig(wayland-server)
 Provides:   opengl-es-drv
+
+%if %{with emulator}
+ExclusiveArch: %{ix86} x86_64
+%else
+ExclusiveArch:
+%endif
 
 %description
 YaGL - OpenGLES acceleration module for emulator.
