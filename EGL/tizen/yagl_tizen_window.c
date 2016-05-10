@@ -152,7 +152,7 @@ static int yagl_tizen_window_get_buffer_age(struct yagl_native_drawable *drawabl
 
     YAGL_LOG_FUNC_SET(yagl_tizen_window_get_buffer_age);
 
-    return window->back->age;
+    return window->back ? window->back->age : 0;
 }
 
 static void yagl_tizen_window_swap_buffers(struct yagl_native_drawable *drawable)
