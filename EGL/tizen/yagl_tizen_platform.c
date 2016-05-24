@@ -49,8 +49,6 @@ static struct yagl_native_display
 {
     struct yagl_native_display *dpy = NULL;
 
-    YAGL_LOG_FUNC_SET(eglGetDisplay);
-
     dpy = yagl_tizen_display_create(&yagl_tizen_platform,os_dpy);
 
     return dpy;

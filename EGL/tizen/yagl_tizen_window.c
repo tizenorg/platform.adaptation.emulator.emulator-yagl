@@ -150,8 +150,6 @@ static int yagl_tizen_window_get_buffer_age(struct yagl_native_drawable *drawabl
 {
     struct yagl_tizen_window *window = (struct yagl_tizen_window*)drawable;
 
-    YAGL_LOG_FUNC_SET(yagl_tizen_window_get_buffer_age);
-
     return window->back ? window->back->age : 0;
 }
 
@@ -253,8 +251,6 @@ struct yagl_native_drawable
     struct yagl_tizen_window *window;
     tpl_display_t *tpl_display = NULL;
     tpl_surface_t *tpl_surface = NULL;
-
-    YAGL_LOG_FUNC_SET(yagl_tizen_window_create);
 
     window = yagl_malloc0(sizeof(*window));
 
