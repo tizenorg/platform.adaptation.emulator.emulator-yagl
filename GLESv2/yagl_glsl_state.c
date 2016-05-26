@@ -43,13 +43,15 @@ static void yagl_glsl_state_flush_version(struct yagl_glsl_state *state)
 {
     int have_version = state->have_version;
     int have_extensions = state->have_extensions;
+    int have_samplerexternaloes = state->have_samplerexternaloes;
 
-    if (have_version && have_extensions) {
+    if (have_version && have_extensions && have_samplerexternaloes) {
         return;
     }
 
     state->have_version = 1;
     state->have_extensions = 1;
+    state->have_samplerexternaloes = 1;
 
     if (!have_version) {
         switch (state->patch_version) {
@@ -75,6 +77,10 @@ static void yagl_glsl_state_flush_version(struct yagl_glsl_state *state)
         default:
             break;
         }
+    }
+
+    if(!have_samplerexternaloes) {
+        yagl_glsl_state_append_header(state, "#define samplerExternalOES sampler2D\n\n");
     }
 }
 

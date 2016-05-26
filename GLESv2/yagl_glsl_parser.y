@@ -69,7 +69,6 @@ static int yagl_glsl_lex(union YYSTYPE *val, struct yagl_glsl_state *state)
 %token <str> TOK_TEXTURECUBE
 %token <str> TOK_TEXTURECUBELOD
 %token <str> TOK_GLFRAGCOLOR
-%token <str> TOK_SAMPLEREXTERNALOES
 
 %%
 
@@ -590,10 +589,5 @@ expression
     } else {
         yagl_glsl_state_append_output(state, $1.value);
     }
-}
-| TOK_SAMPLEREXTERNALOES
-{
-    yagl_glsl_state_flush_pending(state, $1.index);
-    yagl_glsl_state_append_output(state, "sampler2D");
 }
 ;

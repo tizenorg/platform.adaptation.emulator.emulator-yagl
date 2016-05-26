@@ -86,6 +86,8 @@ struct yagl_glsl_state
 
     int have_extensions;
 
+    int have_samplerexternaloes;
+
     int frag_color_declared;
     int texture1d_declared;
     int texture1dproj_declared;
