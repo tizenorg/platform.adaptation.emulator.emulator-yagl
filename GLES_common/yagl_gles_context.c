@@ -2390,6 +2390,9 @@ int yagl_gles_context_get_tex_parameterfv(struct yagl_gles_context *ctx,
     case GL_TEXTURE_IMMUTABLE_FORMAT:
         params[0] = texture_obj->immutable;
         return 1;
+    case GL_REQUIRED_TEXTURE_IMAGE_UNITS_OES:
+        params[0] = texture_obj->num_image_units;
+        return 1;
     default:
         break;
     }
