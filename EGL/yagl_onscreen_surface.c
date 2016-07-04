@@ -62,7 +62,11 @@ static void yagl_onscreen_surface_invalidate(struct yagl_surface *sfc)
     struct yagl_native_drawable *drawable = native_drawable(osfc);
     struct vigs_drm_surface *new_drm_sfc;
 
+#ifdef YAGL_PLATFORM_TIZEN
+    if (drawable->validate(drawable) && osfc->last_stamp == drawable->stamp) {
+#else
     if (osfc->last_stamp == drawable->stamp) {
+#endif
         return;
     }
 

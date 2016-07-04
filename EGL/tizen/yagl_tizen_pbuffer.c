@@ -70,6 +70,11 @@ static int yagl_tizen_pbuffer_get_buffer(struct yagl_native_drawable *drawable,
     return 1;
 }
 
+static int yagl_tizen_pbuffer_validate(struct yagl_native_drawable *drawable)
+{
+    return 1;
+}
+
 static int yagl_tizen_pbuffer_get_buffer_age(struct yagl_native_drawable *drawable)
 {
     return 0;
@@ -186,6 +191,7 @@ struct yagl_native_drawable
     yagl_native_drawable_init(pbuffer, dpy, (yagl_os_drawable)drm_sfc);
 
     pbuffer->get_buffer = &yagl_tizen_pbuffer_get_buffer;
+    pbuffer->validate = &yagl_tizen_pbuffer_validate;
     pbuffer->get_buffer_age = &yagl_tizen_pbuffer_get_buffer_age;
     pbuffer->swap_buffers = &yagl_tizen_pbuffer_swap_buffers;
     pbuffer->wait = &yagl_tizen_pbuffer_wait;
