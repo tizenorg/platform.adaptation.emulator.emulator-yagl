@@ -75,8 +75,7 @@ static int yagl_tizen_window_get_buffer(struct yagl_native_drawable *drawable,
     width = tbm_surface_get_width(tbm_surface);
     height = tbm_surface_get_height(tbm_surface);
 
-    if ((window->width != width) ||
-    (window->height != height)) {
+    if ((window->width != width) || (window->height != height)) {
         for (i = 0; i < YAGL_TIZEN_MAX_COLOR_BUF; i++) {
             if (window->color_buffers[i].locked && window->back != &window->color_buffers[i]) {
                 /*
@@ -84,11 +83,13 @@ static int yagl_tizen_window_get_buffer(struct yagl_native_drawable *drawable,
                  */
                 continue;
             }
-            if(window->color_buffers[i].data) {
-				tbm_surface_internal_unref(window->color_buffers[i].data);
-				window->color_buffers[i].data =  NULL;
+
+            if (window->color_buffers[i].data) {
+                tbm_surface_internal_unref(window->color_buffers[i].data);
+                window->color_buffers[i].data =  NULL;
             }
-			if (window->back == &window->color_buffers[i]) {
+
+            if (window->back == &window->color_buffers[i]) {
                 /*
                  * If it's a back buffer and the window was resized
                  * then we MUST destroy it and create a new one
@@ -142,6 +143,28 @@ static int yagl_tizen_window_get_buffer(struct yagl_native_drawable *drawable,
     window->back->age = 0;
     window->back->locked = 1;
     window->back->data = (void *)tbm_surface;
+
+    return 1;
+}
+
+static int yagl_tizen_window_validate(struct yagl_native_drawable *drawable)
+{
+    struct yagl_tizen_window *window = (struct yagl_tizen_window *)drawable;
+
+    if (!window->back || !window->back->data) {
+        return 1;
+    }
+
+    if (tpl_surface_validate(window->surface) == TPL_FALSE) {
+        tbm_surface_internal_unref(window->back->data);
+        window->back->data = NULL;
+        window->back->locked = 0;
+        window->back = NULL;
+
+        ++drawable->stamp;
+
+        return 0;
+    }
 
     return 1;
 }
@@ -261,7 +284,9 @@ struct yagl_native_drawable
                                      (tpl_handle_t)os_window,
                                      TPL_SURFACE_TYPE_WINDOW,
                                      TBM_FORMAT_ARGB8888);
+
     window->base.get_buffer = &yagl_tizen_window_get_buffer;
+    window->base.validate = &yagl_tizen_window_validate;
     window->base.get_buffer_age = &yagl_tizen_window_get_buffer_age;
     window->base.swap_buffers = &yagl_tizen_window_swap_buffers;
     window->base.wait = &yagl_tizen_window_wait;
