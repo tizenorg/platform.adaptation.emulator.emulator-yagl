@@ -250,7 +250,9 @@ YAGL_API EGLBoolean eglInitialize(EGLDisplay dpy_, EGLint* major, EGLint* minor)
     EGLint error = 0;
     struct yagl_display *dpy;
 
-    YAGL_LOG_FUNC_ENTER(eglInitialize, "dpy = %u", (yagl_host_handle)dpy_);
+    YAGL_LOG_FUNC_ENTER(eglInitialize,
+                        "dpy = %u",
+                        (yagl_host_handle)VOIDP2INT(dpy_));
 
     dpy = yagl_display_get(dpy_);
 
@@ -284,7 +286,9 @@ YAGL_API EGLBoolean eglTerminate(EGLDisplay dpy_)
     struct yagl_display *dpy;
     EGLBoolean ret = EGL_FALSE;
 
-    YAGL_LOG_FUNC_ENTER(eglTerminate, "dpy = %u", (yagl_host_handle)dpy_);
+    YAGL_LOG_FUNC_ENTER(eglTerminate,
+                        "dpy = %u",
+                        (yagl_host_handle)VOIDP2INT(dpy_));
 
     if (!yagl_validate_display(dpy_, &dpy)) {
         goto out;
@@ -310,7 +314,7 @@ YAGL_API const char *eglQueryString(EGLDisplay dpy_, EGLint name)
 
     YAGL_LOG_FUNC_ENTER(eglQueryString,
                         "dpy = %u, name = %d",
-                        (yagl_host_handle)dpy_,
+                        (yagl_host_handle)VOIDP2INT(dpy_),
                         name);
 
     switch (name) {
@@ -348,7 +352,7 @@ YAGL_API EGLBoolean eglGetConfigs(EGLDisplay dpy,
 
     YAGL_LOG_FUNC_ENTER(eglGetConfigs,
                         "dpy = %u, configs = %p, config_size = %d",
-                        (yagl_host_handle)dpy,
+                        (yagl_host_handle)VOIDP2INT(dpy),
                         configs,
                         config_size);
 
@@ -384,7 +388,9 @@ YAGL_API EGLBoolean eglChooseConfig(EGLDisplay dpy,
 {
     EGLint error = 0;
 
-    YAGL_LOG_FUNC_ENTER(eglChooseConfig, "dpy = %u", (yagl_host_handle)dpy);
+    YAGL_LOG_FUNC_ENTER(eglChooseConfig,
+                        "dpy = %u",
+                        (yagl_host_handle)VOIDP2INT(dpy));
 
     if (!num_config) {
         YAGL_SET_ERR(EGL_BAD_PARAMETER);
@@ -424,8 +430,8 @@ YAGL_API EGLBoolean eglGetConfigAttrib(EGLDisplay dpy_,
 
     YAGL_LOG_FUNC_ENTER(eglGetConfigAttrib,
                         "dpy = %u, config = %u, attribute = 0x%X",
-                        (yagl_host_handle)dpy_,
-                        (yagl_host_handle)config,
+                        (yagl_host_handle)VOIDP2INT(dpy_),
+                        (yagl_host_handle)VOIDP2INT(config),
                         attribute);
 
     if (!yagl_validate_display(dpy_, &dpy)) {
@@ -499,8 +505,8 @@ YAGL_API EGLSurface eglCreateWindowSurface(EGLDisplay dpy_,
 
     YAGL_LOG_FUNC_ENTER(eglCreateWindowSurface,
                         "dpy = %u, config = %u",
-                        (yagl_host_handle)dpy_,
-                        (yagl_host_handle)config);
+                        (yagl_host_handle)VOIDP2INT(dpy_),
+                        (yagl_host_handle)VOIDP2INT(config));
 
     if (!yagl_validate_display(dpy_, &dpy)) {
         goto fail;
@@ -554,8 +560,8 @@ YAGL_API EGLSurface eglCreatePbufferSurface(EGLDisplay dpy_,
 
     YAGL_LOG_FUNC_ENTER(eglCreatePbufferSurface,
                         "dpy = %u, config = %u",
-                        (yagl_host_handle)dpy_,
-                        (yagl_host_handle)config);
+                        (yagl_host_handle)VOIDP2INT(dpy_),
+                        (yagl_host_handle)VOIDP2INT(config));
 
     if (!yagl_validate_display(dpy_, &dpy)) {
         goto fail;
@@ -601,8 +607,8 @@ YAGL_API EGLSurface eglCreatePixmapSurface(EGLDisplay dpy_,
 
     YAGL_LOG_FUNC_ENTER(eglCreatePixmapSurface,
                         "dpy = %u, config = %u",
-                        (yagl_host_handle)dpy_,
-                        (yagl_host_handle)config);
+                        (yagl_host_handle)VOIDP2INT(dpy_),
+                        (yagl_host_handle)VOIDP2INT(config));
 
     if (!yagl_validate_display(dpy_, &dpy)) {
         goto fail;
@@ -655,7 +661,7 @@ YAGL_API EGLBoolean eglDestroySurface(EGLDisplay dpy_, EGLSurface surface_)
 
     YAGL_LOG_FUNC_ENTER(eglDestroySurface,
                         "dpy = %u, surface = %p",
-                        (yagl_host_handle)dpy_,
+                        (yagl_host_handle)VOIDP2INT(dpy_),
                         surface_);
 
     if (!yagl_validate_display(dpy_, &dpy)) {
@@ -701,7 +707,7 @@ YAGL_API EGLBoolean eglQuerySurface(EGLDisplay dpy_,
 
     YAGL_LOG_FUNC_ENTER(eglQuerySurface,
                         "dpy = %u, surface = %p, attribute = 0x%X, value = %p",
-                        (yagl_host_handle)dpy_,
+                        (yagl_host_handle)VOIDP2INT(dpy_),
                         surface_,
                         attribute,
                         value);
@@ -878,7 +884,7 @@ YAGL_API EGLBoolean eglSurfaceAttrib(EGLDisplay dpy_,
 
     YAGL_LOG_FUNC_ENTER(eglSurfaceAttrib,
                         "dpy = %u, surface = %p, attribute = 0x%X, value = 0x%X",
-                        (yagl_host_handle)dpy_,
+                        (yagl_host_handle)VOIDP2INT(dpy_),
                         surface_,
                         attribute,
                         value);
@@ -924,7 +930,7 @@ YAGL_API EGLBoolean eglBindTexImage(EGLDisplay dpy_,
 
     YAGL_LOG_FUNC_ENTER(eglBindTexImage,
                         "dpy = %u, surface = %p, buffer = 0x%X",
-                        (yagl_host_handle)dpy_,
+                        (yagl_host_handle)VOIDP2INT(dpy_),
                         surface_,
                         buffer);
 
@@ -1003,7 +1009,7 @@ YAGL_API EGLBoolean eglReleaseTexImage(EGLDisplay dpy_,
 
     YAGL_LOG_FUNC_ENTER(eglReleaseTexImage,
                         "dpy = %u, surface = %p, buffer = 0x%X",
-                        (yagl_host_handle)dpy_,
+                        (yagl_host_handle)VOIDP2INT(dpy_),
                         surface_,
                         buffer);
 
@@ -1043,7 +1049,7 @@ YAGL_API EGLBoolean eglSwapInterval(EGLDisplay dpy, EGLint interval)
 
     YAGL_LOG_FUNC_ENTER(eglSwapInterval,
                         "dpy = %u, interval = %d",
-                        (yagl_host_handle)dpy,
+                        (yagl_host_handle)VOIDP2INT(dpy),
                         interval);
 
     draw_sfc = yagl_get_draw_surface();
@@ -1083,9 +1089,9 @@ YAGL_API EGLContext eglCreateContext(EGLDisplay dpy_,
 
     YAGL_LOG_FUNC_ENTER(eglCreateContext,
                         "dpy = %u, config = %u, share_context = %u",
-                        (yagl_host_handle)dpy_,
-                        (yagl_host_handle)config,
-                        (yagl_host_handle)share_context_);
+                        (yagl_host_handle)VOIDP2INT(dpy_),
+                        (yagl_host_handle)VOIDP2INT(config),
+                        (yagl_host_handle)VOIDP2INT(share_context_));
 
     if (!yagl_validate_display(dpy_, &dpy)) {
         goto out;
@@ -1157,8 +1163,8 @@ YAGL_API EGLBoolean eglDestroyContext(EGLDisplay dpy_, EGLContext ctx)
 
     YAGL_LOG_FUNC_ENTER(eglDestroyContext,
                         "dpy = %u, ctx = %u",
-                        (yagl_host_handle)dpy_,
-                        (yagl_host_handle)ctx);
+                        (yagl_host_handle)VOIDP2INT(dpy_),
+                        (yagl_host_handle)VOIDP2INT(ctx));
 
     if (!yagl_validate_display(dpy_, &dpy)) {
         goto fail;
@@ -1196,10 +1202,10 @@ YAGL_API EGLBoolean eglMakeCurrent(EGLDisplay dpy_,
 
     YAGL_LOG_FUNC_ENTER(eglMakeCurrent,
                         "dpy = %u, draw = %p, read = %p, ctx = %u",
-                        (yagl_host_handle)dpy_,
+                        (yagl_host_handle)VOIDP2INT(dpy_),
                         draw_,
                         read_,
-                        (yagl_host_handle)ctx_);
+                        (yagl_host_handle)VOIDP2INT(ctx_));
 
     if (bad_match) {
         YAGL_SET_ERR(EGL_BAD_MATCH);
@@ -1383,8 +1389,8 @@ YAGL_API EGLBoolean eglQueryContext(EGLDisplay dpy_,
 
     YAGL_LOG_FUNC_ENTER(eglQueryContext,
                         "dpy = %u, ctx = %u, attribute = 0x%X, value = %p",
-                        (yagl_host_handle)dpy_,
-                        (yagl_host_handle)ctx_,
+                        (yagl_host_handle)VOIDP2INT(dpy_),
+                        (yagl_host_handle)VOIDP2INT(ctx_),
                         attribute,
                         value);
 
@@ -1511,7 +1517,7 @@ YAGL_API EGLBoolean eglSwapBuffers(EGLDisplay dpy_, EGLSurface surface_)
 
     YAGL_LOG_FUNC_ENTER(eglSwapBuffers,
                         "dpy = %u, surface = %p",
-                        (yagl_host_handle)dpy_,
+                        (yagl_host_handle)VOIDP2INT(dpy_),
                         surface_);
 
     if (!yagl_validate_display(dpy_, &dpy)) {
@@ -1593,7 +1599,7 @@ YAGL_API EGLBoolean eglCopyBuffers(EGLDisplay dpy_,
 
     YAGL_LOG_FUNC_ENTER(eglCopyBuffers,
                         "dpy = %u, surface = %p, target = %u",
-                        (yagl_host_handle)dpy_,
+                        (yagl_host_handle)VOIDP2INT(dpy_),
                         surface_,
                         (uint32_t)target);
 
@@ -1650,8 +1656,8 @@ YAGL_API EGLImageKHR eglCreateImageKHR(EGLDisplay dpy_,
 
     YAGL_LOG_FUNC_ENTER(eglCreateImageKHR,
                         "dpy = %u, ctx = %u, target = %u, buffer = %p",
-                        (yagl_host_handle)dpy_,
-                        (yagl_host_handle)ctx_,
+                        (yagl_host_handle)VOIDP2INT(dpy_),
+                        (yagl_host_handle)VOIDP2INT(ctx_),
                         target,
                         buffer);
 
@@ -1829,7 +1835,7 @@ YAGL_API EGLBoolean eglDestroyImageKHR( EGLDisplay dpy_,
 
     YAGL_LOG_FUNC_ENTER(eglDestroyImageKHR,
                         "dpy = %u, image = %p",
-                        (yagl_host_handle)dpy_,
+                        (yagl_host_handle)VOIDP2INT(dpy_),
                         image_);
 
     if (!yagl_validate_display(dpy_, &dpy)) {
@@ -1869,7 +1875,7 @@ YAGL_API EGLBoolean eglLockSurfaceKHR(EGLDisplay dpy_,
 
     YAGL_LOG_FUNC_ENTER(eglLockSurfaceKHR,
                         "dpy = %u, surface = %p",
-                        (yagl_host_handle)dpy_,
+                        (yagl_host_handle)VOIDP2INT(dpy_),
                         surface_);
 
     if (!yagl_validate_display(dpy_, &dpy)) {
@@ -1927,7 +1933,7 @@ YAGL_API EGLBoolean eglUnlockSurfaceKHR(EGLDisplay dpy_,
 
     YAGL_LOG_FUNC_ENTER(eglUnlockSurfaceKHR,
                         "dpy = %u, surface = %p",
-                        (yagl_host_handle)dpy_,
+                        (yagl_host_handle)VOIDP2INT(dpy_),
                         surface_);
 
     if (!yagl_validate_display(dpy_, &dpy)) {
@@ -1961,8 +1967,10 @@ YAGL_API EGLSyncKHR eglCreateSyncKHR(EGLDisplay dpy_, EGLenum type, const EGLint
     struct yagl_display *dpy = NULL;
     struct yagl_fence *fence = NULL;
 
-    YAGL_LOG_FUNC_ENTER(eglCreateSyncKHR, "dpy = %u, type = %u",
-                        (yagl_host_handle)dpy_, type);
+    YAGL_LOG_FUNC_ENTER(eglCreateSyncKHR,
+                        "dpy = %u, type = %u",
+                        (yagl_host_handle)VOIDP2INT(dpy_),
+                        type);
 
     if (type != EGL_SYNC_FENCE_KHR) {
         YAGL_SET_ERR(EGL_BAD_ATTRIBUTE);
@@ -2005,8 +2013,10 @@ YAGL_API EGLBoolean eglDestroySyncKHR(EGLDisplay dpy_, EGLSyncKHR sync_)
     struct yagl_display *dpy = NULL;
     struct yagl_fence *fence = NULL;
 
-    YAGL_LOG_FUNC_ENTER(eglDestroySyncKHR, "dpy = %u, sync = %p",
-                        (yagl_host_handle)dpy_, sync_);
+    YAGL_LOG_FUNC_ENTER(eglDestroySyncKHR,
+                        "dpy = %u, sync = %p",
+                        (yagl_host_handle)VOIDP2INT(dpy_),
+                        sync_);
 
     if (!yagl_validate_display(dpy_, &dpy)) {
         goto out;
@@ -2038,8 +2048,12 @@ YAGL_API EGLint eglClientWaitSyncKHR(EGLDisplay dpy_, EGLSyncKHR sync_, EGLint f
     struct yagl_display *dpy = NULL;
     struct yagl_fence *fence = NULL;
 
-    YAGL_LOG_FUNC_ENTER(eglClientWaitSyncKHR, "dpy = %u, sync = %p, flags = 0x%X, timeout = %u",
-                        (yagl_host_handle)dpy_, sync_, flags, (uint32_t)timeout);
+    YAGL_LOG_FUNC_ENTER(eglClientWaitSyncKHR,
+                        "dpy = %u, sync = %p, flags = 0x%X, timeout = %u",
+                        (yagl_host_handle)VOIDP2INT(dpy_),
+                        sync_,
+                        flags,
+                        (uint32_t)timeout);
 
     if (!yagl_validate_display(dpy_, &dpy)) {
         goto out;
@@ -2068,8 +2082,11 @@ out:
 
 YAGL_API EGLBoolean eglSignalSyncKHR(EGLDisplay dpy_, EGLSyncKHR sync_, EGLenum mode)
 {
-    YAGL_LOG_FUNC_ENTER(eglSignalSyncKHR, "dpy = %u, sync = %p, mode = 0x%X",
-                        (yagl_host_handle)dpy_, sync_, mode);
+    YAGL_LOG_FUNC_ENTER(eglSignalSyncKHR,
+                        "dpy = %u, sync = %p, mode = 0x%X",
+                        (yagl_host_handle)VOIDP2INT(dpy_),
+                        sync_,
+                        mode);
 
     YAGL_SET_ERR(EGL_BAD_MATCH);
 
@@ -2084,8 +2101,11 @@ YAGL_API EGLBoolean eglGetSyncAttribKHR(EGLDisplay dpy_, EGLSyncKHR sync_, EGLin
     struct yagl_display *dpy = NULL;
     struct yagl_fence *fence = NULL;
 
-    YAGL_LOG_FUNC_ENTER(eglGetSyncAttribKHR, "dpy = %u, sync = %p, attribute = 0x%X",
-                        (yagl_host_handle)dpy_, sync_, attribute);
+    YAGL_LOG_FUNC_ENTER(eglGetSyncAttribKHR,
+                        "dpy = %u, sync = %p, attribute = 0x%X",
+                        (yagl_host_handle)VOIDP2INT(dpy_),
+                        sync_,
+                        attribute);
 
     if (!yagl_validate_display(dpy_, &dpy)) {
         goto out;
@@ -2135,7 +2155,7 @@ YAGL_API EGLBoolean eglBindWaylandDisplayWL(EGLDisplay dpy_,
 
     YAGL_LOG_FUNC_ENTER(eglBindWaylandDisplayWL,
                         "dpy = %u, display = %p",
-                        (yagl_host_handle)dpy_,
+                        (yagl_host_handle)VOIDP2INT(dpy_),
                         display);
 
     if (!yagl_validate_display(dpy_, &dpy)) {
@@ -2172,7 +2192,7 @@ YAGL_API EGLBoolean eglUnbindWaylandDisplayWL(EGLDisplay dpy_,
 
     YAGL_LOG_FUNC_ENTER(eglUnbindWaylandDisplayWL,
                         "dpy = %u, display = %p",
-                        (yagl_host_handle)dpy_,
+                        (yagl_host_handle)VOIDP2INT(dpy_),
                         display);
 
     if (!yagl_validate_display(dpy_, &dpy)) {
@@ -2212,7 +2232,7 @@ YAGL_API EGLBoolean eglQueryWaylandBufferWL(EGLDisplay dpy_,
 
     YAGL_LOG_FUNC_ENTER(eglQueryWaylandBufferWL,
                         "dpy = %u, buffer = %p, attribute = 0x%X",
-                        (yagl_host_handle)dpy_,
+                        (yagl_host_handle)VOIDP2INT(dpy_),
                         buffer,
                         attribute);
 
