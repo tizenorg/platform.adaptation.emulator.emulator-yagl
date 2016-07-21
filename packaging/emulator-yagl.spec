@@ -63,7 +63,7 @@ Development files for use with Wayland protocol
 %build
 cp %{SOURCE1001} .
 %if "%{ENABLE_TIZEN_BACKEND}" == "1"
-cmake -DCMAKE_INSTALL_PREFIX=%{buildroot} -DINSTALL_LIB_DIR=%{buildroot}%{_libdir} -DPLATFORM_TIZEN=1
+cmake -DCMAKE_INSTALL_PREFIX=%{buildroot} -DINSTALL_LIB_DIR=%{buildroot}%{_libdir} -DPLATFORM_TIZEN=1 -DDUMMY_LIBS=1
 %else
 cmake -DCMAKE_INSTALL_PREFIX=%{buildroot} -DINSTALL_LIB_DIR=%{buildroot}%{_libdir} -DPLATFORM_X11=0 -DPLATFORM_GBM=0 -DPLATFORM_WAYLAND=1
 %endif
@@ -74,8 +74,11 @@ rm -fr %{buildroot}
 mkdir -p %{buildroot}
 mkdir -p %{buildroot}%{_libdir}
 mkdir -p %{buildroot}%{_libdir}/pkgconfig
+mkdir -p %{buildroot}/etc/profile.d
 
 make install
+
+cp packaging/opengl-es-setup-yagl-env.sh %{buildroot}/etc/profile.d/
 
 %if "%{ENABLE_TIZEN_BACKEND}" == "0"
 cp pkgconfig/wayland-egl.pc %{buildroot}%{_libdir}/pkgconfig/
@@ -95,6 +98,7 @@ ln -sf driver/libGLESv1_CM.so.1.0 %{buildroot}%{_libdir}/libGLESv1_CM.so.1.1
 %{_libdir}/driver/libEGL*
 %{_libdir}/driver/libGL*
 %{_libdir}/libGLESv1_CM.so.1.1
+%attr(770,root,root)/etc/profile.d/opengl-es-setup-yagl-env.sh
 
 %if "%{ENABLE_TIZEN_BACKEND}" == "0"
 %files -n libwayland-egl
