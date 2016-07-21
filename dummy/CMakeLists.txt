@@ -6,5 +6,5 @@ add_library(GLESv2_dummy SHARED gles2_dummy.c)
 
 install(
     TARGETS EGL_dummy GLESv1_dummy GLESv2_dummy
-    LIBRARY DESTINATION lib/dummy-gl
+    LIBRARY DESTINATION ${INSTALL_LIB_DIR}/driver
 )
