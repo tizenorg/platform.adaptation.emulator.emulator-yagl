@@ -1,4 +1,5 @@
 #!/bin/sh
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 echo -e "[${_G} OpenGL ES acceleration module setting. ${C_}]"
 if [ -e /dev/yagl ] ; then
